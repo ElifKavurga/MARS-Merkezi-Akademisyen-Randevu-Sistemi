@@ -37,6 +37,9 @@ management:
 mars:
   cors:
     allowed-origins: ${MARS_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  jwt:
+    secret: ${MARS_JWT_SECRET:MARS_DEV_JWT_SECRET_KEY_CHANGE_ME_32CHARS_MIN}
+    expiration-ms: ${MARS_JWT_EXPIRATION_MS:86400000}
 
 logging:
   level:
