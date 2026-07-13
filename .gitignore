@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+mars-frontend/node_modules/
+mars-backend/target/
+
+# Build
+dist/
+build/
+*.jar
+*.war
+*.class
+!mars-backend/.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+.factorypath
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.*
+
+# Logs
+*.log
+logs/
+mars-backend/run-out.txt
+mars-backend/run-err.txt
+
+# Maven
+mars-backend/.mvn/wrapper/maven-wrapper.jar.bak
+
+# Coverage / test
+coverage/
+*.lcov
+.nyc_output/
+
+# Misc
+*.swp
+*.swo
+*~
