@@ -1,0 +1,39 @@
+---
+description: MARS resmi doküman sadakati — SRS, ER, Use Case, Veri Sözlüğü
+alwaysApply: true
+---
+
+# MARS Doküman Referans Kuralları
+
+`docs/` altındaki belgeler projenin **resmi referans** kaynaklarıdır:
+
+- `docs/SRS.md` — gereksinimler, use case’ler, veri sözlüğü, iş kuralları
+- `docs/ER.md` — entity-relationship modeli ve ilişkiler
+- `docs/ui/` — UI referans ekranları (tasarım rehberi; SRS/ER’yi genişletmez)
+
+## Zorunlu kısıtlar
+
+Kod üretirken:
+
+1. SRS, ER Diyagramı, Use Case’ler ve Veri Sözlüğü’ne sadık kal.
+2. Bu belgelerde **olmayan** yeni özellik ekleme.
+3. İlişkileri **değiştirme**.
+4. Entity isimlerini **değiştirme** (Role, Department, User, Course, CourseAssignment, AvailabilitySlot, RecurrenceRule, OutOfOfficePeriod, AppointmentCategory, PenaltyRule, Appointment, DelegationLog, StudentPenaltyStatus, WaitlistEntry).
+5. İş kurallarını **değiştirme**.
+6. Kararsız kalınca varsayım yapma; kullanıcıdan onay iste.
+7. SRS veri sözlüğü ile ER arasında çelişki görürsen sessizce “düzeltme”; onay iste.
+
+## Kapsam dışı (SRS 1.2)
+
+- QR / kart okuyucu vb. fiziksel entegrasyon
+- OBS tam veri senkronizasyonu
+- Serbest metin / mesajlaşma
+- Harici takvim (.ics) entegrasyonu
+
+## Temel iş kısıtları (özet)
+
+- Sıfır serbest metin; akış kategorilerle yürür.
+- Roller: STUDENT, ASSISTANT, ACADEMICIAN, HOD, ADMIN
+- Alt rol üst role randevu devredemez (asistan → hoca yok).
+- Kurumsal `@...edu.tr` e-posta zorunlu.
+- No-Show cezası, turuncu uyarı (kısıtlı süre), bekleme listesi FIFO, OOO, delegasyon SRS use case’lerine göre.
