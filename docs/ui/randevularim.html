@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+<html class="light" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Randevularım - MARS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@600;700;800&amp;family=Inter:wght@400&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed": "#e0e2e9",
+                        "inverse-surface": "#213145",
+                        "surface-tint": "#525c8a",
+                        "secondary": "#5d5f5f",
+                        "surface-container-high": "#dce9ff",
+                        "secondary-fixed": "#e2e2e2",
+                        "surface": "#f8f9ff",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-background": "#0b1c30",
+                        "on-error-container": "#93000a",
+                        "surface-container-low": "#eff4ff",
+                        "tertiary-container": "#181c21",
+                        "on-tertiary-fixed": "#181c21",
+                        "on-secondary-fixed-variant": "#454747",
+                        "surface-container": "#e5eeff",
+                        "surface-bright": "#f8f9ff",
+                        "inverse-on-surface": "#eaf1ff",
+                        "secondary-fixed-dim": "#c6c6c7",
+                        "surface-variant": "#d3e4fe",
+                        "on-primary-fixed": "#0d1843",
+                        "on-surface": "#0b1c30",
+                        "error-container": "#ffdad6",
+                        "background": "#f8f9ff",
+                        "error": "#ba1a1a",
+                        "on-surface-variant": "#45464f",
+                        "secondary-container": "#dfe0e0",
+                        "primary": "#000000",
+                        "outline-variant": "#c6c5d0",
+                        "primary-fixed-dim": "#bac4f8",
+                        "primary-container": "#0d1843",
+                        "on-primary-container": "#7881b2",
+                        "tertiary": "#000000",
+                        "primary-fixed": "#dde1ff",
+                        "outline": "#767680",
+                        "on-primary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed-dim": "#c4c6cd",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-dim": "#cbdbf5",
+                        "on-tertiary-fixed-variant": "#44474c",
+                        "on-primary-fixed-variant": "#3a4471",
+                        "on-secondary-fixed": "#1a1c1c",
+                        "inverse-primary": "#bac4f8",
+                        "on-secondary-container": "#616363",
+                        "on-tertiary-container": "#81848a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "64px",
+                        "gutter": "24px",
+                        "max-width": "1280px",
+                        "unit": "4px",
+                        "margin-mobile": "20px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["JetBrains Mono"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "body-md": ["Inter"],
+                        "label-md": ["JetBrains Mono"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background min-h-screen flex overflow-x-hidden">
+<!-- SideNavBar (JSON Derived) -->
+<nav class="border-r border-outline-variant h-screen w-64 fixed left-0 top-0 hidden md:flex flex-col py-6 z-50" style="background-color: #0b1641;">
+<!-- Brand/Header -->
+<div class="px-6 mb-8 flex items-center gap-4">
+<div class="w-10 h-10 rounded bg-white/10 flex items-center justify-center shrink-0">
+<img alt="University Logo" class="w-8 h-8 object-contain" data-alt="A minimalist, modern academic logo featuring abstract geometric lines forming a shield or crest, primarily in white, set against a dark, high-contrast background indicating a premium educational institution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4vjuXuZYht0MBaVxpAfnwZTQr8WBxic1CSwPU_DrgOTAGMPS3ftVgGXt4nJYBqkhQ_PQFOcrgpOti256op2BwjCis09A_55WqeYxDs4yGE4s5EwfAwJtzqa81R46ZvE0PEACDgq4H1pbe4Byl1gOyv1fRRU0N9isPFNSIgb0cK8qUwNl8IwAthx4e6QLrcd2C9sfxwaJcindfb0gUZT3Gz88K7v0DHoMKZzxMf34VMMRXX7v-Qinsbgy1cqNYyXB8lw"/>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-white tracking-tight">MARS</h1>
+<p class="font-label-sm text-label-sm text-white/70 mt-1">Akademik Sistem</p>
+</div>
+</div>
+<!-- Navigation Tabs -->
+<div class="flex-1 flex flex-col gap-1 mt-4">
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-4 py-3 text-white/70 hover:text-white hover:bg-white/10 transition-colors mx-2 rounded-DEFAULT group" href="#">
+<span class="material-symbols-outlined group-hover:text-white transition-colors text-[20px]">dashboard</span>
+<span class="font-label-md text-label-md">Kontrol Paneli</span>
+</a>
+<!-- Active -->
+<a class="flex items-center gap-3 px-4 py-3 bg-white/10 text-white border-l-4 border-white mx-2 rounded-r-DEFAULT opacity-90 transition-opacity" href="#">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">calendar_today</span>
+<span class="font-label-md text-label-md">Randevular</span>
+</a>
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-4 py-3 text-white/70 hover:text-white hover:bg-white/10 transition-colors mx-2 rounded-DEFAULT group" href="#">
+<span class="material-symbols-outlined group-hover:text-white transition-colors text-[20px]">notifications</span>
+<span class="font-label-md text-label-md">Bildirimler</span>
+</a>
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-4 py-3 text-white/70 hover:text-white hover:bg-white/10 transition-colors mx-2 rounded-DEFAULT group" href="#">
+<span class="material-symbols-outlined group-hover:text-white transition-colors text-[20px]">person</span>
+<span class="font-label-md text-label-md">Profil</span>
+</a>
+</div>
+<!-- CTA -->
+<div class="px-6 mt-auto">
+<button class="w-full py-3 bg-white/10 text-white rounded-lg font-label-md text-label-md border border-white/20 hover:bg-white/20 transition-colors flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                Yeni Randevu
+            </button>
+</div>
+</nav>
+<!-- Main Content Canvas Wrapper -->
+<div class="flex-1 md:ml-64 flex flex-col min-h-screen">
+<!-- TopAppBar (JSON Derived) -->
+<header class="bg-surface border-b border-outline-variant flex justify-between items-center px-8 h-16 w-full sticky top-0 z-40">
+<!-- Navigation Links -->
+<div class="flex items-center gap-8 h-full">
+<a class="text-on-secondary-container font-label-md text-label-md hover:text-primary transition-colors h-full flex items-center" href="#">Dönem</a>
+<a class="text-on-secondary-container font-label-md text-label-md hover:text-primary transition-colors h-full flex items-center" href="#">Bölüm</a>
+<a class="text-on-secondary-container font-label-md text-label-md hover:text-primary transition-colors h-full flex items-center" href="#">Fakülte</a>
+</div>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">help</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant ml-2">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A professional headshot of a student in a modern, well-lit academic setting. Soft natural lighting, neutral background, reflecting a calm, intelligent demeanor typical of a top-tier university environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsih4_hK7ZhOq1MPHSjjguVRCLDSewNHKxZmLRYYiSiyHtlZflebNLRygCtNdoNeCGwCs8VVHP33nRSkPENt7wJux3z9wH-LwFVd-ia_TQ1AGsl4xMXiH5ArllpvQd4UZEpDC2ezKNcZainhTZHWrEZ3OyIX9KH3X_A9MuKWhhQlsqI4ir6xXrYdFdJgxR30qNkSgTwJZhnkMX8-tKj8l0Qb4n51BN5g3NP6EwCDvNEJvrlTFcV1zK"/>
+</div>
+</div>
+</header>
+<!-- Page Canvas -->
+<main class="flex-1 w-full max-w-max-width mx-auto px-margin-mobile md:px-margin-desktop py-12">
+<!-- Page Header -->
+<div class="mb-10">
+<h2 class="font-display-lg text-display-lg text-on-background">Randevularım</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-2 max-w-2xl">Akademik görüşmelerinizi, ofis saatlerini ve danışmanlık randevularınızı buradan yönetebilirsiniz.</p>
+</div>
+<!-- Content Tabs -->
+<div class="border-b border-outline-variant mb-8 flex gap-8">
+<button class="pb-4 font-label-md text-label-md text-primary border-b-2 border-primary transition-colors">
+                    Aktif Randevular
+                </button>
+<button class="pb-4 font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors">
+                    Geçmiş Randevular
+                </button>
+<button class="pb-4 font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors">
+                    İptal Edilenler
+                </button>
+</div>
+<!-- Cards Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+<!-- Card 1 (Active) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-col hover:border-primary-container transition-colors duration-200">
+<!-- Academician Info -->
+<div class="flex items-center gap-4 mb-6">
+<div class="w-12 h-12 rounded-full overflow-hidden shrink-0 border border-surface-variant">
+<img alt="Prof. Dr. Ahmet Yılmaz" class="w-full h-full object-cover" data-alt="A portrait of a male professor in his 40s, wearing a tailored navy blazer and glasses. The background is a slightly blurred modern university office with bookshelves. The lighting is crisp, professional, and inviting, fitting a premium institutional aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1z-H0fD8CCwvXDcS71CG7b9V1Kyr-kufE86CvK2BlV5cN3Gf1Yz-b0riwGRy6Hp5yNzslFcobt-Edvs0Nyy-d-Uk2_nSmDrTJRE5zhbUdjakzYaQbtGhRx8lTTIjaWsVXcpVSrnGpKHkqcqkuukiZv3IJbiXbDCQMuZKIPZOoouuetdQBZDwDn0ER3OaXFLgou1fWCAaCI_HErEeGCaN7-Vw9Z6JLqxOL6jwX0-vNb4_DoyXD3g0Y"/>
+</div>
+<div>
+<h3 class="font-headline-md text-[18px] leading-[24px] font-semibold text-on-background">Prof. Dr. Ahmet Yılmaz</h3>
+<p class="font-body-md text-[14px] text-on-surface-variant">Bilgisayar Mühendisliği</p>
+</div>
+</div>
+<!-- Details -->
+<div class="space-y-3 mb-8">
+<div class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-[20px] text-primary-container/70">event</span>
+<span class="font-body-md text-body-md">24 Ekim 2023, Salı</span>
+</div>
+<div class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-[20px] text-primary-container/70">schedule</span>
+<span class="font-body-md text-body-md">14:00 - 14:30</span>
+</div>
+<div class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-[20px] text-primary-container/70">bookmark</span>
+<span class="font-body-md text-body-md">Bitirme Projesi Danışmanlığı</span>
+</div>
+</div>
+<!-- Footer / Actions -->
+<div class="mt-auto pt-4 border-t border-surface-variant flex items-center justify-between">
+<span class="px-3 py-1 bg-primary-container/10 text-primary-container rounded-DEFAULT font-label-sm text-label-sm">Onaylandı</span>
+<button class="font-label-md text-label-md text-error hover:bg-error/10 px-4 py-2 rounded-lg transition-colors border border-transparent hover:border-error/20">
+                            Randevuyu İptal Et
+                        </button>
+</div>
+</div>
+<!-- Card 2 (Active) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-col hover:border-primary-container transition-colors duration-200">
+<!-- Academician Info -->
+<div class="flex items-center gap-4 mb-6">
+<div class="w-12 h-12 rounded-full overflow-hidden shrink-0 border border-surface-variant">
+<img alt="Doç. Dr. Ayşe Kaya" class="w-full h-full object-cover" data-alt="A portrait of a female academician in her 30s, wearing a smart grey blouse. The setting is a clean, bright, minimalist classroom environment with expansive white space. The mood is approachable yet highly professional, matching the corporate modernism style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDrcubea60MTK7H9bXCs3LAXhx_DYqP78xi5t0v4V5KQzAV6yPlPhuY2P0JNK-j7gpxdlNfJ3A6FFuwYvJHGyuzrc_YJ7mmFTszEKlWjtCP8hNyCE1HJTUkCbaAItm99FqXqcCBjSmM2Dy_34QqV--nD-cU5jiUtBfnbbWGAEcfJeGRxre466OGPA7QUDYHSltaC1rzOJrExyNLIEqzCVXp1fxKMmvnEnuY6nu4PEFo0mxo6HQcT1pi"/>
+</div>
+<div>
+<h3 class="font-headline-md text-[18px] leading-[24px] font-semibold text-on-background">Doç. Dr. Ayşe Kaya</h3>
+<p class="font-body-md text-[14px] text-on-surface-variant">Yapay Zeka Laboratuvarı</p>
+</div>
+</div>
+<!-- Details -->
+<div class="space-y-3 mb-8">
+<div class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-[20px] text-primary-container/70">event</span>
+<span class="font-body-md text-body-md">26 Ekim 2023, Perşembe</span>
+</div>
+<div class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-[20px] text-primary-container/70">schedule</span>
+<span class="font-body-md text-body-md">10:15 - 11:00</span>
+</div>
+<div class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-[20px] text-primary-container/70">bookmark</span>
+<span class="font-body-md text-body-md">Tez Gözden Geçirme</span>
+</div>
+</div>
+<!-- Footer / Actions -->
+<div class="mt-auto pt-4 border-t border-surface-variant flex items-center justify-between">
+<span class="px-3 py-1 bg-surface-tint/20 text-surface-tint rounded-DEFAULT font-label-sm text-label-sm">Bekliyor</span>
+<button class="font-label-md text-label-md text-error hover:bg-error/10 px-4 py-2 rounded-lg transition-colors border border-transparent hover:border-error/20">
+                            Randevuyu İptal Et
+                        </button>
+</div>
+</div>
+<!-- Empty State / Add New (Stylistic choice for the 3rd column) -->
+<div class="bg-surface-container-low border border-dashed border-outline-variant rounded-xl p-6 flex flex-col items-center justify-center text-center hover:bg-surface-variant/50 transition-colors cursor-pointer min-h-[300px]">
+<div class="w-14 h-14 rounded-full bg-primary-container/10 flex items-center justify-center mb-4 text-primary-container">
+<span class="material-symbols-outlined text-[28px]">add_circle</span>
+</div>
+<h3 class="font-headline-md text-[18px] text-on-background mb-2">Yeni Randevu Oluştur</h3>
+<p class="font-body-md text-[14px] text-on-surface-variant max-w-[200px]">Akademik personel ile yeni bir görüşme planlayın.</p>
+</div>
+</div>
+</main>
+</div>
+</body></html>

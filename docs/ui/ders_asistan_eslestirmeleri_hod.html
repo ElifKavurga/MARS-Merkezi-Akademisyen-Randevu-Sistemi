@@ -1,0 +1,364 @@
+<!DOCTYPE html><html lang="tr" class="light"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet"><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">try{
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#d3e4fe",
+                        "surface": "#f8f9ff",
+                        "on-primary-fixed-variant": "#3a4471",
+                        "on-background": "#0b1c30",
+                        "on-secondary": "#ffffff",
+                        "background": "#f8f9ff",
+                        "error": "#ba1a1a",
+                        "secondary-container": "#dfe0e0",
+                        "on-surface": "#0b1c30",
+                        "inverse-surface": "#213145",
+                        "on-secondary-container": "#616363",
+                        "on-secondary-fixed-variant": "#454747",
+                        "tertiary-fixed-dim": "#c4c6cd",
+                        "surface-tint": "#525c8a",
+                        "on-tertiary-fixed-variant": "#44474c",
+                        "tertiary-fixed": "#e0e2e9",
+                        "surface-container": "#e5eeff",
+                        "outline-variant": "#c6c5d0",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed-dim": "#c6c6c7",
+                        "surface-dim": "#cbdbf5",
+                        "on-primary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#5d5f5f",
+                        "surface-bright": "#f8f9ff",
+                        "on-error": "#ffffff",
+                        "surface-container-high": "#dce9ff",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed": "#181c21",
+                        "on-secondary-fixed": "#1a1c1c",
+                        "on-tertiary-container": "#81848a",
+                        "on-primary-fixed": "#0d1843",
+                        "on-surface-variant": "#45464f",
+                        "primary-fixed-dim": "#bac4f8",
+                        "inverse-primary": "#bac4f8",
+                        "inverse-on-surface": "#eaf1ff",
+                        "surface-variant": "#d3e4fe",
+                        "primary-container": "#0d1843",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-low": "#eff4ff",
+                        "primary-fixed": "#dde1ff",
+                        "tertiary-container": "#181c21",
+                        "primary": "#0d1843", /* Adjusted to match brand navy */
+                        "tertiary": "#000000",
+                        "outline": "#767680",
+                        "secondary-fixed": "#e2e2e2",
+                        "on-primary-container": "#7881b2"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "max-width": "1280px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "64px",
+                        "gutter": "24px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["JetBrains Mono"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "label-md": ["JetBrains Mono"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }]
+                    }
+                },
+            },
+        }
+    }catch(_e){}</script><meta charset="utf-8"></head><body class="bg-background text-on-background font-body-md min-h-screen flex">
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-primary-container hidden md:flex flex-col py-6 z-50" style="background-color: rgb(11, 22, 65); color: white;">
+<!-- Brand Header -->
+<div class="px-6 mb-8 flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-white flex items-center justify-center p-1"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmyiUBDR1y5cPhkHT9_RHRbxGaUJnHhraU6tmsAN1aAa0wNKXR0UM55tQ8XhGZ2xMxpv3Rhkmef2AWiH1y1IsVOhPIsTsWUNE0qAfuNa0Plbz3f1Bm6NuAEjrEgHTYObTc2_gKwXxDHEKxFO6zHe88HdvIPHKTrQTKwzIP0azoOBvAPCLLhIr5uOCCP3Jwsd9HoXCVcQsVpWDmZCTkysAmMg19k6Kq_ZLx891JJ5XhaNpb8buG3d9S-12AAw7KWIe2iQ" alt="MARS Logo" class="w-full h-full object-contain"></div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-on-primary-container text-white">MARS</h1>
+<p class="font-label-sm text-label-sm text-on-primary-container/70 text-white">Akademisyen Sistemi</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 flex flex-col gap-2 overflow-y-auto">
+<!-- Active Tab: Dashboard (Assuming this fits the "overview" nature of the match list) -->
+<a href="#" class="flex items-center gap-3 px-4 py-3 bg-surface-container-highest text-on-primary-fixed rounded-lg mx-2 scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined fill text-on-primary-fixed text-white">dashboard</span>
+<span class="font-label-md text-label-md text-white">Dashboard</span>
+</a>
+<a href="#" class="flex items-center gap-3 px-4 py-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-surface-variant/10 transition-colors duration-200 mx-2 scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-white">calendar_month</span>
+<span class="font-label-md text-label-md text-white">Randevular</span>
+</a>
+<a href="#" class="flex items-center gap-3 px-4 py-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-surface-variant/10 transition-colors duration-200 mx-2 scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-white">notifications</span>
+<span class="font-label-md text-label-md text-white">Bildirimler</span>
+</a>
+<a href="#" class="flex items-center gap-3 px-4 py-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-surface-variant/10 transition-colors duration-200 mx-2 scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-white">account_circle</span>
+<span class="font-label-md text-label-md text-white">Profil</span>
+</a>
+</nav>
+<!-- CTA -->
+<div class="px-4 mt-auto">
+<button class="w-full py-3 bg-surface text-primary rounded-lg font-label-md text-label-md flex items-center justify-center gap-2 hover:bg-surface-variant transition-colors shadow-sm">
+<span class="material-symbols-outlined">add</span>
+                Yeni Randevu
+            </button>
+</div>
+</aside>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col md:ml-64 min-h-screen">
+<!-- TopNavBar -->
+<header class="docked full-width top-0 sticky z-40 border-b border-outline-variant bg-surface h-16 px-8 flex justify-between items-center hidden md:flex">
+<!-- Search (Left) -->
+<div class="flex items-center w-96 relative">
+<span class="material-symbols-outlined absolute left-3 text-on-surface-variant">search</span>
+<input type="text" placeholder="Ara..." class="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-surface-tint/20 transition-all font-body-md text-body-md">
+</div>
+<!-- Actions (Right) -->
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest transition-colors opacity-80 active:opacity-100">
+<span class="material-symbols-outlined">help</span>
+</button>
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest transition-colors opacity-80 active:opacity-100">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-primary-container text-white flex items-center justify-center overflow-hidden border border-outline-variant ml-2">
+<img alt="Kullanıcı Profili" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTi4Yrp88V_sH2KkH3YzqILk1kb0cq1n6CKCCzF3H9TOTGA5eNUplYB8Zo-tUu_nv0tcNV1Jrnp6dh6r1qmathLrIo3uFrkZGC_UFr43k25034pg8repgJzuFMNqCinG7uhZ4I_yAOtA7ifdcLZcp96KKIkcuJnR7sxAnM5gRj-swxlTK0yUdMrB1J92vsBk4eQSzE7EyaeCD6dJfX87dAZ-XvDsj2elWDb07NmFmUY5FCYSHgpyPM">
+</div>
+</div>
+</header>
+<!-- Mobile Header (Visible only on small screens) -->
+<header class="md:hidden flex items-center justify-between px-4 h-16 bg-surface border-b border-outline-variant sticky top-0 z-40">
+<img src="https://lh3.googleusercontent.com/aida-public/AB6AXuC962sortoIyEZLGrZyq-nvHOw_ErHCj-KuIrrIQ64IjSdY1AWSt3LTLsPdWOor029N2YyNrXuwMyFWu0-_tsMKoNhlxCsHN7wCwL1bzjoDNgLB6jKRBTNW3q2r_B5Ykj8F5BHITM1PIOkxjZ8Mkixq_RShGeh8_SKJf1jJvX94rxkyyvyUCFYDokzt_wRtW64k1-rmNZpgggWbKBM7isWM_k6ylosnzBGnE6sysX2qaEomNEGS3cYe_D3N0WM6TLCaPw" alt="MARS Logo" class="h-8 object-contain">
+<button class="text-on-surface-variant">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 p-6 md:p-8 max-w-[1280px] w-full mx-auto">
+<!-- Page Header -->
+<div class="mb-8">
+<h2 class="font-display-lg text-display-lg text-on-background mb-2">Bölüm Ders ve Asistan Eşleşmeleri</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">2023-2024 Güz Dönemi atama listesi (Salt Okunur).</p>
+</div>
+<!-- Bento Grid Layout for Content -->
+<div class="grid grid-cols-1 gap-6">
+<!-- Overview Stats Card (Glassmorphism inspired, subtle background) -->
+<div class="bg-surface-tint/5 rounded-xl border border-outline-variant p-6 flex flex-col md:flex-row gap-6 md:items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-primary-container/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-3xl">library_books</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase">Toplam Ders</p>
+<p class="font-headline-lg text-headline-lg text-on-background">42</p>
+</div>
+</div>
+<div class="w-px h-12 bg-outline-variant hidden md:block"></div>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-3xl">school</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase">Atanan Asistan</p>
+<p class="font-headline-lg text-headline-lg text-on-background">38</p>
+</div>
+</div>
+<div class="w-px h-12 bg-outline-variant hidden md:block"></div>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-error-container/50 flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-3xl">warning</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase">Eksik Atama</p>
+<p class="font-headline-lg text-headline-lg text-error">4</p>
+</div>
+</div>
+</div>
+<!-- Match List Container -->
+<div class="bg-white rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+<!-- Filters/Toolbar -->
+<div class="p-4 border-b border-outline-variant bg-surface-container-lowest flex flex-col sm:flex-row justify-between items-center gap-4">
+<div class="relative w-full sm:w-72">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-sm">search</span>
+<input class="w-full pl-9 pr-4 py-2 text-sm bg-surface rounded-md border border-outline-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-body-md" placeholder="Ders kodu veya hoca ara..." type="text">
+</div>
+<div class="flex gap-2">
+<span class="px-3 py-1.5 bg-primary-container text-white rounded-md font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+                                Tümü
+                            </span>
+</div>
+</div>
+<!-- Modern Table / List -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-lowest border-b border-outline-variant font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+<th class="px-6 py-4 font-medium">Ders Kodu &amp; Adı</th>
+<th class="px-6 py-4 font-medium">Sorumlu Akademisyen</th>
+<th class="px-6 py-4 font-medium">Atanan Asistan</th>
+<th class="px-6 py-4 font-medium">Durum</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md divide-y divide-outline-variant/50">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="font-headline-md text-[16px] font-bold text-primary">CENG 301</span>
+<span class="text-on-surface-variant text-sm">Algoritma Analizi</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-tint text-white flex items-center justify-center font-bold text-sm">
+                                                AE
+                                            </div>
+<span class="text-on-background font-medium">Prof. Dr. Ahmet Yılmaz</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<img alt="Asistan Profil" class="w-8 h-8 rounded-full border border-outline-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8bJRZQUt0ADxo63mg3MtMEMfhgCTkZuWl9dmoqO9jE62jIQrjbyYlYMdkvwWJhnISgIm0X3kmKYNbmNQ1Bae52b334dfk2VPc1klW7onzrGxm3KeT3fOumy3nidflaqnX1NbQjaTsk_ptJqV-DnMSemRKQRzRK-X8Kaf5ZsvXRzAGywZh2k6mabxA9v7e4MVdddDU7qhhW6HzuR8-XCporknl2q6rDo9WNryj3iZL6THBFdFBqXnk">
+<span class="text-on-background">Zeynep Kaya</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-highest text-primary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                                            Atandı
+                                        </span>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="font-headline-md text-[16px] font-bold text-primary">CENG 351</span>
+<span class="text-on-surface-variant text-sm">Veri Tabanı Yönetimi</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-tint text-white flex items-center justify-center font-bold text-sm">
+                                                BK
+                                            </div>
+<span class="text-on-background font-medium">Doç. Dr. Burak Kaya</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest text-primary flex items-center justify-center font-bold text-sm border border-outline-variant">
+                                                MC
+                                            </div>
+<span class="text-on-background">Mustafa Can</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-highest text-primary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                                            Atandı
+                                        </span>
+</td>
+</tr>
+<!-- Row 3 (Unassigned) -->
+<tr class="bg-error-container/10 hover:bg-error-container/20 transition-colors border-l-4 border-l-error">
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="font-headline-md text-[16px] font-bold text-primary">CENG 499</span>
+<span class="text-on-surface-variant text-sm">Bitirme Projesi</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-tint text-white flex items-center justify-center font-bold text-sm">
+                                                EB
+                                            </div>
+<span class="text-on-background font-medium">Prof. Dr. Elif Demir</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-on-surface-variant italic text-sm">Henüz atanmadı</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-error/10 text-error font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">pending</span>
+                                            Bekliyor
+                                        </span>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="font-headline-md text-[16px] font-bold text-primary">MATH 219</span>
+<span class="text-on-surface-variant text-sm">Diferansiyel Denklemler</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<img alt="Hoca Profil" class="w-8 h-8 rounded-full border border-outline-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcT3qeofndAjgA4t2M6LRVEsKuAQhx_RtizzQryBwWZuW-iuwi7TLqQsibJRFyrQNlL0n4vd61BIz5tF2XG7tN3menookcooPkRF1b1x80MLF5JsKplCTGlz0YDHlplJP73VFOb9Z21yZ_r5pH0W95wJVEioKfmoR1II-qs4sLpAx83DP6XLADyz3-_uiU6c9c3XsKhSvPKhJbaJ6FH-A5zhurDf6lRfOIUGtddC7wDyJ37uu9LUwX">
+<span class="text-on-background font-medium">Dr. Öğr. Üyesi Ali Yılmaz</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest text-primary flex items-center justify-center font-bold text-sm border border-outline-variant">
+                                                AO
+                                            </div>
+<span class="text-on-background">Ayşe Öz</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-highest text-primary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                                            Atandı
+                                        </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination (Static for visual) -->
+<div class="px-6 py-4 border-t border-outline-variant bg-surface-container-lowest flex items-center justify-between">
+<span class="font-label-sm text-on-surface-variant">Gösterilen: 1-4 / 42</span>
+<div class="flex gap-2">
+<button class="w-8 h-8 rounded flex items-center justify-center border border-outline-variant text-on-surface-variant disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="w-8 h-8 rounded flex items-center justify-center bg-primary text-white font-label-sm">1</button>
+<button class="w-8 h-8 rounded flex items-center justify-center border border-outline-variant text-on-surface-variant font-label-sm hover:bg-surface-variant">2</button>
+<button class="w-8 h-8 rounded flex items-center justify-center border border-outline-variant text-on-surface-variant hover:bg-surface-variant">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

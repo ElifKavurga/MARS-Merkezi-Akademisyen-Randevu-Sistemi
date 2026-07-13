@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+
+<html class="light" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MARS - Akademisyen Arama</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Hanken+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-bright": "#f8f9ff",
+                    "tertiary": "#000000",
+                    "on-primary-fixed": "#0d1843",
+                    "surface-dim": "#cbdbf5",
+                    "tertiary-fixed-dim": "#c4c6cd",
+                    "surface-container": "#e5eeff",
+                    "on-primary-container": "#7881b2",
+                    "error-container": "#ffdad6",
+                    "surface-variant": "#d3e4fe",
+                    "on-secondary-container": "#616363",
+                    "on-secondary-fixed": "#1a1c1c",
+                    "tertiary-fixed": "#e0e2e9",
+                    "on-secondary-fixed-variant": "#454747",
+                    "primary-container": "#0d1843",
+                    "on-surface": "#0b1c30",
+                    "secondary-fixed": "#e2e2e2",
+                    "on-primary-fixed-variant": "#3a4471",
+                    "on-error": "#ffffff",
+                    "on-tertiary-container": "#81848a",
+                    "on-background": "#0b1c30",
+                    "outline-variant": "#c6c5d0",
+                    "outline": "#767680",
+                    "surface-container-highest": "#d3e4fe",
+                    "surface": "#f8f9ff",
+                    "primary": "#000000",
+                    "secondary-fixed-dim": "#c6c6c7",
+                    "on-tertiary": "#ffffff",
+                    "on-primary": "#ffffff",
+                    "primary-fixed": "#dde1ff",
+                    "on-tertiary-fixed": "#181c21",
+                    "on-secondary": "#ffffff",
+                    "surface-container-low": "#eff4ff",
+                    "surface-container-high": "#dce9ff",
+                    "error": "#ba1a1a",
+                    "primary-fixed-dim": "#bac4f8",
+                    "inverse-on-surface": "#eaf1ff",
+                    "secondary": "#5d5f5f",
+                    "background": "#f8f9ff",
+                    "surface-tint": "#525c8a",
+                    "secondary-container": "#dfe0e0",
+                    "inverse-primary": "#bac4f8",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-fixed-variant": "#44474c",
+                    "on-surface-variant": "#45464f",
+                    "inverse-surface": "#213145",
+                    "tertiary-container": "#181c21",
+                    "on-error-container": "#93000a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-mobile": "20px",
+                    "margin-desktop": "64px",
+                    "unit": "4px",
+                    "gutter": "24px",
+                    "max-width": "1280px"
+            },
+            "fontFamily": {
+                    "label-md": ["JetBrains Mono"],
+                    "body-md": ["Inter"],
+                    "headline-lg": ["Hanken Grotesk"],
+                    "headline-lg-mobile": ["Hanken Grotesk"],
+                    "label-sm": ["JetBrains Mono"],
+                    "body-lg": ["Inter"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "display-lg": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        body {
+            background-color: #f8f9ff;
+            color: #0b1c30;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-hidden">
+<!-- Sidebar Wrapper -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-primary-container text-on-primary border-r border-outline-variant flex flex-col py-6 z-50">
+<!-- Brand Header -->
+<div class="px-6 mb-10">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-on-primary rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-container" style="font-variation-settings: 'FILL' 1;">school</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-on-primary leading-none">MARS</h1>
+<p class="text-[10px] opacity-70 uppercase tracking-widest mt-1">Academic System</p>
+</div>
+</div>
+</div>
+<!-- Navigation -->
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-6 py-3 text-on-primary-container/70 hover:text-on-primary hover:bg-primary-fixed-dim/10 transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 bg-surface-container-lowest/10 text-on-primary border-l-4 border-on-primary" href="#">
+<span class="material-symbols-outlined">person_search</span>
+<span class="font-body-md">Akademisyen Ara</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-on-primary-container/70 hover:text-on-primary hover:bg-primary-fixed-dim/10 transition-colors" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-body-md">Appointments</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-on-primary-container/70 hover:text-on-primary hover:bg-primary-fixed-dim/10 transition-colors" href="#">
+<span class="material-symbols-outlined">notifications</span>
+<span class="font-body-md">Notifications</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-on-primary-container/70 hover:text-on-primary hover:bg-primary-fixed-dim/10 transition-colors" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-body-md">Profile</span>
+</a>
+</nav>
+<!-- CTA & Bottom -->
+<div class="px-4 mt-auto">
+<button class="w-full py-3 bg-on-primary text-primary-container rounded-lg font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-sm">add</span>
+                New Appointment
+            </button>
+<div class="mt-6 pt-6 border-t border-on-primary-container/20 flex items-center gap-3 px-2">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A clean, professional close-up portrait of a university student looking confident and friendly. The lighting is bright and natural, reflecting a modern light-mode educational environment. The style is consistent with high-end academic photography with a neutral, soft background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCs4-WqdKanS1117EUPr5Z7PHf11pcyiLG9ney37miNCuDdZMDO_uqfSVE_7j6lbc7Krccope872vVloBjNMhKHOEovwCrSij_6Qz9xLNOxWQ50Dtwudv55qulSe8hNA4nQ0E3GU2vx-CFBQ9XLZj1RckVCxd5e6CoOBqwy4RwoCIduy0xIFLXXRvC7AEKxvcRxPddY5KGUhs5NfKKXxc2N8RdfMj0l3Os6Zv8GZvVA8XGPRRMKRIO1"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-bold truncate">Öğrenci Hesabı</p>
+<p class="text-[10px] opacity-60 truncate">ogrenci@univ.edu.tr</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 min-h-screen flex flex-col">
+<!-- Top App Bar -->
+<header class="flex justify-between items-center px-8 h-16 w-full bg-surface border-b border-outline-variant sticky top-0 z-40">
+<div class="flex items-center gap-8">
+<h2 class="font-headline-md text-headline-md font-extrabold text-primary">Akademisyen Arama</h2>
+<nav class="hidden md:flex gap-6">
+<a class="text-on-secondary-container font-label-md text-label-md hover:text-primary transition-colors" href="#">Semester</a>
+<a class="text-on-secondary-container font-label-md text-label-md hover:text-primary transition-colors" href="#">Department</a>
+<a class="text-on-secondary-container font-label-md text-label-md hover:text-primary transition-colors" href="#">Faculty</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-secondary-container hover:text-primary transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+<button class="p-2 text-on-secondary-container hover:text-primary transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="h-8 w-[1px] bg-outline-variant mx-2"></div>
+<div class="flex items-center gap-3 cursor-pointer hover:bg-surface-container-low px-2 py-1 rounded-lg transition-colors">
+<span class="text-sm font-medium text-on-surface">Öğrenci Paneli</span>
+<span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
+</div>
+</div>
+</header>
+<!-- Search and Filter Canvas -->
+<section class="p-8 max-w-max-width mx-auto w-full flex-1 overflow-y-auto custom-scrollbar">
+<!-- Hero Search Section -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 mb-8 shadow-sm">
+<div class="flex flex-col md:flex-row gap-4">
+<div class="relative flex-1">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-12 pr-4 py-4 bg-surface border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary-container focus:border-transparent outline-none transition-all" placeholder="İsim veya anahtar kelime ile ara..." type="text"/>
+</div>
+<div class="w-full md:w-72 relative">
+<select class="w-full pl-4 pr-10 py-4 bg-surface border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary-container outline-none appearance-none cursor-pointer">
+<option value="">Tüm Bölümler</option>
+<option value="cs">Bilgisayar Mühendisliği</option>
+<option value="ee">Elektrik-Elektronik Mühendisliği</option>
+<option value="me">Makine Mühendisliği</option>
+<option value="arch">Mimarlık</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-outline">filter_list</span>
+</div>
+<button class="px-8 py-4 bg-primary-container text-on-primary rounded-lg font-semibold hover:opacity-95 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">search</span>
+                        Filtrele
+                    </button>
+</div>
+<div class="mt-4 flex flex-wrap gap-2">
+<span class="text-label-sm font-label-sm text-on-surface-variant">Popüler Aramalar:</span>
+<button class="px-3 py-1 bg-surface-variant/30 text-primary text-xs rounded-full border border-outline-variant hover:bg-surface-variant transition-colors">Yapay Zeka</button>
+<button class="px-3 py-1 bg-surface-variant/30 text-primary text-xs rounded-full border border-outline-variant hover:bg-surface-variant transition-colors">Termodinamik</button>
+<button class="px-3 py-1 bg-surface-variant/30 text-primary text-xs rounded-full border border-outline-variant hover:bg-surface-variant transition-colors">Veri Bilimi</button>
+</div>
+</div>
+<!-- Grid Header -->
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-body-lg font-body-lg font-bold flex items-center gap-2">
+                    Sonuçlar <span class="px-2 py-0.5 bg-surface-container-highest text-primary text-xs rounded-full">12 Akademisyen</span>
+</h3>
+<div class="flex items-center gap-2">
+<span class="text-sm text-on-secondary-container">Sırala:</span>
+<select class="bg-transparent border-none text-sm font-bold text-primary focus:ring-0 cursor-pointer">
+<option>A'dan Z'ye</option>
+<option>Uygunluk</option>
+<option>Ünvan</option>
+</select>
+</div>
+</div>
+<!-- Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden hover:border-primary-container transition-colors group">
+<div class="p-6">
+<div class="flex gap-4 items-start mb-6">
+<div class="w-20 h-20 rounded-lg overflow-hidden shrink-0 border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional academic portrait of a middle-aged male professor with a friendly expression. He is wearing a dark navy blazer over a light shirt. The background is a blurred academic library setting with soft focus on bookshelves. High-key lighting, corporate modern photography style, navy and white color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZfZSFPqrssB185qDA3p5p5B_YM1ix6QwjB4qhq-isPcfALDQV413kgP1pIGPTXYsoxlqCD-YQrda1ozIQ1Y31RXSy0Ae40dBIdPKSOtl5BQgznrDQWnWkr7K3pyzcCmWY-QlwYlE9q1MfdU9_mWxG6ZuFix4lBSbJaWx9Tx5zjL2FzGIj_KGUOz866H1dburpR4gqnr6cg1pFLwNS2HWW0x97_kz_rSyyiCbfgT1I13gjN9hMNwzM"/>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold uppercase rounded flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Uygun
+                                    </span>
+</div>
+<h4 class="text-body-md font-bold mt-1 text-primary">Prof. Dr. Ahmet Yılmaz</h4>
+<p class="text-xs text-on-secondary-container">Bilgisayar Mühendisliği</p>
+</div>
+</div>
+<div class="space-y-4">
+<div>
+<p class="text-[10px] uppercase font-bold text-outline tracking-wider mb-2">Verdiği Dersler</p>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-1 bg-surface-container text-primary text-[11px] font-medium rounded border border-outline-variant">BM101</span>
+<span class="px-2 py-1 bg-surface-container text-primary text-[11px] font-medium rounded border border-outline-variant">Yapay Zeka</span>
+<span class="px-2 py-1 bg-surface-container text-primary text-[11px] font-medium rounded border border-outline-variant">Veri Yapıları</span>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant flex gap-3">
+<button class="flex-1 py-2.5 bg-primary-container text-on-primary rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity active:scale-95 duration-150">Randevu Al</button>
+<button class="w-10 h-10 border border-outline-variant rounded-lg flex items-center justify-center text-primary-container hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-lg">mail</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden hover:border-primary-container transition-colors group">
+<div class="p-6">
+<div class="flex gap-4 items-start mb-6">
+<div class="w-20 h-20 rounded-lg overflow-hidden shrink-0 border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional academic portrait of a senior female professor with glasses, smiling warmly. She is in a bright university office with modern furniture and plants in the background. Editorial academic photography style, soft natural lighting, predominantly white and navy blue tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuArjk8xSqDerxnZjNVI-yPsUKfk2k9WapIFiz2z_rr4uuTxD0q0Djm6l0I1lksT5KaDYtmfCtrg55U_xQPQ2GDFa6w8S0-y8tLfM7YnWzq7XCxpRuk8j6G1D5ZSKUKKri1XnOS6r1E-zPDo3JzHZwovegr8auvHIl1UKTs9kZzFkvW9nGo1Cad9GAD-O5zI6W6-Cnll04YijyzkvmFRJ0pqaYr8vwWKg0yBQb4Z2mfpzxeUiwJcTKky"/>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold uppercase rounded flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Dolu
+                                    </span>
+</div>
+<h4 class="text-body-md font-bold mt-1 text-primary">Doç. Dr. Elif Demir</h4>
+<p class="text-xs text-on-secondary-container">Yazılım Mühendisliği</p>
+</div>
+</div>
+<div class="space-y-4">
+<div>
+<p class="text-[10px] uppercase font-bold text-outline tracking-wider mb-2">Verdiği Dersler</p>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-1 bg-surface-container text-primary text-[11px] font-medium rounded border border-outline-variant">Yazılım Mimarisi</span>
+<span class="px-2 py-1 bg-surface-container text-primary text-[11px] font-medium rounded border border-outline-variant">Web Teknolojileri</span>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant flex gap-3">
+<button class="flex-1 py-2.5 bg-secondary text-on-primary rounded-lg text-sm font-semibold cursor-not-allowed opacity-50">Randevu Al</button>
+<button class="w-10 h-10 border border-outline-variant rounded-lg flex items-center justify-center text-primary-container hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-lg">mail</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden hover:border-primary-container transition-colors group">
+<div class="p-6">
+<div class="flex gap-4 items-start mb-6">
+<div class="w-20 h-20 rounded-lg overflow-hidden shrink-0 border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A portrait of a young male academic in a white lab coat, standing in a contemporary research laboratory. The lighting is clean and professional. The scene conveys intelligence and modern scientific research. Visual style uses deep navy and bright white with a professional editorial look." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAb31Sv-xsF5PdGHvKGei3akWkqoV5k9TVOFpYHzRstyKuKlArb1bSsm4hUfWtdmfC_FaRnLAKD4Vc6YDqgNfdhKpxn0GSM3qAE8fL1wNPFloqbTPJ5pAzY0-2gx3zNVD66DwO24djF08P-_a5M8aNkx-gbjc7JjIyeZTHO1NEYalumjiclymXW-W5x5WD1kiN5GtzSYtV-fSEJ85tu5AfJXx6n7CJ5mvd4UcfirKVMRW9Oq-Xk5X4O"/>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold uppercase rounded flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Uygun
+                                    </span>
+</div>
+<h4 class="text-body-md font-bold mt-1 text-primary">Dr. Öğr. Üyesi Caner Can</h4>
+<p class="text-xs text-on-secondary-container">Makine Mühendisliği</p>
+</div>
+</div>
+<div class="space-y-4">
+<div>
+<p class="text-[10px] uppercase font-bold text-outline tracking-wider mb-2">Verdiği Dersler</p>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-1 bg-surface-container text-primary text-[11px] font-medium rounded border border-outline-variant">Termodinamik</span>
+<span class="px-2 py-1 bg-surface-container text-primary text-[11px] font-medium rounded border border-outline-variant">Akışkanlar Mekaniği</span>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant flex gap-3">
+<button class="flex-1 py-2.5 bg-primary-container text-on-primary rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">Randevu Al</button>
+<button class="w-10 h-10 border border-outline-variant rounded-lg flex items-center justify-center text-primary-container hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-lg">mail</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden hover:border-primary-container transition-colors group">
+<div class="p-6">
+<div class="flex gap-4 items-start mb-6">
+<div class="w-20 h-20 rounded-lg overflow-hidden shrink-0 border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A sophisticated portrait of a senior male professor in a business casual suit. He is in an architectural studio with drawing tables and models in the background. The lighting is soft and artistic. Minimalist professional aesthetic with deep contrast and navy blue accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6zcEzgp5VxEQWw7AvRfnvoxvWPlboDwyX73ihbKOK53b9g2L1yp4V-29dLe3u47cieBj75hMNBAuDE61W75QUFKpYFKfOhnoa-L-Lr2hBq8bEuR0bw3c8HtJEgZUGf4gTLLUbRXn3hNAh6KrhfV1stTuNd8Lo_EcGKpCK5ZA7_Dd541jFtg5fE0lnh4AIEvlh-88LNj4Z19guaMc4NUQTrdS8Pka1kimUvSQBajeNuixFQta26Acw"/>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold uppercase rounded flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Uygun
+                                    </span>
+</div>
+<h4 class="text-body-md font-bold mt-1 text-primary">Prof. Dr. Selim Akas</h4>
+<p class="text-xs text-on-secondary-container">Mimarlık</p>
+</div>
+</div>
+<div class="space-y-4">
+<div>
+<p class="text-[10px] uppercase font-bold text-outline tracking-wider mb-2">Verdiği Dersler</p>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-1 bg-surface-container text-primary text-[11px] font-medium rounded border border-outline-variant">Temel Tasarım</span>
+<span class="px-2 py-1 bg-surface-container text-primary text-[11px] font-medium rounded border border-outline-variant">Restorasyon</span>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant flex gap-3">
+<button class="flex-1 py-2.5 bg-primary-container text-on-primary rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">Randevu Al</button>
+<button class="w-10 h-10 border border-outline-variant rounded-lg flex items-center justify-center text-primary-container hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-lg">mail</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 5 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden hover:border-primary-container transition-colors group">
+<div class="p-6">
+<div class="flex gap-4 items-start mb-6">
+<div class="w-20 h-20 rounded-lg overflow-hidden shrink-0 border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="Professional portrait of a female university lecturer in a modern office. She has a bright, intelligent gaze and is surrounded by academic journals and a laptop. Lighting is focused and professional, creating an atmosphere of reliability and expertise. Palette is clean white and deep navy." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxWU06nIYw0xf8qvU-5_yFM7GnxwmjN0tXnLJti52EmC2tsrNKbLjoFoMIfzhSVYFFUDbRxCPvcxui1Q9gGsAaXBdlwIYHfm4UIqEWLkCIiy2mzWQCYrQPN6mnH0e96_knYEcq7hjyx_SaGlg10RSQPZuKhgXo3YkdTdCravdEiU2O7tMyTz6DXGl68Vfd_NaP48ScwIvAlYxXKnVn3CtdvPzMTk1csbx5QrqsPNkFAl1Swrb2AO8z"/>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold uppercase rounded flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Uygun
+                                    </span>
+</div>
+<h4 class="text-body-md font-bold mt-1 text-primary">Dr. Zeynep Aksoy</h4>
+<p class="text-xs text-on-secondary-container">İstatistik</p>
+</div>
+</div>
+<div class="space-y-4">
+<div>
+<p class="text-[10px] uppercase font-bold text-outline tracking-wider mb-2">Verdiği Dersler</p>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-1 bg-surface-container text-primary text-[11px] font-medium rounded border border-outline-variant">Olasılık</span>
+<span class="px-2 py-1 bg-surface-container text-primary text-[11px] font-medium rounded border border-outline-variant">R ile Veri Analizi</span>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant flex gap-3">
+<button class="flex-1 py-2.5 bg-primary-container text-on-primary rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">Randevu Al</button>
+<button class="w-10 h-10 border border-outline-variant rounded-lg flex items-center justify-center text-primary-container hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-lg">mail</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 6 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden hover:border-primary-container transition-colors group">
+<div class="p-6">
+<div class="flex gap-4 items-start mb-6">
+<div class="w-20 h-20 rounded-lg overflow-hidden shrink-0 border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A portrait of a male researcher with a beard, wearing a casual sweater, sitting in a university lounge area. Soft natural light, modern campus background. Professional but approachable tone. High-end modern photography, deep blues and neutral light background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQUMElOwORLGo2DCjkjUcCOGYKduDRw4BLl1AmlQPrU3hu5iurl914sJ5qgLB51libEOn6LdC5fLl-FQeCFHKbSV0tB42GAh-8lFY5qHJ81sKXAQCGWTb7x9bWcZ4sxV0pEEoC56j4NecTXHn0J4YSqOMoyLKjnCtD65DdqTK0PQBRV-jaaU54rymf_CfIuqg5K7Gd9kC_3PydbVUzfESEqUf9ndETeMvTXOuCoc3IVxNyCai0dy-K"/>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold uppercase rounded flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Dolu
+                                    </span>
+</div>
+<h4 class="text-body-md font-bold mt-1 text-primary">Dr. Murat Işık</h4>
+<p class="text-xs text-on-secondary-container">Endüstri Mühendisliği</p>
+</div>
+</div>
+<div class="space-y-4">
+<div>
+<p class="text-[10px] uppercase font-bold text-outline tracking-wider mb-2">Verdiği Dersler</p>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-1 bg-surface-container text-primary text-[11px] font-medium rounded border border-outline-variant">Yöneylem</span>
+<span class="px-2 py-1 bg-surface-container text-primary text-[11px] font-medium rounded border border-outline-variant">Simülasyon</span>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant flex gap-3">
+<button class="flex-1 py-2.5 bg-secondary text-on-primary rounded-lg text-sm font-semibold cursor-not-allowed opacity-50">Randevu Al</button>
+<button class="w-10 h-10 border border-outline-variant rounded-lg flex items-center justify-center text-primary-container hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-lg">mail</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Pagination -->
+<div class="mt-12 flex items-center justify-center gap-2">
+<button class="w-10 h-10 rounded-lg border border-outline-variant flex items-center justify-center text-primary hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 rounded-lg bg-primary-container text-on-primary font-bold">1</button>
+<button class="w-10 h-10 rounded-lg border border-outline-variant flex items-center justify-center text-primary hover:bg-surface-container transition-colors">2</button>
+<button class="w-10 h-10 rounded-lg border border-outline-variant flex items-center justify-center text-primary hover:bg-surface-container transition-colors">3</button>
+<button class="w-10 h-10 rounded-lg border border-outline-variant flex items-center justify-center text-primary hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+<!-- Spacing footer -->
+<div class="h-12"></div>
+</section>
+</main>
+<!-- Micro-interaction Script -->
+<script>
+        document.querySelectorAll('button:not([disabled])').forEach(button => {
+            button.addEventListener('mousedown', () => {
+                button.classList.add('scale-95');
+            });
+            button.addEventListener('mouseup', () => {
+                button.classList.remove('scale-95');
+            });
+            button.addEventListener('mouseleave', () => {
+                button.classList.remove('scale-95');
+            });
+        });
+
+        // Search highlight simulation
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('ring-2', 'ring-primary-container');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('ring-2', 'ring-primary-container');
+        });
+    </script>
+</body></html>

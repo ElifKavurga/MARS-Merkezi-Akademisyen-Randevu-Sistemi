@@ -1,0 +1,304 @@
+<!DOCTYPE html><html lang="tr" class="light"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet"><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">try{
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed": "#dde1ff",
+                      "secondary": "#5d5f5f",
+                      "on-primary": "#ffffff",
+                      "inverse-surface": "#213145",
+                      "outline-variant": "#c6c5d0",
+                      "on-secondary-fixed-variant": "#454747",
+                      "secondary-fixed-dim": "#c6c6c7",
+                      "surface-tint": "#525c8a",
+                      "on-secondary": "#ffffff",
+                      "inverse-primary": "#bac4f8",
+                      "surface": "#f8f9ff",
+                      "on-error-container": "#93000a",
+                      "background": "#f8f9ff",
+                      "primary": "#000000",
+                      "on-tertiary-fixed-variant": "#44474c",
+                      "inverse-on-surface": "#eaf1ff",
+                      "tertiary-container": "#181c21",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-container-highest": "#d3e4fe",
+                      "tertiary-fixed": "#e0e2e9",
+                      "surface-container-low": "#eff4ff",
+                      "on-tertiary-container": "#81848a",
+                      "surface-container": "#e5eeff",
+                      "on-background": "#0b1c30",
+                      "primary-container": "#0d1843",
+                      "surface-variant": "#d3e4fe",
+                      "secondary-fixed": "#e2e2e2",
+                      "on-surface-variant": "#45464f",
+                      "on-primary-fixed-variant": "#3a4471",
+                      "on-error": "#ffffff",
+                      "error": "#ba1a1a",
+                      "surface-dim": "#cbdbf5",
+                      "on-secondary-container": "#616363",
+                      "surface-container-high": "#dce9ff",
+                      "primary-fixed-dim": "#bac4f8",
+                      "secondary-container": "#dfe0e0",
+                      "on-primary-fixed": "#0d1843",
+                      "on-secondary-fixed": "#1a1c1c",
+                      "tertiary-fixed-dim": "#c4c6cd",
+                      "surface-bright": "#f8f9ff",
+                      "on-tertiary": "#ffffff",
+                      "on-tertiary-fixed": "#181c21",
+                      "tertiary": "#000000",
+                      "on-surface": "#0b1c30",
+                      "outline": "#767680",
+                      "on-primary-container": "#7881b2",
+                      "error-container": "#ffdad6"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-mobile": "20px",
+                      "margin-desktop": "64px",
+                      "max-width": "1280px",
+                      "unit": "4px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "headline-lg": [
+                              "Hanken Grotesk"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-lg-mobile": [
+                              "Hanken Grotesk"
+                      ],
+                      "label-sm": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "display-lg": [
+                              "Hanken Grotesk"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "800"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    }catch(_e){}</script><meta charset="utf-8"></head><body class="bg-background text-on-background font-body-md h-screen overflow-hidden flex">
+<!-- SideNavBar -->
+<nav class="bg-primary-container text-on-primary-container font-body-md text-body-md h-screen w-64 fixed left-0 top-0 border-r border-outline-variant z-20 flex flex-col h-full py-6" style="background-color: rgb(11, 22, 65); color: rgb(255, 255, 255);">
+<div class="px-6 mb-8 flex items-center gap-3">
+<img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVpCSz1DPmKmd0Qg7WpvAj5ZUpSS-2SuiHj7zwHuLVNndFjYk6dGJQK3tNGirMOC6sjZKA23V1D20uGcX5dsKigGTf5KssuQdyIyQ4toOrJrv1SANX3YOqeH02y8N2LN2wbFtBVaq20ynFmanx-pX3uar9xwU4SXSDi7Z4DFkPMSJ-ML7Vb9VkOIn6dfuwiOB3BA_nsKPzNk-AjIjCbzERPhbfI_G0gIOoJ1glkZ6ATlR-6Z9ekfltbziidboH20kmtw" alt="University Logo" class="w-10 h-10 object-contain rounded">
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-on-primary">MARS</h1>
+<p class="font-label-sm text-label-sm text-on-primary-container/70">Academic System</p>
+</div>
+</div>
+<ul class="flex-1 px-2 space-y-1">
+<li class="">
+<a href="#" class="flex items-center gap-3 px-4 py-3 bg-surface-container-lowest/10 text-on-primary border-l-4 border-on-primary rounded-r-lg opacity-90 transition-opacity">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+                    Dashboard
+                </a>
+</li>
+<li class="">
+<a href="#" class="flex items-center gap-3 px-4 py-3 text-on-primary-container/70 hover:text-on-primary hover:bg-primary-fixed-dim/10 transition-colors rounded-r-lg"><span class="material-symbols-outlined">calendar_today</span> Appointments</a>
+</li>
+<li class="">
+<a href="#" class="flex items-center gap-3 px-4 py-3 text-on-primary-container/70 hover:text-on-primary hover:bg-primary-fixed-dim/10 transition-colors rounded-r-lg"><span class="material-symbols-outlined">calendar_today</span> Appointments</a>
+</li>
+<li class="">
+<a href="#" class="flex items-center gap-3 px-4 py-3 text-on-primary-container/70 hover:text-on-primary hover:bg-primary-fixed-dim/10 transition-colors rounded-r-lg"><span class="material-symbols-outlined">calendar_today</span> Appointments</a>
+</li>
+</ul>
+<div class="px-4 mt-auto">
+<button class="w-full py-3 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center justify-center gap-2 border border-on-primary">
+<span class="material-symbols-outlined">add</span>
+                New Appointment
+            </button>
+</div>
+</nav>
+<!-- Main Content-->
+<div class="flex-1 flex flex-col ml-64 w-[calc(100%-16rem)]">
+<!-- TopAppBar -->
+<header class="bg-surface text-primary font-label-md text-label-md border-b border-outline-variant flex justify-between items-center px-8 h-16 z-10 shrink-0">
+<div class="flex items-center gap-6">
+<img src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3DReSOCR6hsjqLE79Wv0_hidvyAAJGuI3-ufKc8DE4jrUyo3ExsT-48Ts2nzMPqtyWhCZ0XCiOzX6rFf0VULnmIIa_YnSbzSBtYiYcVgjaV5vjPR6whoPWtQxhKes3BiE1KUFmXEgCPXKDspE9CZiXy4gDbrueqaHOOOWLNJkgy-FtU9kKIy9oumWUjg5q-xF9cj519AZhc0Xy7fOAawNyliv0NZepMnd6D0dwc0R27ML6g3pL3vnw_uaL-MLMMTP_g" alt="MARS Logo" class="h-8 w-8 object-contain">
+<nav class="flex gap-4">
+<a href="#" class="text-on-secondary-container hover:text-primary transition-colors">Semester</a>
+<a href="#" class="text-primary font-bold border-b-2 border-primary pb-1">Department</a>
+<a href="#" class="text-on-secondary-container hover:text-primary transition-colors">Faculty</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden lg:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input type="text" placeholder="Arama..." class="pl-10 pr-4 py-1.5 bg-surface-container border border-outline-variant rounded-full text-body-md focus:border-primary focus:ring-2 focus:ring-surface-tint focus:outline-none transition-shadow w-64">
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-variant/50">
+<span class="material-symbols-outlined">help</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-variant/50">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<img class="w-8 h-8 rounded-full border border-outline-variant object-cover" data-alt="A professional headshot portrait of an academic staff member in a bright modern office. The lighting is soft and natural, emphasizing a welcoming yet serious demeanor. The person is dressed in smart-casual business attire suitable for an educational environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqM24jBJO2bChn2rnTvITbskMZf0HrikKdNLBsctADHSqJyCljR0gONtuTtAog7fTQMfs74BpEq51q_DxomW-r6j_oZaWRIkPmWlefpAH6BPaXwap882ssSJh3xeHPHUrZeQQ9UqM35PRbjOtUr7HIl1iWPuWYpt7hx_MmmpHzoFOiFktJ7NOCjUckbCZVOgkcXT8h8iWkn_WbvinxFoOi-eN3iaDRZSoHA8znOyrArb93AL1M2wzl">
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 overflow-y-auto p-margin-desktop bg-background">
+<div class="max-w-max-width mx-auto">
+<!-- Page Header -->
+<div class="flex justify-between items-end mb-8">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-background mb-2">Ders Yönetimi</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Güz 2024 Akademik Dönemi</p>
+</div>
+<button class="bg-primary text-on-primary px-6 py-3 rounded-lg font-label-md text-label-md flex items-center gap-2 hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined">add_circle</span>
+                        Yeni Ders Ekle
+                    </button>
+</div>
+<!-- Bento Grid Layout for Courses -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Course Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 hover:shadow-sm transition-shadow flex flex-col h-full">
+<div class="flex justify-between items-start mb-4">
+<span class="bg-surface-container px-3 py-1 rounded font-label-sm text-label-sm text-primary">CENG 301</span>
+<span class="material-symbols-outlined text-on-surface-variant">more_vert</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-background mb-2 line-clamp-2">Algoritma Analizi ve Tasarımı</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6 flex-1">Kredi: 4 | AKTS: 6</p>
+<div class="mt-auto space-y-3 pt-4 border-t border-outline-variant/50">
+<label class="block font-label-sm text-label-sm text-on-surface-variant">Asistan Ata:</label>
+<select class="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 font-body-md text-body-md focus:border-primary focus:ring-2 focus:ring-surface-tint focus:outline-none">
+<option disabled="" selected="" value="">Asistan Seçiniz...</option>
+<option value="1">Ahmet Yılmaz</option>
+<option value="2">Ayşe Demir</option>
+<option value="3">Mehmet Kaya</option>
+</select>
+<button class="w-full border border-primary text-primary py-2 rounded-lg font-label-md text-label-md hover:bg-surface-variant transition-colors mt-2">
+                                Kaydet
+                            </button>
+</div>
+</div>
+<!-- Course Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 hover:shadow-sm transition-shadow flex flex-col h-full">
+<div class="flex justify-between items-start mb-4">
+<span class="bg-surface-container px-3 py-1 rounded font-label-sm text-label-sm text-primary">CENG 415</span>
+<span class="material-symbols-outlined text-on-surface-variant">more_vert</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-background mb-2 line-clamp-2">Yapay Zekaya Giriş</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6 flex-1">Kredi: 3 | AKTS: 5</p>
+<div class="mt-auto space-y-3 pt-4 border-t border-outline-variant/50">
+<label class="block font-label-sm text-label-sm text-on-surface-variant">Asistan Ata:</label>
+<select class="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 font-body-md text-body-md focus:border-primary focus:ring-2 focus:ring-surface-tint focus:outline-none">
+<option disabled="" value="">Asistan Seçiniz...</option>
+<option value="1">Ahmet Yılmaz</option>
+<option selected="" value="2">Ayşe Demir</option>
+<option value="3">Mehmet Kaya</option>
+</select>
+<button class="w-full border border-primary text-primary py-2 rounded-lg font-label-md text-label-md hover:bg-surface-variant transition-colors mt-2">
+                                Güncelle
+                            </button>
+</div>
+</div>
+<!-- Course Card 3 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 hover:shadow-sm transition-shadow flex flex-col h-full relative overflow-hidden">
+<div class="absolute inset-0 bg-primary-fixed-dim/5 z-0 pointer-events-none"></div>
+<div class="relative z-10 flex flex-col h-full">
+<div class="flex justify-between items-start mb-4">
+<span class="bg-primary text-on-primary px-3 py-1 rounded font-label-sm text-label-sm">CENG 101</span>
+<span class="material-symbols-outlined text-on-surface-variant">more_vert</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-background mb-2 line-clamp-2">Bilgisayar Mühendisliğine Giriş</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6 flex-1">Kredi: 3 | AKTS: 4</p>
+<div class="mt-auto space-y-3 pt-4 border-t border-outline-variant/50">
+<label class="block font-label-sm text-label-sm text-on-surface-variant">Asistan Ata:</label>
+<select class="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 font-body-md text-body-md focus:border-primary focus:ring-2 focus:ring-surface-tint focus:outline-none">
+<option disabled="" selected="" value="">Asistan Seçiniz...</option>
+<option value="1">Ahmet Yılmaz</option>
+<option value="2">Ayşe Demir</option>
+<option value="3">Mehmet Kaya</option>
+</select>
+<button class="w-full border border-primary text-primary py-2 rounded-lg font-label-md text-label-md hover:bg-surface-variant transition-colors mt-2">
+                                    Kaydet
+                                </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

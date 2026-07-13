@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+
+<html class="light" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MARS - Akademik Sisteme Giriş</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&family=Inter:wght@400;500&family=JetBrains+Mono:wght@500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline": "#767680",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary-container": "#616363",
+                    "surface-container-low": "#eff4ff",
+                    "tertiary": "#000000",
+                    "surface-bright": "#f8f9ff",
+                    "surface-container": "#e5eeff",
+                    "secondary-fixed": "#e2e2e2",
+                    "surface-container-high": "#dce9ff",
+                    "on-tertiary-container": "#81848a",
+                    "outline-variant": "#c6c5d0",
+                    "inverse-primary": "#bac4f8",
+                    "on-error": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-container": "#0d1843",
+                    "surface-container-highest": "#d3e4fe",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed-dim": "#c4c6cd",
+                    "secondary-container": "#dfe0e0",
+                    "primary-fixed-dim": "#bac4f8",
+                    "primary-fixed": "#dde1ff",
+                    "secondary": "#5d5f5f",
+                    "on-primary-fixed": "#0d1843",
+                    "surface-dim": "#cbdbf5",
+                    "on-secondary": "#ffffff",
+                    "secondary-fixed-dim": "#c6c6c7",
+                    "surface-variant": "#d3e4fe",
+                    "primary": "#000000",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed": "#181c21",
+                    "surface": "#f8f9ff",
+                    "on-surface": "#0b1c30",
+                    "inverse-on-surface": "#eaf1ff",
+                    "on-tertiary-fixed-variant": "#44474c",
+                    "on-secondary-fixed-variant": "#454747",
+                    "error": "#ba1a1a",
+                    "tertiary-fixed": "#e0e2e9",
+                    "background": "#f8f9ff",
+                    "surface-tint": "#525c8a",
+                    "tertiary-container": "#181c21",
+                    "on-secondary-fixed": "#1a1c1c",
+                    "on-primary-fixed-variant": "#3a4471",
+                    "on-primary-container": "#7881b2",
+                    "inverse-surface": "#213145",
+                    "error-container": "#ffdad6",
+                    "on-surface-variant": "#45464f",
+                    "on-background": "#0b1c30"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "4px",
+                    "margin-mobile": "20px",
+                    "gutter": "24px",
+                    "max-width": "1280px",
+                    "margin-desktop": "64px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Hanken Grotesk"],
+                    "display-lg": ["Hanken Grotesk"],
+                    "body-lg": ["Inter"],
+                    "headline-lg": ["Hanken Grotesk"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "label-sm": ["JetBrains Mono"],
+                    "label-md": ["JetBrains Mono"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        body {
+            background-color: #f8f9ff;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(229, 238, 255, 0.5) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(211, 228, 254, 0.3) 0px, transparent 50%);
+        }
+        .login-card {
+            border: 1px solid #c6c5d0;
+            box-shadow: 0 10px 25px -5px rgba(13, 24, 67, 0.05);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6 font-body-md text-on-background">
+<!-- Main Container -->
+<main class="w-full max-w-md animate-fade-in">
+<!-- Login Card -->
+<div class="login-card bg-surface-container-lowest rounded-xl p-8 md:p-12 transition-all duration-300">
+<!-- Logo Section -->
+<div class="flex flex-col items-center mb-10">
+<div class="w-24 h-24 mb-6 relative group">
+<div class="absolute inset-0 bg-primary-container/5 rounded-full blur-xl group-hover:bg-primary-container/10 transition-colors"></div>
+<img alt="MARS Logo" class="w-full h-full object-contain relative z-10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5XZ9C3OXh-FMFklCuWcZ3aCjb_1tVMVofuYAzhjd1yHSTYgRoswvZD8QxYV9mtUkf-IYb59BypRMIX79EFT1hoq--j5n1hJRj7AuXqTgQEphT46riy1XDOvT0ojRTXNWJ3YcmxPEyOP8XQU0EkwhWYBCwmscjWH2pv4XfssmUDomrueoH1ipuxv1SYlpgLtbJ_BXJHgQKRW-wgB1uAI9C45QvOwzZb51IPcDFpQIHgDI89EURrI2-uIMcsMiipV7VjA"/>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-primary text-center mb-2">
+                    Akademik Sisteme Giriş Yapın
+                </h1>
+<p class="font-body-md text-on-secondary-container text-center max-w-[280px]">
+                    Kurumsal kimliğinizle güvenli erişim sağlayın.
+                </p>
+</div>
+<!-- Login Form -->
+<form class="space-y-6" id="loginForm" onsubmit="return false;">
+<!-- Email Field -->
+<div class="space-y-2">
+<label class="block font-label-md text-label-md text-on-surface-variant px-1" for="email">
+                        Kurumsal E-posta
+                    </label>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">
+                            mail
+                        </span>
+<input class="w-full pl-10 pr-4 py-3 bg-white border border-outline-variant rounded-lg font-body-md focus:outline-none focus:border-primary-container focus:ring-2 focus:ring-primary-container/10 transition-all placeholder:text-outline-variant/60" id="email" placeholder="ad.soyad@universite.edu.tr" required="" type="email"/>
+</div>
+</div>
+<!-- Password Field -->
+<div class="space-y-2">
+<div class="flex justify-between items-center px-1">
+<label class="block font-label-md text-label-md text-on-surface-variant" for="password">
+                            Şifre
+                        </label>
+</div>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">
+                            lock
+                        </span>
+<input class="w-full pl-10 pr-12 py-3 bg-white border border-outline-variant rounded-lg font-body-md focus:outline-none focus:border-primary-container focus:ring-2 focus:ring-primary-container/10 transition-all placeholder:text-outline-variant/60" id="password" placeholder="••••••••" required="" type="password"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors p-1" onclick="togglePassword()" type="button">
+<span class="material-symbols-outlined" id="passIcon">visibility</span>
+</button>
+</div>
+</div>
+<!-- Action Button -->
+<button class="w-full py-4 bg-[#0b1641] text-on-primary font-headline-md text-body-md rounded-lg hover:bg-black active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary-container/10" type="submit">
+<span>Giriş Yap</span>
+<span class="material-symbols-outlined text-[20px]">login</span>
+</button>
+<!-- Forgot Password -->
+<div class="pt-4 text-center">
+<a class="font-label-md text-label-md text-primary-container hover:text-primary underline-offset-4 hover:underline transition-all" href="#">
+                        Şifremi Unuttum
+                    </a>
+</div>
+</form>
+<!-- Footer Message -->
+<div class="mt-12 pt-8 border-t border-outline-variant flex flex-col items-center gap-4">
+<div class="flex items-center gap-2 text-outline-variant">
+<span class="material-symbols-outlined text-[16px]">verified_user</span>
+<span class="font-label-sm text-label-sm uppercase tracking-widest">Secure Institutional Access</span>
+</div>
+<p class="font-label-sm text-label-sm text-on-secondary-container/50 text-center italic">
+                    Bu sistem yalnızca yetkili akademik personel kullanımı içindir.
+                </p>
+</div>
+</div>
+<!-- System Status Hint -->
+<div class="mt-8 flex justify-center gap-6 text-outline-variant">
+<div class="flex items-center gap-1.5">
+<div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+<span class="font-label-sm text-label-sm">Sistem Aktif</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="font-label-sm text-label-sm">v4.2.0-stable</span>
+</div>
+</div>
+</main>
+<script>
+        function togglePassword() {
+            const passInput = document.getElementById('password');
+            const passIcon = document.getElementById('passIcon');
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                passIcon.textContent = 'visibility_off';
+            } else {
+                passInput.type = 'password';
+                passIcon.textContent = 'visibility';
+            }
+        }
+
+        // Simple login interaction simulation
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalContent = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = `
+                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Doğrulanıyor...</span>
+            `;
+
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+                // Add your navigation or error logic here
+            }, 1500);
+        });
+    </script>
+</body></html>

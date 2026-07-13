@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+
+<html class="light" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MARS - Bildirim Yönetimi</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Hanken+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-container": "#7881b2",
+                    "tertiary-container": "#181c21",
+                    "surface-variant": "#d3e4fe",
+                    "error-container": "#ffdad6",
+                    "surface-container-high": "#dce9ff",
+                    "outline": "#767680",
+                    "on-secondary": "#ffffff",
+                    "surface-bright": "#f8f9ff",
+                    "error": "#ba1a1a",
+                    "background": "#f8f9ff",
+                    "outline-variant": "#c6c5d0",
+                    "surface-container-low": "#eff4ff",
+                    "primary-fixed": "#dde1ff",
+                    "tertiary-fixed-dim": "#c4c6cd",
+                    "on-primary-fixed": "#0d1843",
+                    "secondary-fixed-dim": "#c6c6c7",
+                    "surface": "#f8f9ff",
+                    "on-tertiary-container": "#81848a",
+                    "primary-fixed-dim": "#bac4f8",
+                    "on-secondary-fixed-variant": "#454747",
+                    "inverse-primary": "#bac4f8",
+                    "surface-tint": "#525c8a",
+                    "on-tertiary": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "primary": "#000000",
+                    "surface-container": "#e5eeff",
+                    "tertiary": "#000000",
+                    "on-surface": "#0b1c30",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-highest": "#d3e4fe",
+                    "on-tertiary-fixed": "#181c21",
+                    "on-primary": "#ffffff",
+                    "primary-container": "#0d1843",
+                    "on-secondary-container": "#616363",
+                    "secondary-container": "#dfe0e0",
+                    "tertiary-fixed": "#e0e2e9",
+                    "on-background": "#0b1c30",
+                    "on-primary-fixed-variant": "#3a4471",
+                    "secondary": "#5d5f5f",
+                    "on-tertiary-fixed-variant": "#44474c",
+                    "surface-dim": "#cbdbf5",
+                    "secondary-fixed": "#e2e2e2",
+                    "on-secondary-fixed": "#1a1c1c",
+                    "on-error": "#ffffff",
+                    "inverse-surface": "#213145",
+                    "on-surface-variant": "#45464f",
+                    "inverse-on-surface": "#eaf1ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Hanken Grotesk"],
+                    "label-sm": ["JetBrains Mono"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "display-lg": ["Hanken Grotesk"],
+                    "label-md": ["JetBrains Mono"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #f8f9ff;
+            color: #0b1c30;
+        }
+        .sidebar-gradient {
+            background: linear-gradient(180deg, #0d1843 0%, #000000 100%);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c6c5d0;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="font-body-md overflow-hidden">
+<!-- Side Navigation Bar -->
+<aside class="h-screen w-64 fixed left-0 top-0 sidebar-gradient flex flex-col py-6 border-r border-outline-variant z-50">
+<div class="px-6 mb-10 flex items-center gap-3">
+<img alt="MARS Logo" class="w-10 h-10 rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4PoQwmTRFhZ70wViPut1-V2KzVgvDsRZ_vquA3neYL0CRIovo3Don3JsUvBpjoFhJ08s6g08H83Cd0pXKBldO9TAT0z4S0TpVT3KfDis_EV0uVhQDbjI6ljlwdnAXQfySNY8Wv9UgAlU5hsaYvWbQBVbKK7k4ul7laU1ifgC002V-3moK9cU5hmRpr9f4lJXfp3jJTlkh78NSwwpxNPZoAzoelwnQbFnpeJmGGmH2SxP95GATamfc0hPI5WmIa_uCBg"/>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-on-primary leading-none">MARS</h1>
+<p class="text-[10px] text-on-primary-container tracking-widest uppercase mt-1">Akademik Sistem</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1 px-4">
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container/70 hover:text-on-primary hover:bg-primary-fixed-dim/10 transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container/70 hover:text-on-primary hover:bg-primary-fixed-dim/10 transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-body-md">Appointments</span>
+</a>
+<!-- Active State -->
+<a class="flex items-center gap-3 px-4 py-3 bg-white/10 text-on-primary border-l-4 border-on-primary transition-all" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">notifications</span>
+<span class="font-body-md font-semibold">Notifications</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary-container/70 hover:text-on-primary hover:bg-primary-fixed-dim/10 transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-body-md">Profile</span>
+</a>
+</nav>
+<div class="px-4 mt-auto">
+<button class="w-full bg-surface-container-lowest text-primary-container font-semibold py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-white transition-all shadow-lg active:scale-95 duration-150">
+<span class="material-symbols-outlined">add</span>
+<span class="font-label-md">New Appointment</span>
+</button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 flex flex-col h-screen">
+<!-- Top App Bar -->
+<header class="flex justify-between items-center px-8 h-16 w-full bg-surface border-b border-outline-variant">
+<div class="flex items-center gap-8">
+<h2 class="font-headline-md text-headline-md font-extrabold text-primary">Bildirim Yönetimi</h2>
+<nav class="hidden md:flex gap-6">
+<a class="text-on-secondary-container hover:text-primary transition-colors font-label-md text-label-md" href="#">Semester</a>
+<a class="text-on-secondary-container hover:text-primary transition-colors font-label-md text-label-md" href="#">Department</a>
+<a class="text-on-secondary-container hover:text-primary transition-colors font-label-md text-label-md" href="#">Faculty</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative group hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="bg-surface-container-low border border-outline-variant rounded-full pl-10 pr-4 py-1.5 text-sm focus:ring-2 focus:ring-primary-container focus:border-transparent outline-none w-64 transition-all" placeholder="Bildirimlerde ara..." type="text"/>
+</div>
+<button class="p-2 text-on-secondary-container hover:bg-surface-container transition-colors rounded-full">
+<span class="material-symbols-outlined">help</span>
+</button>
+<button class="p-2 text-on-secondary-container hover:bg-surface-container transition-colors rounded-full">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary font-bold text-xs">
+                    AD
+                </div>
+</div>
+</header>
+<!-- Content Canvas -->
+<section class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+<div class="max-w-[1280px] mx-auto">
+<!-- Filter Section -->
+<div class="flex items-center justify-between mb-8">
+<div class="flex gap-2">
+<span class="bg-primary text-on-primary px-4 py-1.5 rounded-full text-xs font-label-sm cursor-pointer">Hepsi</span>
+<span class="bg-surface-container text-on-secondary-container px-4 py-1.5 rounded-full text-xs font-label-sm hover:bg-surface-container-high transition-colors cursor-pointer">Okunmamış</span>
+<span class="bg-surface-container text-on-secondary-container px-4 py-1.5 rounded-full text-xs font-label-sm hover:bg-surface-container-high transition-colors cursor-pointer">Arşivlenmiş</span>
+</div>
+<button class="text-primary font-semibold text-sm flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-sm">done_all</span>
+                        Tümünü Okundu İşaretle
+                    </button>
+</div>
+<!-- Notifications List -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl divide-y divide-outline-variant overflow-hidden shadow-sm">
+<!-- Notification Item: Approved -->
+<div class="flex items-center gap-4 p-5 hover:bg-surface-container-low transition-colors group cursor-default">
+<div class="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-green-600" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-0.5">
+<h3 class="font-semibold text-on-surface">Randevu Onaylandı</h3>
+<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-label-sm uppercase tracking-wider">Onay</span>
+</div>
+<p class="text-on-surface-variant text-sm line-clamp-1">Prof. Dr. Ahmet Yılmaz ile 14:30'daki görüşme talebiniz onaylanmıştır. Lütfen zamanında fakültede olunuz.</p>
+</div>
+<div class="text-right flex-shrink-0 pl-4">
+<p class="text-xs font-medium text-outline">Bugün, 10:45</p>
+<span class="w-2 h-2 rounded-full bg-primary inline-block mt-2"></span>
+</div>
+</div>
+<!-- Notification Item: Rejected -->
+<div class="flex items-center gap-4 p-5 hover:bg-surface-container-low transition-colors group cursor-default">
+<div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-red-600" style="font-variation-settings: 'FILL' 1;">cancel</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-0.5">
+<h3 class="font-semibold text-on-surface">Randevu Reddedildi</h3>
+<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-label-sm uppercase tracking-wider">Red</span>
+</div>
+<p class="text-on-surface-variant text-sm line-clamp-1">Doç. Dr. Elif Kaya, acil bir toplantı nedeniyle 11:00 randevunuzu iptal etmek zorunda kaldı.</p>
+</div>
+<div class="text-right flex-shrink-0 pl-4">
+<p class="text-xs font-medium text-outline">Bugün, 09:12</p>
+</div>
+</div>
+<!-- Notification Item: Waitlist -->
+<div class="flex items-center gap-4 p-5 hover:bg-surface-container-low transition-colors group cursor-default">
+<div class="w-12 h-12 rounded-full bg-primary-container/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary-container" style="font-variation-settings: 'FILL' 1;">hourglass_top</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-0.5">
+<h3 class="font-semibold text-on-surface">Bekleme Listesinden Sıra Geldi</h3>
+<span class="bg-primary-container text-on-primary px-2 py-0.5 rounded text-[10px] font-label-sm uppercase tracking-wider">Sıra Geldi</span>
+</div>
+<p class="text-on-surface-variant text-sm line-clamp-1">Yapay Zeka Laboratuvarı kullanımı için bekleme listesinde sıranız geldi. Lütfen 30 dakika içinde onaylayın.</p>
+</div>
+<div class="text-right flex-shrink-0 pl-4">
+<p class="text-xs font-medium text-outline">Dün, 16:20</p>
+</div>
+</div>
+<!-- Notification Item: General -->
+<div class="flex items-center gap-4 p-5 hover:bg-surface-container-low transition-colors group cursor-default">
+<div class="w-12 h-12 rounded-full bg-secondary-container/50 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 0;">notifications_active</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-0.5">
+<h3 class="font-semibold text-on-surface">Yeni İşlem Bildirimi</h3>
+<span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded text-[10px] font-label-sm uppercase tracking-wider">Bilgi</span>
+</div>
+<p class="text-on-surface-variant text-sm line-clamp-1">Yeni akademik dönem için danışman onay sistemine ders programı girişleri başlamıştır.</p>
+</div>
+<div class="text-right flex-shrink-0 pl-4">
+<p class="text-xs font-medium text-outline">12 Tem, 14:00</p>
+</div>
+</div>
+<!-- Notification Item: Approved 2 -->
+<div class="flex items-center gap-4 p-5 hover:bg-surface-container-low transition-colors group cursor-default">
+<div class="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-green-600" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-0.5">
+<h3 class="font-semibold text-on-surface">Randevu Onaylandı</h3>
+<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-label-sm uppercase tracking-wider">Onay</span>
+</div>
+<p class="text-on-surface-variant text-sm line-clamp-1">Tez izleme komitesi için yaptığınız başvuru kabul edildi. 15 Temmuz'da 402 nolu odada görüşülecek.</p>
+</div>
+<div class="text-right flex-shrink-0 pl-4">
+<p class="text-xs font-medium text-outline">11 Tem, 09:30</p>
+</div>
+</div>
+</div>
+<!-- Statistics Grid (Bento Style) -->
+<div class="mt-12 grid grid-cols-1 md:grid-cols-4 gap-6">
+<div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl">
+<p class="text-on-secondary-container text-xs font-label-sm uppercase mb-2">Okunmamış</p>
+<h4 class="text-3xl font-bold text-primary">12</h4>
+<div class="mt-4 h-1 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 30%;"></div>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl">
+<p class="text-on-secondary-container text-xs font-label-sm uppercase mb-2">Bu Hafta</p>
+<h4 class="text-3xl font-bold text-primary">48</h4>
+<div class="mt-4 h-1 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-green-500" style="width: 65%;"></div>
+</div>
+</div>
+<div class="md:col-span-2 bg-primary-container p-6 rounded-xl flex justify-between items-center relative overflow-hidden group">
+<div class="z-10">
+<p class="text-on-primary-container/80 text-xs font-label-sm uppercase mb-2">Sistem Durumu</p>
+<h4 class="text-xl font-bold text-on-primary">Tüm Sistemler Aktif</h4>
+<p class="text-on-primary-container text-sm mt-1">Kesintisiz bildirim akışı devam ediyor.</p>
+</div>
+<span class="material-symbols-outlined text-6xl text-white/10 group-hover:scale-110 transition-transform duration-500">sensors</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Micro-interaction Script -->
+<script>
+        document.querySelectorAll('.group').forEach(item => {
+            item.addEventListener('click', () => {
+                const unreadDot = item.querySelector('.bg-primary');
+                if(unreadDot) {
+                    unreadDot.style.opacity = '0';
+                    unreadDot.style.transition = 'opacity 0.3s ease';
+                    setTimeout(() => unreadDot.remove(), 300);
+                }
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+
+<html class="light" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MARS - Randevu Oluşturma</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Hanken+Grotesk:wght@600;700;800&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .step-active {
+            @apply bg-primary text-on-primary ring-4 ring-primary-container;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9ff;
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "surface-bright": "#f8f9ff",
+                "tertiary": "#000000",
+                "on-primary-fixed": "#0d1843",
+                "surface-dim": "#cbdbf5",
+                "tertiary-fixed-dim": "#c4c6cd",
+                "surface-container": "#e5eeff",
+                "on-primary-container": "#7881b2",
+                "error-container": "#ffdad6",
+                "surface-variant": "#d3e4fe",
+                "on-secondary-container": "#616363",
+                "on-secondary-fixed": "#1a1c1c",
+                "tertiary-fixed": "#e0e2e9",
+                "on-secondary-fixed-variant": "#454747",
+                "primary-container": "#0d1843",
+                "on-surface": "#0b1c30",
+                "secondary-fixed": "#e2e2e2",
+                "on-primary-fixed-variant": "#3a4471",
+                "on-error": "#ffffff",
+                "on-tertiary-container": "#81848a",
+                "on-background": "#0b1c30",
+                "outline-variant": "#c6c5d0",
+                "outline": "#767680",
+                "surface-container-highest": "#d3e4fe",
+                "surface": "#f8f9ff",
+                "primary": "#000000",
+                "secondary-fixed-dim": "#c6c6c7",
+                "on-tertiary": "#ffffff",
+                "on-primary": "#ffffff",
+                "primary-fixed": "#dde1ff",
+                "on-tertiary-fixed": "#181c21",
+                "on-secondary": "#ffffff",
+                "surface-container-low": "#eff4ff",
+                "surface-container-high": "#dce9ff",
+                "error": "#ba1a1a",
+                "primary-fixed-dim": "#bac4f8",
+                "inverse-on-surface": "#eaf1ff",
+                "secondary": "#5d5f5f",
+                "background": "#f8f9ff",
+                "surface-tint": "#525c8a",
+                "secondary-container": "#dfe0e0",
+                "inverse-primary": "#bac4f8",
+                "surface-container-lowest": "#ffffff",
+                "on-tertiary-fixed-variant": "#44474c",
+                "on-surface-variant": "#45464f",
+                "inverse-surface": "#213145",
+                "tertiary-container": "#181c21",
+                "on-error-container": "#93000a"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+            },
+            "fontFamily": {
+                "label-md": ["JetBrains Mono"],
+                "body-md": ["Inter"],
+                "headline-lg": ["Hanken Grotesk"],
+                "headline-md": ["Hanken Grotesk"],
+                "display-lg": ["Hanken Grotesk"]
+            }
+          }
+        }
+      }
+    </script>
+</head>
+<body class="text-on-background">
+<!-- SideNavBar Integration -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-[#0b1641] border-r border-outline-variant flex flex-col py-6 z-50">
+<div class="px-6 mb-8">
+<img alt="MARS" class="h-10 w-auto mb-1" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5tKZNNB2-0uG-bjo7vRyWurVnobVYwbnG_WwidJP7fIy9zrWHtXIOPzNopWW_19-erBp4kK_S-zq-ihl1UigaX6u1StbCjA7Xmt_NKQXaqs4GcAOQFbvIgzn3lKPKSk3RlES0ZZbT-wxDINfi7WOo2QfAEPtqT7kImNOer2InQYjDV5kDfVgka6Kv3OfCOET3KPdO6OFq2bTxrV87fIF8xFj_5-So0J1NP1Bpf3rT5e4jNAIxTnwdaJI5kEXhK599KA"/>
+<p class="text-[10px] uppercase tracking-widest text-white/60 font-medium">Akademik Sistem</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-6 py-3 text-white/70 hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Panel</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 bg-white/10 text-white border-l-4 border-white transition-colors" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-body-md text-body-md">Randevular</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-white/70 hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined">notifications</span>
+<span class="font-body-md text-body-md">Bildirimler</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-white/70 hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-body-md text-body-md">Profil</span>
+</a>
+</nav>
+<div class="px-4 mt-auto">
+<button class="w-full py-3 px-4 bg-white text-[#0b1641] font-bold rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined">add</span>
+                Yeni Randevu
+            </button>
+</div>
+</aside>
+<!-- TopAppBar Integration -->
+<header class="flex justify-between items-center ml-64 px-8 h-16 w-[calc(100%-16rem)] fixed top-0 bg-surface border-b border-outline-variant z-40">
+<div class="flex items-center gap-8">
+<span class="font-headline-md text-headline-md font-extrabold text-primary">MARS</span>
+<nav class="hidden md:flex gap-6">
+<a class="text-on-secondary-container font-label-md text-label-md hover:text-primary transition-colors" href="#">Dönem</a>
+<a class="text-on-secondary-container font-label-md text-label-md hover:text-primary transition-colors" href="#">Bölüm</a>
+<a class="text-on-secondary-container font-label-md text-label-md hover:text-primary transition-colors" href="#">Fakülte</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="absolute inset-y-0 left-3 flex items-center text-outline">
+<span class="material-symbols-outlined text-sm">search</span>
+</span>
+<input class="pl-10 pr-4 py-1.5 bg-surface-container-low border border-outline-variant rounded-full text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none w-64" placeholder="Hızlı Ara..." type="text"/>
+</div>
+<span class="material-symbols-outlined text-on-secondary-container cursor-pointer hover:text-primary">help</span>
+<span class="material-symbols-outlined text-on-secondary-container cursor-pointer hover:text-primary">settings</span>
+<div class="w-8 h-8 rounded-full bg-surface-dim overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a university student with a clean-cut appearance, wearing business casual attire. The lighting is soft and academic, set against a neutral, high-end campus library background. The image is crisp, modern, and fits a professional educational platform aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCax4UrWEdUnAwKV0QtDIbnWkbRpZQDQ0pnQlebSM2olYGUS_eGrpXdTZeTNgm78tiJ46Wo8RWdx1BGTGplxbubxO11_VUvxmN3A2B07_6Y91x9ICdDXiuh9PEBwzoRZgXtC9bPbkk6N9LhFRxc8vmi2uVKJgkf9sxsgWtE_sI54Vx5OkoClto5cWwdZG_euY4OdeM8covb1iKL64gYjkRvwxOONpy2oY9Ho2Twl89EN8V_I5pkBEZ"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-24 pb-12 px-8 min-h-screen bg-surface-bright">
+<div class="max-w-5xl mx-auto">
+<!-- Step Progress Bar -->
+<section class="mb-12">
+<div class="relative flex justify-between items-center max-w-2xl mx-auto">
+<div class="absolute top-1/2 left-0 w-full h-0.5 bg-surface-container -translate-y-1/2 -z-10"></div>
+<div class="absolute top-1/2 left-0 h-0.5 bg-primary -translate-y-1/2 -z-10 transition-all duration-500" style="width: 100%;"></div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-sm ring-4 ring-primary-container">1</div>
+<span class="font-label-sm text-label-sm text-on-surface opacity-60">Fakülte</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-sm ring-4 ring-primary-container">2</div>
+<span class="font-label-sm text-label-sm text-on-surface opacity-60">Akademisyen</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-sm ring-4 ring-primary-container">3</div>
+<span class="font-label-sm text-label-sm text-on-surface opacity-60">Tarih</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-sm ring-4 ring-primary-container">4</div>
+<span class="font-label-sm text-label-sm text-on-surface opacity-60">Slot</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-sm ring-4 ring-primary-container">5</div>
+<span class="font-label-sm text-label-sm text-primary font-bold">Onay</span>
+</div>
+</div>
+</section>
+<!-- Limited Time Warning -->
+<div class="mb-8 flex items-center gap-4 bg-orange-50 border border-orange-200 p-4 rounded-lg animate-pulse">
+<div class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">timer</span>
+</div>
+<div>
+<h4 class="font-bold text-orange-900 font-body-md">Kısıtlı Süre!</h4>
+<p class="text-orange-800 text-sm">Seçtiğiniz bu slot için son 15 dakika! Randevuyu tamamlamak için işleminizi hızlandırın.</p>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Category Selection -->
+<div class="lg:col-span-2 space-y-6">
+<h2 class="font-headline-md text-headline-md text-primary mb-4">Randevu Kategorisi</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<button class="p-6 rounded-xl border-2 border-primary bg-surface-container-lowest flex flex-col items-center text-center gap-4 group hover:bg-primary-container hover:text-on-primary transition-all duration-300">
+<span class="material-symbols-outlined text-4xl text-primary group-hover:text-on-primary">menu_book</span>
+<span class="font-bold font-body-md">Ders Seçimi</span>
+</button>
+<button class="p-6 rounded-xl border border-outline-variant bg-surface-container-lowest flex flex-col items-center text-center gap-4 group hover:border-primary transition-all duration-300">
+<span class="material-symbols-outlined text-4xl text-on-surface-variant group-hover:text-primary">account_tree</span>
+<span class="font-bold font-body-md">Proje Danışmanlığı</span>
+</button>
+<button class="p-6 rounded-xl border border-outline-variant bg-surface-container-lowest flex flex-col items-center text-center gap-4 group hover:border-primary transition-all duration-300">
+<span class="material-symbols-outlined text-4xl text-on-surface-variant group-hover:text-primary">chat</span>
+<span class="font-bold font-body-md">Genel Görüşme</span>
+</button>
+</div>
+<!-- Slot Info Detail -->
+<div class="p-6 rounded-xl bg-surface-container-low border border-outline-variant">
+<h3 class="font-bold text-primary mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">info</span>
+                            Slot Bilgisi Özeti
+                        </h3>
+<div class="space-y-3">
+<div class="flex justify-between items-center py-2 border-b border-outline-variant/30">
+<span class="text-on-surface-variant text-sm">Görüşme Süresi</span>
+<span class="font-bold text-primary">30 Dakika</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-outline-variant/30">
+<span class="text-on-surface-variant text-sm">Platform</span>
+<span class="font-bold text-primary">Yüz Yüze / Oda 402</span>
+</div>
+<div class="flex justify-between items-center py-2">
+<span class="text-on-surface-variant text-sm">Kontenjan</span>
+<span class="font-bold text-primary">1 / 1</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Appointment Summary Card -->
+<div class="lg:col-span-1">
+<div class="sticky top-24 rounded-xl overflow-hidden border border-outline-variant bg-white shadow-sm">
+<div class="h-32 bg-primary relative">
+<div class="absolute -bottom-10 left-6 p-1 bg-white rounded-lg shadow-lg">
+<div class="w-20 h-20 bg-surface-dim rounded-md overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A portrait of a distinguished university professor in a modern office setting. The academic is middle-aged, wearing a smart charcoal blazer and glasses, looking friendly and approachable. In the background, floor-to-ceiling bookshelves are visible with high-end architectural lighting, creating an atmosphere of deep wisdom and institutional prestige." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCRiMhU73VUdPQoJEF8HcK2dI6-St3ROHOOl_uqTwnpPocArVpsU39il5IkHGXH2VWMrkLbeKzGnibDgs7aLnWQbwNEeqDO1X2-DeD-qndrW1tOEI5hpdchahIMeKC-z1pKZMIJh6xlJ_KuNdthzr2pGdXhqdsgABUReIXnyvY725fdAiBW3Z4_6_3VCgMT1f3rCpkrjH7zkh0QPaaKKFKZCdITRvvU1Rin_lqKguxCisirLdu9DLYH"/>
+</div>
+</div>
+</div>
+<div class="pt-14 px-6 pb-6 space-y-6">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary leading-tight">Prof. Dr. Ahmet Yılmaz</h3>
+<p class="text-on-surface-variant text-sm font-medium">Bilgisayar Mühendisliği Bölüm Başkanı</p>
+</div>
+<div class="space-y-4 py-4 border-y border-outline-variant/30">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-primary-container">calendar_month</span>
+<div>
+<p class="text-[10px] uppercase text-outline-variant font-bold leading-none">TARİH</p>
+<p class="font-bold text-on-surface">15 Mayıs 2024, Çarşamba</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-primary-container">schedule</span>
+<div>
+<p class="text-[10px] uppercase text-outline-variant font-bold leading-none">SAAT</p>
+<p class="font-bold text-on-surface">14:30 - 15:00</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-primary-container">category</span>
+<div>
+<p class="text-[10px] uppercase text-outline-variant font-bold leading-none">KATEGORİ</p>
+<p class="font-bold text-on-surface">Ders Seçimi</p>
+</div>
+</div>
+</div>
+<button class="w-full py-4 bg-primary text-on-primary rounded-lg font-bold text-lg hover:bg-primary-container active:scale-95 transition-all duration-150 flex items-center justify-center gap-2" id="confirmBtn">
+                                Randevuyu Onayla
+                                <span class="material-symbols-outlined">check_circle</span>
+</button>
+<p class="text-center text-xs text-on-surface-variant">Onay butonuna basarak kampüs kurallarını kabul etmiş sayılırsınız.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Success Modal (Hidden by default) -->
+<div class="fixed inset-0 bg-primary/40 backdrop-blur-sm z-[100] hidden items-center justify-center p-4" id="successModal">
+<div class="bg-white max-w-md w-full rounded-2xl p-8 text-center shadow-2xl scale-95 transition-transform duration-300">
+<div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+<span class="material-symbols-outlined text-5xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-primary mb-2">Randevu Onaylandı!</h2>
+<p class="text-on-surface-variant mb-8">Randevu bilgileriniz e-posta adresinize gönderildi. Takviminize eklemeyi unutmayın.</p>
+<button class="w-full py-3 bg-primary text-on-primary rounded-lg font-bold" onclick="window.location.reload()">Ana Sayfaya Dön</button>
+</div>
+</div>
+<script>
+        document.getElementById('confirmBtn').addEventListener('click', function() {
+            const modal = document.getElementById('successModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.querySelector('div').classList.remove('scale-95');
+                modal.querySelector('div').classList.add('scale-100');
+            }, 10);
+        });
+
+        // Simple interactive micro-interaction for category cards
+        const categoryCards = document.querySelectorAll('button.rounded-xl.border');
+        categoryCards.forEach(card => {
+            card.addEventListener('click', () => {
+                categoryCards.forEach(c => {
+                    c.classList.remove('border-primary', 'bg-primary-container', 'text-on-primary');
+                    c.classList.add('border-outline-variant', 'bg-surface-container-lowest');
+                    const icon = c.querySelector('.material-symbols-outlined');
+                    if (icon) {
+                        icon.classList.remove('text-on-primary', 'text-primary');
+                        icon.classList.add('text-on-surface-variant');
+                    }
+                });
+                card.classList.add('border-primary', 'bg-primary-container', 'text-on-primary');
+                card.classList.remove('border-outline-variant', 'bg-surface-container-lowest');
+                const activeIcon = card.querySelector('.material-symbols-outlined');
+                if (activeIcon) {
+                    activeIcon.classList.add('text-on-primary');
+                    activeIcon.classList.remove('text-on-surface-variant');
+                }
+            });
+        });
+    </script>
+</body></html>

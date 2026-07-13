@@ -1,0 +1,309 @@
+<!DOCTYPE html><html lang="tr" class="light"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&amp;family=Inter:wght@400;500&amp;family=JetBrains+Mono:wght@500&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet"><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">try{
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline": "#767680",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary-container": "#616363",
+                    "surface-container-low": "#eff4ff",
+                    "tertiary": "#000000",
+                    "surface-bright": "#f8f9ff",
+                    "surface-container": "#e5eeff",
+                    "secondary-fixed": "#e2e2e2",
+                    "surface-container-high": "#dce9ff",
+                    "on-tertiary-container": "#81848a",
+                    "outline-variant": "#c6c5d0",
+                    "inverse-primary": "#bac4f8",
+                    "on-error": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-container": "#0d1843",
+                    "surface-container-highest": "#d3e4fe",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed-dim": "#c4c6cd",
+                    "secondary-container": "#dfe0e0",
+                    "primary-fixed-dim": "#bac4f8",
+                    "primary-fixed": "#dde1ff",
+                    "secondary": "#5d5f5f",
+                    "on-primary-fixed": "#0d1843",
+                    "surface-dim": "#cbdbf5",
+                    "on-secondary": "#ffffff",
+                    "secondary-fixed-dim": "#c6c6c7",
+                    "surface-variant": "#d3e4fe",
+                    "primary": "#000000",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed": "#181c21",
+                    "surface": "#f8f9ff",
+                    "on-surface": "#0b1c30",
+                    "inverse-on-surface": "#eaf1ff",
+                    "on-tertiary-fixed-variant": "#44474c",
+                    "on-secondary-fixed-variant": "#454747",
+                    "error": "#ba1a1a",
+                    "tertiary-fixed": "#e0e2e9",
+                    "background": "#f8f9ff",
+                    "surface-tint": "#525c8a",
+                    "tertiary-container": "#181c21",
+                    "on-secondary-fixed": "#1a1c1c",
+                    "on-primary-fixed-variant": "#3a4471",
+                    "on-primary-container": "#7881b2",
+                    "inverse-surface": "#213145",
+                    "error-container": "#ffdad6",
+                    "on-surface-variant": "#45464f",
+                    "on-background": "#0b1c30"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "4px",
+                    "margin-mobile": "20px",
+                    "gutter": "24px",
+                    "max-width": "1280px",
+                    "margin-desktop": "64px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Hanken Grotesk"],
+                    "display-lg": ["Hanken Grotesk"],
+                    "body-lg": ["Inter"],
+                    "headline-lg": ["Hanken Grotesk"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "label-sm": ["JetBrains Mono"],
+                    "label-md": ["JetBrains Mono"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    }catch(_e){}</script><meta charset="utf-8"></head><body class="text-on-background">
+<!-- Side-->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-primary dark:bg-primary-container border-r border-outline-variant flex flex-col py-6" style="background-color: rgb(11, 22, 65);">
+<div class="px-6 mb-8 flex items-center gap-3">
+<img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCicXDg7dJsGzFU--CB_Vcuraxv0xvOJHRTeHQFghkI1ToZTnaRMrRaxQUsv0cjXkUw1ByjwtHrCsJBUOVNfC_kGcU3yAsEtu8ZafkUozJtvlSSQE6OfrT0wuIc1je6q5FouD1J59BM3pnO2UFNrWgldSqTK4ZZqgrYT2jMnjo_PDksXw-gi8snWP_gbPFXHPptGwX6yMX9SCL07QgR_JigdZmt6rzaxD4cJVs9Ge6e6KGQ-6XvvycFkLqtTldMBUDZYw" alt="MARS Logo" class="w-10 h-10 rounded-lg">
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-on-primary">MARS</h1>
+<p class="font-label-sm text-label-sm text-on-primary/60">Akademik Sistem</p>
+</div>
+</div>
+<nav class="flex-1 px-4 space-y-1">
+<!-- Dashboard (Active) -->
+<a href="#" class="flex items-center gap-3 px-4 py-3 bg-surface-container-lowest/10 text-on-primary border-l-4 border-on-primary font-body-md text-body-md transition-opacity duration-150"><span class="material-symbols-outlined">dashboard</span>Panel</a>
+<a href="#" class="flex items-center gap-3 px-4 py-3 text-on-primary-container/70 hover:text-on-primary font-body-md text-body-md hover:bg-primary-fixed-dim/10 transition-colors"><span class="material-symbols-outlined">calendar_today</span>Randevular</a>
+<a href="#" class="flex items-center gap-3 px-4 py-3 text-on-primary-container/70 hover:text-on-primary font-body-md text-body-md hover:bg-primary-fixed-dim/10 transition-colors"><span class="material-symbols-outlined">notifications</span>Bildirimler</a>
+<a href="#" class="flex items-center gap-3 px-4 py-3 text-on-primary-container/70 hover:text-on-primary font-body-md text-body-md hover:bg-primary-fixed-dim/10 transition-colors"><span class="material-symbols-outlined">person</span>Profil</a>
+</nav>
+<div class="px-4 mt-auto">
+<button class="w-full py-3 bg-on-primary text-primary font-bold rounded-lg hover:bg-on-primary/90 transition-all flex items-center justify-center gap-2"><span class="material-symbols-outlined" style="font-variation-settings: &quot;FILL&quot; 1;">add_circle</span>Yeni Randevu</button>
+</div>
+</aside>
+<!-- TopAppBar Shell -->
+<header class="flex justify-between items-center ml-64 px-8 h-16 w-[calc(100%-16rem)] fixed top-0 bg-surface border-b border-outline-variant z-10">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-6 font-label-md text-label-md">
+<a href="#" class="text-primary font-bold border-b-2 border-primary pb-1">Dönem</a>
+<a href="#" class="text-on-secondary-container hover:text-primary transition-colors">Bölüm</a>
+<a href="#" class="text-on-secondary-container hover:text-primary transition-colors">Fakülte</a>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative hidden lg:block">
+<input type="text" placeholder="Kaynaklarda ara..." class="pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-label-md font-label-md focus:ring-2 focus:ring-primary-fixed-dim focus:outline-none w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-secondary-container hover:text-primary transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+<button class="text-on-secondary-container hover:text-primary transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-primary-container flex items-center justify-center border border-outline-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a middle-aged academic professor with short dark hair and glasses, wearing a navy blue suit jacket. The background is a clean, blurred office with warm wood tones. High-end portrait photography style, soft directional lighting, modern corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNeNcI_ZlFGGrcp-gJtHOqfCJ2cDm7EleiW1ClH4mQ6mM5yEH48okX6ItM9DnEYIgWqt163r1OZdYTMc7nWnSSQLGrsXPSGqL2275tkhwhvd8B989AFV8VbkghpncuXm7DPRPZ-zaPhsBlH36X_0J2QeYUZ4ukLFVz_E8sdFiu3QliQX6UPN3uUPZkRCUW5OeMy_Dh7EGNyhAx6H801hYIFOcJGy5QQNof2k_CKTaTScYezuNbL4Jl">
+</div>
+</div>
+</div>
+</header>
+<!-- Main Canvas Area -->
+<main class="ml-64 pt-16 min-h-screen">
+<div class="max-w-max-width mx-auto p-8">
+<!-- Welcome Section -->
+<section class="mb-8">
+<div class="bg-primary-container text-on-primary rounded-xl p-8 relative overflow-hidden flex items-center justify-between">
+<div class="relative z-10">
+<h2 class="font-headline-lg text-headline-lg mb-2">Hoş Geldiniz, Dr. Selim Yılmaz</h2>
+<p class="font-body-md text-body-md text-on-primary/70">Akademik takviminizde bugün 4 adet görüşmeniz bulunmaktadır.</p>
+</div>
+<div class="hidden md:block">
+<div class="flex gap-4">
+<div class="bg-surface-container-lowest/10 p-4 rounded-lg backdrop-blur-sm text-center min-w-[100px]">
+<p class="font-label-sm text-label-sm uppercase tracking-wider text-on-primary/60">AKTİF</p>
+<p class="font-headline-md text-headline-md font-bold">12</p>
+</div>
+<div class="bg-surface-container-lowest/10 p-4 rounded-lg backdrop-blur-sm text-center min-w-[100px]">
+<p class="font-label-sm text-label-sm uppercase tracking-wider text-on-primary/60">MESAJ</p>
+<p class="font-headline-md text-headline-md font-bold">3</p>
+</div>
+</div>
+</div>
+<!-- Abstract Background Pattern -->
+<div class="absolute right-0 top-0 h-full w-1/3 opacity-10 pointer-events-none">
+<div class="absolute inset-0 bg-gradient-to-l from-on-primary to-transparent"></div>
+</div>
+</div>
+</section>
+<!-- Limited Time Alert Box -->
+<div class="mb-8 p-4 bg-orange-50 border border-orange-200 rounded-lg flex items-center gap-4 text-orange-800">
+<span class="material-symbols-outlined text-orange-600" style="font-variation-settings: 'FILL' 1;">warning</span>
+<div class="flex-1 font-body-md text-body-md">
+<span class="font-bold">Limited Time:</span> Güz dönemi ders onayları için son 24 saat. Lütfen bekleyen başvuruları inceleyin.
+                </div>
+<button class="px-4 py-1.5 bg-orange-600 text-white rounded-lg font-label-md text-label-md hover:bg-orange-700 transition-colors">
+                    Hemen İncele
+                </button>
+</div>
+<!-- Bento Grid Content -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Appointment Summary Card -->
+<div class="col-span-12 lg:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-md text-headline-md text-primary">Randevu Özeti</h3>
+<a class="text-primary font-label-md text-label-md hover:underline" href="#">Tümünü Gör</a>
+</div>
+<div class="space-y-unit*4">
+<!-- Row 1 -->
+<div class="flex items-center justify-between p-4 border-b border-outline-variant last:border-0 hover:bg-surface-bright transition-colors rounded-lg">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-surface-container rounded-full flex items-center justify-center font-bold text-primary">AY</div>
+<div>
+<p class="font-body-md text-body-md font-semibold text-primary">Ali Yılmaz</p>
+<p class="font-label-sm text-label-sm text-outline">Tez Danışmanlığı • 14:30</p>
+</div>
+</div>
+<span class="px-3 py-1 bg-green-100 text-green-800 text-label-sm font-label-sm rounded-full">Onaylandı</span>
+</div>
+<!-- Row 2 -->
+<div class="flex items-center justify-between p-4 border-b border-outline-variant last:border-0 hover:bg-surface-bright transition-colors rounded-lg">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-surface-container rounded-full flex items-center justify-center font-bold text-primary">BK</div>
+<div>
+<p class="font-body-md text-body-md font-semibold text-primary">Berrin Kaya</p>
+<p class="font-label-sm text-label-sm text-outline">Proje Değerlendirme • 15:45</p>
+</div>
+</div>
+<span class="px-3 py-1 bg-orange-100 text-orange-800 text-label-sm font-label-sm rounded-full">Beklemede</span>
+</div>
+<!-- Row 3 -->
+<div class="flex items-center justify-between p-4 border-b border-outline-variant last:border-0 hover:bg-surface-bright transition-colors rounded-lg">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-surface-container rounded-full flex items-center justify-center font-bold text-primary">ET</div>
+<div>
+<p class="font-body-md text-body-md font-semibold text-primary">Emre Tan</p>
+<p class="font-label-sm text-label-sm text-outline">Akademik İtiraz • 16:15</p>
+</div>
+</div>
+<span class="px-3 py-1 bg-green-100 text-green-800 text-label-sm font-label-sm rounded-full">Onaylandı</span>
+</div>
+</div>
+</div>
+<!-- Notifications & Quick Actions Column -->
+<div class="col-span-12 lg:col-span-4 space-y-gutter">
+<!-- Notifications Card -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">notifications</span>
+<h3 class="font-headline-md text-headline-md text-primary">3 Yeni Bildirim</h3>
+</div>
+<div class="space-y-4">
+<div class="flex gap-4">
+<div class="w-2 h-2 mt-2 bg-primary rounded-full shrink-0"></div>
+<p class="font-body-md text-body-md text-on-surface-variant">Yeni bir tez önerisi dosyası yüklendi.</p>
+</div>
+<div class="flex gap-4">
+<div class="w-2 h-2 mt-2 bg-primary rounded-full shrink-0"></div>
+<p class="font-body-md text-body-md text-on-surface-variant">Toplantı saati değişikliği talebi alındı.</p>
+</div>
+<div class="flex gap-4 opacity-50">
+<div class="w-2 h-2 mt-2 bg-transparent rounded-full shrink-0"></div>
+<p class="font-body-md text-body-md text-on-surface-variant">Haftalık performans raporu hazır.</p>
+</div>
+</div>
+</div>
+<!-- Quick Action Cards -->
+<div class="space-y-3">
+<h4 class="font-label-md text-label-md text-outline uppercase tracking-widest px-1">Hızlı İşlemler</h4>
+<button class="w-full flex items-center justify-between p-4 bg-primary text-on-primary rounded-xl hover:opacity-90 transition-opacity">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" data-original-icon="add_calendar">circle</span>
+<span class="font-body-md text-body-md font-semibold">Yeni Randevu Oluştur</span>
+</div>
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-4 bg-surface-container border border-outline-variant text-primary rounded-xl hover:bg-surface-container-high transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined">event_available</span>
+<span class="font-body-md text-body-md font-semibold">Müsaitlik Ayarla</span>
+</div>
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Academic Progress (Optional visual) -->
+<div class="col-span-12 bg-surface-container-lowest border border-outline-variant rounded-xl p-8">
+<h3 class="font-headline-md text-headline-md text-primary mb-6">Bölüm İstatistikleri</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div>
+<div class="flex justify-between items-end mb-2">
+<p class="font-label-md text-label-md text-on-surface-variant">Ders Katılım Oranı</p>
+<p class="font-label-sm text-label-sm font-bold text-primary">88%</p>
+</div>
+<div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 88%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-end mb-2">
+<p class="font-label-md text-label-md text-on-surface-variant">Ödev Teslimleri</p>
+<p class="font-label-sm text-label-sm font-bold text-primary">74%</p>
+</div>
+<div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 74%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-end mb-2">
+<p class="font-label-md text-label-md text-on-surface-variant">Sınav Not Ortalaması</p>
+<p class="font-label-sm text-label-sm font-bold text-primary">62/100</p>
+</div>
+<div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 62%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script class="">
+        // Micro-interactions
+        document.querySelectorAll('button, a').forEach(el => {
+            el.addEventListener('mousedown', () => {
+                el.classList.add('scale-95');
+                setTimeout(() => el.classList.remove('scale-95'), 150);
+            });
+        });
+    </script>
+
+</body></html>
