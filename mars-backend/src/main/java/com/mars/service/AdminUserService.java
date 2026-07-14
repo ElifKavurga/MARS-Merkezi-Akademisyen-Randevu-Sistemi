@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mars.dto.admin.CreateUserRequest;
+import com.mars.dto.admin.UpdateUserRequest;
 import com.mars.dto.admin.UserListResponse;
 import com.mars.dto.admin.UserResponse;
 import com.mars.entity.Department;
@@ -59,6 +60,28 @@ public class AdminUserService {
         user.setDepartment(department);
         user.setIsActive(true);
         user.setCreatedAt(LocalDateTime.now());
+
+        User saved = userRepository.save(user);
+        return userMapper.toUserResponse(saved);
+    }
+
+    @Transactional
+    public UserResponse updateUser(Integer id, UpdateUserRequest request) {
+        User user = userRepository.findByIdWithRoleAndDepartment(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı."));
+
+        if (userRepository.existsByInstitutionalEmailAndUserIdNot(
+                request.getInstitutionalEmail(), id)) {
+            throw new ConflictException("Bu e-posta adresi zaten kayıtlı.");
+        }
+
+        Role role = roleRepository.findById(request.getRoleId())
+                .orElseThrow(() -> new ResourceNotFoundException("Rol bulunamadı."));
+
+        Department department = departmentRepository.findById(request.getDepartmentId())
+                .orElseThrow(() -> new ResourceNotFoundException("Bölüm bulunamadı."));
+
+        userMapper.updateUserFromRequest(user, request, role, department);
 
         User saved = userRepository.save(user);
         return userMapper.toUserResponse(saved);

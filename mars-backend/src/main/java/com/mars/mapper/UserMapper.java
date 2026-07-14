@@ -2,8 +2,11 @@ package com.mars.mapper;
 
 import org.springframework.stereotype.Component;
 
+import com.mars.dto.admin.UpdateUserRequest;
 import com.mars.dto.admin.UserListResponse;
 import com.mars.dto.admin.UserResponse;
+import com.mars.entity.Department;
+import com.mars.entity.Role;
 import com.mars.entity.User;
 
 @Component
@@ -30,5 +33,12 @@ public class UserMapper {
                 .department(user.getDepartment().getDepartmentName())
                 .isActive(user.getIsActive())
                 .build();
+    }
+
+    public void updateUserFromRequest(User user, UpdateUserRequest request, Role role, Department department) {
+        user.setFullName(request.getFullName());
+        user.setInstitutionalEmail(request.getInstitutionalEmail());
+        user.setRole(role);
+        user.setDepartment(department);
     }
 }

@@ -17,5 +17,10 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     @Query("SELECT u FROM User u JOIN FETCH u.role JOIN FETCH u.department ORDER BY u.userId ASC")
     List<User> findAllWithRoleAndDepartment();
 
+    @Query("SELECT u FROM User u JOIN FETCH u.role JOIN FETCH u.department WHERE u.userId = :userId")
+    Optional<User> findByIdWithRoleAndDepartment(@Param("userId") Integer userId);
+
     boolean existsByInstitutionalEmail(String institutionalEmail);
+
+    boolean existsByInstitutionalEmailAndUserIdNot(String institutionalEmail, Integer userId);
 }

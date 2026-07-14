@@ -5,12 +5,15 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mars.dto.admin.CreateUserRequest;
+import com.mars.dto.admin.UpdateUserRequest;
 import com.mars.dto.admin.UserListResponse;
 import com.mars.dto.admin.UserResponse;
 import com.mars.service.AdminUserService;
@@ -33,5 +36,12 @@ public class AdminUserController {
     public ResponseEntity<UserResponse> createUser(@RequestBody CreateUserRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(adminUserService.createUser(request));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponse> updateUser(
+            @PathVariable Integer id,
+            @RequestBody UpdateUserRequest request) {
+        return ResponseEntity.ok(adminUserService.updateUser(id, request));
     }
 }

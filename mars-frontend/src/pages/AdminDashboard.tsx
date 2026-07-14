@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
 import CreateUserModal from '../components/CreateUserModal';
+import EditUserModal from '../components/EditUserModal';
 import { getAdminUsers } from '../services/adminUserService';
 import type { UserListItem } from '../types/user';
 import { getRoleLabel } from '../constants';
@@ -12,6 +13,7 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserListItem | null>(null);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -36,6 +38,11 @@ export default function AdminDashboard() {
 
   const handleCreated = () => {
     setSuccessMessage('Kullanıcı başarıyla oluşturuldu.');
+    void loadUsers();
+  };
+
+  const handleUpdated = () => {
+    setSuccessMessage('Kullanıcı başarıyla güncellendi.');
     void loadUsers();
   };
 
@@ -205,10 +212,10 @@ export default function AdminDashboard() {
                         ) : (
                           <button
                             type="button"
-                            className="font-label-sm text-label-sm text-primary border border-primary px-3 py-1.5 rounded-md font-semibold opacity-60 cursor-not-allowed"
-                            disabled
+                            className="font-label-sm text-label-sm text-primary border border-primary px-3 py-1.5 rounded-md hover:bg-primary/5 transition-colors font-semibold"
+                            onClick={() => setEditingUser(user)}
                           >
-                            Rolü Güncelle
+                            Düzenle
                           </button>
                         )}
                       </td>
@@ -233,6 +240,12 @@ export default function AdminDashboard() {
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
         onCreated={handleCreated}
+      />
+      <EditUserModal
+        open={editingUser != null}
+        user={editingUser}
+        onClose={() => setEditingUser(null)}
+        onUpdated={handleUpdated}
       />
     </div>
   );
