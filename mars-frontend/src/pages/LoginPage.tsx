@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import marsLogo from '../assets/images/mars-logo.png';
-import { getHomePathForRole } from '../constants';
+import { ROUTES, getHomePathForRole } from '../constants';
 import { useAuth } from '../contexts/AuthContext';
 import { login } from '../services/authService';
 import '../styles/LoginPage.css';
@@ -174,13 +174,12 @@ export default function LoginPage() {
             </button>
 
             <div className="pt-4 text-center">
-              <a
+              <Link
                 className="font-label-md text-label-md text-primary-container hover:text-primary underline-offset-4 hover:underline transition-all"
-                href="#"
-                onClick={(event) => event.preventDefault()}
+                to={ROUTES.RESET_PASSWORD}
               >
                 Şifremi Unuttum
-              </a>
+              </Link>
             </div>
           </form>
 

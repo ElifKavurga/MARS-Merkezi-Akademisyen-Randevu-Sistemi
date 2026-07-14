@@ -1,19 +1,6 @@
-import { useLocation, useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Drawer,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Toolbar,
-  Typography,
-  Divider,
-} from '@mui/material';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import { FiHome } from 'react-icons/fi';
-import { ROUTES } from '../constants/routes';
-import { APP_NAME } from '../constants';
+import { NavLink } from 'react-router-dom';
+import MarsLogo from './MarsLogo';
+import { APP_NAME, ROUTES } from '../constants';
 
 interface SidebarProps {
   drawerWidth: number;
@@ -26,9 +13,9 @@ const navItems = [
   {
     label: 'Dashboard',
     path: ROUTES.DASHBOARD,
-    icon: <DashboardIcon />,
+    icon: 'dashboard',
   },
-];
+] as const;
 
 export default function Sidebar({
   drawerWidth,
@@ -36,91 +23,72 @@ export default function Sidebar({
   onClose,
   isMobile,
 }: SidebarProps) {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const handleNavigate = (path: string) => {
-    navigate(path);
-    if (isMobile) {
-      onClose();
-    }
-  };
-
   const drawerContent = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Toolbar sx={{ gap: 1.5 }}>
-        <FiHome size={22} />
-        <Typography variant="h6" noWrap sx={{ fontWeight: 700 }}>
-          {APP_NAME}
-        </Typography>
-      </Toolbar>
-      <Divider />
-      <List sx={{ flexGrow: 1, px: 1, py: 2 }}>
+    <div className="flex h-full flex-col bg-[rgb(11,22,65)] text-white">
+      <div className="flex items-center gap-3 px-4 py-4 border-b border-white/10">
+        <MarsLogo onDark className="h-10 w-auto max-w-[7rem]" />
+        <span className="font-headline-md text-sm font-bold tracking-wide truncate">{APP_NAME}</span>
+      </div>
+
+      <nav className="flex-1 px-2 py-3 space-y-1" aria-label="Ana menü">
         {navItems.map((item) => (
-          <ListItemButton
+          <NavLink
             key={item.path}
-            selected={location.pathname === item.path}
-            onClick={() => handleNavigate(item.path)}
-            sx={{
-              borderRadius: 1,
-              mb: 0.5,
-              '&.Mui-selected': {
-                bgcolor: 'primary.main',
-                color: 'primary.contrastText',
-                '& .MuiListItemIcon-root': {
-                  color: 'primary.contrastText',
-                },
-                '&:hover': {
-                  bgcolor: 'primary.dark',
-                },
-              },
+            to={item.path}
+            end
+            onClick={() => {
+              if (isMobile) {
+                onClose();
+              }
             }}
+            className={({ isActive }) =>
+              [
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                isActive
+                  ? 'bg-white/10 text-white font-bold'
+                  : 'text-white/70 hover:bg-white/5 hover:text-white',
+              ].join(' ')
+            }
           >
-            <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.label} />
-          </ListItemButton>
+            <span className="material-symbols-outlined text-[22px]" aria-hidden="true">
+              {item.icon}
+            </span>
+            <span>{item.label}</span>
+          </NavLink>
         ))}
-      </List>
-    </Box>
+      </nav>
+    </div>
   );
 
   return (
-    <Box
-      component="nav"
-      sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
+    <nav
+      className="shrink-0"
+      style={{ width: isMobile ? undefined : drawerWidth }}
+      aria-label="Yan menü"
     >
-      <Drawer
-        variant="temporary"
-        open={mobileOpen}
-        onClose={onClose}
-        slotProps={{
-          root: { keepMounted: true },
-        }}
-        sx={{
-          display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': {
-            boxSizing: 'border-box',
-            width: drawerWidth,
-          },
-        }}
+      <div
+        className={`fixed inset-0 z-40 bg-[rgba(13,24,67,0.3)] backdrop-blur-sm md:hidden ${
+          mobileOpen ? 'block' : 'hidden'
+        }`}
+        onClick={onClose}
+        aria-hidden={!mobileOpen}
+      />
+
+      <aside
+        className={`fixed left-0 top-0 z-50 h-full md:hidden transition-transform duration-200 ${
+          mobileOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+        style={{ width: drawerWidth }}
       >
         {drawerContent}
-      </Drawer>
-      <Drawer
-        variant="permanent"
-        open
-        sx={{
-          display: { xs: 'none', md: 'block' },
-          '& .MuiDrawer-paper': {
-            boxSizing: 'border-box',
-            width: drawerWidth,
-            borderRight: 1,
-            borderColor: 'divider',
-          },
-        }}
+      </aside>
+
+      <aside
+        className="hidden md:fixed md:left-0 md:top-0 md:z-30 md:block md:h-full md:border-r md:border-outline-variant"
+        style={{ width: drawerWidth }}
       >
         {drawerContent}
-      </Drawer>
-    </Box>
+      </aside>
+    </nav>
   );
 }

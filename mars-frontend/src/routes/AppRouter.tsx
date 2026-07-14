@@ -3,6 +3,7 @@ import MainLayout from '../layouts/MainLayout';
 import AdminLayout from '../layouts/AdminLayout';
 import ProtectedRoute from './ProtectedRoute';
 import LoginPage from '../pages/LoginPage';
+import ResetPasswordPage from '../pages/ResetPasswordPage';
 import DashboardPage from '../pages/DashboardPage';
 import AdminHomePage from '../pages/AdminHomePage';
 import AdminDashboard from '../pages/AdminDashboard';
@@ -20,6 +21,7 @@ export default function AppRouter() {
   return (
     <Routes>
       <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+      <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage />} />
 
       <Route element={<ProtectedRoute />}>
         <Route element={<MainLayout />}>

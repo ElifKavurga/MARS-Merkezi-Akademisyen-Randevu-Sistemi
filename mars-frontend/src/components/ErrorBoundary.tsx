@@ -1,5 +1,4 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { Box, Button, Typography } from '@mui/material';
 
 type Props = {
   children: ReactNode;
@@ -27,27 +26,21 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <Box
-          sx={{
-            minHeight: '100vh',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 2,
-            p: 3,
-          }}
-        >
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>
+        <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6 bg-surface text-on-surface">
+          <h1 className="font-headline-md text-headline-md font-bold text-on-surface">
             Beklenmeyen bir hata oluştu
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
+          </h1>
+          <p className="font-body-md text-body-md text-on-surface-variant text-center max-w-sm">
             Sayfayı yenileyerek tekrar deneyebilirsiniz.
-          </Typography>
-          <Button variant="contained" onClick={this.handleReload}>
+          </p>
+          <button
+            type="button"
+            onClick={this.handleReload}
+            className="inline-flex items-center justify-center px-5 py-3 rounded-lg bg-[#0b1641] text-on-primary font-label-md text-label-md hover:bg-black transition-colors"
+          >
             Ana sayfaya dön
-          </Button>
-        </Box>
+          </button>
+        </div>
       );
     }
 

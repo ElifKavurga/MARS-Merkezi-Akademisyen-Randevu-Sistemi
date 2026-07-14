@@ -12,6 +12,14 @@ export type LoginResponse = {
   role: string;
 };
 
+export type ResetPasswordRequest = {
+  institutionalEmail: string;
+};
+
+export type ResetPasswordResponse = {
+  message: string;
+};
+
 export type AuthUser = {
   userId: number;
   fullName: string;

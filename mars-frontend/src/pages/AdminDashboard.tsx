@@ -2,14 +2,12 @@
 import { isAxiosError } from 'axios';
 import AdminActionButton from '../components/AdminActionButton';
 import CreateUserModal from '../components/CreateUserModal';
+import DepartmentSelect from '../components/DepartmentSelect';
 import EditUserModal from '../components/EditUserModal';
+import RoleSelect from '../components/RoleSelect';
 import { changeAdminUserStatus, getAdminUsers } from '../services/adminUserService';
 import type { UserListItem } from '../types/user';
-import {
-  ADMIN_DEPARTMENT_OPTIONS,
-  ADMIN_ROLE_OPTIONS,
-  getRoleLabel,
-} from '../constants';
+import { getRoleLabel } from '../constants';
 import { formatDate, formatDateTime, getInitials } from '../utils';
 
 export default function AdminDashboard() {
@@ -43,16 +41,6 @@ export default function AdminDashboard() {
   useEffect(() => {
     void loadUsers();
   }, [loadUsers]);
-
-  const departmentOptions = useMemo(() => {
-    const fromUsers = users
-      .map((user) => user.department)
-      .filter((name): name is string => typeof name === 'string' && name.length > 0);
-    const fromCatalog = ADMIN_DEPARTMENT_OPTIONS.map((department) => department.label);
-    return Array.from(new Set([...fromCatalog, ...fromUsers])).sort((a, b) =>
-      a.localeCompare(b, 'tr'),
-    );
-  }, [users]);
 
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
@@ -132,32 +120,28 @@ export default function AdminDashboard() {
       <div className="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
         <div className="p-4 border-b border-outline-variant bg-surface-container-lowest flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
           <div className="flex flex-wrap gap-2">
-            <select
+            <RoleSelect
+              id="admin-role-filter"
+              value={0}
+              onChange={() => undefined}
+              valueMode="name"
+              nameValue={roleFilter}
+              onNameChange={setRoleFilter}
+              allowEmpty
+              emptyLabel="Tüm Roller"
               className="py-2 pl-3 pr-8 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary text-sm"
-              value={roleFilter}
-              aria-label="Rol filtresi"
-              onChange={(event) => setRoleFilter(event.target.value)}
-            >
-              <option value="">Tüm Roller</option>
-              {ADMIN_ROLE_OPTIONS.map((role) => (
-                <option key={role.name} value={role.name}>
-                  {role.label}
-                </option>
-              ))}
-            </select>
-            <select
+            />
+            <DepartmentSelect
+              id="admin-department-filter"
+              value={0}
+              onChange={() => undefined}
+              valueMode="name"
+              nameValue={departmentFilter}
+              onNameChange={setDepartmentFilter}
+              allowEmpty
+              emptyLabel="Tüm Bölümler"
               className="py-2 pl-3 pr-8 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary text-sm"
-              value={departmentFilter}
-              aria-label="Bölüm filtresi"
-              onChange={(event) => setDepartmentFilter(event.target.value)}
-            >
-              <option value="">Tüm Bölümler</option>
-              {departmentOptions.map((department) => (
-                <option key={department} value={department}>
-                  {department}
-                </option>
-              ))}
-            </select>
+            />
           </div>
           <button
             type="button"

@@ -1,13 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { isAxiosError } from 'axios';
+import DepartmentSelect from './DepartmentSelect';
+import RoleSelect from './RoleSelect';
+import { useDepartments } from '../hooks/useDepartments';
+import { useRoles } from '../hooks/useRoles';
 import { updateAdminUser } from '../services/adminUserService';
 import type { UpdateUserPayload, UserListItem } from '../types/user';
-import {
-  ADMIN_DEPARTMENT_OPTIONS,
-  ADMIN_ROLE_OPTIONS,
-  resolveDepartmentIdByName,
-  resolveRoleIdByName,
-} from '../constants/adminFormOptions';
+import { resolveDepartmentIdByName, resolveRoleIdByName } from '../utils/catalogResolvers';
 
 type EditUserModalProps = {
   open: boolean;
@@ -17,11 +16,13 @@ type EditUserModalProps = {
 };
 
 export default function EditUserModal({ open, user, onClose, onUpdated }: EditUserModalProps) {
+  const { roles } = useRoles();
+  const { departments } = useDepartments();
   const [form, setForm] = useState<UpdateUserPayload>({
     fullName: '',
     institutionalEmail: '',
-    roleId: ADMIN_ROLE_OPTIONS[0].id,
-    departmentId: ADMIN_DEPARTMENT_OPTIONS[0].id,
+    roleId: 0,
+    departmentId: 0,
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,11 +34,11 @@ export default function EditUserModal({ open, user, onClose, onUpdated }: EditUs
     setForm({
       fullName: user.fullName,
       institutionalEmail: user.institutionalEmail,
-      roleId: resolveRoleIdByName(user.role),
-      departmentId: resolveDepartmentIdByName(user.department),
+      roleId: resolveRoleIdByName(roles, user.role),
+      departmentId: resolveDepartmentIdByName(departments, user.department),
     });
     setError(null);
-  }, [open, user]);
+  }, [open, user, roles, departments]);
 
   if (!open || !user) {
     return null;
@@ -51,6 +52,12 @@ export default function EditUserModal({ open, user, onClose, onUpdated }: EditUs
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+
+    if (!form.roleId || !form.departmentId) {
+      setError('Rol ve bölüm seçimi zorunludur.');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -159,22 +166,13 @@ export default function EditUserModal({ open, user, onClose, onUpdated }: EditUs
                     >
                       Rol
                     </label>
-                    <select
+                    <RoleSelect
                       id="edit-role"
-                      className="w-full py-2.5 pl-3 pr-8 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary-container"
                       required
-                      value={form.roleId}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, roleId: Number(e.target.value) }))
-                      }
                       disabled={submitting}
-                    >
-                      {ADMIN_ROLE_OPTIONS.map((role) => (
-                        <option key={role.id} value={role.id}>
-                          {role.label}
-                        </option>
-                      ))}
-                    </select>
+                      value={form.roleId}
+                      onChange={(roleId) => setForm((prev) => ({ ...prev, roleId }))}
+                    />
                   </div>
 
                   <div className="space-y-1.5">
@@ -184,22 +182,13 @@ export default function EditUserModal({ open, user, onClose, onUpdated }: EditUs
                     >
                       Bölüm
                     </label>
-                    <select
+                    <DepartmentSelect
                       id="edit-department"
-                      className="w-full py-2.5 pl-3 pr-8 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary-container"
                       required
-                      value={form.departmentId}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, departmentId: Number(e.target.value) }))
-                      }
                       disabled={submitting}
-                    >
-                      {ADMIN_DEPARTMENT_OPTIONS.map((department) => (
-                        <option key={department.id} value={department.id}>
-                          {department.label}
-                        </option>
-                      ))}
-                    </select>
+                      value={form.departmentId}
+                      onChange={(departmentId) => setForm((prev) => ({ ...prev, departmentId }))}
+                    />
                   </div>
 
                   {error ? (

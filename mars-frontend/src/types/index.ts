@@ -14,3 +14,12 @@ export type PaginatedResponse<T> = {
 export type { UserListItem } from './user';
 export type { AppointmentCategory, AppointmentCategoryPayload } from './category';
 export type { PenaltyRule, UpdatePenaltyRulePayload } from './penaltyRule';
+export type { RoleOption } from './role';
+export type { DepartmentOption } from './department';
+export type {
+  LoginRequest,
+  LoginResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
+  AuthUser,
+} from './auth';

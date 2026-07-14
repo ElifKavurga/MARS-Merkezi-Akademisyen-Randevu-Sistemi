@@ -1,6 +1,7 @@
 export const ROUTES = {
   HOME: '/',
   LOGIN: '/giris',
+  RESET_PASSWORD: '/sifre-sifirlama',
   DASHBOARD: '/dashboard',
   ADMIN: '/admin',
   ADMIN_USERS: '/admin/kullanicilar',

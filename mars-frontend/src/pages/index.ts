@@ -1,4 +1,5 @@
 export { default as LoginPage } from './LoginPage';
+export { default as ResetPasswordPage } from './ResetPasswordPage';
 export { default as DashboardPage } from './DashboardPage';
 export { default as AdminHomePage } from './AdminHomePage';
 export { default as AdminDashboard } from './AdminDashboard';

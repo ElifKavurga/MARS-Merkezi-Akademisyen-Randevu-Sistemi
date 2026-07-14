@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { isAxiosError } from 'axios';
+import DepartmentSelect from './DepartmentSelect';
+import RoleSelect from './RoleSelect';
 import { createAdminUser } from '../services/adminUserService';
 import type { CreateUserPayload } from '../types/user';
-import { ADMIN_DEPARTMENT_OPTIONS, ADMIN_ROLE_OPTIONS } from '../constants/adminFormOptions';
 
 type CreateUserModalProps = {
   open: boolean;
@@ -14,8 +15,8 @@ const INITIAL_FORM: CreateUserPayload = {
   fullName: '',
   institutionalEmail: '',
   password: '',
-  roleId: ADMIN_ROLE_OPTIONS[0]?.id ?? 1,
-  departmentId: ADMIN_DEPARTMENT_OPTIONS[0]?.id ?? 1,
+  roleId: 0,
+  departmentId: 0,
 };
 
 export default function CreateUserModal({ open, onClose, onCreated }: CreateUserModalProps) {
@@ -36,6 +37,12 @@ export default function CreateUserModal({ open, onClose, onCreated }: CreateUser
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+
+    if (!form.roleId || !form.departmentId) {
+      setError('Rol ve bölüm seçimi zorunludur.');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -163,22 +170,13 @@ export default function CreateUserModal({ open, onClose, onCreated }: CreateUser
                     >
                       Rol
                     </label>
-                    <select
+                    <RoleSelect
                       id="create-role"
-                      className="w-full py-2.5 pl-3 pr-8 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary-container"
                       required
-                      value={form.roleId}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, roleId: Number(e.target.value) }))
-                      }
                       disabled={submitting}
-                    >
-                      {ADMIN_ROLE_OPTIONS.map((role) => (
-                        <option key={role.id} value={role.id}>
-                          {role.label}
-                        </option>
-                      ))}
-                    </select>
+                      value={form.roleId}
+                      onChange={(roleId) => setForm((prev) => ({ ...prev, roleId }))}
+                    />
                   </div>
 
                   <div className="space-y-1.5">
@@ -188,22 +186,13 @@ export default function CreateUserModal({ open, onClose, onCreated }: CreateUser
                     >
                       Bölüm
                     </label>
-                    <select
+                    <DepartmentSelect
                       id="create-department"
-                      className="w-full py-2.5 pl-3 pr-8 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary-container"
                       required
-                      value={form.departmentId}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, departmentId: Number(e.target.value) }))
-                      }
                       disabled={submitting}
-                    >
-                      {ADMIN_DEPARTMENT_OPTIONS.map((department) => (
-                        <option key={department.id} value={department.id}>
-                          {department.label}
-                        </option>
-                      ))}
-                    </select>
+                      value={form.departmentId}
+                      onChange={(departmentId) => setForm((prev) => ({ ...prev, departmentId }))}
+                    />
                   </div>
 
                   {error ? (

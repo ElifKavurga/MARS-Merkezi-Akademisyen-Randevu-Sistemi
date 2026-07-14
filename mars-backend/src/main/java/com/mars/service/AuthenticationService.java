@@ -7,15 +7,22 @@ import org.springframework.stereotype.Service;
 
 import com.mars.dto.auth.LoginRequest;
 import com.mars.dto.auth.LoginResponse;
+import com.mars.dto.auth.ResetPasswordRequest;
+import com.mars.dto.auth.ResetPasswordResponse;
 import com.mars.entity.User;
+import com.mars.exception.BadRequestException;
 import com.mars.security.CustomUserDetails;
 import com.mars.security.JwtService;
+import com.mars.util.InstitutionalEmailValidator;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
+
+    private static final String RESET_PASSWORD_SUCCESS_MESSAGE =
+            "Şifre sıfırlama bağlantısı kurumsal e-posta adresinize gönderildi.";
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -37,6 +44,21 @@ public class AuthenticationService {
                 .fullName(user.getFullName())
                 .institutionalEmail(user.getInstitutionalEmail())
                 .role(user.getRole().getRoleName())
+                .build();
+    }
+
+    public ResetPasswordResponse resetPassword(ResetPasswordRequest request) {
+        String email = request.getInstitutionalEmail() == null
+                ? null
+                : request.getInstitutionalEmail().trim();
+
+        if (!InstitutionalEmailValidator.isValid(email)) {
+            throw new BadRequestException("Geçerli bir kurumsal (@...edu.tr) e-posta adresi giriniz.");
+        }
+
+        // Dummy akış: gerçek e-posta gönderilmez. Kullanıcı var/yok ayırt edilmez.
+        return ResetPasswordResponse.builder()
+                .message(RESET_PASSWORD_SUCCESS_MESSAGE)
                 .build();
     }
 }

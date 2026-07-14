@@ -1,5 +1,7 @@
 export { apiClient } from './apiClient';
-export { login } from './authService';
+export { login, resetPassword } from './authService';
+export { getRoles } from './roleService';
+export { getDepartments } from './departmentService';
 export { getAdminUsers, createAdminUser, updateAdminUser, changeAdminUserStatus } from './adminUserService';
 export {
   getAdminCategories,
