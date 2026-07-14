@@ -7,3 +7,7 @@ export {
   updateAdminCategory,
   deleteAdminCategory,
 } from './adminCategoryService';
+export {
+  getAdminPenaltyRule,
+  updateAdminPenaltyRule,
+} from './adminPenaltyRuleService';

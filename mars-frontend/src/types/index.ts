@@ -13,3 +13,4 @@ export type PaginatedResponse<T> = {
 
 export type { UserListItem } from './user';
 export type { AppointmentCategory, AppointmentCategoryPayload } from './category';
+export type { PenaltyRule, UpdatePenaltyRulePayload } from './penaltyRule';
