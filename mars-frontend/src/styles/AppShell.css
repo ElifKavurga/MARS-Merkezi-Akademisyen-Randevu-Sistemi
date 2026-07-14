@@ -1,0 +1,30 @@
+@tailwind utilities;
+
+.app-shell .material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-header {
+  box-shadow: 0 1px 0 rgba(13, 24, 67, 0.04);
+}
+
+.app-welcome-card {
+  border: 1px solid #c6c5d0;
+  box-shadow: 0 10px 25px -5px rgba(13, 24, 67, 0.05);
+}

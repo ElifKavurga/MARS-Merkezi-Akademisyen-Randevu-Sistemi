@@ -1,6 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./index.html', './src/pages/LoginPage.tsx', './src/styles/LoginPage.css'],
+  content: [
+    './index.html',
+    './src/pages/**/*.{tsx,ts}',
+    './src/components/**/*.{tsx,ts}',
+    './src/layouts/**/*.{tsx,ts}',
+    './src/styles/**/*.css',
+  ],
   darkMode: 'class',
   corePlugins: {
     preflight: false,

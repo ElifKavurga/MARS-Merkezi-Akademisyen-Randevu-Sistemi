@@ -1,21 +1,25 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import marsLogo from '../assets/mars-logo.png';
-import { ROUTES } from '../constants/routes';
+import { getHomePathForRole } from '../constants';
 import { useAuth } from '../contexts/AuthContext';
 import { login } from '../services/authService';
 import '../styles/LoginPage.css';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { setSession } = useAuth();
+  const { isAuthenticated, user, setSession } = useAuth();
 
   const [institutionalEmail, setInstitutionalEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  if (isAuthenticated && user) {
+    return <Navigate to={getHomePathForRole(user.role)} replace />;
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -25,7 +29,7 @@ export default function LoginPage() {
     try {
       const response = await login({ institutionalEmail, password });
       setSession(response);
-      navigate(ROUTES.DASHBOARD, { replace: true });
+      navigate(getHomePathForRole(response.role), { replace: true });
     } catch (err) {
       if (isAxiosError(err)) {
         const backendMessage = err.response?.data?.message;

@@ -4,3 +4,12 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api';
 
 export { ROUTES } from './routes';
 export { STORAGE_KEYS } from './storage';
+export {
+  ROLES,
+  ROLE_HOME_PATH,
+  ROLE_LABELS,
+  isRole,
+  getHomePathForRole,
+  getRoleLabel,
+} from './roles';
+export type { Role } from './roles';
