@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+﻿import { useCallback, useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
 import CreateUserModal from '../components/CreateUserModal';
 import EditUserModal from '../components/EditUserModal';
-import { getAdminUsers } from '../services/adminUserService';
+import { changeAdminUserStatus, getAdminUsers } from '../services/adminUserService';
 import type { UserListItem } from '../types/user';
 import { getRoleLabel } from '../constants';
 import { formatDateTime, getInitials } from '../utils';
@@ -14,6 +14,7 @@ export default function AdminDashboard() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserListItem | null>(null);
+  const [statusUpdatingId, setStatusUpdatingId] = useState<number | null>(null);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -44,6 +45,33 @@ export default function AdminDashboard() {
   const handleUpdated = () => {
     setSuccessMessage('Kullanıcı başarıyla güncellendi.');
     void loadUsers();
+  };
+
+  const handleToggleStatus = async (user: UserListItem) => {
+    setStatusUpdatingId(user.userId);
+    setError(null);
+    try {
+      const updated = await changeAdminUserStatus(user.userId);
+      setSuccessMessage(
+        updated.isActive
+          ? 'Kullanıcı aktif hale getirildi.'
+          : 'Kullanıcı pasif hale getirildi.',
+      );
+      await loadUsers();
+    } catch (err) {
+      if (isAxiosError(err)) {
+        const backendMessage = err.response?.data?.message;
+        if (typeof backendMessage === 'string' && backendMessage.length > 0) {
+          setError(backendMessage);
+        } else {
+          setError('Kullanıcı durumu güncellenemedi.');
+        }
+      } else {
+        setError('Kullanıcı durumu güncellenemedi.');
+      }
+    } finally {
+      setStatusUpdatingId(null);
+    }
   };
 
   return (
@@ -145,6 +173,7 @@ export default function AdminDashboard() {
               <tbody className="divide-y divide-outline-variant/50">
                 {users.map((user) => {
                   const inactive = !user.isActive;
+                  const statusBusy = statusUpdatingId === user.userId;
                   return (
                     <tr
                       key={user.userId}
@@ -189,8 +218,8 @@ export default function AdminDashboard() {
                         <span
                           className={`inline-flex items-center justify-center px-3 py-1 rounded-md font-label-sm text-label-sm ${
                             user.isActive
-                              ? 'bg-surface-container text-on-surface'
-                              : 'bg-surface-container text-on-surface-variant'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : 'bg-red-100 text-red-800'
                           }`}
                         >
                           {user.isActive ? 'Aktif' : 'Pasif'}
@@ -204,20 +233,29 @@ export default function AdminDashboard() {
                         {formatDateTime(user.createdAt)}
                       </td>
                       <td className="py-4 px-6 text-right">
-                        {inactive ? (
-                          <span className="inline-flex items-center gap-1.5 font-label-sm text-label-sm text-on-surface-variant px-3 py-1.5 bg-surface-container rounded-md">
-                            <span className="material-symbols-outlined text-[16px]">block</span>
-                            Pasif
-                          </span>
-                        ) : (
+                        <div className="inline-flex items-center gap-2 justify-end flex-wrap">
+                          {!inactive ? (
+                            <button
+                              type="button"
+                              className="font-label-sm text-label-sm text-primary border border-primary px-3 py-1.5 rounded-md hover:bg-primary/5 transition-colors font-semibold"
+                              onClick={() => setEditingUser(user)}
+                            >
+                              Düzenle
+                            </button>
+                          ) : null}
                           <button
                             type="button"
-                            className="font-label-sm text-label-sm text-primary border border-primary px-3 py-1.5 rounded-md hover:bg-primary/5 transition-colors font-semibold"
-                            onClick={() => setEditingUser(user)}
+                            className="font-label-sm text-label-sm border border-outline-variant px-3 py-1.5 rounded-md hover:bg-surface-container-low transition-colors font-semibold text-on-surface disabled:opacity-60"
+                            onClick={() => void handleToggleStatus(user)}
+                            disabled={statusBusy}
                           >
-                            Düzenle
+                            {statusBusy
+                              ? 'Güncelleniyor...'
+                              : user.isActive
+                                ? 'Pasif Yap'
+                                : 'Aktif Yap'}
                           </button>
-                        )}
+                        </div>
                       </td>
                     </tr>
                   );

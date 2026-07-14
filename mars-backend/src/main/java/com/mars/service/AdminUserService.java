@@ -86,4 +86,15 @@ public class AdminUserService {
         User saved = userRepository.save(user);
         return userMapper.toUserResponse(saved);
     }
+
+    @Transactional
+    public UserResponse changeUserStatus(Integer id) {
+        User user = userRepository.findByIdWithRoleAndDepartment(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı."));
+
+        user.setIsActive(!Boolean.TRUE.equals(user.getIsActive()));
+
+        User saved = userRepository.save(user);
+        return userMapper.toUserResponse(saved);
+    }
 }

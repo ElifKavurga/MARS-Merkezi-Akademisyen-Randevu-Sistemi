@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -43,5 +44,10 @@ public class AdminUserController {
             @PathVariable Integer id,
             @RequestBody UpdateUserRequest request) {
         return ResponseEntity.ok(adminUserService.updateUser(id, request));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<UserResponse> changeUserStatus(@PathVariable Integer id) {
+        return ResponseEntity.ok(adminUserService.changeUserStatus(id));
     }
 }

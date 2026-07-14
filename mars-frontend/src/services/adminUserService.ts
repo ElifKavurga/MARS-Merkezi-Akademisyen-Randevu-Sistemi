@@ -18,3 +18,8 @@ export async function updateAdminUser(
   const { data } = await apiClient.put<UserResponse>(`/admin/users/${userId}`, payload);
   return data;
 }
+
+export async function changeAdminUserStatus(userId: number): Promise<UserResponse> {
+  const { data } = await apiClient.patch<UserResponse>(`/admin/users/${userId}/status`);
+  return data;
+}
