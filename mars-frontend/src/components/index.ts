@@ -1,6 +1,11 @@
 export { default as Header } from './Header';
 export { default as Sidebar } from './Sidebar';
+export { default as AdminSidebar } from './AdminSidebar';
+export { default as MarsLogo } from './MarsLogo';
+export { default as AdminActionButton } from './AdminActionButton';
 export { default as RoleWelcomeView } from './RoleWelcomeView';
 export { default as CreateUserModal } from './CreateUserModal';
 export { default as EditUserModal } from './EditUserModal';
+export { default as CategoryFormModal } from './CategoryFormModal';
+export { default as DeleteCategoryModal } from './DeleteCategoryModal';
 export { ErrorBoundary } from './ErrorBoundary';

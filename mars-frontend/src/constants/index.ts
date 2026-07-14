@@ -13,3 +13,9 @@ export {
   getRoleLabel,
 } from './roles';
 export type { Role } from './roles';
+export {
+  ADMIN_ROLE_OPTIONS,
+  ADMIN_DEPARTMENT_OPTIONS,
+  resolveRoleIdByName,
+  resolveDepartmentIdByName,
+} from './adminFormOptions';

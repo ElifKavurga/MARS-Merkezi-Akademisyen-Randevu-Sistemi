@@ -1,9 +1,13 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
+import AdminLayout from '../layouts/AdminLayout';
 import ProtectedRoute from './ProtectedRoute';
 import LoginPage from '../pages/LoginPage';
 import DashboardPage from '../pages/DashboardPage';
+import AdminHomePage from '../pages/AdminHomePage';
 import AdminDashboard from '../pages/AdminDashboard';
+import AdminCategoriesPage from '../pages/AdminCategoriesPage';
+import AdminPenaltyRulesPage from '../pages/AdminPenaltyRulesPage';
 import HodDashboard from '../pages/HodDashboard';
 import AcademicianDashboard from '../pages/AcademicianDashboard';
 import AssistantDashboard from '../pages/AssistantDashboard';
@@ -22,10 +26,6 @@ export default function AppRouter() {
           <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.DASHBOARD} replace />} />
           <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
 
-          <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
-            <Route path={ROUTES.ADMIN} element={<AdminDashboard />} />
-          </Route>
-
           <Route element={<ProtectedRoute allowedRoles={[ROLES.HOD]} />}>
             <Route path={ROUTES.HOD} element={<HodDashboard />} />
           </Route>
@@ -40,6 +40,15 @@ export default function AppRouter() {
 
           <Route element={<ProtectedRoute allowedRoles={[ROLES.STUDENT]} />}>
             <Route path={ROUTES.STUDENT} element={<StudentDashboard />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
+          <Route element={<AdminLayout />}>
+            <Route path={ROUTES.ADMIN} element={<AdminHomePage />} />
+            <Route path={ROUTES.ADMIN_USERS} element={<AdminDashboard />} />
+            <Route path={ROUTES.ADMIN_CATEGORIES} element={<AdminCategoriesPage />} />
+            <Route path={ROUTES.ADMIN_PENALTY_RULES} element={<AdminPenaltyRulesPage />} />
           </Route>
         </Route>
       </Route>

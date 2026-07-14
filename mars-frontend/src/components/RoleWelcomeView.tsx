@@ -9,7 +9,7 @@ export default function RoleWelcomeView() {
   }
 
   return (
-    <div className="max-w-max-width mx-auto animate-fade-in">
+    <div className="w-full min-w-0 animate-fade-in">
       <div className="mb-8">
         <h1 className="font-headline-lg text-headline-lg text-primary tracking-tight">
           Hoş Geldiniz

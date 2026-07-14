@@ -1,4 +1,4 @@
-import marsLogo from '../assets/mars-logo.png';
+import marsLogo from '../assets/images/mars-logo.png';
 import { useAuth } from '../contexts/AuthContext';
 import { APP_NAME, getRoleLabel } from '../constants';
 

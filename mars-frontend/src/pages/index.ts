@@ -1,6 +1,9 @@
 export { default as LoginPage } from './LoginPage';
 export { default as DashboardPage } from './DashboardPage';
+export { default as AdminHomePage } from './AdminHomePage';
 export { default as AdminDashboard } from './AdminDashboard';
+export { default as AdminCategoriesPage } from './AdminCategoriesPage';
+export { default as AdminPenaltyRulesPage } from './AdminPenaltyRulesPage';
 export { default as HodDashboard } from './HodDashboard';
 export { default as AcademicianDashboard } from './AcademicianDashboard';
 export { default as AssistantDashboard } from './AssistantDashboard';

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { isAxiosError } from 'axios';
-import marsLogo from '../assets/mars-logo.png';
+import marsLogo from '../assets/images/mars-logo.png';
 import { getHomePathForRole } from '../constants';
 import { useAuth } from '../contexts/AuthContext';
 import { login } from '../services/authService';

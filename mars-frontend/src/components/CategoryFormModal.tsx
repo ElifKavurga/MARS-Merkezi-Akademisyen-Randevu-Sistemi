@@ -1,34 +1,56 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { isAxiosError } from 'axios';
-import { createAdminUser } from '../services/adminUserService';
-import type { CreateUserPayload } from '../types/user';
-import { ADMIN_DEPARTMENT_OPTIONS, ADMIN_ROLE_OPTIONS } from '../constants/adminFormOptions';
+import { createAdminCategory, updateAdminCategory } from '../services/adminCategoryService';
+import type { AppointmentCategory, AppointmentCategoryPayload } from '../types/category';
+import { CATEGORY_GROUP_OPTIONS } from '../types/category';
 
-type CreateUserModalProps = {
+type CategoryFormModalProps = {
   open: boolean;
+  category: AppointmentCategory | null;
   onClose: () => void;
-  onCreated: () => void;
+  onSaved: (message: string) => void;
 };
 
-const INITIAL_FORM: CreateUserPayload = {
-  fullName: '',
-  institutionalEmail: '',
-  password: '',
-  roleId: ADMIN_ROLE_OPTIONS[0]?.id ?? 1,
-  departmentId: ADMIN_DEPARTMENT_OPTIONS[0]?.id ?? 1,
+const INITIAL_FORM: AppointmentCategoryPayload = {
+  categoryName: '',
+  durationMinutes: 30,
+  categoryGroup: 'ACADEMIC',
+  requiresCourseSelection: false,
 };
 
-export default function CreateUserModal({ open, onClose, onCreated }: CreateUserModalProps) {
-  const [form, setForm] = useState<CreateUserPayload>(INITIAL_FORM);
+export default function CategoryFormModal({
+  open,
+  category,
+  onClose,
+  onSaved,
+}: CategoryFormModalProps) {
+  const [form, setForm] = useState<AppointmentCategoryPayload>(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isEdit = category != null;
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    if (category) {
+      setForm({
+        categoryName: category.categoryName,
+        durationMinutes: category.durationMinutes,
+        categoryGroup: category.categoryGroup,
+        requiresCourseSelection: Boolean(category.requiresCourseSelection),
+      });
+    } else {
+      setForm({ ...INITIAL_FORM });
+    }
+    setError(null);
+  }, [open, category]);
 
   if (!open) {
     return null;
   }
 
-  const resetAndClose = () => {
-    setForm(INITIAL_FORM);
+  const handleClose = () => {
     setError(null);
     onClose();
   };
@@ -38,27 +60,31 @@ export default function CreateUserModal({ open, onClose, onCreated }: CreateUser
     setError(null);
     setSubmitting(true);
 
+    const payload: AppointmentCategoryPayload = {
+      ...form,
+      durationMinutes: Number(form.durationMinutes),
+      requiresCourseSelection: Boolean(form.requiresCourseSelection),
+    };
+
     try {
-      await createAdminUser({
-        ...form,
-        roleId: Number(form.roleId),
-        departmentId: Number(form.departmentId),
-      });
-      setForm(INITIAL_FORM);
-      onCreated();
+      if (isEdit && category) {
+        await updateAdminCategory(category.categoryId, payload);
+        onSaved('Kategori başarıyla güncellendi.');
+      } else {
+        await createAdminCategory(payload);
+        onSaved('Kategori başarıyla oluşturuldu.');
+      }
       onClose();
     } catch (err) {
       if (isAxiosError(err)) {
         const backendMessage = err.response?.data?.message;
         if (typeof backendMessage === 'string' && backendMessage.length > 0) {
           setError(backendMessage);
-        } else if (err.response?.status === 409) {
-          setError('Bu e-posta adresi zaten kayıtlı.');
         } else {
-          setError('Kullanıcı oluşturulamadı. Lütfen tekrar deneyin.');
+          setError('Kategori kaydedilemedi. Lütfen tekrar deneyin.');
         }
       } else {
-        setError('Kullanıcı oluşturulamadı. Lütfen tekrar deneyin.');
+        setError('Kategori kaydedilemedi. Lütfen tekrar deneyin.');
       }
     } finally {
       setSubmitting(false);
@@ -67,7 +93,7 @@ export default function CreateUserModal({ open, onClose, onCreated }: CreateUser
 
   return (
     <div
-      aria-labelledby="create-user-modal-title"
+      aria-labelledby="category-form-modal-title"
       aria-modal="true"
       className="fixed inset-0 z-50"
       role="dialog"
@@ -75,7 +101,7 @@ export default function CreateUserModal({ open, onClose, onCreated }: CreateUser
       <div
         aria-hidden="true"
         className="fixed inset-0 bg-primary/20 backdrop-blur-sm transition-opacity"
-        onClick={resetAndClose}
+        onClick={handleClose}
       />
       <div className="fixed inset-0 z-10 overflow-y-auto">
         <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
@@ -85,17 +111,19 @@ export default function CreateUserModal({ open, onClose, onCreated }: CreateUser
               <div className="bg-surface px-4 pb-4 pt-5 sm:p-6">
                 <div className="flex items-start gap-3 mb-6">
                   <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-surface-container border border-outline-variant">
-                    <span className="material-symbols-outlined text-primary">person_add</span>
+                    <span className="material-symbols-outlined text-primary">category</span>
                   </div>
                   <div>
                     <h3
                       className="font-headline-md text-body-lg font-bold leading-6 text-on-background"
-                      id="create-user-modal-title"
+                      id="category-form-modal-title"
                     >
-                      Kullanıcı Ekle
+                      {isEdit ? 'Kategori Düzenle' : 'Kategori Ekle'}
                     </h3>
                     <p className="font-body-md text-body-md text-on-surface-variant mt-1">
-                      Yeni kullanıcı hesabı oluşturun.
+                      {isEdit
+                        ? 'Kategori bilgilerini güncelleyin.'
+                        : 'Yeni randevu kategorisi tanımlayın.'}
                     </p>
                   </div>
                 </div>
@@ -104,35 +132,17 @@ export default function CreateUserModal({ open, onClose, onCreated }: CreateUser
                   <div className="space-y-1.5">
                     <label
                       className="block font-label-md text-label-md text-on-surface-variant"
-                      htmlFor="create-fullName"
+                      htmlFor="category-name"
                     >
-                      Ad Soyad
+                      Kategori Adı
                     </label>
                     <input
-                      id="create-fullName"
+                      id="category-name"
                       className="w-full py-2.5 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary-container"
                       required
-                      value={form.fullName}
-                      onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))}
-                      disabled={submitting}
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label
-                      className="block font-label-md text-label-md text-on-surface-variant"
-                      htmlFor="create-email"
-                    >
-                      Kurumsal E-posta
-                    </label>
-                    <input
-                      id="create-email"
-                      type="email"
-                      className="w-full py-2.5 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary-container"
-                      required
-                      value={form.institutionalEmail}
+                      value={form.categoryName}
                       onChange={(e) =>
-                        setForm((prev) => ({ ...prev, institutionalEmail: e.target.value }))
+                        setForm((prev) => ({ ...prev, categoryName: e.target.value }))
                       }
                       disabled={submitting}
                     />
@@ -141,17 +151,23 @@ export default function CreateUserModal({ open, onClose, onCreated }: CreateUser
                   <div className="space-y-1.5">
                     <label
                       className="block font-label-md text-label-md text-on-surface-variant"
-                      htmlFor="create-password"
+                      htmlFor="category-duration"
                     >
-                      Şifre
+                      Süre (Dakika)
                     </label>
                     <input
-                      id="create-password"
-                      type="password"
+                      id="category-duration"
+                      type="number"
+                      min={1}
                       className="w-full py-2.5 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary-container"
                       required
-                      value={form.password}
-                      onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))}
+                      value={form.durationMinutes}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          durationMinutes: Number(e.target.value),
+                        }))
+                      }
                       disabled={submitting}
                     />
                   </div>
@@ -159,51 +175,47 @@ export default function CreateUserModal({ open, onClose, onCreated }: CreateUser
                   <div className="space-y-1.5">
                     <label
                       className="block font-label-md text-label-md text-on-surface-variant"
-                      htmlFor="create-role"
+                      htmlFor="category-group"
                     >
-                      Rol
+                      Kategori Grubu
                     </label>
                     <select
-                      id="create-role"
+                      id="category-group"
                       className="w-full py-2.5 pl-3 pr-8 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary-container"
                       required
-                      value={form.roleId}
+                      value={form.categoryGroup}
                       onChange={(e) =>
-                        setForm((prev) => ({ ...prev, roleId: Number(e.target.value) }))
+                        setForm((prev) => ({ ...prev, categoryGroup: e.target.value }))
                       }
                       disabled={submitting}
                     >
-                      {ADMIN_ROLE_OPTIONS.map((role) => (
-                        <option key={role.id} value={role.id}>
-                          {role.label}
+                      {CATEGORY_GROUP_OPTIONS.map((group) => (
+                        <option key={group.value} value={group.value}>
+                          {group.label}
                         </option>
                       ))}
                     </select>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label
-                      className="block font-label-md text-label-md text-on-surface-variant"
-                      htmlFor="create-department"
-                    >
-                      Bölüm
+                  <div className="flex items-center justify-between py-2">
+                    <span className="font-label-md text-label-md text-on-surface-variant">
+                      Ders Seçimi Gerekli
+                    </span>
+                    <label className="mars-switch">
+                      <input
+                        id="category-requires-course"
+                        type="checkbox"
+                        checked={Boolean(form.requiresCourseSelection)}
+                        onChange={(event) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            requiresCourseSelection: event.target.checked,
+                          }))
+                        }
+                        disabled={submitting}
+                      />
+                      <span className="mars-switch-track" aria-hidden="true" />
                     </label>
-                    <select
-                      id="create-department"
-                      className="w-full py-2.5 pl-3 pr-8 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary-container"
-                      required
-                      value={form.departmentId}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, departmentId: Number(e.target.value) }))
-                      }
-                      disabled={submitting}
-                    >
-                      {ADMIN_DEPARTMENT_OPTIONS.map((department) => (
-                        <option key={department.id} value={department.id}>
-                          {department.label}
-                        </option>
-                      ))}
-                    </select>
                   </div>
 
                   {error ? (
@@ -225,7 +237,7 @@ export default function CreateUserModal({ open, onClose, onCreated }: CreateUser
                 <button
                   type="button"
                   className="mt-3 inline-flex w-full justify-center rounded-lg bg-surface px-5 py-2 font-label-md text-label-md text-primary border border-outline-variant hover:bg-surface-container sm:mt-0 sm:w-auto transition-colors"
-                  onClick={resetAndClose}
+                  onClick={handleClose}
                   disabled={submitting}
                 >
                   İptal
