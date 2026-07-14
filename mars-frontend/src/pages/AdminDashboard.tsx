@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
+import CreateUserModal from '../components/CreateUserModal';
 import { getAdminUsers } from '../services/adminUserService';
 import type { UserListItem } from '../types/user';
 import { getRoleLabel } from '../constants';
@@ -9,39 +10,34 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+
+  const loadUsers = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getAdminUsers();
+      setUsers(data);
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.status === 403) {
+        setError('Bu sayfaya erişim yetkiniz yok.');
+      } else {
+        setError('Kullanıcı listesi yüklenemedi. Lütfen tekrar deneyin.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let cancelled = false;
-
-    const loadUsers = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await getAdminUsers();
-        if (!cancelled) {
-          setUsers(data);
-        }
-      } catch (err) {
-        if (cancelled) {
-          return;
-        }
-        if (isAxiosError(err) && err.response?.status === 403) {
-          setError('Bu sayfaya erişim yetkiniz yok.');
-        } else {
-          setError('Kullanıcı listesi yüklenemedi. Lütfen tekrar deneyin.');
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
     void loadUsers();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  }, [loadUsers]);
+
+  const handleCreated = () => {
+    setSuccessMessage('Kullanıcı başarıyla oluşturuldu.');
+    void loadUsers();
+  };
 
   return (
     <div className="max-w-max-width mx-auto w-full animate-fade-in">
@@ -51,6 +47,23 @@ export default function AdminDashboard() {
           Sistemdeki tüm kullanıcıları yönetin ve yetkilendirin.
         </p>
       </div>
+
+      {successMessage ? (
+        <div
+          className="mb-4 p-4 rounded-lg bg-surface-container border border-outline-variant flex items-center justify-between gap-3"
+          role="status"
+        >
+          <p className="font-body-md text-body-md text-on-surface">{successMessage}</p>
+          <button
+            type="button"
+            className="text-on-surface-variant hover:text-primary"
+            aria-label="Mesajı kapat"
+            onClick={() => setSuccessMessage(null)}
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+      ) : null}
 
       <div className="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
         <div className="p-4 border-b border-outline-variant bg-surface-container-lowest flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
@@ -79,7 +92,7 @@ export default function AdminDashboard() {
           <button
             type="button"
             className="bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-primary/90 transition-colors flex items-center gap-2 self-start sm:self-auto"
-            disabled
+            onClick={() => setCreateModalOpen(true)}
           >
             <span className="material-symbols-outlined text-[18px]">add</span>
             Yeni Kullanıcı
@@ -215,6 +228,12 @@ export default function AdminDashboard() {
           </div>
         ) : null}
       </div>
+
+      <CreateUserModal
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onCreated={handleCreated}
+      />
     </div>
   );
 }

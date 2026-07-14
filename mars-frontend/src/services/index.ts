@@ -1,3 +1,3 @@
 export { apiClient } from './apiClient';
 export { login } from './authService';
-export { getAdminUsers } from './adminUserService';
+export { getAdminUsers, createAdminUser } from './adminUserService';
