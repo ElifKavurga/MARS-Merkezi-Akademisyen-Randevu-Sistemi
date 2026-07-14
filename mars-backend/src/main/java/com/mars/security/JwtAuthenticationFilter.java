@@ -24,6 +24,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final CustomUserDetailsService customUserDetailsService;
+    private final SecurityErrorWriter securityErrorWriter;
 
     @Override
     protected void doFilterInternal(
@@ -44,6 +45,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     && SecurityContextHolder.getContext().getAuthentication() == null) {
                 String institutionalEmail = jwtService.extractUsername(token);
                 UserDetails userDetails = customUserDetailsService.loadUserByUsername(institutionalEmail);
+
+                if (!userDetails.isEnabled()) {
+                    SecurityContextHolder.clearContext();
+                    securityErrorWriter.write(
+                            request,
+                            response,
+                            HttpServletResponse.SC_UNAUTHORIZED,
+                            SecurityMessages.ACCOUNT_INACTIVE);
+                    return;
+                }
 
                 if (jwtService.isTokenValid(token, institutionalEmail)) {
                     UsernamePasswordAuthenticationToken authentication =

@@ -11,6 +11,7 @@ import com.mars.dto.admin.PenaltyRuleResponse;
 import com.mars.dto.admin.UpdatePenaltyRuleRequest;
 import com.mars.service.AdminPenaltyRuleService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -27,7 +28,7 @@ public class AdminPenaltyRuleController {
 
     @PutMapping
     public ResponseEntity<PenaltyRuleResponse> updatePenaltyRule(
-            @RequestBody UpdatePenaltyRuleRequest request) {
+            @Valid @RequestBody UpdatePenaltyRuleRequest request) {
         return ResponseEntity.ok(adminPenaltyRuleService.updatePenaltyRule(request));
     }
 }

@@ -1,6 +1,7 @@
 package com.mars.service;
 
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import com.mars.entity.User;
 import com.mars.exception.BadRequestException;
 import com.mars.security.CustomUserDetails;
 import com.mars.security.JwtService;
+import com.mars.security.SecurityMessages;
 import com.mars.util.InstitutionalEmailValidator;
 
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,10 @@ public class AuthenticationService {
                         request.getPassword()));
 
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        if (!userDetails.isEnabled()) {
+            throw new DisabledException(SecurityMessages.ACCOUNT_INACTIVE);
+        }
+
         User user = userDetails.getUser();
         String token = jwtService.generateToken(user.getInstitutionalEmail());
 

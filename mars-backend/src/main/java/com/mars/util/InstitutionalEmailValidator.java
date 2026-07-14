@@ -4,8 +4,11 @@ import java.util.regex.Pattern;
 
 public final class InstitutionalEmailValidator {
 
+    public static final String INSTITUTIONAL_EMAIL_REGEX =
+            "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.edu\\.tr$";
+
     private static final Pattern INSTITUTIONAL_EMAIL_PATTERN = Pattern.compile(
-            "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.edu\\.tr$",
+            INSTITUTIONAL_EMAIL_REGEX,
             Pattern.CASE_INSENSITIVE);
 
     private InstitutionalEmailValidator() {

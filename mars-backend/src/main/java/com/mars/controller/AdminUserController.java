@@ -19,6 +19,7 @@ import com.mars.dto.admin.UserListResponse;
 import com.mars.dto.admin.UserResponse;
 import com.mars.service.AdminUserService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -34,7 +35,7 @@ public class AdminUserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserResponse> createUser(@RequestBody CreateUserRequest request) {
+    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(adminUserService.createUser(request));
     }
@@ -42,7 +43,7 @@ public class AdminUserController {
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable Integer id,
-            @RequestBody UpdateUserRequest request) {
+            @Valid @RequestBody UpdateUserRequest request) {
         return ResponseEntity.ok(adminUserService.updateUser(id, request));
     }
 

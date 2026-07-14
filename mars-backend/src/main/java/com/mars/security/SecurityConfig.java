@@ -1,11 +1,8 @@
 package com.mars.security;
 
-import java.io.IOException;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -27,6 +24,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CorsConfigurationSource corsConfigurationSource;
+    private final SecurityErrorWriter securityErrorWriter;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -55,22 +53,26 @@ public class SecurityConfig {
                         .requestMatchers("/admin/users", "/admin/users/**").hasRole("ADMIN")
                         .requestMatchers("/admin/categories", "/admin/categories/**").hasRole("ADMIN")
                         .requestMatchers("/admin/penalty-rule", "/admin/penalty-rule/**").hasRole("ADMIN")
-                        .anyRequest().permitAll()
+                        .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) ->
-                                writeError(response, HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage()))
+                                securityErrorWriter.write(
+                                        request,
+                                        response,
+                                        HttpServletResponse.SC_UNAUTHORIZED,
+                                        authException.getMessage() == null || authException.getMessage().isBlank()
+                                                ? SecurityMessages.UNAUTHORIZED
+                                                : authException.getMessage()))
                         .accessDeniedHandler((request, response, accessDeniedException) ->
-                                writeError(response, HttpServletResponse.SC_FORBIDDEN, accessDeniedException.getMessage()))
+                                securityErrorWriter.write(
+                                        request,
+                                        response,
+                                        HttpServletResponse.SC_FORBIDDEN,
+                                        SecurityMessages.ACCESS_DENIED))
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
-    }
-
-    private static void writeError(HttpServletResponse response, int status, String message) throws IOException {
-        response.setStatus(status);
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.getWriter().write("{\"message\":\"" + (message == null ? "" : message.replace("\"", "'")) + "\"}");
     }
 }

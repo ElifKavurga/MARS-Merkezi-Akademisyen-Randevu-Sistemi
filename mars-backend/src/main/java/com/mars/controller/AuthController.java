@@ -12,6 +12,7 @@ import com.mars.dto.auth.ResetPasswordRequest;
 import com.mars.dto.auth.ResetPasswordResponse;
 import com.mars.service.AuthenticationService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -22,12 +23,14 @@ public class AuthController {
     private final AuthenticationService authenticationService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        // Success body kept as raw DTO for frontend compatibility (not wrapped in ApiResponse).
         return ResponseEntity.ok(authenticationService.login(request));
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<ResetPasswordResponse> resetPassword(@RequestBody ResetPasswordRequest request) {
+    public ResponseEntity<ResetPasswordResponse> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request) {
         return ResponseEntity.ok(authenticationService.resetPassword(request));
     }
 }

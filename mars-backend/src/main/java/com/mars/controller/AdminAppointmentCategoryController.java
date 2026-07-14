@@ -17,6 +17,7 @@ import com.mars.dto.admin.AppointmentCategoryRequest;
 import com.mars.dto.admin.AppointmentCategoryResponse;
 import com.mars.service.AdminAppointmentCategoryService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -33,7 +34,7 @@ public class AdminAppointmentCategoryController {
 
     @PostMapping
     public ResponseEntity<AppointmentCategoryResponse> createCategory(
-            @RequestBody AppointmentCategoryRequest request) {
+            @Valid @RequestBody AppointmentCategoryRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(adminAppointmentCategoryService.createCategory(request));
     }
@@ -41,7 +42,7 @@ public class AdminAppointmentCategoryController {
     @PutMapping("/{id}")
     public ResponseEntity<AppointmentCategoryResponse> updateCategory(
             @PathVariable Integer id,
-            @RequestBody AppointmentCategoryRequest request) {
+            @Valid @RequestBody AppointmentCategoryRequest request) {
         return ResponseEntity.ok(adminAppointmentCategoryService.updateCategory(id, request));
     }
 
