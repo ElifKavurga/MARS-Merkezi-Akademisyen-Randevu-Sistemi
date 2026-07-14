@@ -10,3 +10,5 @@ export type PaginatedResponse<T> = {
   page: number;
   size: number;
 };
+
+export type { UserListItem } from './user';
