@@ -14,6 +14,48 @@ type AdminSidebarProps = {
   onClose: () => void;
 };
 
+function NavItem({
+  label,
+  path,
+  icon,
+  end,
+  onClose,
+}: {
+  label: string;
+  path: string;
+  icon: string;
+  end: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <NavLink
+      to={path}
+      end={end}
+      onClick={onClose}
+      className={({ isActive }) =>
+        ['admin-sidebar-link', isActive ? 'admin-sidebar-link--active' : ''].filter(Boolean).join(' ')
+      }
+    >
+      {({ isActive }) => (
+        <>
+          <span
+            className="admin-sidebar-icon material-symbols-outlined"
+            style={
+              isActive
+                ? { fontVariationSettings: "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24" }
+                : { fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }
+            }
+            aria-hidden="true"
+          >
+            {icon}
+          </span>
+          <span>{label}</span>
+        </>
+      )}
+    </NavLink>
+  );
+}
+
 export default function AdminSidebar({ mobileOpen, onClose }: AdminSidebarProps) {
   return (
     <>
@@ -34,36 +76,26 @@ export default function AdminSidebar({ mobileOpen, onClose }: AdminSidebarProps)
 
         <nav className="admin-sidebar-nav" aria-label="Admin sayfa menüsü">
           {adminNavItems.map((item) => (
-            <NavLink
+            <NavItem
               key={item.path}
-              to={item.path}
+              label={item.label}
+              path={item.path}
+              icon={item.icon}
               end={item.end}
-              onClick={onClose}
-              className={({ isActive }) =>
-                ['admin-sidebar-link', isActive ? 'admin-sidebar-link--active' : '']
-                  .filter(Boolean)
-                  .join(' ')
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <span
-                    className="admin-sidebar-icon material-symbols-outlined"
-                    style={
-                      isActive
-                        ? { fontVariationSettings: "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24" }
-                        : { fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }
-                    }
-                    aria-hidden="true"
-                  >
-                    {item.icon}
-                  </span>
-                  <span>{item.label}</span>
-                </>
-              )}
-            </NavLink>
+              onClose={onClose}
+            />
           ))}
         </nav>
+
+        <div className="mt-auto border-t border-white/10 pt-3">
+          <NavItem
+            label="Profilim"
+            path={ROUTES.ADMIN_PROFILE}
+            icon="person"
+            end={false}
+            onClose={onClose}
+          />
+        </div>
       </aside>
     </>
   );

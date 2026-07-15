@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { isAxiosError } from 'axios';
+import Loading from '../components/Loading';
+import { useToast } from '../hooks/useToast';
 import {
   getAdminPenaltyRule,
   updateAdminPenaltyRule,
@@ -9,6 +11,7 @@ import type { UpdatePenaltyRulePayload } from '../types/penaltyRule';
 const MAX_NOSHOW_OPTIONS = [1, 2, 3, 4, 5] as const;
 
 export default function AdminPenaltyRulesPage() {
+  const toast = useToast();
   const [form, setForm] = useState<UpdatePenaltyRulePayload>({
     maxNoShowCount: 3,
     banDurationDays: 7,
@@ -17,7 +20,6 @@ export default function AdminPenaltyRulesPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const loadPenaltyRule = useCallback(async () => {
     setLoading(true);
@@ -55,7 +57,6 @@ export default function AdminPenaltyRulesPage() {
     event.preventDefault();
     setSubmitting(true);
     setError(null);
-    setSuccessMessage(null);
 
     const payload: UpdatePenaltyRulePayload = {
       maxNoShowCount: Number(form.maxNoShowCount),
@@ -70,18 +71,20 @@ export default function AdminPenaltyRulesPage() {
         banDurationDays: updated.banDurationDays,
         isActive: Boolean(updated.isActive),
       });
-      setSuccessMessage('Ceza kuralları başarıyla güncellendi.');
+      toast.success('Ceza kuralları başarıyla güncellendi.');
       await loadPenaltyRule();
     } catch (err) {
       if (isAxiosError(err)) {
         const backendMessage = err.response?.data?.message;
-        setError(
+        const message =
           typeof backendMessage === 'string' && backendMessage.length > 0
             ? backendMessage
-            : 'Ceza kuralları kaydedilemedi.',
-        );
+            : 'Ceza kuralları kaydedilemedi.';
+        setError(message);
+        toast.error(message);
       } else {
         setError('Ceza kuralları kaydedilemedi.');
+        toast.error('Ceza kuralları kaydedilemedi.');
       }
     } finally {
       setSubmitting(false);
@@ -100,25 +103,8 @@ export default function AdminPenaltyRulesPage() {
           </p>
         </div>
 
-        {successMessage ? (
-          <div
-            className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-outline-variant bg-surface-container p-4"
-            role="status"
-          >
-            <p className="font-body-md text-body-md text-on-surface">{successMessage}</p>
-            <button
-              type="button"
-              className="text-on-surface-variant hover:text-primary"
-              aria-label="Mesajı kapat"
-              onClick={() => setSuccessMessage(null)}
-            >
-              <span className="material-symbols-outlined">close</span>
-            </button>
-          </div>
-        ) : null}
-
         {loading ? (
-          <p className="font-body-md text-on-surface-variant">Ceza kuralları yükleniyor...</p>
+          <Loading label="Ceza kuralları yükleniyor..." />
         ) : (
           <>
             <div className="relative overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest p-6 md:p-8">
@@ -268,7 +254,11 @@ export default function AdminPenaltyRulesPage() {
                     <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
                       save
                     </span>
-                    {submitting ? 'Kaydediliyor...' : 'Kuralları Kaydet'}
+                    {submitting ? (
+                      <Loading variant="inline" label="Loading..." className="text-on-primary" />
+                    ) : (
+                      'Kuralları Kaydet'
+                    )}
                   </button>
                 </div>
               </form>

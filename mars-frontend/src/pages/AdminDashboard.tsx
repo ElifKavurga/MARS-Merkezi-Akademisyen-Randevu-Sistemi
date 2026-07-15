@@ -1,23 +1,28 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import { isAxiosError } from 'axios';
 import AdminActionButton from '../components/AdminActionButton';
+import ConfirmModal from '../components/ConfirmModal';
 import CreateUserModal from '../components/CreateUserModal';
 import DepartmentSelect from '../components/DepartmentSelect';
 import EditUserModal from '../components/EditUserModal';
+import Loading from '../components/Loading';
 import RoleSelect from '../components/RoleSelect';
+import { useToast } from '../hooks/useToast';
 import { changeAdminUserStatus, getAdminUsers } from '../services/adminUserService';
 import type { UserListItem } from '../types/user';
 import { getRoleLabel } from '../constants';
 import { formatDate, formatDateTime, getInitials } from '../utils';
 
 export default function AdminDashboard() {
+  const toast = useToast();
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserListItem | null>(null);
+  const [statusTarget, setStatusTarget] = useState<UserListItem | null>(null);
   const [statusUpdatingId, setStatusUpdatingId] = useState<number | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
 
@@ -55,36 +60,40 @@ export default function AdminDashboard() {
   }, [users, roleFilter, departmentFilter]);
 
   const handleCreated = () => {
-    setSuccessMessage('Kullanıcı başarıyla oluşturuldu.');
+    toast.success('Kullanıcı başarıyla oluşturuldu.');
     void loadUsers();
   };
 
   const handleUpdated = () => {
-    setSuccessMessage('Kullanıcı başarıyla güncellendi.');
+    toast.success('Kullanıcı başarıyla güncellendi.');
     void loadUsers();
   };
 
-  const handleToggleStatus = async (user: UserListItem) => {
-    setStatusUpdatingId(user.userId);
-    setError(null);
+  const handleConfirmStatusChange = async () => {
+    if (!statusTarget) {
+      return;
+    }
+    setStatusUpdatingId(statusTarget.userId);
+    setStatusError(null);
     try {
-      const updated = await changeAdminUserStatus(user.userId);
-      setSuccessMessage(
+      const updated = await changeAdminUserStatus(statusTarget.userId);
+      toast.success(
         updated.isActive
           ? 'Kullanıcı aktif hale getirildi.'
           : 'Kullanıcı pasif hale getirildi.',
       );
+      setStatusTarget(null);
       await loadUsers();
     } catch (err) {
       if (isAxiosError(err)) {
         const backendMessage = err.response?.data?.message;
-        if (typeof backendMessage === 'string' && backendMessage.length > 0) {
-          setError(backendMessage);
-        } else {
-          setError('Kullanıcı durumu güncellenemedi.');
-        }
+        setStatusError(
+          typeof backendMessage === 'string' && backendMessage.length > 0
+            ? backendMessage
+            : 'Kullanıcı durumu güncellenemedi.',
+        );
       } else {
-        setError('Kullanıcı durumu güncellenemedi.');
+        setStatusError('Kullanıcı durumu güncellenemedi.');
       }
     } finally {
       setStatusUpdatingId(null);
@@ -99,23 +108,6 @@ export default function AdminDashboard() {
           Sistemdeki tüm kullanıcıları yönetin ve yetkilendirin.
         </p>
       </div>
-
-      {successMessage ? (
-        <div
-          className="mb-4 p-4 rounded-lg bg-surface-container border border-outline-variant flex items-center justify-between gap-3"
-          role="status"
-        >
-          <p className="font-body-md text-body-md text-on-surface">{successMessage}</p>
-          <button
-            type="button"
-            className="text-on-surface-variant hover:text-primary"
-            aria-label="Mesajı kapat"
-            onClick={() => setSuccessMessage(null)}
-          >
-            <span className="material-symbols-outlined">close</span>
-          </button>
-        </div>
-      ) : null}
 
       <div className="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
         <div className="p-4 border-b border-outline-variant bg-surface-container-lowest flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
@@ -155,7 +147,7 @@ export default function AdminDashboard() {
 
         <div className="admin-table-wrap">
           {loading ? (
-            <p className="p-6 font-body-md text-on-surface-variant">Kullanıcılar yükleniyor...</p>
+            <Loading label="Kullanıcılar yükleniyor..." />
           ) : error ? (
             <p className="p-6 font-body-md text-error" role="alert">
               {error}
@@ -273,11 +265,14 @@ export default function AdminDashboard() {
                           <AdminActionButton
                             variant="neutral"
                             icon={user.isActive ? 'pause_circle' : 'play_circle'}
-                            onClick={() => void handleToggleStatus(user)}
+                            onClick={() => {
+                              setStatusError(null);
+                              setStatusTarget(user);
+                            }}
                             disabled={statusBusy}
                           >
                             {statusBusy
-                              ? '...'
+                              ? 'Loading...'
                               : user.isActive
                                 ? 'Pasif Yap'
                                 : 'Aktif Yap'}
@@ -311,6 +306,29 @@ export default function AdminDashboard() {
         user={editingUser}
         onClose={() => setEditingUser(null)}
         onUpdated={handleUpdated}
+      />
+      <ConfirmModal
+        open={statusTarget != null}
+        title={statusTarget?.isActive ? 'Kullanıcıyı Pasifleştir' : 'Kullanıcıyı Aktifleştir'}
+        description={
+          statusTarget
+            ? `${statusTarget.fullName} adlı kullanıcıyı ${
+                statusTarget.isActive ? 'pasif' : 'aktif'
+              } hale getirmek istediğinize emin misiniz?`
+            : ''
+        }
+        confirmLabel={statusTarget?.isActive ? 'Pasif Yap' : 'Aktif Yap'}
+        loading={statusUpdatingId != null}
+        error={statusError}
+        variant={statusTarget?.isActive ? 'danger' : 'primary'}
+        onConfirm={() => void handleConfirmStatusChange()}
+        onClose={() => {
+          if (statusUpdatingId != null) {
+            return;
+          }
+          setStatusTarget(null);
+          setStatusError(null);
+        }}
       />
     </div>
   );

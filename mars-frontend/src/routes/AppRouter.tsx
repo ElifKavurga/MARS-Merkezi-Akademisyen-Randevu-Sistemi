@@ -9,6 +9,7 @@ import AdminHomePage from '../pages/AdminHomePage';
 import AdminDashboard from '../pages/AdminDashboard';
 import AdminCategoriesPage from '../pages/AdminCategoriesPage';
 import AdminPenaltyRulesPage from '../pages/AdminPenaltyRulesPage';
+import AdminProfilePage from '../pages/AdminProfilePage';
 import HodDashboard from '../pages/HodDashboard';
 import AcademicianDashboard from '../pages/AcademicianDashboard';
 import AssistantDashboard from '../pages/AssistantDashboard';
@@ -51,6 +52,7 @@ export default function AppRouter() {
             <Route path={ROUTES.ADMIN_USERS} element={<AdminDashboard />} />
             <Route path={ROUTES.ADMIN_CATEGORIES} element={<AdminCategoriesPage />} />
             <Route path={ROUTES.ADMIN_PENALTY_RULES} element={<AdminPenaltyRulesPage />} />
+            <Route path={ROUTES.ADMIN_PROFILE} element={<AdminProfilePage />} />
           </Route>
         </Route>
       </Route>

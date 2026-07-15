@@ -3,8 +3,10 @@ import { Link, Navigate } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import marsLogo from '../assets/images/mars-logo.png';
 import { ROUTES, getHomePathForRole } from '../constants';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
+import { useToast } from '../hooks/useToast';
 import { resetPassword } from '../services/authService';
+import Loading from '../components/Loading';
 import '../styles/LoginPage.css';
 
 const backToLoginLinkClassName =
@@ -26,6 +28,7 @@ function BackToLoginLink() {
 
 export default function ResetPasswordPage() {
   const { isAuthenticated, user } = useAuth();
+  const toast = useToast();
   const [institutionalEmail, setInstitutionalEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -43,17 +46,17 @@ export default function ResetPasswordPage() {
     try {
       await resetPassword({ institutionalEmail });
       setSubmitted(true);
+      toast.success('Şifre sıfırlama bağlantısı gönderildi.');
     } catch (err) {
+      let message = 'İstek gönderilemedi. Lütfen tekrar deneyin.';
       if (isAxiosError(err)) {
         const backendMessage = err.response?.data?.message;
         if (typeof backendMessage === 'string' && backendMessage.length > 0) {
-          setError(backendMessage);
-        } else {
-          setError('İstek gönderilemedi. Lütfen tekrar deneyin.');
+          message = backendMessage;
         }
-      } else {
-        setError('İstek gönderilemedi. Lütfen tekrar deneyin.');
       }
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -161,10 +164,7 @@ export default function ResetPasswordPage() {
                   disabled={loading}
                 >
                   {loading ? (
-                    <>
-                      <span className="material-symbols-outlined animate-spin">progress_activity</span>
-                      <span>Gönderiliyor...</span>
-                    </>
+                    <Loading variant="inline" label="Loading..." className="text-on-primary" />
                   ) : (
                     <>
                       <span>Sıfırlama Bağlantısı Gönder</span>

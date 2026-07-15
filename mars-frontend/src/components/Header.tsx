@@ -1,14 +1,17 @@
 import { useNavigate } from 'react-router-dom';
 import marsLogo from '../assets/images/mars-logo.png';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
+import { useToast } from '../hooks/useToast';
 import { APP_NAME, ROUTES, getRoleLabel } from '../constants';
 
 export default function Header() {
   const { user, clearSession } = useAuth();
+  const toast = useToast();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     clearSession();
+    toast.info('Oturum kapatıldı.');
     navigate(ROUTES.LOGIN, { replace: true });
   };
 

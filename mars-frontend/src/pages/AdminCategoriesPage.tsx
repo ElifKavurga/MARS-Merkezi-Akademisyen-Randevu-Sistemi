@@ -3,14 +3,16 @@ import { isAxiosError } from 'axios';
 import AdminActionButton from '../components/AdminActionButton';
 import CategoryFormModal from '../components/CategoryFormModal';
 import DeleteCategoryModal from '../components/DeleteCategoryModal';
+import Loading from '../components/Loading';
+import { useToast } from '../hooks/useToast';
 import { deleteAdminCategory, getAdminCategories } from '../services/adminCategoryService';
 import type { AppointmentCategory } from '../types/category';
 
 export default function AdminCategoriesPage() {
+  const toast = useToast();
   const [categories, setCategories] = useState<AppointmentCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<AppointmentCategory | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<AppointmentCategory | null>(null);
@@ -39,7 +41,7 @@ export default function AdminCategoriesPage() {
   }, [loadCategories]);
 
   const handleSaved = (message: string) => {
-    setSuccessMessage(message);
+    toast.success(message);
     void loadCategories();
   };
 
@@ -52,7 +54,7 @@ export default function AdminCategoriesPage() {
     try {
       await deleteAdminCategory(deletingCategory.categoryId);
       setDeletingCategory(null);
-      setSuccessMessage('Kategori başarıyla silindi.');
+      toast.success('Kategori başarıyla silindi.');
       await loadCategories();
     } catch (err) {
       if (isAxiosError(err) && err.response?.status === 409) {
@@ -81,23 +83,6 @@ export default function AdminCategoriesPage() {
         </p>
       </div>
 
-      {successMessage ? (
-        <div
-          className="mb-4 p-4 rounded-lg bg-surface-container border border-outline-variant flex items-center justify-between gap-3"
-          role="status"
-        >
-          <p className="font-body-md text-body-md text-on-surface">{successMessage}</p>
-          <button
-            type="button"
-            className="text-on-surface-variant hover:text-primary"
-            aria-label="Mesajı kapat"
-            onClick={() => setSuccessMessage(null)}
-          >
-            <span className="material-symbols-outlined">close</span>
-          </button>
-        </div>
-      ) : null}
-
       <div className="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
         <div className="p-4 border-b border-outline-variant flex justify-between items-center">
           <div className="flex items-center gap-3">
@@ -125,7 +110,7 @@ export default function AdminCategoriesPage() {
 
         <div className="admin-table-wrap">
           {loading ? (
-            <p className="p-6 font-body-md text-on-surface-variant">Kategoriler yükleniyor...</p>
+            <Loading label="Kategoriler yükleniyor..." />
           ) : error ? (
             <p className="p-6 font-body-md text-error" role="alert">
               {error}

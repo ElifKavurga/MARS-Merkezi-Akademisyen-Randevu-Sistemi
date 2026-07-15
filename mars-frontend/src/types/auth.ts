@@ -10,6 +10,8 @@ export type LoginResponse = {
   fullName: string;
   institutionalEmail: string;
   role: string;
+  department?: string;
+  isActive?: boolean;
 };
 
 export type ResetPasswordRequest = {
@@ -25,4 +27,6 @@ export type AuthUser = {
   fullName: string;
   institutionalEmail: string;
   role: string;
+  department?: string;
+  isActive?: boolean;
 };

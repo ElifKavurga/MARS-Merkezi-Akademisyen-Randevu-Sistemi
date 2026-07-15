@@ -50,6 +50,8 @@ public class AuthenticationService {
                 .fullName(user.getFullName())
                 .institutionalEmail(user.getInstitutionalEmail())
                 .role(user.getRole().getRoleName())
+                .department(user.getDepartment().getDepartmentName())
+                .isActive(user.getIsActive())
                 .build();
     }
 

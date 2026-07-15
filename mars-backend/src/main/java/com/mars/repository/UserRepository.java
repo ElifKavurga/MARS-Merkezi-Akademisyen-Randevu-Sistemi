@@ -11,7 +11,7 @@ import com.mars.entity.User;
 
 public interface UserRepository extends JpaRepository<User, Integer> {
 
-    @Query("SELECT u FROM User u JOIN FETCH u.role WHERE u.institutionalEmail = :institutionalEmail")
+    @Query("SELECT u FROM User u JOIN FETCH u.role JOIN FETCH u.department WHERE u.institutionalEmail = :institutionalEmail")
     Optional<User> findByInstitutionalEmail(@Param("institutionalEmail") String institutionalEmail);
 
     @Query("SELECT u FROM User u JOIN FETCH u.role JOIN FETCH u.department ORDER BY u.userId ASC")

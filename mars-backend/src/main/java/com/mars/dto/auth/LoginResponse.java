@@ -19,4 +19,6 @@ public class LoginResponse {
     private String fullName;
     private String institutionalEmail;
     private String role;
+    private String department;
+    private Boolean isActive;
 }

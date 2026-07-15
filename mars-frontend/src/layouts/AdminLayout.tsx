@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import AdminSidebar from '../components/AdminSidebar';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
+import { useToast } from '../hooks/useToast';
 import { ROUTES, getRoleLabel } from '../constants';
 import '../styles/AppShell.css';
 
 export default function AdminLayout() {
   const { user, clearSession } = useAuth();
+  const toast = useToast();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = () => {
     clearSession();
+    toast.info('Oturum kapatıldı.');
     navigate(ROUTES.LOGIN, { replace: true });
   };
 

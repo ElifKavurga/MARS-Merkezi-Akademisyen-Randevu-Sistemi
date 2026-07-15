@@ -205,7 +205,7 @@ export default function EditUserModal({ open, user, onClose, onUpdated }: EditUs
                   className="inline-flex w-full justify-center rounded-lg bg-primary-container px-5 py-2 font-label-md text-label-md text-on-primary hover:bg-black sm:w-auto shadow-sm transition-colors disabled:opacity-70"
                   disabled={submitting}
                 >
-                  {submitting ? 'Kaydediliyor...' : 'Kaydet'}
+                  {submitting ? 'Loading...' : 'Kaydet'}
                 </button>
                 <button
                   type="button"

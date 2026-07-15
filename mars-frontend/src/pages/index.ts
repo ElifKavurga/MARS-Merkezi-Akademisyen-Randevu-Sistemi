@@ -5,6 +5,7 @@ export { default as AdminHomePage } from './AdminHomePage';
 export { default as AdminDashboard } from './AdminDashboard';
 export { default as AdminCategoriesPage } from './AdminCategoriesPage';
 export { default as AdminPenaltyRulesPage } from './AdminPenaltyRulesPage';
+export { default as AdminProfilePage } from './AdminProfilePage';
 export { default as HodDashboard } from './HodDashboard';
 export { default as AcademicianDashboard } from './AcademicianDashboard';
 export { default as AssistantDashboard } from './AssistantDashboard';

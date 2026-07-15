@@ -1,5 +1,10 @@
 export { apiClient } from './apiClient';
 export { login, resetPassword } from './authService';
+export {
+  registerClearSessionHandler,
+  unregisterClearSessionHandler,
+  triggerClearSession,
+} from './authSessionBridge';
 export { getRoles } from './roleService';
 export { getDepartments } from './departmentService';
 export { getAdminUsers, createAdminUser, updateAdminUser, changeAdminUserStatus } from './adminUserService';
