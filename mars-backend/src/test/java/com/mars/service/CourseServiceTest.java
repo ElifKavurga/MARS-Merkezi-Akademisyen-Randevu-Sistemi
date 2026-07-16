@@ -28,6 +28,7 @@ import com.mars.dto.CourseAssistantResponseDto;
 import com.mars.dto.CourseCreateRequest;
 import com.mars.dto.CourseDetailResponseDto;
 import com.mars.dto.CourseResponseDto;
+import com.mars.dto.CourseStatsResponseDto;
 import com.mars.dto.CourseUpdateRequest;
 import com.mars.entity.Course;
 import com.mars.entity.CourseAssignment;
@@ -204,6 +205,41 @@ class CourseServiceTest {
         assertThatThrownBy(() -> courseService.getMyCourse(1))
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessageContaining("görüntüleme");
+    }
+
+    @Test
+    void getCourseStats_returnsMappedStats() {
+        CourseStatsResponseDto statsDto = CourseStatsResponseDto.builder()
+                .totalAssistantCount(2)
+                .isActive(true)
+                .academicTerm("2024-2025 Güz")
+                .departmentName("Bilgisayar Mühendisliği")
+                .build();
+
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+        when(courseAssignmentRepository.countActiveAssistantsByCourseId(1)).thenReturn(2L);
+        when(courseMapper.toStatsResponse(course, 2L)).thenReturn(statsDto);
+
+        CourseStatsResponseDto result = courseService.getCourseStats(1);
+
+        assertThat(result.getTotalAssistantCount()).isEqualTo(2);
+        assertThat(result.getAcademicTerm()).isEqualTo("2024-2025 Güz");
+        verify(courseAssignmentRepository).countActiveAssistantsByCourseId(1);
+        verify(courseMapper).toStatsResponse(course, 2L);
+    }
+
+    @Test
+    void getCourseStats_otherAcademician_throwsAccessDenied() {
+        User otherOwner = new User();
+        otherOwner.setUserId(99);
+        course.setOwnerAcademician(otherOwner);
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+
+        assertThatThrownBy(() -> courseService.getCourseStats(1))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("istatistiklerini görüntüleme");
+
+        verify(courseAssignmentRepository, never()).countActiveAssistantsByCourseId(any());
     }
 
     @Test

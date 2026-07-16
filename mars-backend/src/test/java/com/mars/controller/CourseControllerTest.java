@@ -31,6 +31,7 @@ import com.mars.dto.CourseAssistantResponseDto;
 import com.mars.dto.CourseCreateRequest;
 import com.mars.dto.CourseDetailResponseDto;
 import com.mars.dto.CourseResponseDto;
+import com.mars.dto.CourseStatsResponseDto;
 import com.mars.dto.CourseUpdateRequest;
 import com.mars.exception.handler.GlobalExceptionHandler;
 import com.mars.security.JwtAuthenticationFilter;
@@ -123,6 +124,34 @@ class CourseControllerTest {
     @WithMockUser(roles = "STUDENT")
     void getMyCourse_asStudent_returnsForbidden() throws Exception {
         mockMvc.perform(get("/courses/1"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.status").value(403));
+    }
+
+    @Test
+    @WithMockUser(roles = "ACADEMICIAN")
+    void getCourseStats_asAcademician_returnsStats() throws Exception {
+        when(courseService.getCourseStats(1)).thenReturn(
+                CourseStatsResponseDto.builder()
+                        .totalAssistantCount(2)
+                        .isActive(true)
+                        .academicTerm("2024-2025 Güz")
+                        .departmentName("Bilgisayar Mühendisliği")
+                        .build());
+
+        mockMvc.perform(get("/courses/1/stats"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalAssistantCount").value(2))
+                .andExpect(jsonPath("$.isActive").value(true))
+                .andExpect(jsonPath("$.academicTerm").value("2024-2025 Güz"))
+                .andExpect(jsonPath("$.departmentName").value("Bilgisayar Mühendisliği"));
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    void getCourseStats_asStudent_returnsForbidden() throws Exception {
+        mockMvc.perform(get("/courses/1/stats"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.status").value(403));

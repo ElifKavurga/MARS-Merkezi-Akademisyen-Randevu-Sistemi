@@ -21,6 +21,7 @@ export {
 export {
   getMyCourses,
   getMyCourse,
+  getCourseStats,
   getCourseAssistants,
   assignCourseAssistant,
   updateCourseAssignment,

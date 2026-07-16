@@ -31,6 +31,7 @@ public class CourseAssignmentMapper {
                 .assistantName(assistant != null ? assistant.getFullName() : null)
                 .institutionalEmail(assistant != null ? assistant.getInstitutionalEmail() : null)
                 .departmentName(department != null ? department.getDepartmentName() : null)
+                .assignedAt(assignment.getAssignedAt())
                 .build();
     }
 }

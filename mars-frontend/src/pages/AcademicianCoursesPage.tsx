@@ -5,6 +5,7 @@ import AdminActionButton from '../components/AdminActionButton';
 import ConfirmModal from '../components/ConfirmModal';
 import CourseCreateModal from '../components/CourseCreateModal';
 import CourseEditModal from '../components/CourseEditModal';
+import CourseStatusBadge from '../components/CourseStatusBadge';
 import Loading from '../components/Loading';
 import { FORM_FIELD_CLASS, FORM_SELECT_CLASS } from '../constants';
 import {
@@ -402,15 +403,7 @@ export default function AcademicianCoursesPage() {
                         {course.departmentName}
                       </td>
                       <td className="py-4 px-6 text-center">
-                        <span
-                          className={`inline-flex items-center justify-center rounded-md px-2 py-0.5 font-label-sm text-label-sm ${
-                            course.isActive
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {course.isActive ? 'Aktif' : 'Pasif'}
-                        </span>
+                        <CourseStatusBadge isActive={course.isActive} />
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex flex-wrap justify-end gap-2">

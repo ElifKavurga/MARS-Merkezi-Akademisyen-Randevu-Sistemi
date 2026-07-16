@@ -18,6 +18,7 @@ import com.mars.dto.CourseAssistantResponseDto;
 import com.mars.dto.CourseCreateRequest;
 import com.mars.dto.CourseDetailResponseDto;
 import com.mars.dto.CourseResponseDto;
+import com.mars.dto.CourseStatsResponseDto;
 import com.mars.dto.CourseUpdateRequest;
 import com.mars.service.CourseService;
 
@@ -39,6 +40,11 @@ public class CourseController {
     @GetMapping("/{courseId}")
     public ResponseEntity<CourseDetailResponseDto> getMyCourse(@PathVariable Integer courseId) {
         return ResponseEntity.ok(courseService.getMyCourse(courseId));
+    }
+
+    @GetMapping("/{courseId}/stats")
+    public ResponseEntity<CourseStatsResponseDto> getCourseStats(@PathVariable Integer courseId) {
+        return ResponseEntity.ok(courseService.getCourseStats(courseId));
     }
 
     @GetMapping("/{courseId}/assistants")

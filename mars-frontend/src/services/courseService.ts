@@ -6,6 +6,7 @@ import type {
   CourseAssignmentUpdatePayload,
   CourseCreatePayload,
   CourseDetail,
+  CourseStats,
   CourseUpdatePayload,
 } from '../types/course';
 
@@ -16,6 +17,11 @@ export async function getMyCourses(): Promise<Course[]> {
 
 export async function getMyCourse(courseId: number): Promise<CourseDetail> {
   const { data } = await apiClient.get<CourseDetail>(`/courses/${courseId}`);
+  return data;
+}
+
+export async function getCourseStats(courseId: number): Promise<CourseStats> {
+  const { data } = await apiClient.get<CourseStats>(`/courses/${courseId}/stats`);
   return data;
 }
 

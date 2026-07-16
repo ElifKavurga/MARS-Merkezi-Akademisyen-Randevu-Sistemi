@@ -27,6 +27,7 @@ export type CourseAssistant = {
   assistantName: string;
   institutionalEmail: string;
   departmentName: string;
+  assignedAt: string;
 };
 
 export type CourseDetail = {
@@ -38,6 +39,13 @@ export type CourseDetail = {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+};
+
+export type CourseStats = {
+  totalAssistantCount: number;
+  isActive: boolean;
+  academicTerm: string;
+  departmentName: string;
 };
 
 export type CourseAssistantCreatePayload = {

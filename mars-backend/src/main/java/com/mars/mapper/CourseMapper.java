@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import com.mars.dto.CourseCreateRequest;
 import com.mars.dto.CourseDetailResponseDto;
 import com.mars.dto.CourseResponseDto;
+import com.mars.dto.CourseStatsResponseDto;
 import com.mars.dto.CourseUpdateRequest;
 import com.mars.entity.Course;
 import com.mars.entity.Department;
@@ -41,6 +42,16 @@ public class CourseMapper {
                 .isActive(Boolean.TRUE.equals(course.getIsActive()))
                 .createdAt(course.getCreatedAt())
                 .updatedAt(course.getUpdatedAt())
+                .build();
+    }
+
+    public CourseStatsResponseDto toStatsResponse(Course course, long totalAssistantCount) {
+        Department department = course.getDepartment();
+        return CourseStatsResponseDto.builder()
+                .totalAssistantCount((int) totalAssistantCount)
+                .isActive(Boolean.TRUE.equals(course.getIsActive()))
+                .academicTerm(course.getAcademicTerm())
+                .departmentName(department != null ? department.getDepartmentName() : null)
                 .build();
     }
 

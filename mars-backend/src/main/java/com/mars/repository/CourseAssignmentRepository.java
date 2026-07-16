@@ -36,4 +36,12 @@ public interface CourseAssignmentRepository extends JpaRepository<CourseAssignme
             Integer courseId,
             Integer assistantId,
             Integer courseAssignmentId);
+
+    @Query("""
+            SELECT COUNT(ca) FROM CourseAssignment ca
+            JOIN ca.assistant a
+            WHERE ca.course.courseId = :courseId
+              AND a.isActive = true
+            """)
+    long countActiveAssistantsByCourseId(@Param("courseId") Integer courseId);
 }

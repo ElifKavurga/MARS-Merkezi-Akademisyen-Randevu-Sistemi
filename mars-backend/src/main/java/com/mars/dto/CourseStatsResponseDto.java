@@ -1,7 +1,5 @@
 package com.mars.dto;
 
-import java.time.LocalDateTime;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,12 +11,10 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CourseAssistantResponseDto {
+public class CourseStatsResponseDto {
 
-    private Integer assignmentId;
-    private Integer assistantId;
-    private String assistantName;
-    private String institutionalEmail;
+    private Integer totalAssistantCount;
+    private Boolean isActive;
+    private String academicTerm;
     private String departmentName;
-    private LocalDateTime assignedAt;
 }

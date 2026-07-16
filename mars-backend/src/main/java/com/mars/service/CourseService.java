@@ -16,6 +16,7 @@ import com.mars.dto.CourseAssistantResponseDto;
 import com.mars.dto.CourseCreateRequest;
 import com.mars.dto.CourseDetailResponseDto;
 import com.mars.dto.CourseResponseDto;
+import com.mars.dto.CourseStatsResponseDto;
 import com.mars.dto.CourseUpdateRequest;
 import com.mars.entity.Course;
 import com.mars.entity.CourseAssignment;
@@ -69,6 +70,14 @@ public class CourseService {
         User currentUser = getCurrentUser();
         Course course = getOwnedCourse(courseId, currentUser, "Bu dersi görüntüleme yetkiniz yok.");
         return courseMapper.toDetailResponse(course);
+    }
+
+    @Transactional(readOnly = true)
+    public CourseStatsResponseDto getCourseStats(Integer courseId) {
+        User currentUser = getCurrentUser();
+        Course course = getOwnedCourse(courseId, currentUser, "Bu dersin istatistiklerini görüntüleme yetkiniz yok.");
+        long totalAssistantCount = courseAssignmentRepository.countActiveAssistantsByCourseId(courseId);
+        return courseMapper.toStatsResponse(course, totalAssistantCount);
     }
 
     @Transactional(readOnly = true)
