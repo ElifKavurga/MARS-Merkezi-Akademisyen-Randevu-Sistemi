@@ -19,4 +19,5 @@ public class CourseResponseDto {
     private String academicTerm;
     private Integer departmentId;
     private String departmentName;
+    private Boolean isActive;
 }

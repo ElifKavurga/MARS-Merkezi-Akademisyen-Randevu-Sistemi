@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -42,5 +43,10 @@ public class CourseController {
             @PathVariable Integer courseId,
             @Valid @RequestBody CourseUpdateRequest request) {
         return ResponseEntity.ok(courseService.updateCourse(courseId, request));
+    }
+
+    @PatchMapping("/{courseId}/status")
+    public ResponseEntity<CourseResponseDto> changeCourseStatus(@PathVariable Integer courseId) {
+        return ResponseEntity.ok(courseService.changeCourseStatus(courseId));
     }
 }

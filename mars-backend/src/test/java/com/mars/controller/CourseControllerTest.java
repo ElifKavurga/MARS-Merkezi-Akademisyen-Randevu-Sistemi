@@ -3,8 +3,10 @@ package com.mars.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -221,6 +223,38 @@ class CourseControllerTest {
         mockMvc.perform(put("/courses/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.status").value(403));
+    }
+
+    @Test
+    @WithMockUser(roles = "ACADEMICIAN")
+    void changeCourseStatus_asAcademician_returnsOk() throws Exception {
+        when(courseService.changeCourseStatus(1)).thenReturn(
+                CourseResponseDto.builder()
+                        .courseId(1)
+                        .courseCode("CENG 301")
+                        .courseName("Algoritma Analizi")
+                        .academicTerm("2024-2025 Güz")
+                        .departmentId(1)
+                        .departmentName("Bilgisayar Mühendisliği")
+                        .isActive(false)
+                        .build());
+
+        mockMvc.perform(patch("/courses/1/status"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.courseId").value(1))
+                .andExpect(jsonPath("$.courseCode").value("CENG 301"))
+                .andExpect(jsonPath("$.isActive").value(false));
+
+        verify(courseService).changeCourseStatus(1);
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    void changeCourseStatus_asStudent_returnsForbidden() throws Exception {
+        mockMvc.perform(patch("/courses/1/status"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.status").value(403));

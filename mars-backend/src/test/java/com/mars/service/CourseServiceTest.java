@@ -3,6 +3,7 @@ package com.mars.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -31,6 +32,7 @@ import com.mars.exception.BadRequestException;
 import com.mars.exception.ConflictException;
 import com.mars.exception.ResourceNotFoundException;
 import com.mars.mapper.CourseMapper;
+import com.mars.repository.AppointmentRepository;
 import com.mars.repository.CourseRepository;
 import com.mars.repository.DepartmentRepository;
 import com.mars.security.CustomUserDetails;
@@ -43,6 +45,9 @@ class CourseServiceTest {
 
     @Mock
     private DepartmentRepository departmentRepository;
+
+    @Mock
+    private AppointmentRepository appointmentRepository;
 
     @Mock
     private CourseMapper courseMapper;
@@ -80,6 +85,7 @@ class CourseServiceTest {
                 .academicTerm("2024-2025 Güz")
                 .departmentId(1)
                 .departmentName("Bilgisayar Mühendisliği")
+                .isActive(true)
                 .build();
 
         CustomUserDetails userDetails = new CustomUserDetails(academician);
@@ -95,7 +101,7 @@ class CourseServiceTest {
 
     @Test
     void getMyCourses_returnsOwnedCoursesMapped() {
-        when(courseRepository.findByOwnerAcademician_UserIdAndIsActiveTrueOrderByCourseNameAsc(10))
+        when(courseRepository.findByOwnerAcademician_UserIdOrderByCourseNameAsc(10))
                 .thenReturn(List.of(course));
         when(courseMapper.toResponse(course)).thenReturn(responseDto);
 
@@ -104,13 +110,13 @@ class CourseServiceTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getCourseCode()).isEqualTo("CENG 301");
         assertThat(result.get(0).getDepartmentName()).isEqualTo("Bilgisayar Mühendisliği");
-        verify(courseRepository).findByOwnerAcademician_UserIdAndIsActiveTrueOrderByCourseNameAsc(10);
+        verify(courseRepository).findByOwnerAcademician_UserIdOrderByCourseNameAsc(10);
         verify(courseMapper).toResponse(course);
     }
 
     @Test
     void getMyCourses_emptyList_returnsEmpty() {
-        when(courseRepository.findByOwnerAcademician_UserIdAndIsActiveTrueOrderByCourseNameAsc(10))
+        when(courseRepository.findByOwnerAcademician_UserIdOrderByCourseNameAsc(10))
                 .thenReturn(List.of());
 
         List<CourseResponseDto> result = courseService.getMyCourses();
@@ -233,6 +239,85 @@ class CourseServiceTest {
         assertThatThrownBy(() -> courseService.updateCourse(1, request))
                 .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("ders kodu");
+
+        verify(courseRepository, never()).save(any());
+    }
+
+    @Test
+    void changeCourseStatus_deactivatesActiveCourse() {
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+        when(appointmentRepository.existsByCourse_CourseIdAndAppointmentStatusIn(eq(1), any())).thenReturn(false);
+        when(appointmentRepository.existsByCourse_CourseIdAndSlot_IsBlockedFalse(1)).thenReturn(false);
+        when(courseRepository.save(course)).thenReturn(course);
+        when(courseMapper.toResponse(course)).thenReturn(responseDto);
+
+        CourseResponseDto result = courseService.changeCourseStatus(1);
+
+        assertThat(result.getCourseId()).isEqualTo(1);
+        assertThat(course.getIsActive()).isFalse();
+        verify(courseRepository).save(course);
+    }
+
+    @Test
+    void changeCourseStatus_activatesInactiveCourse() {
+        course.setIsActive(false);
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+        when(courseRepository.save(course)).thenReturn(course);
+        when(courseMapper.toResponse(course)).thenReturn(responseDto);
+
+        CourseResponseDto result = courseService.changeCourseStatus(1);
+
+        assertThat(result.getCourseId()).isEqualTo(1);
+        assertThat(course.getIsActive()).isTrue();
+        verify(courseRepository).save(course);
+    }
+
+    @Test
+    void changeCourseStatus_otherAcademician_throwsAccessDenied() {
+        User otherOwner = new User();
+        otherOwner.setUserId(99);
+        course.setOwnerAcademician(otherOwner);
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+
+        assertThatThrownBy(() -> courseService.changeCourseStatus(1))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("durumunu değiştirme");
+
+        verify(courseRepository, never()).save(any());
+    }
+
+    @Test
+    void changeCourseStatus_withActiveAppointments_throwsConflict() {
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+        when(appointmentRepository.existsByCourse_CourseIdAndAppointmentStatusIn(eq(1), any())).thenReturn(true);
+
+        assertThatThrownBy(() -> courseService.changeCourseStatus(1))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("aktif randevular");
+
+        verify(courseRepository, never()).save(any());
+    }
+
+    @Test
+    void changeCourseStatus_withActiveOfficeHours_throwsConflict() {
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+        when(appointmentRepository.existsByCourse_CourseIdAndAppointmentStatusIn(eq(1), any())).thenReturn(false);
+        when(appointmentRepository.existsByCourse_CourseIdAndSlot_IsBlockedFalse(1)).thenReturn(true);
+
+        assertThatThrownBy(() -> courseService.changeCourseStatus(1))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("aktif ofis saatleri");
+
+        verify(courseRepository, never()).save(any());
+    }
+
+    @Test
+    void changeCourseStatus_notFound_throwsNotFound() {
+        when(courseRepository.findById(99)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> courseService.changeCourseStatus(99))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Ders bulunamadı");
 
         verify(courseRepository, never()).save(any());
     }

@@ -8,6 +8,8 @@ import com.mars.entity.Course;
 
 public interface CourseRepository extends JpaRepository<Course, Integer> {
 
+    List<Course> findByOwnerAcademician_UserIdOrderByCourseNameAsc(Integer userId);
+
     List<Course> findByOwnerAcademician_UserIdAndIsActiveTrueOrderByCourseNameAsc(Integer userId);
 
     boolean existsByOwnerAcademician_UserIdAndCourseCode(Integer userId, String courseCode);

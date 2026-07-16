@@ -15,3 +15,8 @@ export async function updateCourse(courseId: number, payload: CourseUpdatePayloa
   const { data } = await apiClient.put<Course>(`/courses/${courseId}`, payload);
   return data;
 }
+
+export async function changeCourseStatus(courseId: number): Promise<Course> {
+  const { data } = await apiClient.patch<Course>(`/courses/${courseId}/status`);
+  return data;
+}

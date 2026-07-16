@@ -2,6 +2,7 @@ package com.mars.service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -15,10 +16,12 @@ import com.mars.dto.CourseUpdateRequest;
 import com.mars.entity.Course;
 import com.mars.entity.Department;
 import com.mars.entity.User;
+import com.mars.enums.AppointmentStatus;
 import com.mars.exception.BadRequestException;
 import com.mars.exception.ConflictException;
 import com.mars.exception.ResourceNotFoundException;
 import com.mars.mapper.CourseMapper;
+import com.mars.repository.AppointmentRepository;
 import com.mars.repository.CourseRepository;
 import com.mars.repository.DepartmentRepository;
 import com.mars.security.CustomUserDetails;
@@ -30,15 +33,20 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CourseService {
 
+    private static final Set<String> ACTIVE_APPOINTMENT_STATUSES = Set.of(
+            AppointmentStatus.PENDING.name(),
+            AppointmentStatus.APPROVED.name());
+
     private final CourseRepository courseRepository;
     private final DepartmentRepository departmentRepository;
+    private final AppointmentRepository appointmentRepository;
     private final CourseMapper courseMapper;
 
     @Transactional(readOnly = true)
     public List<CourseResponseDto> getMyCourses() {
         User currentUser = getCurrentUser();
         return courseRepository
-                .findByOwnerAcademician_UserIdAndIsActiveTrueOrderByCourseNameAsc(currentUser.getUserId())
+                .findByOwnerAcademician_UserIdOrderByCourseNameAsc(currentUser.getUserId())
                 .stream()
                 .map(courseMapper::toResponse)
                 .toList();
@@ -64,17 +72,7 @@ public class CourseService {
     @Transactional
     public CourseResponseDto updateCourse(Integer courseId, CourseUpdateRequest request) {
         User currentUser = getCurrentUser();
-        Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Ders bulunamadı."));
-
-        if (course.getOwnerAcademician() == null
-                || !Objects.equals(course.getOwnerAcademician().getUserId(), currentUser.getUserId())) {
-            throw new AccessDeniedException("Bu dersi güncelleme yetkiniz yok.");
-        }
-
-        if (!Boolean.TRUE.equals(course.getIsActive())) {
-            throw new BadRequestException("Pasif ders güncellenemez.");
-        }
+        Course course = getOwnedActiveCourse(courseId, currentUser, "Bu dersi güncelleme yetkiniz yok.");
 
         String courseCode = request.getCourseCode().trim();
         if (courseRepository.existsByOwnerAcademician_UserIdAndCourseCodeAndCourseIdNot(
@@ -88,6 +86,63 @@ public class CourseService {
         courseMapper.updateEntity(course, request, department);
         Course saved = courseRepository.save(course);
         return courseMapper.toResponse(saved);
+    }
+
+    @Transactional
+    public CourseResponseDto changeCourseStatus(Integer courseId) {
+        User currentUser = getCurrentUser();
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ders bulunamadı."));
+
+        if (course.getOwnerAcademician() == null
+                || !Objects.equals(course.getOwnerAcademician().getUserId(), currentUser.getUserId())) {
+            throw new AccessDeniedException("Bu dersin durumunu değiştirme yetkiniz yok.");
+        }
+
+        if (Boolean.TRUE.equals(course.getIsActive())) {
+            deactivateCourse(course);
+        } else {
+            activateCourse(course);
+        }
+
+        Course saved = courseRepository.save(course);
+        return courseMapper.toResponse(saved);
+    }
+
+    private void deactivateCourse(Course course) {
+        if (appointmentRepository.existsByCourse_CourseIdAndAppointmentStatusIn(
+                course.getCourseId(), ACTIVE_APPOINTMENT_STATUSES)) {
+            throw new ConflictException("Bu derse ait aktif randevular bulunduğu için ders pasifleştirilemez.");
+        }
+
+        if (appointmentRepository.existsByCourse_CourseIdAndSlot_IsBlockedFalse(course.getCourseId())) {
+            throw new ConflictException("Bu derse ait aktif ofis saatleri bulunduğu için ders pasifleştirilemez.");
+        }
+
+        course.setIsActive(false);
+    }
+
+    private void activateCourse(Course course) {
+        if (Boolean.TRUE.equals(course.getIsActive())) {
+            throw new BadRequestException("Bu ders zaten aktif.");
+        }
+        course.setIsActive(true);
+    }
+
+    private Course getOwnedActiveCourse(Integer courseId, User currentUser, String accessDeniedMessage) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ders bulunamadı."));
+
+        if (course.getOwnerAcademician() == null
+                || !Objects.equals(course.getOwnerAcademician().getUserId(), currentUser.getUserId())) {
+            throw new AccessDeniedException(accessDeniedMessage);
+        }
+
+        if (!Boolean.TRUE.equals(course.getIsActive())) {
+            throw new BadRequestException("Pasif ders güncellenemez.");
+        }
+
+        return course;
     }
 
     private User getCurrentUser() {

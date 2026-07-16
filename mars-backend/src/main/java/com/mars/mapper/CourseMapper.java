@@ -21,6 +21,7 @@ public class CourseMapper {
                 .academicTerm(course.getAcademicTerm())
                 .departmentId(department != null ? department.getDepartmentId() : null)
                 .departmentName(department != null ? department.getDepartmentName() : null)
+                .isActive(Boolean.TRUE.equals(course.getIsActive()))
                 .build();
     }
 

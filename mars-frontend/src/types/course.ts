@@ -5,6 +5,7 @@ export type Course = {
   academicTerm: string;
   departmentId: number;
   departmentName: string;
+  isActive: boolean;
 };
 
 export type CourseCreatePayload = {
@@ -15,3 +16,5 @@ export type CourseCreatePayload = {
 };
 
 export type CourseUpdatePayload = CourseCreatePayload;
+
+export type CourseStatusFilter = 'ACTIVE' | 'INACTIVE' | 'ALL';
