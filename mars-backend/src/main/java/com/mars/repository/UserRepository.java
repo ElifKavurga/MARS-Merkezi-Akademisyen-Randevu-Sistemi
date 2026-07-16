@@ -23,4 +23,14 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     boolean existsByInstitutionalEmail(String institutionalEmail);
 
     boolean existsByInstitutionalEmailAndUserIdNot(String institutionalEmail, Integer userId);
+
+    @Query("""
+            SELECT u FROM User u
+            JOIN FETCH u.role r
+            JOIN FETCH u.department
+            WHERE r.roleName = :roleName
+              AND u.isActive = true
+            ORDER BY u.fullName ASC
+            """)
+    List<User> findActiveUsersByRoleName(@Param("roleName") String roleName);
 }

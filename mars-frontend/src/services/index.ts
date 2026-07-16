@@ -22,7 +22,9 @@ export {
   getMyCourses,
   getMyCourse,
   getCourseAssistants,
+  assignCourseAssistant,
   createCourse,
   updateCourse,
   changeCourseStatus,
 } from './courseService';
+export { getUsersByRole, getActiveAssistants } from './userService';

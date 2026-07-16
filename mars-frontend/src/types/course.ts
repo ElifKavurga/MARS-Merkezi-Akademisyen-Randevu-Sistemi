@@ -28,3 +28,14 @@ export type CourseAssistant = {
   institutionalEmail: string;
   departmentName: string;
 };
+
+export type CourseAssistantCreatePayload = {
+  assistantId: number;
+};
+
+export type AssistantUserOption = {
+  userId: number;
+  fullName: string;
+  institutionalEmail: string;
+  departmentName: string;
+};

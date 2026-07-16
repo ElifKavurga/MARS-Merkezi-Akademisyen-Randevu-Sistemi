@@ -19,4 +19,6 @@ public interface CourseAssignmentRepository extends JpaRepository<CourseAssignme
             ORDER BY a.fullName ASC
             """)
     List<CourseAssignment> findActiveAssistantsByCourseId(@Param("courseId") Integer courseId);
+
+    boolean existsByCourse_CourseIdAndAssistant_UserId(Integer courseId, Integer assistantId);
 }

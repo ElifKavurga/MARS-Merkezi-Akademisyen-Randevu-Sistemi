@@ -23,6 +23,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.mars.dto.CourseAssistantCreateRequest;
 import com.mars.dto.CourseAssistantResponseDto;
 import com.mars.dto.CourseCreateRequest;
 import com.mars.dto.CourseResponseDto;
@@ -30,6 +31,7 @@ import com.mars.dto.CourseUpdateRequest;
 import com.mars.entity.Course;
 import com.mars.entity.CourseAssignment;
 import com.mars.entity.Department;
+import com.mars.entity.Role;
 import com.mars.entity.User;
 import com.mars.exception.BadRequestException;
 import com.mars.exception.ConflictException;
@@ -40,6 +42,7 @@ import com.mars.repository.AppointmentRepository;
 import com.mars.repository.CourseAssignmentRepository;
 import com.mars.repository.CourseRepository;
 import com.mars.repository.DepartmentRepository;
+import com.mars.repository.UserRepository;
 import com.mars.security.CustomUserDetails;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,6 +61,9 @@ class CourseServiceTest {
     private CourseAssignmentRepository courseAssignmentRepository;
 
     @Mock
+    private UserRepository userRepository;
+
+    @Mock
     private CourseMapper courseMapper;
 
     @Mock
@@ -67,6 +73,8 @@ class CourseServiceTest {
     private CourseService courseService;
 
     private User academician;
+    private User assistant;
+    private Role assistantRole;
     private Department department;
     private Course course;
     private CourseResponseDto responseDto;
@@ -76,9 +84,21 @@ class CourseServiceTest {
         academician = new User();
         academician.setUserId(10);
 
+        assistantRole = new Role();
+        assistantRole.setRoleId(2);
+        assistantRole.setRoleName("ASSISTANT");
+
         department = new Department();
         department.setDepartmentId(1);
         department.setDepartmentName("Bilgisayar Mühendisliği");
+
+        assistant = new User();
+        assistant.setUserId(20);
+        assistant.setFullName("Ayşe Asistan");
+        assistant.setInstitutionalEmail("ayse.asistan@mars.edu.tr");
+        assistant.setRole(assistantRole);
+        assistant.setDepartment(department);
+        assistant.setIsActive(true);
 
         course = new Course();
         course.setCourseId(1);
@@ -231,6 +251,107 @@ class CourseServiceTest {
                 .hasMessageContaining("Ders bulunamadı");
 
         verify(courseAssignmentRepository, never()).findActiveAssistantsByCourseId(any());
+    }
+
+    @Test
+    void assignAssistant_successfulAssignment() {
+        CourseAssistantCreateRequest request = new CourseAssistantCreateRequest(20);
+        CourseAssignment assignment = new CourseAssignment();
+        assignment.setCourseAssignmentId(5);
+        assignment.setCourse(course);
+        assignment.setAssistant(assistant);
+        CourseAssistantResponseDto response = CourseAssistantResponseDto.builder()
+                .assignmentId(5)
+                .assistantId(20)
+                .assistantName("Ayşe Asistan")
+                .institutionalEmail("ayse.asistan@mars.edu.tr")
+                .departmentName("Bilgisayar Mühendisliği")
+                .build();
+
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+        when(userRepository.findByIdWithRoleAndDepartment(20)).thenReturn(Optional.of(assistant));
+        when(courseAssignmentRepository.existsByCourse_CourseIdAndAssistant_UserId(1, 20)).thenReturn(false);
+        when(courseAssignmentMapper.toEntity(course, assistant)).thenReturn(assignment);
+        when(courseAssignmentRepository.save(assignment)).thenReturn(assignment);
+        when(courseAssignmentMapper.toAssistantResponse(assignment)).thenReturn(response);
+
+        CourseAssistantResponseDto result = courseService.assignAssistant(1, request);
+
+        assertThat(result.getAssignmentId()).isEqualTo(5);
+        assertThat(result.getAssistantId()).isEqualTo(20);
+        verify(courseAssignmentRepository).save(assignment);
+    }
+
+    @Test
+    void assignAssistant_duplicateAssignment_throwsConflict() {
+        CourseAssistantCreateRequest request = new CourseAssistantCreateRequest(20);
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+        when(userRepository.findByIdWithRoleAndDepartment(20)).thenReturn(Optional.of(assistant));
+        when(courseAssignmentRepository.existsByCourse_CourseIdAndAssistant_UserId(1, 20)).thenReturn(true);
+
+        assertThatThrownBy(() -> courseService.assignAssistant(1, request))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("zaten atanmış");
+
+        verify(courseAssignmentRepository, never()).save(any());
+    }
+
+    @Test
+    void assignAssistant_otherAcademician_throwsAccessDenied() {
+        User otherOwner = new User();
+        otherOwner.setUserId(99);
+        course.setOwnerAcademician(otherOwner);
+        CourseAssistantCreateRequest request = new CourseAssistantCreateRequest(20);
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+
+        assertThatThrownBy(() -> courseService.assignAssistant(1, request))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("asistan atama");
+
+        verify(userRepository, never()).findByIdWithRoleAndDepartment(any());
+        verify(courseAssignmentRepository, never()).save(any());
+    }
+
+    @Test
+    void assignAssistant_inactiveUser_throwsBadRequest() {
+        assistant.setIsActive(false);
+        CourseAssistantCreateRequest request = new CourseAssistantCreateRequest(20);
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+        when(userRepository.findByIdWithRoleAndDepartment(20)).thenReturn(Optional.of(assistant));
+
+        assertThatThrownBy(() -> courseService.assignAssistant(1, request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Pasif kullanıcı");
+
+        verify(courseAssignmentRepository, never()).save(any());
+    }
+
+    @Test
+    void assignAssistant_nonAssistantRole_throwsBadRequest() {
+        Role studentRole = new Role();
+        studentRole.setRoleName("STUDENT");
+        assistant.setRole(studentRole);
+        CourseAssistantCreateRequest request = new CourseAssistantCreateRequest(20);
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+        when(userRepository.findByIdWithRoleAndDepartment(20)).thenReturn(Optional.of(assistant));
+
+        assertThatThrownBy(() -> courseService.assignAssistant(1, request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("ASSISTANT");
+
+        verify(courseAssignmentRepository, never()).save(any());
+    }
+
+    @Test
+    void assignAssistant_courseNotFound_throwsNotFound() {
+        CourseAssistantCreateRequest request = new CourseAssistantCreateRequest(20);
+        when(courseRepository.findById(99)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> courseService.assignAssistant(99, request))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Ders bulunamadı");
+
+        verify(courseAssignmentRepository, never()).save(any());
     }
 
     @Test

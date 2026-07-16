@@ -11,14 +11,17 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mars.dto.CourseAssistantCreateRequest;
 import com.mars.dto.CourseAssistantResponseDto;
 import com.mars.dto.CourseCreateRequest;
 import com.mars.dto.CourseResponseDto;
 import com.mars.dto.CourseUpdateRequest;
 import com.mars.entity.Course;
+import com.mars.entity.CourseAssignment;
 import com.mars.entity.Department;
 import com.mars.entity.User;
 import com.mars.enums.AppointmentStatus;
+import com.mars.enums.RoleType;
 import com.mars.exception.BadRequestException;
 import com.mars.exception.ConflictException;
 import com.mars.exception.ResourceNotFoundException;
@@ -28,6 +31,7 @@ import com.mars.repository.AppointmentRepository;
 import com.mars.repository.CourseAssignmentRepository;
 import com.mars.repository.CourseRepository;
 import com.mars.repository.DepartmentRepository;
+import com.mars.repository.UserRepository;
 import com.mars.security.CustomUserDetails;
 import com.mars.security.SecurityMessages;
 
@@ -45,6 +49,7 @@ public class CourseService {
     private final DepartmentRepository departmentRepository;
     private final AppointmentRepository appointmentRepository;
     private final CourseAssignmentRepository courseAssignmentRepository;
+    private final UserRepository userRepository;
     private final CourseMapper courseMapper;
     private final CourseAssignmentMapper courseAssignmentMapper;
 
@@ -72,6 +77,37 @@ public class CourseService {
         return courseAssignmentRepository.findActiveAssistantsByCourseId(courseId).stream()
                 .map(courseAssignmentMapper::toAssistantResponse)
                 .toList();
+    }
+
+    @Transactional
+    public CourseAssistantResponseDto assignAssistant(Integer courseId, CourseAssistantCreateRequest request) {
+        User currentUser = getCurrentUser();
+        Course course = getOwnedCourse(courseId, currentUser, "Bu derse asistan atama yetkiniz yok.");
+
+        if (!Boolean.TRUE.equals(course.getIsActive())) {
+            throw new BadRequestException("Pasif derse asistan atanamaz.");
+        }
+
+        User assistant = userRepository.findByIdWithRoleAndDepartment(request.getAssistantId())
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı."));
+
+        if (!Boolean.TRUE.equals(assistant.getIsActive())) {
+            throw new BadRequestException("Pasif kullanıcı atanamaz.");
+        }
+
+        if (assistant.getRole() == null
+                || !RoleType.ASSISTANT.name().equals(assistant.getRole().getRoleName())) {
+            throw new BadRequestException("Yalnızca ASSISTANT rolündeki kullanıcılar atanabilir.");
+        }
+
+        if (courseAssignmentRepository.existsByCourse_CourseIdAndAssistant_UserId(
+                courseId, assistant.getUserId())) {
+            throw new ConflictException("Bu asistan bu derse zaten atanmış.");
+        }
+
+        CourseAssignment assignment = courseAssignmentMapper.toEntity(course, assistant);
+        CourseAssignment saved = courseAssignmentRepository.save(assignment);
+        return courseAssignmentMapper.toAssistantResponse(saved);
     }
 
     @Transactional

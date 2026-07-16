@@ -54,6 +54,7 @@ public class SecurityConfig {
                         .requestMatchers("/admin/categories", "/admin/categories/**").hasRole("ADMIN")
                         .requestMatchers("/admin/penalty-rule", "/admin/penalty-rule/**").hasRole("ADMIN")
                         .requestMatchers("/courses", "/courses/**").hasAnyRole("ACADEMICIAN", "HOD")
+                        .requestMatchers(HttpMethod.GET, "/users").hasAnyRole("ACADEMICIAN", "HOD")
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex

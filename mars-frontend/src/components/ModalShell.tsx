@@ -8,6 +8,7 @@ type ModalShellProps = {
   onSubmit?: (event: FormEvent<HTMLFormElement>) => void;
   disableBackdropClose?: boolean;
   maxWidthClass?: string;
+  zIndexClass?: string;
   children: ReactNode;
   footer?: ReactNode;
 };
@@ -20,6 +21,7 @@ export default function ModalShell({
   onSubmit,
   disableBackdropClose = false,
   maxWidthClass = 'sm:max-w-lg',
+  zIndexClass = 'z-50',
   children,
   footer,
 }: ModalShellProps) {
@@ -36,13 +38,13 @@ export default function ModalShell({
   );
 
   return (
-    <div aria-labelledby={titleId} aria-modal="true" className="fixed inset-0 z-50" role="dialog">
+    <div aria-labelledby={titleId} aria-modal="true" className={`fixed inset-0 ${zIndexClass}`} role="dialog">
       <div
         aria-hidden="true"
         className="fixed inset-0 bg-primary/20 backdrop-blur-sm transition-opacity"
         onClick={disableBackdropClose ? undefined : onClose}
       />
-      <div className="fixed inset-0 z-10 overflow-y-auto">
+      <div className={`fixed inset-0 z-10 overflow-y-auto`}>
         <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
           <div
             className={`relative transform overflow-hidden rounded-xl bg-surface text-left shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all sm:my-8 sm:w-full ${maxWidthClass} border border-outline-variant`}

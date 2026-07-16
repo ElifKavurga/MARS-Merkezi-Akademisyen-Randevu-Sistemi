@@ -1,5 +1,11 @@
 import { apiClient } from './apiClient';
-import type { Course, CourseAssistant, CourseCreatePayload, CourseUpdatePayload } from '../types/course';
+import type {
+  Course,
+  CourseAssistant,
+  CourseAssistantCreatePayload,
+  CourseCreatePayload,
+  CourseUpdatePayload,
+} from '../types/course';
 
 export async function getMyCourses(): Promise<Course[]> {
   const { data } = await apiClient.get<Course[]>('/courses/my');
@@ -13,6 +19,14 @@ export async function getMyCourse(courseId: number): Promise<Course> {
 
 export async function getCourseAssistants(courseId: number): Promise<CourseAssistant[]> {
   const { data } = await apiClient.get<CourseAssistant[]>(`/courses/${courseId}/assistants`);
+  return data;
+}
+
+export async function assignCourseAssistant(
+  courseId: number,
+  payload: CourseAssistantCreatePayload,
+): Promise<CourseAssistant> {
+  const { data } = await apiClient.post<CourseAssistant>(`/courses/${courseId}/assistants`, payload);
   return data;
 }
 

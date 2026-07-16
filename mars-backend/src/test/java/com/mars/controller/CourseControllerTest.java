@@ -26,6 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mars.config.CorsConfig;
+import com.mars.dto.CourseAssistantCreateRequest;
 import com.mars.dto.CourseAssistantResponseDto;
 import com.mars.dto.CourseCreateRequest;
 import com.mars.dto.CourseResponseDto;
@@ -152,6 +153,56 @@ class CourseControllerTest {
     @WithMockUser(roles = "STUDENT")
     void getCourseAssistants_asStudent_returnsForbidden() throws Exception {
         mockMvc.perform(get("/courses/1/assistants"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.status").value(403));
+    }
+
+    @Test
+    @WithMockUser(roles = "ACADEMICIAN")
+    void assignAssistant_asAcademician_returnsCreated() throws Exception {
+        CourseAssistantCreateRequest request = new CourseAssistantCreateRequest(20);
+        when(courseService.assignAssistant(eq(1), any(CourseAssistantCreateRequest.class))).thenReturn(
+                CourseAssistantResponseDto.builder()
+                        .assignmentId(5)
+                        .assistantId(20)
+                        .assistantName("Ayşe Asistan")
+                        .institutionalEmail("ayse.asistan@mars.edu.tr")
+                        .departmentName("Bilgisayar Mühendisliği")
+                        .build());
+
+        mockMvc.perform(post("/courses/1/assistants")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.assignmentId").value(5))
+                .andExpect(jsonPath("$.assistantId").value(20))
+                .andExpect(jsonPath("$.assistantName").value("Ayşe Asistan"));
+
+        verify(courseService).assignAssistant(eq(1), any(CourseAssistantCreateRequest.class));
+    }
+
+    @Test
+    @WithMockUser(roles = "ACADEMICIAN")
+    void assignAssistant_invalidBody_returnsBadRequest() throws Exception {
+        CourseAssistantCreateRequest request = new CourseAssistantCreateRequest(null);
+
+        mockMvc.perform(post("/courses/1/assistants")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    void assignAssistant_asStudent_returnsForbidden() throws Exception {
+        CourseAssistantCreateRequest request = new CourseAssistantCreateRequest(20);
+
+        mockMvc.perform(post("/courses/1/assistants")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.status").value(403));

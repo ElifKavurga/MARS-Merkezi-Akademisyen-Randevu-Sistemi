@@ -21,6 +21,8 @@ export const COURSE_MESSAGES = {
   DETAIL_ERROR: 'Ders detayı yüklenemedi. Lütfen tekrar deneyin.',
   ASSISTANTS_ERROR: 'Asistan listesi yüklenemedi. Lütfen tekrar deneyin.',
   ASSISTANTS_EMPTY: 'Bu derse henüz asistan atanmadı.',
+  ASSIGN_SUCCESS: 'Asistan derse başarıyla atandı.',
+  ASSIGN_ERROR: 'Asistan atanamadı. Lütfen tekrar deneyin.',
   CREATE_SUCCESS: 'Ders başarıyla oluşturuldu.',
   UPDATE_SUCCESS: 'Ders başarıyla güncellendi.',
   DEACTIVATE_SUCCESS: 'Ders başarıyla pasifleştirildi.',
