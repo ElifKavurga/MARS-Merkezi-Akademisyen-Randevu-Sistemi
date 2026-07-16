@@ -1,10 +1,12 @@
 package com.mars.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -24,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mars.config.CorsConfig;
 import com.mars.dto.CourseCreateRequest;
 import com.mars.dto.CourseResponseDto;
+import com.mars.dto.CourseUpdateRequest;
 import com.mars.exception.handler.GlobalExceptionHandler;
 import com.mars.security.JwtAuthenticationFilter;
 import com.mars.security.SecurityConfig;
@@ -167,6 +170,55 @@ class CourseControllerTest {
         CourseCreateRequest request = new CourseCreateRequest("CENG 301", "Algoritma Analizi", "2024-2025 Güz", 1);
 
         mockMvc.perform(post("/courses")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.status").value(403));
+    }
+
+    @Test
+    @WithMockUser(roles = "ACADEMICIAN")
+    void updateCourse_asAcademician_returnsOk() throws Exception {
+        CourseUpdateRequest request = new CourseUpdateRequest("CENG 302", "Veri Yapıları", "2024-2025 Bahar", 1);
+        when(courseService.updateCourse(eq(1), any(CourseUpdateRequest.class))).thenReturn(
+                CourseResponseDto.builder()
+                        .courseId(1)
+                        .courseCode("CENG 302")
+                        .courseName("Veri Yapıları")
+                        .academicTerm("2024-2025 Bahar")
+                        .departmentId(1)
+                        .departmentName("Bilgisayar Mühendisliği")
+                        .build());
+
+        mockMvc.perform(put("/courses/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.courseId").value(1))
+                .andExpect(jsonPath("$.courseCode").value("CENG 302"))
+                .andExpect(jsonPath("$.courseName").value("Veri Yapıları"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ACADEMICIAN")
+    void updateCourse_invalidBody_returnsBadRequest() throws Exception {
+        CourseUpdateRequest request = new CourseUpdateRequest("", "", "", null);
+
+        mockMvc.perform(put("/courses/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    void updateCourse_asStudent_returnsForbidden() throws Exception {
+        CourseUpdateRequest request = new CourseUpdateRequest("CENG 302", "Veri Yapıları", "2024-2025 Bahar", 1);
+
+        mockMvc.perform(put("/courses/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden())

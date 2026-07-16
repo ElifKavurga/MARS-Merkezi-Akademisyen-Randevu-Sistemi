@@ -23,9 +23,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.mars.dto.CourseCreateRequest;
 import com.mars.dto.CourseResponseDto;
+import com.mars.dto.CourseUpdateRequest;
 import com.mars.entity.Course;
 import com.mars.entity.Department;
 import com.mars.entity.User;
+import com.mars.exception.BadRequestException;
 import com.mars.exception.ConflictException;
 import com.mars.exception.ResourceNotFoundException;
 import com.mars.mapper.CourseMapper;
@@ -49,6 +51,7 @@ class CourseServiceTest {
     private CourseService courseService;
 
     private User academician;
+    private Department department;
     private Course course;
     private CourseResponseDto responseDto;
 
@@ -57,7 +60,7 @@ class CourseServiceTest {
         academician = new User();
         academician.setUserId(10);
 
-        Department department = new Department();
+        department = new Department();
         department.setDepartmentId(1);
         department.setDepartmentName("Bilgisayar Mühendisliği");
 
@@ -68,6 +71,7 @@ class CourseServiceTest {
         course.setAcademicTerm("2024-2025 Güz");
         course.setDepartment(department);
         course.setOwnerAcademician(academician);
+        course.setIsActive(true);
 
         responseDto = CourseResponseDto.builder()
                 .courseId(1)
@@ -91,7 +95,7 @@ class CourseServiceTest {
 
     @Test
     void getMyCourses_returnsOwnedCoursesMapped() {
-        when(courseRepository.findByOwnerAcademician_UserIdOrderByCourseNameAsc(10))
+        when(courseRepository.findByOwnerAcademician_UserIdAndIsActiveTrueOrderByCourseNameAsc(10))
                 .thenReturn(List.of(course));
         when(courseMapper.toResponse(course)).thenReturn(responseDto);
 
@@ -100,13 +104,13 @@ class CourseServiceTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getCourseCode()).isEqualTo("CENG 301");
         assertThat(result.get(0).getDepartmentName()).isEqualTo("Bilgisayar Mühendisliği");
-        verify(courseRepository).findByOwnerAcademician_UserIdOrderByCourseNameAsc(10);
+        verify(courseRepository).findByOwnerAcademician_UserIdAndIsActiveTrueOrderByCourseNameAsc(10);
         verify(courseMapper).toResponse(course);
     }
 
     @Test
     void getMyCourses_emptyList_returnsEmpty() {
-        when(courseRepository.findByOwnerAcademician_UserIdOrderByCourseNameAsc(10))
+        when(courseRepository.findByOwnerAcademician_UserIdAndIsActiveTrueOrderByCourseNameAsc(10))
                 .thenReturn(List.of());
 
         List<CourseResponseDto> result = courseService.getMyCourses();
@@ -125,7 +129,6 @@ class CourseServiceTest {
     @Test
     void createCourse_savesCourseForCurrentUser() {
         CourseCreateRequest request = new CourseCreateRequest("CENG 301", "Algoritma Analizi", "2024-2025 Güz", 1);
-        Department department = course.getDepartment();
 
         when(courseRepository.existsByOwnerAcademician_UserIdAndCourseCode(10, "CENG 301")).thenReturn(false);
         when(departmentRepository.findById(1)).thenReturn(Optional.of(department));
@@ -161,6 +164,75 @@ class CourseServiceTest {
 
         assertThatThrownBy(() -> courseService.createCourse(request))
                 .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(courseRepository, never()).save(any());
+    }
+
+    @Test
+    void updateCourse_successfulUpdate() {
+        CourseUpdateRequest request = new CourseUpdateRequest("CENG 302", "Veri Yapıları", "2024-2025 Bahar", 1);
+        CourseResponseDto updatedResponse = CourseResponseDto.builder()
+                .courseId(1)
+                .courseCode("CENG 302")
+                .courseName("Veri Yapıları")
+                .academicTerm("2024-2025 Bahar")
+                .departmentId(1)
+                .departmentName("Bilgisayar Mühendisliği")
+                .build();
+
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+        when(courseRepository.existsByOwnerAcademician_UserIdAndCourseCodeAndCourseIdNot(10, "CENG 302", 1))
+                .thenReturn(false);
+        when(departmentRepository.findById(1)).thenReturn(Optional.of(department));
+        when(courseRepository.save(course)).thenReturn(course);
+        when(courseMapper.toResponse(course)).thenReturn(updatedResponse);
+
+        CourseResponseDto result = courseService.updateCourse(1, request);
+
+        assertThat(result.getCourseCode()).isEqualTo("CENG 302");
+        verify(courseMapper).updateEntity(course, request, department);
+        verify(courseRepository).save(course);
+    }
+
+    @Test
+    void updateCourse_otherAcademician_throwsAccessDenied() {
+        User otherOwner = new User();
+        otherOwner.setUserId(99);
+        course.setOwnerAcademician(otherOwner);
+
+        CourseUpdateRequest request = new CourseUpdateRequest("CENG 302", "Veri Yapıları", "2024-2025 Bahar", 1);
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+
+        assertThatThrownBy(() -> courseService.updateCourse(1, request))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("yetkiniz yok");
+
+        verify(courseRepository, never()).save(any());
+    }
+
+    @Test
+    void updateCourse_inactiveCourse_throwsBadRequest() {
+        course.setIsActive(false);
+        CourseUpdateRequest request = new CourseUpdateRequest("CENG 302", "Veri Yapıları", "2024-2025 Bahar", 1);
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+
+        assertThatThrownBy(() -> courseService.updateCourse(1, request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Pasif ders");
+
+        verify(courseRepository, never()).save(any());
+    }
+
+    @Test
+    void updateCourse_duplicateCourseCode_throwsConflict() {
+        CourseUpdateRequest request = new CourseUpdateRequest("CENG 999", "Başka Ders", "2024-2025 Bahar", 1);
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+        when(courseRepository.existsByOwnerAcademician_UserIdAndCourseCodeAndCourseIdNot(10, "CENG 999", 1))
+                .thenReturn(true);
+
+        assertThatThrownBy(() -> courseService.updateCourse(1, request))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("ders kodu");
 
         verify(courseRepository, never()).save(any());
     }

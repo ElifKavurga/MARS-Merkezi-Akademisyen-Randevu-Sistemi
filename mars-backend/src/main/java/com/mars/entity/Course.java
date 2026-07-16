@@ -43,4 +43,7 @@ public class Course {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_academician_id", nullable = false)
     private User ownerAcademician;
+
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive;
 }

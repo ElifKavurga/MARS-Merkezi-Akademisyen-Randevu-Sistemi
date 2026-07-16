@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 
 import com.mars.dto.CourseCreateRequest;
 import com.mars.dto.CourseResponseDto;
+import com.mars.dto.CourseUpdateRequest;
 import com.mars.entity.Course;
 import com.mars.entity.Department;
 import com.mars.entity.User;
@@ -30,6 +31,14 @@ public class CourseMapper {
         course.setAcademicTerm(request.getAcademicTerm().trim());
         course.setDepartment(department);
         course.setOwnerAcademician(ownerAcademician);
+        course.setIsActive(true);
         return course;
+    }
+
+    public void updateEntity(Course course, CourseUpdateRequest request, Department department) {
+        course.setCourseCode(request.getCourseCode().trim());
+        course.setCourseName(request.getCourseName().trim());
+        course.setAcademicTerm(request.getAcademicTerm().trim());
+        course.setDepartment(department);
     }
 }

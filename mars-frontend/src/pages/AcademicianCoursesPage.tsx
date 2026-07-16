@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { isAxiosError } from 'axios';
+import AdminActionButton from '../components/AdminActionButton';
 import CourseCreateModal from '../components/CourseCreateModal';
+import CourseEditModal from '../components/CourseEditModal';
 import Loading from '../components/Loading';
 import { FORM_FIELD_CLASS } from '../constants';
 import { useToast } from '../hooks/useToast';
@@ -14,6 +16,7 @@ export default function AcademicianCoursesPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
 
   const loadCourses = useCallback(async () => {
     setLoading(true);
@@ -127,6 +130,9 @@ export default function AcademicianCoursesPage() {
                   <th className="font-label-md text-label-md text-on-surface-variant py-4 px-6 font-semibold">
                     Bölüm
                   </th>
+                  <th className="font-label-md text-label-md text-on-surface-variant py-4 px-6 font-semibold text-right">
+                    İşlemler
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/50">
@@ -147,6 +153,15 @@ export default function AcademicianCoursesPage() {
                     <td className="py-4 px-6 font-body-md text-body-md text-on-surface">
                       {course.departmentName}
                     </td>
+                    <td className="py-4 px-6 text-right">
+                      <AdminActionButton
+                        variant="primary"
+                        icon="edit"
+                        onClick={() => setEditingCourse(course)}
+                      >
+                        Düzenle
+                      </AdminActionButton>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -159,6 +174,16 @@ export default function AcademicianCoursesPage() {
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
         onCreated={(message) => {
+          toast.success(message);
+          void loadCourses();
+        }}
+      />
+
+      <CourseEditModal
+        open={editingCourse != null}
+        course={editingCourse}
+        onClose={() => setEditingCourse(null)}
+        onUpdated={(message) => {
           toast.success(message);
           void loadCourses();
         }}

@@ -5,13 +5,16 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mars.dto.CourseCreateRequest;
 import com.mars.dto.CourseResponseDto;
+import com.mars.dto.CourseUpdateRequest;
 import com.mars.service.CourseService;
 
 import jakarta.validation.Valid;
@@ -32,5 +35,12 @@ public class CourseController {
     @PostMapping
     public ResponseEntity<CourseResponseDto> createCourse(@Valid @RequestBody CourseCreateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(courseService.createCourse(request));
+    }
+
+    @PutMapping("/{courseId}")
+    public ResponseEntity<CourseResponseDto> updateCourse(
+            @PathVariable Integer courseId,
+            @Valid @RequestBody CourseUpdateRequest request) {
+        return ResponseEntity.ok(courseService.updateCourse(courseId, request));
     }
 }

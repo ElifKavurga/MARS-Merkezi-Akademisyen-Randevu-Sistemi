@@ -13,3 +13,5 @@ export type CourseCreatePayload = {
   academicTerm: string;
   departmentId: number;
 };
+
+export type CourseUpdatePayload = CourseCreatePayload;
