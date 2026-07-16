@@ -34,7 +34,7 @@ export { getUsersByRole, getActiveAssistants } from './userService';
 export {
   getMyAvailabilitySlots,
   getMyAvailabilityStats,
-  createAvailabilitySlot,
+  createAvailabilitySlots,
   updateAvailabilitySlot,
   updateAvailabilitySlotBlocked,
 } from './availabilityService';

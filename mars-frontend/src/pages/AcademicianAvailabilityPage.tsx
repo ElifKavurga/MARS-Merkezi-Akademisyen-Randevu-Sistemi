@@ -7,7 +7,6 @@ import AvailabilityStatusBadge from '../components/AvailabilityStatusBadge';
 import ConfirmModal from '../components/ConfirmModal';
 import CourseStatCard from '../components/CourseStatCard';
 import Loading from '../components/Loading';
-import RecurrenceRuleCreateModal from '../components/RecurrenceRuleCreateModal';
 import RecurrenceRuleEditModal from '../components/RecurrenceRuleEditModal';
 import { FORM_FIELD_CLASS, FORM_SELECT_CLASS } from '../constants';
 import {
@@ -121,7 +120,6 @@ export default function AcademicianAvailabilityPage() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [createOpen, setCreateOpen] = useState(false);
   const [editingSlot, setEditingSlot] = useState<AvailabilitySlot | null>(null);
-  const [recurrenceSlot, setRecurrenceSlot] = useState<AvailabilitySlot | null>(null);
   const [editingRecurrenceSlot, setEditingRecurrenceSlot] = useState<AvailabilitySlot | null>(null);
   const [endingRecurrenceSlot, setEndingRecurrenceSlot] = useState<AvailabilitySlot | null>(null);
   const [endLoading, setEndLoading] = useState(false);
@@ -456,7 +454,14 @@ export default function AcademicianAvailabilityPage() {
                       className="border-b border-outline-variant/40 hover:bg-surface-container/30 transition-colors"
                     >
                       <td className="py-4 px-6 font-body-md text-body-md text-on-background">
-                        <div>{getDayOfWeekLabel(slot.slotDate)}</div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span>{getDayOfWeekLabel(slot.slotDate)}</span>
+                          {slot.recurrenceRuleId != null ? (
+                            <span className="inline-flex items-center rounded-md bg-[#0b1641]/10 px-2 py-0.5 font-label-sm text-label-sm text-[#0b1641]">
+                              {AVAILABILITY_MESSAGES.RECURRING_BADGE}
+                            </span>
+                          ) : null}
+                        </div>
                         <div className="mt-0.5 font-label-sm text-label-sm text-on-surface-variant">
                           {slot.slotDate}
                         </div>
@@ -484,15 +489,7 @@ export default function AcademicianAvailabilityPage() {
                               >
                                 Düzenle
                               </AdminActionButton>
-                              {slot.recurrenceRuleId == null ? (
-                                <AdminActionButton
-                                  variant="neutral"
-                                  icon="event_repeat"
-                                  onClick={() => setRecurrenceSlot(slot)}
-                                >
-                                  Tekrar Kuralı
-                                </AdminActionButton>
-                              ) : (
+                              {slot.recurrenceRuleId != null ? (
                                 <>
                                   <AdminActionButton
                                     variant="neutral"
@@ -512,7 +509,7 @@ export default function AcademicianAvailabilityPage() {
                                     Tekrarı Sonlandır
                                   </AdminActionButton>
                                 </>
-                              )}
+                              ) : null}
                               <AdminActionButton
                                 variant="danger"
                                 icon="block"
@@ -561,16 +558,6 @@ export default function AcademicianAvailabilityPage() {
         slot={editingSlot}
         onClose={() => setEditingSlot(null)}
         onUpdated={(message) => {
-          toast.success(message);
-          void loadPageData();
-        }}
-      />
-
-      <RecurrenceRuleCreateModal
-        open={recurrenceSlot !== null}
-        slot={recurrenceSlot}
-        onClose={() => setRecurrenceSlot(null)}
-        onCreated={(message) => {
           toast.success(message);
           void loadPageData();
         }}

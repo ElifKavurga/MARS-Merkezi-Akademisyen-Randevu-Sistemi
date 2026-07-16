@@ -1,9 +1,11 @@
 package com.mars.mapper;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 import org.springframework.stereotype.Component;
 
 import com.mars.dto.AvailabilitySlotBlockRequest;
-import com.mars.dto.AvailabilitySlotCreateRequest;
 import com.mars.dto.AvailabilitySlotResponseDto;
 import com.mars.dto.AvailabilitySlotStatsResponseDto;
 import com.mars.dto.AvailabilitySlotUpdateRequest;
@@ -13,12 +15,12 @@ import com.mars.entity.User;
 @Component
 public class AvailabilitySlotMapper {
 
-    public AvailabilitySlot toEntity(AvailabilitySlotCreateRequest request, User staff) {
+    public AvailabilitySlot toEntity(LocalDate slotDate, LocalTime startTime, LocalTime endTime, User staff) {
         AvailabilitySlot slot = new AvailabilitySlot();
         slot.setStaff(staff);
-        slot.setSlotDate(request.getSlotDate());
-        slot.setStartTime(request.getStartTime());
-        slot.setEndTime(request.getEndTime());
+        slot.setSlotDate(slotDate);
+        slot.setStartTime(startTime);
+        slot.setEndTime(endTime);
         slot.setRecurrenceRule(null);
         slot.setIsBlocked(false);
         return slot;

@@ -2,7 +2,10 @@ package com.mars.service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -19,9 +22,13 @@ import com.mars.dto.AvailabilitySlotCreateRequest;
 import com.mars.dto.AvailabilitySlotResponseDto;
 import com.mars.dto.AvailabilitySlotStatsResponseDto;
 import com.mars.dto.AvailabilitySlotUpdateRequest;
+import com.mars.dto.RecurrenceRuleCreateRequest;
 import com.mars.entity.AvailabilitySlot;
 import com.mars.entity.User;
 import com.mars.enums.AppointmentStatus;
+import com.mars.enums.OfficeHourType;
+import com.mars.enums.RecurrenceEndMode;
+import com.mars.enums.RepeatType;
 import com.mars.exception.BadRequestException;
 import com.mars.exception.ConflictException;
 import com.mars.exception.ResourceNotFoundException;
@@ -30,6 +37,8 @@ import com.mars.repository.AppointmentRepository;
 import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.security.CustomUserDetails;
 import com.mars.security.SecurityMessages;
+import com.mars.util.AcademicTermCalendar;
+import com.mars.util.AvailabilityTimeRules;
 
 import lombok.RequiredArgsConstructor;
 
@@ -44,6 +53,7 @@ public class AvailabilitySlotService {
     private final AvailabilitySlotRepository availabilitySlotRepository;
     private final AppointmentRepository appointmentRepository;
     private final AvailabilitySlotMapper availabilitySlotMapper;
+    private final RecurrenceRuleService recurrenceRuleService;
 
     @Transactional(readOnly = true)
     public List<AvailabilitySlotResponseDto> getMySlots() {
@@ -73,22 +83,15 @@ public class AvailabilitySlotService {
     }
 
     @Transactional
-    public AvailabilitySlotResponseDto createSlot(AvailabilitySlotCreateRequest request) {
+    public List<AvailabilitySlotResponseDto> createSlots(AvailabilitySlotCreateRequest request) {
         User currentUser = getCurrentUser();
-        validateTimeRange(request.getStartTime(), request.getEndTime());
-        validateNotPastDate(request.getSlotDate(), AvailabilitySlotMessages.PAST_DATE_CREATE);
+        AvailabilityTimeRules.validateTimeRange(request.getStartTime(), request.getEndTime());
 
-        if (availabilitySlotRepository.existsOverlappingSlot(
-                currentUser.getUserId(),
-                request.getSlotDate(),
-                request.getStartTime(),
-                request.getEndTime())) {
-            throw new ConflictException(AvailabilitySlotMessages.OVERLAP);
+        OfficeHourType slotType = parseSlotType(request.getSlotType());
+        if (slotType == OfficeHourType.ONE_TIME) {
+            return List.of(createOneTimeSlot(request, currentUser));
         }
-
-        AvailabilitySlot slot = availabilitySlotMapper.toEntity(request, currentUser);
-        AvailabilitySlot saved = availabilitySlotRepository.save(slot);
-        return availabilitySlotMapper.toResponse(saved);
+        return createRecurringSlots(request, currentUser);
     }
 
     @Transactional
@@ -100,7 +103,7 @@ public class AvailabilitySlotService {
             throw new BadRequestException(AvailabilitySlotMessages.BLOCKED_NOT_EDITABLE);
         }
 
-        validateTimeRange(request.getStartTime(), request.getEndTime());
+        AvailabilityTimeRules.validateTimeRange(request.getStartTime(), request.getEndTime());
         validateNotPastDate(request.getSlotDate(), AvailabilitySlotMessages.PAST_DATE_UPDATE);
 
         if (hasActiveAppointments(slotId)) {
@@ -144,15 +147,129 @@ public class AvailabilitySlotService {
         return availabilitySlotMapper.toResponse(saved);
     }
 
+    private AvailabilitySlotResponseDto createOneTimeSlot(
+            AvailabilitySlotCreateRequest request, User currentUser) {
+        if (request.getSlotDate() == null) {
+            throw new BadRequestException(AvailabilitySlotMessages.SLOT_DATE_REQUIRED);
+        }
+        return persistSlot(
+                currentUser,
+                request.getSlotDate(),
+                request.getStartTime(),
+                request.getEndTime(),
+                null);
+    }
+
+    private List<AvailabilitySlotResponseDto> createRecurringSlots(
+            AvailabilitySlotCreateRequest request, User currentUser) {
+        List<DayOfWeek> selectedDays = normalizeSelectedDays(request.getDaysOfWeek());
+        LocalDate recurrenceEndDate = resolveRecurrenceEndDate(request, LocalDate.now());
+
+        List<AvailabilitySlotResponseDto> created = new ArrayList<>();
+        for (DayOfWeek day : selectedDays) {
+            LocalDate slotDate = LocalDate.now().with(TemporalAdjusters.nextOrSame(day));
+            if (recurrenceEndDate.isBefore(slotDate)) {
+                throw new BadRequestException(AvailabilitySlotMessages.RECURRENCE_END_BEFORE_START);
+            }
+            created.add(persistSlot(
+                    currentUser,
+                    slotDate,
+                    request.getStartTime(),
+                    request.getEndTime(),
+                    recurrenceEndDate));
+        }
+        return created;
+    }
+
+    private AvailabilitySlotResponseDto persistSlot(
+            User currentUser,
+            LocalDate slotDate,
+            LocalTime startTime,
+            LocalTime endTime,
+            LocalDate recurrenceEndDate) {
+        validateNotPastDate(slotDate, AvailabilitySlotMessages.PAST_DATE_CREATE);
+
+        if (availabilitySlotRepository.existsOverlappingSlot(
+                currentUser.getUserId(), slotDate, startTime, endTime)) {
+            throw new ConflictException(AvailabilitySlotMessages.OVERLAP);
+        }
+
+        AvailabilitySlot slot = availabilitySlotMapper.toEntity(slotDate, startTime, endTime, currentUser);
+        AvailabilitySlot saved = availabilitySlotRepository.save(slot);
+
+        if (recurrenceEndDate != null) {
+            recurrenceRuleService.createRule(
+                    saved.getSlotId(),
+                    buildWeeklyRecurrenceRequest(slotDate, recurrenceEndDate));
+            saved = availabilitySlotRepository.findByIdWithStaffAndRecurrenceRule(saved.getSlotId())
+                    .orElse(saved);
+        }
+
+        return availabilitySlotMapper.toResponse(saved);
+    }
+
+    private OfficeHourType parseSlotType(String slotType) {
+        if (slotType == null || slotType.isBlank()) {
+            throw new BadRequestException(AvailabilitySlotMessages.SLOT_TYPE_REQUIRED);
+        }
+        try {
+            return OfficeHourType.valueOf(slotType.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException(AvailabilitySlotMessages.SLOT_TYPE_REQUIRED);
+        }
+    }
+
+    private RecurrenceRuleCreateRequest buildWeeklyRecurrenceRequest(LocalDate startDate, LocalDate endDate) {
+        return new RecurrenceRuleCreateRequest(
+                RepeatType.WEEKLY.name(),
+                AvailabilityTimeRules.WEEKLY_REPEAT_COUNT,
+                startDate,
+                endDate);
+    }
+
+    private LocalDate resolveRecurrenceEndDate(AvailabilitySlotCreateRequest request, LocalDate today) {
+        if (request.getRecurrenceEndMode() == null || request.getRecurrenceEndMode().isBlank()) {
+            throw new BadRequestException(AvailabilitySlotMessages.RECURRENCE_END_MODE_REQUIRED);
+        }
+
+        RecurrenceEndMode mode;
+        try {
+            mode = RecurrenceEndMode.valueOf(request.getRecurrenceEndMode().trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException(AvailabilitySlotMessages.RECURRENCE_END_MODE_REQUIRED);
+        }
+
+        if (mode == RecurrenceEndMode.TERM_END) {
+            return AcademicTermCalendar.resolveCurrentTermEndDate(today);
+        }
+
+        if (request.getRecurrenceEndDate() == null) {
+            throw new BadRequestException(AvailabilitySlotMessages.RECURRENCE_END_DATE_REQUIRED);
+        }
+        return request.getRecurrenceEndDate();
+    }
+
+    private List<DayOfWeek> normalizeSelectedDays(List<Integer> daysOfWeek) {
+        if (daysOfWeek == null || daysOfWeek.isEmpty()) {
+            throw new BadRequestException(AvailabilitySlotMessages.DAYS_REQUIRED);
+        }
+
+        Set<DayOfWeek> uniqueDays = new LinkedHashSet<>();
+        for (Integer dayValue : daysOfWeek) {
+            if (dayValue == null || dayValue < 1 || dayValue > 5) {
+                throw new BadRequestException(AvailabilitySlotMessages.INVALID_DAY);
+            }
+            uniqueDays.add(DayOfWeek.of(dayValue));
+        }
+        if (uniqueDays.isEmpty()) {
+            throw new BadRequestException(AvailabilitySlotMessages.DAYS_REQUIRED);
+        }
+        return List.copyOf(uniqueDays);
+    }
+
     private boolean hasActiveAppointments(Integer slotId) {
         return appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(
                 slotId, ACTIVE_APPOINTMENT_STATUSES);
-    }
-
-    private void validateTimeRange(java.time.LocalTime startTime, java.time.LocalTime endTime) {
-        if (!startTime.isBefore(endTime)) {
-            throw new BadRequestException(AvailabilitySlotMessages.START_BEFORE_END);
-        }
     }
 
     private void validateNotPastDate(LocalDate slotDate, String message) {

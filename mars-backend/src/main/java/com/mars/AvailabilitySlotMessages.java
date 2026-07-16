@@ -5,6 +5,17 @@ public final class AvailabilitySlotMessages {
     public static final String SLOT_NOT_FOUND = "Ofis saati bulunamadı.";
     public static final String OVERLAP = "Bu tarih ve saat aralığında çakışan bir ofis saati bulunmaktadır.";
     public static final String START_BEFORE_END = "Başlangıç saati bitiş saatinden önce olmalıdır.";
+    public static final String TIME_REQUIRED = "Başlangıç ve bitiş saati zorunludur.";
+    public static final String INVALID_MINUTE_STEP =
+            "Saat seçimleri yalnızca 10 dakikalık aralıklarla yapılabilir (00, 10, 20, 30, 40, 50).";
+    public static final String DAYS_REQUIRED = "En az bir gün seçilmelidir.";
+    public static final String INVALID_DAY = "Yalnızca Pazartesi–Cuma günleri seçilebilir.";
+    public static final String SLOT_TYPE_REQUIRED = "Ofis saati türü zorunludur.";
+    public static final String SLOT_DATE_REQUIRED = "Tarih zorunludur.";
+    public static final String RECURRENCE_END_MODE_REQUIRED = "Tekrar süresi seçimi zorunludur.";
+    public static final String RECURRENCE_END_DATE_REQUIRED = "Bitiş tarihi zorunludur.";
+    public static final String RECURRENCE_END_BEFORE_START =
+            "Tekrar bitiş tarihi, ofis saati başlangıç tarihinden önce olamaz.";
     public static final String PAST_DATE_CREATE = "Geçmiş tarih için ofis saati oluşturulamaz.";
     public static final String PAST_DATE_UPDATE = "Geçmiş tarih için ofis saati güncellenemez.";
     public static final String BLOCKED_NOT_EDITABLE = "Pasif ofis saati güncellenemez.";

@@ -1,5 +1,5 @@
 import { FORM_FIELD_CLASS } from '../constants/ui';
-import { todayIsoDate } from '../constants/availability';
+import { buildOfficeHourTimeOptions, todayIsoDate } from '../constants/availability';
 
 export type AvailabilitySlotFormValues = {
   slotDate: string;
@@ -13,6 +13,8 @@ type AvailabilitySlotFormFieldsProps = {
   idPrefix: string;
   onChange: (next: AvailabilitySlotFormValues) => void;
 };
+
+const TIME_OPTIONS = buildOfficeHourTimeOptions();
 
 export default function AvailabilitySlotFormFields({
   form,
@@ -48,15 +50,21 @@ export default function AvailabilitySlotFormFields({
         >
           Başlangıç Saati
         </label>
-        <input
+        <select
           id={`${idPrefix}-start-time`}
-          type="time"
           className={FORM_FIELD_CLASS}
           required
           value={form.startTime}
           disabled={disabled}
           onChange={(event) => onChange({ ...form, startTime: event.target.value })}
-        />
+        >
+          <option value="">Seçiniz</option>
+          {TIME_OPTIONS.map((time) => (
+            <option key={`start-${time}`} value={time}>
+              {time}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="space-y-1.5">
@@ -66,15 +74,21 @@ export default function AvailabilitySlotFormFields({
         >
           Bitiş Saati
         </label>
-        <input
+        <select
           id={`${idPrefix}-end-time`}
-          type="time"
           className={FORM_FIELD_CLASS}
           required
           value={form.endTime}
           disabled={disabled}
           onChange={(event) => onChange({ ...form, endTime: event.target.value })}
-        />
+        >
+          <option value="">Seçiniz</option>
+          {TIME_OPTIONS.map((time) => (
+            <option key={`end-${time}`} value={time}>
+              {time}
+            </option>
+          ))}
+        </select>
       </div>
     </div>
   );

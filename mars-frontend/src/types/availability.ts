@@ -8,9 +8,13 @@ export type AvailabilitySlot = {
 };
 
 export type AvailabilitySlotCreatePayload = {
-  slotDate: string;
+  slotType: 'ONE_TIME' | 'RECURRING';
+  slotDate?: string | null;
+  daysOfWeek?: number[] | null;
   startTime: string;
   endTime: string;
+  recurrenceEndMode?: string | null;
+  recurrenceEndDate?: string | null;
 };
 
 export type AvailabilitySlotUpdatePayload = {

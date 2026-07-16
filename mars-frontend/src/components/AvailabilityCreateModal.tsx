@@ -1,15 +1,20 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { isAxiosError } from 'axios';
-import AvailabilitySlotFormFields from './AvailabilitySlotFormFields';
+import AvailabilityCreateFormFields, {
+  type AvailabilityCreateFormValues,
+} from './AvailabilityCreateFormFields';
 import ModalFormFooter from './ModalFormFooter';
 import ModalHeader from './ModalHeader';
 import ModalShell from './ModalShell';
 import {
   AVAILABILITY_MESSAGES,
+  OFFICE_HOUR_TYPE,
+  RECURRENCE_END_MODE,
+  formatCreateSuccessMessage,
   toApiTimeValue,
-  validateAvailabilitySlotForm,
+  validateAvailabilityCreateForm,
 } from '../constants/availability';
-import { createAvailabilitySlot } from '../services/availabilityService';
+import { createAvailabilitySlots } from '../services/availabilityService';
 import type { AvailabilitySlotCreatePayload } from '../types/availability';
 
 type AvailabilityCreateModalProps = {
@@ -18,10 +23,14 @@ type AvailabilityCreateModalProps = {
   onCreated: (message: string) => void;
 };
 
-const INITIAL_FORM: AvailabilitySlotCreatePayload = {
+const INITIAL_FORM: AvailabilityCreateFormValues = {
+  slotType: OFFICE_HOUR_TYPE.ONE_TIME,
   slotDate: '',
+  daysOfWeek: [],
   startTime: '',
   endTime: '',
+  recurrenceEndMode: RECURRENCE_END_MODE.TERM_END,
+  recurrenceEndDate: '',
 };
 
 function resolveError(err: unknown): string {
@@ -40,12 +49,42 @@ function resolveError(err: unknown): string {
   return AVAILABILITY_MESSAGES.CREATE_ERROR;
 }
 
+function toCreatePayload(form: AvailabilityCreateFormValues): AvailabilitySlotCreatePayload {
+  const startTime = toApiTimeValue(form.startTime.trim());
+  const endTime = toApiTimeValue(form.endTime.trim());
+
+  if (form.slotType === OFFICE_HOUR_TYPE.ONE_TIME) {
+    return {
+      slotType: OFFICE_HOUR_TYPE.ONE_TIME,
+      slotDate: form.slotDate.trim(),
+      daysOfWeek: null,
+      startTime,
+      endTime,
+      recurrenceEndMode: null,
+      recurrenceEndDate: null,
+    };
+  }
+
+  return {
+    slotType: OFFICE_HOUR_TYPE.RECURRING,
+    slotDate: null,
+    daysOfWeek: form.daysOfWeek,
+    startTime,
+    endTime,
+    recurrenceEndMode: form.recurrenceEndMode,
+    recurrenceEndDate:
+      form.recurrenceEndMode === RECURRENCE_END_MODE.UNTIL_DATE
+        ? form.recurrenceEndDate.trim()
+        : null,
+  };
+}
+
 export default function AvailabilityCreateModal({
   open,
   onClose,
   onCreated,
 }: AvailabilityCreateModalProps) {
-  const [form, setForm] = useState<AvailabilitySlotCreatePayload>(INITIAL_FORM);
+  const [form, setForm] = useState<AvailabilityCreateFormValues>(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,7 +116,7 @@ export default function AvailabilityCreateModal({
     }
 
     setError(null);
-    const validationError = validateAvailabilitySlotForm(form);
+    const validationError = validateAvailabilityCreateForm(form);
     if (validationError) {
       setError(validationError);
       return;
@@ -85,13 +124,9 @@ export default function AvailabilityCreateModal({
 
     setSubmitting(true);
     try {
-      await createAvailabilitySlot({
-        slotDate: form.slotDate.trim(),
-        startTime: toApiTimeValue(form.startTime.trim()),
-        endTime: toApiTimeValue(form.endTime.trim()),
-      });
+      const created = await createAvailabilitySlots(toCreatePayload(form));
       setForm({ ...INITIAL_FORM });
-      onCreated(AVAILABILITY_MESSAGES.CREATE_SUCCESS);
+      onCreated(formatCreateSuccessMessage(created.length));
       onClose();
     } catch (err) {
       setError(resolveError(err));
@@ -107,6 +142,7 @@ export default function AvailabilityCreateModal({
       onClose={handleClose}
       onSubmit={(event) => void handleSubmit(event)}
       disableBackdropClose={submitting}
+      maxWidthClass="sm:max-w-xl"
       footer={<ModalFormFooter submitting={submitting} onCancel={handleClose} submitLabel="Kaydet" />}
     >
       <div className="bg-surface px-4 pb-4 pt-5 sm:p-6">
@@ -114,10 +150,10 @@ export default function AvailabilityCreateModal({
           titleId="availability-create-modal-title"
           icon="schedule"
           title="Yeni Ofis Saati"
-          description="Tek seferlik müsaitlik aralığı tanımlayın."
+          description="Tek seferlik veya haftalık tekrarlayan ofis saati tanımlayın."
         />
 
-        <AvailabilitySlotFormFields
+        <AvailabilityCreateFormFields
           idPrefix="availability-create"
           form={form}
           disabled={submitting}

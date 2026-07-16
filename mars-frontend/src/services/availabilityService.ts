@@ -17,10 +17,10 @@ export async function getMyAvailabilityStats(): Promise<AvailabilitySlotStats> {
   return data;
 }
 
-export async function createAvailabilitySlot(
+export async function createAvailabilitySlots(
   payload: AvailabilitySlotCreatePayload,
-): Promise<AvailabilitySlot> {
-  const { data } = await apiClient.post<AvailabilitySlot>('/availability-slots', payload);
+): Promise<AvailabilitySlot[]> {
+  const { data } = await apiClient.post<AvailabilitySlot[]>('/availability-slots', payload);
   return data;
 }
 

@@ -8,8 +8,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -25,14 +28,20 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.mars.AvailabilitySlotMessages;
 import com.mars.dto.AvailabilitySlotBlockRequest;
 import com.mars.dto.AvailabilitySlotCreateRequest;
 import com.mars.dto.AvailabilitySlotResponseDto;
 import com.mars.dto.AvailabilitySlotStatsResponseDto;
 import com.mars.dto.AvailabilitySlotUpdateRequest;
+import com.mars.dto.RecurrenceRuleCreateRequest;
+import com.mars.dto.RecurrenceRuleResponseDto;
 import com.mars.entity.AvailabilitySlot;
 import com.mars.entity.User;
 import com.mars.enums.AppointmentStatus;
+import com.mars.enums.OfficeHourType;
+import com.mars.enums.RecurrenceEndMode;
+import com.mars.enums.RepeatType;
 import com.mars.exception.BadRequestException;
 import com.mars.exception.ConflictException;
 import com.mars.exception.ResourceNotFoundException;
@@ -40,6 +49,8 @@ import com.mars.mapper.AvailabilitySlotMapper;
 import com.mars.repository.AppointmentRepository;
 import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.security.CustomUserDetails;
+import com.mars.util.AcademicTermCalendar;
+import com.mars.util.AvailabilityTimeRules;
 
 @ExtendWith(MockitoExtension.class)
 class AvailabilitySlotServiceTest {
@@ -56,6 +67,9 @@ class AvailabilitySlotServiceTest {
 
     @Mock
     private AvailabilitySlotMapper availabilitySlotMapper;
+
+    @Mock
+    private RecurrenceRuleService recurrenceRuleService;
 
     @InjectMocks
     private AvailabilitySlotService availabilitySlotService;
@@ -154,38 +168,188 @@ class AvailabilitySlotServiceTest {
     }
 
     @Test
-    void createSlot_successfulCreation() {
-        LocalDate futureDate = LocalDate.now().plusDays(1);
+    void createSlots_oneTime_createsSingleSlotWithoutRecurrence() {
+        LocalDate slotDate = LocalDate.now().plusDays(1);
         AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(
-                futureDate,
+                OfficeHourType.ONE_TIME.name(),
+                slotDate,
+                null,
                 LocalTime.of(10, 0),
-                LocalTime.of(12, 0));
+                LocalTime.of(12, 0),
+                null,
+                null);
 
-        when(availabilitySlotRepository.existsOverlappingSlot(10, futureDate, LocalTime.of(10, 0), LocalTime.of(12, 0)))
+        when(availabilitySlotRepository.existsOverlappingSlot(
+                10, slotDate, LocalTime.of(10, 0), LocalTime.of(12, 0)))
                 .thenReturn(false);
-        when(availabilitySlotMapper.toEntity(request, academician)).thenReturn(slot);
+        when(availabilitySlotMapper.toEntity(slotDate, LocalTime.of(10, 0), LocalTime.of(12, 0), academician))
+                .thenReturn(slot);
         when(availabilitySlotRepository.save(slot)).thenReturn(slot);
         when(availabilitySlotMapper.toResponse(slot)).thenReturn(responseDto);
 
-        AvailabilitySlotResponseDto result = availabilitySlotService.createSlot(request);
+        List<AvailabilitySlotResponseDto> result = availabilitySlotService.createSlots(request);
 
-        assertThat(result.getSlotId()).isEqualTo(1);
-        verify(availabilitySlotRepository).save(slot);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getSlotId()).isEqualTo(1);
+        verify(recurrenceRuleService, never()).createRule(any(), any());
     }
 
     @Test
-    void createSlot_overlappingSlot_throwsConflict() {
-        LocalDate futureDate = LocalDate.now().plusDays(1);
+    void createSlots_recurringMultipleDays_createsSeparateSlotsWithRules() {
+        LocalDate wed = LocalDate.now().with(TemporalAdjusters.nextOrSame(DayOfWeek.WEDNESDAY));
+        LocalDate thu = LocalDate.now().with(TemporalAdjusters.nextOrSame(DayOfWeek.THURSDAY));
+        LocalDate termEnd = AcademicTermCalendar.resolveCurrentTermEndDate(LocalDate.now());
         AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(
-                futureDate,
-                LocalTime.of(10, 30),
-                LocalTime.of(12, 0));
+                OfficeHourType.RECURRING.name(),
+                null,
+                List.of(DayOfWeek.WEDNESDAY.getValue(), DayOfWeek.THURSDAY.getValue()),
+                LocalTime.of(10, 0),
+                LocalTime.of(11, 0),
+                RecurrenceEndMode.TERM_END.name(),
+                null);
+
+        AvailabilitySlot wedSlot = new AvailabilitySlot();
+        wedSlot.setSlotId(1);
+        wedSlot.setStaff(academician);
+        AvailabilitySlot thuSlot = new AvailabilitySlot();
+        thuSlot.setSlotId(2);
+        thuSlot.setStaff(academician);
+
+        when(availabilitySlotRepository.existsOverlappingSlot(eq(10), any(LocalDate.class), any(), any()))
+                .thenReturn(false);
+        when(availabilitySlotMapper.toEntity(wed, LocalTime.of(10, 0), LocalTime.of(11, 0), academician))
+                .thenReturn(wedSlot);
+        when(availabilitySlotMapper.toEntity(thu, LocalTime.of(10, 0), LocalTime.of(11, 0), academician))
+                .thenReturn(thuSlot);
+        when(availabilitySlotRepository.save(wedSlot)).thenReturn(wedSlot);
+        when(availabilitySlotRepository.save(thuSlot)).thenReturn(thuSlot);
+        when(recurrenceRuleService.createRule(any(), any(RecurrenceRuleCreateRequest.class)))
+                .thenReturn(RecurrenceRuleResponseDto.builder().recurrenceRuleId(9).build());
+        when(availabilitySlotRepository.findByIdWithStaffAndRecurrenceRule(1)).thenReturn(Optional.of(wedSlot));
+        when(availabilitySlotRepository.findByIdWithStaffAndRecurrenceRule(2)).thenReturn(Optional.of(thuSlot));
+        when(availabilitySlotMapper.toResponse(wedSlot)).thenReturn(
+                AvailabilitySlotResponseDto.builder().slotId(1).slotDate(wed).isBlocked(false).build());
+        when(availabilitySlotMapper.toResponse(thuSlot)).thenReturn(
+                AvailabilitySlotResponseDto.builder().slotId(2).slotDate(thu).isBlocked(false).build());
+
+        List<AvailabilitySlotResponseDto> result = availabilitySlotService.createSlots(request);
+
+        assertThat(result).hasSize(2);
+        assertThat(result).extracting(AvailabilitySlotResponseDto::getSlotId).containsExactly(1, 2);
+        verify(availabilitySlotRepository, org.mockito.Mockito.times(2)).save(any());
+        verify(recurrenceRuleService, org.mockito.Mockito.times(2)).createRule(any(), any());
+        assertThat(termEnd).isNotNull();
+    }
+
+    @Test
+    void createSlots_weeklyUntilDate_createsRecurrenceRuleWithRepeatCountOne() {
+        LocalDate slotDate = LocalDate.now().with(TemporalAdjusters.nextOrSame(DayOfWeek.MONDAY));
+        LocalDate endDate = slotDate.plusWeeks(4);
+        AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(
+                OfficeHourType.RECURRING.name(),
+                null,
+                List.of(DayOfWeek.MONDAY.getValue()),
+                LocalTime.of(10, 0),
+                LocalTime.of(12, 0),
+                RecurrenceEndMode.UNTIL_DATE.name(),
+                endDate);
 
         when(availabilitySlotRepository.existsOverlappingSlot(
-                eq(10), eq(futureDate), eq(LocalTime.of(10, 30)), eq(LocalTime.of(12, 0))))
+                10, slotDate, LocalTime.of(10, 0), LocalTime.of(12, 0)))
+                .thenReturn(false);
+        when(availabilitySlotMapper.toEntity(slotDate, LocalTime.of(10, 0), LocalTime.of(12, 0), academician))
+                .thenReturn(slot);
+        when(availabilitySlotRepository.save(slot)).thenReturn(slot);
+        when(recurrenceRuleService.createRule(eq(1), any(RecurrenceRuleCreateRequest.class)))
+                .thenReturn(RecurrenceRuleResponseDto.builder()
+                        .recurrenceRuleId(9)
+                        .repeatType(RepeatType.WEEKLY.name())
+                        .repeatCount(1)
+                        .startDate(slotDate)
+                        .endDate(endDate)
+                        .build());
+        when(availabilitySlotRepository.findByIdWithStaffAndRecurrenceRule(1)).thenReturn(Optional.of(slot));
+        when(availabilitySlotMapper.toResponse(slot)).thenReturn(responseDto);
+
+        availabilitySlotService.createSlots(request);
+
+        ArgumentCaptor<RecurrenceRuleCreateRequest> captor =
+                ArgumentCaptor.forClass(RecurrenceRuleCreateRequest.class);
+        verify(recurrenceRuleService).createRule(eq(1), captor.capture());
+        assertThat(captor.getValue().getRepeatType()).isEqualTo(RepeatType.WEEKLY.name());
+        assertThat(captor.getValue().getStartDate()).isEqualTo(slotDate);
+        assertThat(captor.getValue().getEndDate()).isEqualTo(endDate);
+        assertThat(captor.getValue().getRepeatCount()).isEqualTo(AvailabilityTimeRules.WEEKLY_REPEAT_COUNT);
+    }
+
+    @Test
+    void createSlots_weeklyUntilTermEnd_usesTermEndDate() {
+        LocalDate slotDate = LocalDate.now().with(TemporalAdjusters.nextOrSame(DayOfWeek.FRIDAY));
+        LocalDate termEnd = AcademicTermCalendar.resolveCurrentTermEndDate(LocalDate.now());
+        AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(
+                OfficeHourType.RECURRING.name(),
+                null,
+                List.of(DayOfWeek.FRIDAY.getValue()),
+                LocalTime.of(14, 0),
+                LocalTime.of(15, 0),
+                RecurrenceEndMode.TERM_END.name(),
+                null);
+
+        when(availabilitySlotRepository.existsOverlappingSlot(
+                10, slotDate, LocalTime.of(14, 0), LocalTime.of(15, 0)))
+                .thenReturn(false);
+        when(availabilitySlotMapper.toEntity(slotDate, LocalTime.of(14, 0), LocalTime.of(15, 0), academician))
+                .thenReturn(slot);
+        when(availabilitySlotRepository.save(slot)).thenReturn(slot);
+        when(recurrenceRuleService.createRule(eq(1), any(RecurrenceRuleCreateRequest.class)))
+                .thenReturn(RecurrenceRuleResponseDto.builder().recurrenceRuleId(3).build());
+        when(availabilitySlotRepository.findByIdWithStaffAndRecurrenceRule(1)).thenReturn(Optional.of(slot));
+        when(availabilitySlotMapper.toResponse(slot)).thenReturn(responseDto);
+
+        availabilitySlotService.createSlots(request);
+
+        ArgumentCaptor<RecurrenceRuleCreateRequest> captor =
+                ArgumentCaptor.forClass(RecurrenceRuleCreateRequest.class);
+        verify(recurrenceRuleService).createRule(eq(1), captor.capture());
+        assertThat(captor.getValue().getEndDate()).isEqualTo(termEnd);
+        assertThat(captor.getValue().getRepeatCount()).isEqualTo(1);
+    }
+
+    @Test
+    void createSlots_invalidMinuteStep_throwsBadRequest() {
+        AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(
+                OfficeHourType.ONE_TIME.name(),
+                LocalDate.now().plusDays(1),
+                null,
+                LocalTime.of(10, 5),
+                LocalTime.of(12, 0),
+                null,
+                null);
+
+        assertThatThrownBy(() -> availabilitySlotService.createSlots(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage(AvailabilitySlotMessages.INVALID_MINUTE_STEP);
+
+        verify(availabilitySlotRepository, never()).save(any());
+    }
+
+    @Test
+    void createSlots_overlappingSlot_throwsConflict() {
+        LocalDate slotDate = LocalDate.now().plusDays(2);
+        AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(
+                OfficeHourType.ONE_TIME.name(),
+                slotDate,
+                null,
+                LocalTime.of(10, 0),
+                LocalTime.of(12, 0),
+                null,
+                null);
+
+        when(availabilitySlotRepository.existsOverlappingSlot(
+                10, slotDate, LocalTime.of(10, 0), LocalTime.of(12, 0)))
                 .thenReturn(true);
 
-        assertThatThrownBy(() -> availabilitySlotService.createSlot(request))
+        assertThatThrownBy(() -> availabilitySlotService.createSlots(request))
                 .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("çakışan");
 
@@ -193,27 +357,17 @@ class AvailabilitySlotServiceTest {
     }
 
     @Test
-    void createSlot_pastDate_throwsBadRequest() {
+    void createSlots_startAfterEnd_throwsBadRequest() {
         AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(
-                LocalDate.now().minusDays(1),
-                LocalTime.of(10, 0),
-                LocalTime.of(12, 0));
-
-        assertThatThrownBy(() -> availabilitySlotService.createSlot(request))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("Geçmiş tarih");
-
-        verify(availabilitySlotRepository, never()).save(any());
-    }
-
-    @Test
-    void createSlot_startAfterEnd_throwsBadRequest() {
-        AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(
+                OfficeHourType.ONE_TIME.name(),
                 LocalDate.now().plusDays(1),
+                null,
                 LocalTime.of(12, 0),
-                LocalTime.of(10, 0));
+                LocalTime.of(10, 0),
+                null,
+                null);
 
-        assertThatThrownBy(() -> availabilitySlotService.createSlot(request))
+        assertThatThrownBy(() -> availabilitySlotService.createSlots(request))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("Başlangıç saati");
 
@@ -221,17 +375,29 @@ class AvailabilitySlotServiceTest {
     }
 
     @Test
-    void createSlot_withoutAuthentication_throwsAccessDenied() {
+    void createSlots_withoutAuthentication_throwsAccessDenied() {
         SecurityContextHolder.clearContext();
         AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(
+                OfficeHourType.ONE_TIME.name(),
                 LocalDate.now().plusDays(1),
+                null,
                 LocalTime.of(10, 0),
-                LocalTime.of(12, 0));
+                LocalTime.of(12, 0),
+                null,
+                null);
 
-        assertThatThrownBy(() -> availabilitySlotService.createSlot(request))
+        assertThatThrownBy(() -> availabilitySlotService.createSlots(request))
                 .isInstanceOf(AccessDeniedException.class);
 
         verify(availabilitySlotRepository, never()).save(any());
+    }
+
+    @Test
+    void availabilityTimeRules_computesAppointmentSlotCount() {
+        assertThat(AvailabilityTimeRules.computeTotalDurationMinutes(
+                LocalTime.of(10, 0), LocalTime.of(12, 0))).isEqualTo(120);
+        assertThat(AvailabilityTimeRules.computeAppointmentSlotCount(
+                LocalTime.of(10, 0), LocalTime.of(12, 0))).isEqualTo(12);
     }
 
     @Test

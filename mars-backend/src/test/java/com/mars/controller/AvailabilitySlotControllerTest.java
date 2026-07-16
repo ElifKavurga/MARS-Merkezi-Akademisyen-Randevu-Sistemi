@@ -126,34 +126,38 @@ class AvailabilitySlotControllerTest {
 
     @Test
     @WithMockUser(roles = "ACADEMICIAN")
-    void createSlot_asAcademician_returnsCreated() throws Exception {
+    void createSlots_asAcademician_returnsCreated() throws Exception {
         AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(
-                LocalDate.of(2026, 7, 20),
+                "ONE_TIME",
+                LocalDate.of(2026, 7, 22),
+                null,
                 LocalTime.of(10, 0),
-                LocalTime.of(12, 0));
-        when(availabilitySlotService.createSlot(any(AvailabilitySlotCreateRequest.class))).thenReturn(
+                LocalTime.of(12, 0),
+                null,
+                null);
+        when(availabilitySlotService.createSlots(any(AvailabilitySlotCreateRequest.class))).thenReturn(List.of(
                 AvailabilitySlotResponseDto.builder()
                         .slotId(1)
-                        .slotDate(LocalDate.of(2026, 7, 20))
+                        .slotDate(LocalDate.of(2026, 7, 22))
                         .startTime(LocalTime.of(10, 0))
                         .endTime(LocalTime.of(12, 0))
                         .isBlocked(false)
-                        .build());
+                        .build()));
 
         mockMvc.perform(post("/availability-slots")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.slotId").value(1))
-                .andExpect(jsonPath("$.isBlocked").value(false));
+                .andExpect(jsonPath("$[0].slotId").value(1))
+                .andExpect(jsonPath("$[0].isBlocked").value(false));
 
-        verify(availabilitySlotService).createSlot(any(AvailabilitySlotCreateRequest.class));
+        verify(availabilitySlotService).createSlots(any(AvailabilitySlotCreateRequest.class));
     }
 
     @Test
     @WithMockUser(roles = "ACADEMICIAN")
-    void createSlot_invalidBody_returnsBadRequest() throws Exception {
-        AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(null, null, null);
+    void createSlots_invalidBody_returnsBadRequest() throws Exception {
+        AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(null, null, null, null, null, null, null);
 
         mockMvc.perform(post("/availability-slots")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -165,11 +169,15 @@ class AvailabilitySlotControllerTest {
 
     @Test
     @WithMockUser(roles = "STUDENT")
-    void createSlot_asStudent_returnsForbidden() throws Exception {
+    void createSlots_asStudent_returnsForbidden() throws Exception {
         AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(
-                LocalDate.of(2026, 7, 20),
+                "ONE_TIME",
+                LocalDate.of(2026, 7, 22),
+                null,
                 LocalTime.of(10, 0),
-                LocalTime.of(12, 0));
+                LocalTime.of(12, 0),
+                null,
+                null);
 
         mockMvc.perform(post("/availability-slots")
                         .contentType(MediaType.APPLICATION_JSON)

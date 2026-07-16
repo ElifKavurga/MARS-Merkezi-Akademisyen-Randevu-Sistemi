@@ -41,9 +41,9 @@ public class AvailabilitySlotController {
     }
 
     @PostMapping
-    public ResponseEntity<AvailabilitySlotResponseDto> createSlot(
+    public ResponseEntity<List<AvailabilitySlotResponseDto>> createSlots(
             @Valid @RequestBody AvailabilitySlotCreateRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(availabilitySlotService.createSlot(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(availabilitySlotService.createSlots(request));
     }
 
     @PutMapping("/{slotId}")
