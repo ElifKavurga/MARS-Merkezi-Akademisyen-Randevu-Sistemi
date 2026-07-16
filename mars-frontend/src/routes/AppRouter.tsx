@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 import AdminLayout from '../layouts/AdminLayout';
+import AcademicianLayout from '../layouts/AcademicianLayout';
 import ProtectedRoute from './ProtectedRoute';
 import LoginPage from '../pages/LoginPage';
 import ResetPasswordPage from '../pages/ResetPasswordPage';
@@ -12,6 +13,7 @@ import AdminPenaltyRulesPage from '../pages/AdminPenaltyRulesPage';
 import AdminProfilePage from '../pages/AdminProfilePage';
 import HodDashboard from '../pages/HodDashboard';
 import AcademicianDashboard from '../pages/AcademicianDashboard';
+import AcademicianCoursesPage from '../pages/AcademicianCoursesPage';
 import AssistantDashboard from '../pages/AssistantDashboard';
 import StudentDashboard from '../pages/StudentDashboard';
 import NotFoundPage from '../pages/NotFoundPage';
@@ -33,16 +35,19 @@ export default function AppRouter() {
             <Route path={ROUTES.HOD} element={<HodDashboard />} />
           </Route>
 
-          <Route element={<ProtectedRoute allowedRoles={[ROLES.ACADEMICIAN]} />}>
-            <Route path={ROUTES.ACADEMICIAN} element={<AcademicianDashboard />} />
-          </Route>
-
           <Route element={<ProtectedRoute allowedRoles={[ROLES.ASSISTANT]} />}>
             <Route path={ROUTES.ASSISTANT} element={<AssistantDashboard />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={[ROLES.STUDENT]} />}>
             <Route path={ROUTES.STUDENT} element={<StudentDashboard />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={[ROLES.ACADEMICIAN, ROLES.HOD]} />}>
+          <Route element={<AcademicianLayout />}>
+            <Route path={ROUTES.ACADEMICIAN} element={<AcademicianDashboard />} />
+            <Route path={ROUTES.ACADEMICIAN_COURSES} element={<AcademicianCoursesPage />} />
           </Route>
         </Route>
 

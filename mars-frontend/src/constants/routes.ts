@@ -10,6 +10,7 @@ export const ROUTES = {
   ADMIN_PROFILE: '/admin/profil',
   HOD: '/bolum-baskani',
   ACADEMICIAN: '/akademisyen',
+  ACADEMICIAN_COURSES: '/academician/courses',
   ASSISTANT: '/asistan',
   STUDENT: '/ogrenci',
 } as const;
