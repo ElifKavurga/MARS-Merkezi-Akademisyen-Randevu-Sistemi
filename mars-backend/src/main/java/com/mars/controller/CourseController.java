@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mars.dto.CourseAssistantResponseDto;
 import com.mars.dto.CourseCreateRequest;
 import com.mars.dto.CourseResponseDto;
 import com.mars.dto.CourseUpdateRequest;
@@ -36,6 +37,11 @@ public class CourseController {
     @GetMapping("/{courseId}")
     public ResponseEntity<CourseResponseDto> getMyCourse(@PathVariable Integer courseId) {
         return ResponseEntity.ok(courseService.getMyCourse(courseId));
+    }
+
+    @GetMapping("/{courseId}/assistants")
+    public ResponseEntity<List<CourseAssistantResponseDto>> getCourseAssistants(@PathVariable Integer courseId) {
+        return ResponseEntity.ok(courseService.getCourseAssistants(courseId));
     }
 
     @PostMapping

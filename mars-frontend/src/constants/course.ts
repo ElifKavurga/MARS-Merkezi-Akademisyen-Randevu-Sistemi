@@ -19,6 +19,8 @@ export const COURSE_MESSAGES = {
   LOAD_ERROR: 'Ders listesi yüklenemedi. Lütfen tekrar deneyin.',
   ACCESS_DENIED: 'Bu sayfaya erişim yetkiniz yok.',
   DETAIL_ERROR: 'Ders detayı yüklenemedi. Lütfen tekrar deneyin.',
+  ASSISTANTS_ERROR: 'Asistan listesi yüklenemedi. Lütfen tekrar deneyin.',
+  ASSISTANTS_EMPTY: 'Bu derse henüz asistan atanmadı.',
   CREATE_SUCCESS: 'Ders başarıyla oluşturuldu.',
   UPDATE_SUCCESS: 'Ders başarıyla güncellendi.',
   DEACTIVATE_SUCCESS: 'Ders başarıyla pasifleştirildi.',

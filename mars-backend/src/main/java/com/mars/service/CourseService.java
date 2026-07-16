@@ -11,6 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mars.dto.CourseAssistantResponseDto;
 import com.mars.dto.CourseCreateRequest;
 import com.mars.dto.CourseResponseDto;
 import com.mars.dto.CourseUpdateRequest;
@@ -21,8 +22,10 @@ import com.mars.enums.AppointmentStatus;
 import com.mars.exception.BadRequestException;
 import com.mars.exception.ConflictException;
 import com.mars.exception.ResourceNotFoundException;
+import com.mars.mapper.CourseAssignmentMapper;
 import com.mars.mapper.CourseMapper;
 import com.mars.repository.AppointmentRepository;
+import com.mars.repository.CourseAssignmentRepository;
 import com.mars.repository.CourseRepository;
 import com.mars.repository.DepartmentRepository;
 import com.mars.security.CustomUserDetails;
@@ -41,7 +44,9 @@ public class CourseService {
     private final CourseRepository courseRepository;
     private final DepartmentRepository departmentRepository;
     private final AppointmentRepository appointmentRepository;
+    private final CourseAssignmentRepository courseAssignmentRepository;
     private final CourseMapper courseMapper;
+    private final CourseAssignmentMapper courseAssignmentMapper;
 
     @Transactional(readOnly = true)
     public List<CourseResponseDto> getMyCourses() {
@@ -58,6 +63,15 @@ public class CourseService {
         User currentUser = getCurrentUser();
         Course course = getOwnedCourse(courseId, currentUser, "Bu dersi görüntüleme yetkiniz yok.");
         return courseMapper.toResponse(course);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CourseAssistantResponseDto> getCourseAssistants(Integer courseId) {
+        User currentUser = getCurrentUser();
+        getOwnedCourse(courseId, currentUser, "Bu dersin asistanlarını görüntüleme yetkiniz yok.");
+        return courseAssignmentRepository.findActiveAssistantsByCourseId(courseId).stream()
+                .map(courseAssignmentMapper::toAssistantResponse)
+                .toList();
     }
 
     @Transactional

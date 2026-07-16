@@ -23,17 +23,21 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.mars.dto.CourseAssistantResponseDto;
 import com.mars.dto.CourseCreateRequest;
 import com.mars.dto.CourseResponseDto;
 import com.mars.dto.CourseUpdateRequest;
 import com.mars.entity.Course;
+import com.mars.entity.CourseAssignment;
 import com.mars.entity.Department;
 import com.mars.entity.User;
 import com.mars.exception.BadRequestException;
 import com.mars.exception.ConflictException;
 import com.mars.exception.ResourceNotFoundException;
+import com.mars.mapper.CourseAssignmentMapper;
 import com.mars.mapper.CourseMapper;
 import com.mars.repository.AppointmentRepository;
+import com.mars.repository.CourseAssignmentRepository;
 import com.mars.repository.CourseRepository;
 import com.mars.repository.DepartmentRepository;
 import com.mars.security.CustomUserDetails;
@@ -51,7 +55,13 @@ class CourseServiceTest {
     private AppointmentRepository appointmentRepository;
 
     @Mock
+    private CourseAssignmentRepository courseAssignmentRepository;
+
+    @Mock
     private CourseMapper courseMapper;
+
+    @Mock
+    private CourseAssignmentMapper courseAssignmentMapper;
 
     @InjectMocks
     private CourseService courseService;
@@ -160,6 +170,67 @@ class CourseServiceTest {
         assertThatThrownBy(() -> courseService.getMyCourse(1))
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessageContaining("görüntüleme");
+    }
+
+    @Test
+    void getCourseAssistants_returnsMappedActiveAssistants() {
+        CourseAssignment assignment = new CourseAssignment();
+        assignment.setCourseAssignmentId(5);
+        CourseAssistantResponseDto assistantDto = CourseAssistantResponseDto.builder()
+                .assignmentId(5)
+                .assistantId(20)
+                .assistantName("Ayşe Asistan")
+                .institutionalEmail("ayse.asistan@mars.edu.tr")
+                .departmentName("Bilgisayar Mühendisliği")
+                .build();
+
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+        when(courseAssignmentRepository.findActiveAssistantsByCourseId(1)).thenReturn(List.of(assignment));
+        when(courseAssignmentMapper.toAssistantResponse(assignment)).thenReturn(assistantDto);
+
+        List<CourseAssistantResponseDto> result = courseService.getCourseAssistants(1);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getAssignmentId()).isEqualTo(5);
+        assertThat(result.get(0).getAssistantName()).isEqualTo("Ayşe Asistan");
+        verify(courseAssignmentRepository).findActiveAssistantsByCourseId(1);
+        verify(courseAssignmentMapper).toAssistantResponse(assignment);
+    }
+
+    @Test
+    void getCourseAssistants_emptyList_returnsEmpty() {
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+        when(courseAssignmentRepository.findActiveAssistantsByCourseId(1)).thenReturn(List.of());
+
+        List<CourseAssistantResponseDto> result = courseService.getCourseAssistants(1);
+
+        assertThat(result).isEmpty();
+        verify(courseAssignmentMapper, never()).toAssistantResponse(any());
+    }
+
+    @Test
+    void getCourseAssistants_otherAcademician_throwsAccessDenied() {
+        User otherOwner = new User();
+        otherOwner.setUserId(99);
+        course.setOwnerAcademician(otherOwner);
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+
+        assertThatThrownBy(() -> courseService.getCourseAssistants(1))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("asistanlarını görüntüleme");
+
+        verify(courseAssignmentRepository, never()).findActiveAssistantsByCourseId(any());
+    }
+
+    @Test
+    void getCourseAssistants_notFound_throwsNotFound() {
+        when(courseRepository.findById(99)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> courseService.getCourseAssistants(99))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Ders bulunamadı");
+
+        verify(courseAssignmentRepository, never()).findActiveAssistantsByCourseId(any());
     }
 
     @Test

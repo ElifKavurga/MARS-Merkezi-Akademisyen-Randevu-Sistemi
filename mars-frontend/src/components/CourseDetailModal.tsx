@@ -4,8 +4,9 @@ import Loading from './Loading';
 import ModalHeader from './ModalHeader';
 import ModalShell from './ModalShell';
 import { COURSE_MESSAGES } from '../constants/course';
-import { getMyCourse } from '../services/courseService';
-import type { Course } from '../types/course';
+import { useToast } from '../hooks/useToast';
+import { getCourseAssistants, getMyCourse } from '../services/courseService';
+import type { Course, CourseAssistant } from '../types/course';
 import { formatDateTime } from '../utils';
 
 type CourseDetailModalProps = {
@@ -24,7 +25,9 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 }
 
 export default function CourseDetailModal({ open, courseId, onClose }: CourseDetailModalProps) {
+  const toast = useToast();
   const [course, setCourse] = useState<Course | null>(null);
+  const [assistants, setAssistants] = useState<CourseAssistant[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,31 +40,37 @@ export default function CourseDetailModal({ open, courseId, onClose }: CourseDet
     setLoading(true);
     setError(null);
     setCourse(null);
+    setAssistants([]);
 
     void (async () => {
       try {
-        const data = await getMyCourse(courseId);
+        const [courseData, assistantData] = await Promise.all([
+          getMyCourse(courseId),
+          getCourseAssistants(courseId),
+        ]);
         if (!cancelled) {
-          setCourse(data);
+          setCourse(courseData);
+          setAssistants(assistantData);
         }
       } catch (err) {
         if (cancelled) {
           return;
         }
+        let message: string = COURSE_MESSAGES.DETAIL_ERROR;
         if (isAxiosError(err)) {
           const backendMessage = err.response?.data?.message;
           if (typeof backendMessage === 'string' && backendMessage.length > 0) {
-            setError(backendMessage);
+            message = backendMessage;
           } else if (err.response?.status === 403) {
-            setError('Bu dersi görüntüleme yetkiniz yok.');
+            message = 'Bu dersi görüntüleme yetkiniz yok.';
           } else if (err.response?.status === 404) {
-            setError('Ders bulunamadı.');
+            message = 'Ders bulunamadı.';
           } else {
-            setError(COURSE_MESSAGES.DETAIL_ERROR);
+            message = COURSE_MESSAGES.ASSISTANTS_ERROR;
           }
-        } else {
-          setError(COURSE_MESSAGES.DETAIL_ERROR);
         }
+        setError(message);
+        toast.error(message);
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -72,7 +81,7 @@ export default function CourseDetailModal({ open, courseId, onClose }: CourseDet
     return () => {
       cancelled = true;
     };
-  }, [open, courseId]);
+  }, [open, courseId, toast]);
 
   if (!open) {
     return null;
@@ -118,6 +127,29 @@ export default function CourseDetailModal({ open, courseId, onClose }: CourseDet
             <DetailRow label="Durum" value={course.isActive ? 'Aktif' : 'Pasif'} />
             <DetailRow label="Oluşturulma Tarihi" value={formatDateTime(course.createdAt)} />
             <DetailRow label="Son Güncellenme Tarihi" value={formatDateTime(course.updatedAt)} />
+
+            <div className="mt-6 border-t border-outline-variant/40 pt-4">
+              <h3 className="font-label-md text-label-md text-on-background">Atanmış Asistanlar</h3>
+              {assistants.length === 0 ? (
+                <p className="mt-3 font-body-md text-body-md text-on-surface-variant">
+                  {COURSE_MESSAGES.ASSISTANTS_EMPTY}
+                </p>
+              ) : (
+                <ul className="mt-3 divide-y divide-outline-variant/40">
+                  {assistants.map((assistant) => (
+                    <li key={assistant.assignmentId} className="py-3">
+                      <p className="font-body-md text-body-md text-on-background">{assistant.assistantName}</p>
+                      <p className="mt-0.5 font-label-sm text-label-sm text-on-surface-variant">
+                        {assistant.institutionalEmail}
+                      </p>
+                      <p className="mt-0.5 font-label-sm text-label-sm text-on-surface-variant">
+                        {assistant.departmentName}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         ) : null}
       </div>

@@ -26,6 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mars.config.CorsConfig;
+import com.mars.dto.CourseAssistantResponseDto;
 import com.mars.dto.CourseCreateRequest;
 import com.mars.dto.CourseResponseDto;
 import com.mars.dto.CourseUpdateRequest;
@@ -119,6 +120,38 @@ class CourseControllerTest {
     @WithMockUser(roles = "STUDENT")
     void getMyCourse_asStudent_returnsForbidden() throws Exception {
         mockMvc.perform(get("/courses/1"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.status").value(403));
+    }
+
+    @Test
+    @WithMockUser(roles = "ACADEMICIAN")
+    void getCourseAssistants_asAcademician_returnsAssistants() throws Exception {
+        when(courseService.getCourseAssistants(1)).thenReturn(List.of(
+                CourseAssistantResponseDto.builder()
+                        .assignmentId(5)
+                        .assistantId(20)
+                        .assistantName("Ayşe Asistan")
+                        .institutionalEmail("ayse.asistan@mars.edu.tr")
+                        .departmentName("Bilgisayar Mühendisliği")
+                        .build()));
+
+        mockMvc.perform(get("/courses/1/assistants"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].assignmentId").value(5))
+                .andExpect(jsonPath("$[0].assistantId").value(20))
+                .andExpect(jsonPath("$[0].assistantName").value("Ayşe Asistan"))
+                .andExpect(jsonPath("$[0].institutionalEmail").value("ayse.asistan@mars.edu.tr"))
+                .andExpect(jsonPath("$[0].departmentName").value("Bilgisayar Mühendisliği"));
+
+        verify(courseService).getCourseAssistants(1);
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    void getCourseAssistants_asStudent_returnsForbidden() throws Exception {
+        mockMvc.perform(get("/courses/1/assistants"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.status").value(403));

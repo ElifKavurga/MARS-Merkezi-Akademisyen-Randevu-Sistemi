@@ -20,3 +20,11 @@ export type CourseCreatePayload = {
 export type CourseUpdatePayload = CourseCreatePayload;
 
 export type CourseStatusFilter = 'ACTIVE' | 'INACTIVE' | 'ALL';
+
+export type CourseAssistant = {
+  assignmentId: number;
+  assistantId: number;
+  assistantName: string;
+  institutionalEmail: string;
+  departmentName: string;
+};
