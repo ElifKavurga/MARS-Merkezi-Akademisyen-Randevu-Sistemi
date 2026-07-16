@@ -15,4 +15,5 @@ export { default as ToastViewport } from './ToastViewport';
 export { default as CreateUserModal } from './CreateUserModal';
 export { default as EditUserModal } from './EditUserModal';
 export { default as CategoryFormModal } from './CategoryFormModal';
+export { default as CourseCreateModal } from './CourseCreateModal';
 export { ErrorBoundary } from './ErrorBoundary';

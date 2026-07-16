@@ -1,4 +1,5 @@
 export { resolveRoleIdByName, resolveDepartmentIdByName } from './catalogResolvers';
+export { getAcademicTermOptions } from './academicTerms';
 
 export function isBlank(value: string | null | undefined): boolean {
   return value == null || value.trim().length === 0;

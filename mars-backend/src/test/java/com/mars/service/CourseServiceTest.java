@@ -2,10 +2,13 @@ package com.mars.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,12 +21,16 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.mars.dto.CourseCreateRequest;
 import com.mars.dto.CourseResponseDto;
 import com.mars.entity.Course;
 import com.mars.entity.Department;
 import com.mars.entity.User;
+import com.mars.exception.ConflictException;
+import com.mars.exception.ResourceNotFoundException;
 import com.mars.mapper.CourseMapper;
 import com.mars.repository.CourseRepository;
+import com.mars.repository.DepartmentRepository;
 import com.mars.security.CustomUserDetails;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,6 +38,9 @@ class CourseServiceTest {
 
     @Mock
     private CourseRepository courseRepository;
+
+    @Mock
+    private DepartmentRepository departmentRepository;
 
     @Mock
     private CourseMapper courseMapper;
@@ -110,5 +120,48 @@ class CourseServiceTest {
 
         assertThatThrownBy(() -> courseService.getMyCourses())
                 .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    void createCourse_savesCourseForCurrentUser() {
+        CourseCreateRequest request = new CourseCreateRequest("CENG 301", "Algoritma Analizi", "2024-2025 Güz", 1);
+        Department department = course.getDepartment();
+
+        when(courseRepository.existsByOwnerAcademician_UserIdAndCourseCode(10, "CENG 301")).thenReturn(false);
+        when(departmentRepository.findById(1)).thenReturn(Optional.of(department));
+        when(courseMapper.toEntity(request, department, academician)).thenReturn(course);
+        when(courseRepository.save(course)).thenReturn(course);
+        when(courseMapper.toResponse(course)).thenReturn(responseDto);
+
+        CourseResponseDto result = courseService.createCourse(request);
+
+        assertThat(result.getCourseCode()).isEqualTo("CENG 301");
+        verify(courseRepository).save(course);
+    }
+
+    @Test
+    void createCourse_duplicateCourseCode_throwsConflict() {
+        CourseCreateRequest request = new CourseCreateRequest("CENG 301", "Algoritma Analizi", "2024-2025 Güz", 1);
+
+        when(courseRepository.existsByOwnerAcademician_UserIdAndCourseCode(10, "CENG 301")).thenReturn(true);
+
+        assertThatThrownBy(() -> courseService.createCourse(request))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("ders kodu");
+
+        verify(courseRepository, never()).save(any());
+    }
+
+    @Test
+    void createCourse_missingDepartment_throwsNotFound() {
+        CourseCreateRequest request = new CourseCreateRequest("CENG 301", "Algoritma Analizi", "2024-2025 Güz", 99);
+
+        when(courseRepository.existsByOwnerAcademician_UserIdAndCourseCode(10, "CENG 301")).thenReturn(false);
+        when(departmentRepository.findById(99)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> courseService.createCourse(request))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(courseRepository, never()).save(any());
     }
 }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { isAxiosError } from 'axios';
+import CourseCreateModal from '../components/CourseCreateModal';
 import Loading from '../components/Loading';
 import { FORM_FIELD_CLASS } from '../constants';
 import { useToast } from '../hooks/useToast';
@@ -12,6 +13,7 @@ export default function AcademicianCoursesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   const loadCourses = useCallback(async () => {
     setLoading(true);
@@ -61,7 +63,7 @@ export default function AcademicianCoursesPage() {
 
       <div className="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
         <div className="p-4 border-b border-outline-variant flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary-container">
               <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
                 menu_book
@@ -70,6 +72,14 @@ export default function AcademicianCoursesPage() {
             <p className="font-body-md text-body-md text-on-surface-variant text-sm">
               Size atanmış dersler
             </p>
+            <button
+              type="button"
+              className="bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-primary/90 transition-colors flex items-center gap-2"
+              onClick={() => setCreateModalOpen(true)}
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              Yeni Ders
+            </button>
           </div>
 
           <div className="relative w-full sm:w-72">
@@ -144,6 +154,15 @@ export default function AcademicianCoursesPage() {
           )}
         </div>
       </div>
+
+      <CourseCreateModal
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onCreated={(message) => {
+          toast.success(message);
+          void loadCourses();
+        }}
+      />
     </div>
   );
 }

@@ -2,9 +2,11 @@ package com.mars.mapper;
 
 import org.springframework.stereotype.Component;
 
+import com.mars.dto.CourseCreateRequest;
 import com.mars.dto.CourseResponseDto;
 import com.mars.entity.Course;
 import com.mars.entity.Department;
+import com.mars.entity.User;
 
 @Component
 public class CourseMapper {
@@ -19,5 +21,15 @@ public class CourseMapper {
                 .departmentId(department != null ? department.getDepartmentId() : null)
                 .departmentName(department != null ? department.getDepartmentName() : null)
                 .build();
+    }
+
+    public Course toEntity(CourseCreateRequest request, Department department, User ownerAcademician) {
+        Course course = new Course();
+        course.setCourseCode(request.getCourseCode().trim());
+        course.setCourseName(request.getCourseName().trim());
+        course.setAcademicTerm(request.getAcademicTerm().trim());
+        course.setDepartment(department);
+        course.setOwnerAcademician(ownerAcademician);
+        return course;
     }
 }

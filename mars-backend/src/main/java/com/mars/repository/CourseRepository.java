@@ -9,4 +9,6 @@ import com.mars.entity.Course;
 public interface CourseRepository extends JpaRepository<Course, Integer> {
 
     List<Course> findByOwnerAcademician_UserIdOrderByCourseNameAsc(Integer userId);
+
+    boolean existsByOwnerAcademician_UserIdAndCourseCode(Integer userId, String courseCode);
 }
