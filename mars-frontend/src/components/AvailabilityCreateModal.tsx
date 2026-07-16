@@ -8,6 +8,7 @@ import ModalHeader from './ModalHeader';
 import ModalShell from './ModalShell';
 import {
   AVAILABILITY_MESSAGES,
+  MEETING_TYPE,
   OFFICE_HOUR_TYPE,
   RECURRENCE_END_MODE,
   formatCreateSuccessMessage,
@@ -31,6 +32,7 @@ const INITIAL_FORM: AvailabilityCreateFormValues = {
   endTime: '',
   recurrenceEndMode: RECURRENCE_END_MODE.TERM_END,
   recurrenceEndDate: '',
+  meetingType: MEETING_TYPE.FACE_TO_FACE,
 };
 
 function resolveError(err: unknown): string {
@@ -62,6 +64,7 @@ function toCreatePayload(form: AvailabilityCreateFormValues): AvailabilitySlotCr
       endTime,
       recurrenceEndMode: null,
       recurrenceEndDate: null,
+      meetingType: form.meetingType,
     };
   }
 
@@ -76,6 +79,7 @@ function toCreatePayload(form: AvailabilityCreateFormValues): AvailabilitySlotCr
       form.recurrenceEndMode === RECURRENCE_END_MODE.UNTIL_DATE
         ? form.recurrenceEndDate.trim()
         : null,
+    meetingType: form.meetingType,
   };
 }
 

@@ -53,6 +53,9 @@ public class Appointment {
     @Column(name = "appointment_status", nullable = false)
     private String appointmentStatus;
 
+    @Column(name = "meeting_type", nullable = false)
+    private String meetingType;
+
     @Column(name = "is_limited_duration", nullable = false)
     private Boolean isLimitedDuration;
 

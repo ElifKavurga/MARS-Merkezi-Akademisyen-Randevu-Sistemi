@@ -49,4 +49,7 @@ public class AvailabilitySlot {
 
     @Column(name = "is_blocked", nullable = false)
     private Boolean isBlocked;
+
+    @Column(name = "meeting_type", nullable = false)
+    private String meetingType;
 }

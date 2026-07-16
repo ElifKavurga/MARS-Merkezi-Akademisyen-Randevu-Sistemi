@@ -39,6 +39,11 @@ export {
   updateAvailabilitySlotBlocked,
 } from './availabilityService';
 export {
+  createAppointment,
+  getAvailableSlots,
+  getAppointmentCategories,
+} from './appointmentService';
+export {
   createRecurrenceRule,
   getRecurrenceRule,
   updateRecurrenceRule,

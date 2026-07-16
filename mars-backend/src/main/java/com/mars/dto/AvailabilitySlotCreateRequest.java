@@ -42,4 +42,7 @@ public class AvailabilitySlotCreateRequest {
 
     /** UNTIL_DATE seçildiğinde zorunludur. */
     private LocalDate recurrenceEndDate;
+
+    /** FACE_TO_FACE | ONLINE | BOTH — varsayılan FACE_TO_FACE. */
+    private String meetingType;
 }

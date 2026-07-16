@@ -5,6 +5,7 @@ export type AvailabilitySlot = {
   endTime: string;
   recurrenceRuleId: number | null;
   isBlocked: boolean;
+  meetingType: string;
 };
 
 export type AvailabilitySlotCreatePayload = {
@@ -15,6 +16,7 @@ export type AvailabilitySlotCreatePayload = {
   endTime: string;
   recurrenceEndMode?: string | null;
   recurrenceEndDate?: string | null;
+  meetingType?: string | null;
 };
 
 export type AvailabilitySlotUpdatePayload = {

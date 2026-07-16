@@ -14,13 +14,13 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AvailabilitySlotResponseDto {
+public class AvailableSlotResponseDto {
 
     private Integer slotId;
+    private Integer staffId;
+    private String staffName;
     private LocalDate slotDate;
     private LocalTime startTime;
     private LocalTime endTime;
-    private Integer recurrenceRuleId;
-    private Boolean isBlocked;
     private String meetingType;
 }

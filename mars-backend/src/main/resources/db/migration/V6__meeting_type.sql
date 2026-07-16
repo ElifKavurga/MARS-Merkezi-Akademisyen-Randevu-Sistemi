@@ -1,0 +1,5 @@
+ALTER TABLE availability_slot
+    ADD COLUMN meeting_type VARCHAR(255) NOT NULL DEFAULT 'FACE_TO_FACE';
+
+ALTER TABLE appointment
+    ADD COLUMN meeting_type VARCHAR(255) NOT NULL DEFAULT 'FACE_TO_FACE';

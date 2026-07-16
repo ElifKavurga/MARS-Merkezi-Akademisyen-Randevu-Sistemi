@@ -27,6 +27,8 @@ public final class AvailabilitySlotMessages {
             "Bu ofis saatine ait aktif randevular bulunduğu için slot engellenemez.";
     public static final String ALREADY_BLOCKED = "Bu ofis saati zaten engelli.";
     public static final String ALREADY_AVAILABLE = "Bu ofis saati zaten uygun durumda.";
+    public static final String MEETING_TYPE_REQUIRED = "Görüşme tipi zorunludur.";
+    public static final String INVALID_MEETING_TYPE = "Geçersiz görüşme tipi.";
 
     private AvailabilitySlotMessages() {
     }

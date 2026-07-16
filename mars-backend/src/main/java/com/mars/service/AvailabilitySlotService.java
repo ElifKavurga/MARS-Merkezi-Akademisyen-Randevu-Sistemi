@@ -22,10 +22,12 @@ import com.mars.dto.AvailabilitySlotCreateRequest;
 import com.mars.dto.AvailabilitySlotResponseDto;
 import com.mars.dto.AvailabilitySlotStatsResponseDto;
 import com.mars.dto.AvailabilitySlotUpdateRequest;
+import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.RecurrenceRuleCreateRequest;
 import com.mars.entity.AvailabilitySlot;
 import com.mars.entity.User;
 import com.mars.enums.AppointmentStatus;
+import com.mars.enums.MeetingType;
 import com.mars.enums.OfficeHourType;
 import com.mars.enums.RecurrenceEndMode;
 import com.mars.enums.RepeatType;
@@ -80,6 +82,21 @@ public class AvailabilitySlotService {
                 staffId, weekStart, weekEnd);
 
         return availabilitySlotMapper.toStatsResponse(total, available, blocked, thisWeek);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AvailableSlotResponseDto> getAvailableSlotsForStaff(Integer staffId) {
+        if (staffId == null) {
+            throw new BadRequestException("Akademisyen seçimi zorunludur.");
+        }
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+        return availabilitySlotRepository
+                .findAvailableSlotsForStaff(staffId, today, ACTIVE_APPOINTMENT_STATUSES)
+                .stream()
+                .filter(slot -> !isSlotInPast(slot, today, now))
+                .map(availabilitySlotMapper::toAvailableResponse)
+                .toList();
     }
 
     @Transactional
@@ -157,13 +174,15 @@ public class AvailabilitySlotService {
                 request.getSlotDate(),
                 request.getStartTime(),
                 request.getEndTime(),
-                null);
+                null,
+                resolveMeetingType(request.getMeetingType()));
     }
 
     private List<AvailabilitySlotResponseDto> createRecurringSlots(
             AvailabilitySlotCreateRequest request, User currentUser) {
         List<DayOfWeek> selectedDays = normalizeSelectedDays(request.getDaysOfWeek());
         LocalDate recurrenceEndDate = resolveRecurrenceEndDate(request, LocalDate.now());
+        String meetingType = resolveMeetingType(request.getMeetingType());
 
         List<AvailabilitySlotResponseDto> created = new ArrayList<>();
         for (DayOfWeek day : selectedDays) {
@@ -176,7 +195,8 @@ public class AvailabilitySlotService {
                     slotDate,
                     request.getStartTime(),
                     request.getEndTime(),
-                    recurrenceEndDate));
+                    recurrenceEndDate,
+                    meetingType));
         }
         return created;
     }
@@ -186,7 +206,8 @@ public class AvailabilitySlotService {
             LocalDate slotDate,
             LocalTime startTime,
             LocalTime endTime,
-            LocalDate recurrenceEndDate) {
+            LocalDate recurrenceEndDate,
+            String meetingType) {
         validateNotPastDate(slotDate, AvailabilitySlotMessages.PAST_DATE_CREATE);
 
         if (availabilitySlotRepository.existsOverlappingSlot(
@@ -194,7 +215,8 @@ public class AvailabilitySlotService {
             throw new ConflictException(AvailabilitySlotMessages.OVERLAP);
         }
 
-        AvailabilitySlot slot = availabilitySlotMapper.toEntity(slotDate, startTime, endTime, currentUser);
+        AvailabilitySlot slot = availabilitySlotMapper.toEntity(
+                slotDate, startTime, endTime, currentUser, meetingType);
         AvailabilitySlot saved = availabilitySlotRepository.save(slot);
 
         if (recurrenceEndDate != null) {
@@ -270,6 +292,24 @@ public class AvailabilitySlotService {
     private boolean hasActiveAppointments(Integer slotId) {
         return appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(
                 slotId, ACTIVE_APPOINTMENT_STATUSES);
+    }
+
+    private String resolveMeetingType(String meetingType) {
+        if (meetingType == null || meetingType.isBlank()) {
+            return MeetingType.FACE_TO_FACE.name();
+        }
+        try {
+            return MeetingType.valueOf(meetingType.trim().toUpperCase()).name();
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException(AvailabilitySlotMessages.INVALID_MEETING_TYPE);
+        }
+    }
+
+    private boolean isSlotInPast(AvailabilitySlot slot, LocalDate today, LocalTime now) {
+        if (slot.getSlotDate().isBefore(today)) {
+            return true;
+        }
+        return slot.getSlotDate().isEqual(today) && slot.getEndTime().isBefore(now);
     }
 
     private void validateNotPastDate(LocalDate slotDate, String message) {

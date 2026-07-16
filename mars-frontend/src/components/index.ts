@@ -34,4 +34,5 @@ export { default as AcademicianCalendar } from './AcademicianCalendar';
 export { default as CalendarEventDetailModal } from './CalendarEventDetailModal';
 export { default as OutOfOfficeCreateModal } from './OutOfOfficeCreateModal';
 export { default as OutOfOfficeEditModal } from './OutOfOfficeEditModal';
+export { default as AppointmentCreateModal } from './AppointmentCreateModal';
 export { ErrorBoundary } from './ErrorBoundary';

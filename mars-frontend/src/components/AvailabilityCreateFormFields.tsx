@@ -1,7 +1,8 @@
-import { FORM_FIELD_CLASS } from '../constants/ui';
+import { FORM_FIELD_CLASS, FORM_SELECT_CLASS } from '../constants/ui';
 import {
   APPOINTMENT_DURATION_MINUTES,
   AVAILABILITY_MESSAGES,
+  MEETING_TYPE_OPTIONS,
   OFFICE_HOUR_TYPE,
   OFFICE_WEEKDAY_OPTIONS,
   RECURRENCE_END_MODE,
@@ -23,6 +24,7 @@ export type AvailabilityCreateFormValues = {
   endTime: string;
   recurrenceEndMode: RecurrenceEndMode;
   recurrenceEndDate: string;
+  meetingType: string;
 };
 
 type AvailabilityCreateFormFieldsProps = {
@@ -172,6 +174,29 @@ export default function AvailabilityCreateFormFields({
           </span>
         </label>
       </fieldset>
+
+      <div className="space-y-1.5">
+        <label
+          htmlFor={`${idPrefix}-meeting-type`}
+          className="block font-label-md text-label-md text-on-surface-variant"
+        >
+          Görüşme Tipi
+        </label>
+        <select
+          id={`${idPrefix}-meeting-type`}
+          className={FORM_SELECT_CLASS}
+          required
+          value={form.meetingType}
+          disabled={disabled}
+          onChange={(event) => onChange({ ...form, meetingType: event.target.value })}
+        >
+          {MEETING_TYPE_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {isOneTime ? (
         <>

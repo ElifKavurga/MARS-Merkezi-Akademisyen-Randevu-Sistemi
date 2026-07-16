@@ -134,6 +134,7 @@ class AvailabilitySlotControllerTest {
                 LocalTime.of(10, 0),
                 LocalTime.of(12, 0),
                 null,
+                null,
                 null);
         when(availabilitySlotService.createSlots(any(AvailabilitySlotCreateRequest.class))).thenReturn(List.of(
                 AvailabilitySlotResponseDto.builder()
@@ -157,7 +158,7 @@ class AvailabilitySlotControllerTest {
     @Test
     @WithMockUser(roles = "ACADEMICIAN")
     void createSlots_invalidBody_returnsBadRequest() throws Exception {
-        AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(null, null, null, null, null, null, null);
+        AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(null, null, null, null, null, null, null, null);
 
         mockMvc.perform(post("/availability-slots")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -176,6 +177,7 @@ class AvailabilitySlotControllerTest {
                 null,
                 LocalTime.of(10, 0),
                 LocalTime.of(12, 0),
+                null,
                 null,
                 null);
 

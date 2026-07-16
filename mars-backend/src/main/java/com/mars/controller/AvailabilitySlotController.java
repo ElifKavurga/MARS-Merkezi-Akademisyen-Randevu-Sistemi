@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mars.dto.AvailabilitySlotBlockRequest;
@@ -18,6 +19,7 @@ import com.mars.dto.AvailabilitySlotCreateRequest;
 import com.mars.dto.AvailabilitySlotResponseDto;
 import com.mars.dto.AvailabilitySlotStatsResponseDto;
 import com.mars.dto.AvailabilitySlotUpdateRequest;
+import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.service.AvailabilitySlotService;
 
 import jakarta.validation.Valid;
@@ -38,6 +40,12 @@ public class AvailabilitySlotController {
     @GetMapping("/my/stats")
     public ResponseEntity<AvailabilitySlotStatsResponseDto> getMyStats() {
         return ResponseEntity.ok(availabilitySlotService.getMyStats());
+    }
+
+    @GetMapping("/available")
+    public ResponseEntity<List<AvailableSlotResponseDto>> getAvailableSlots(
+            @RequestParam Integer staffId) {
+        return ResponseEntity.ok(availabilitySlotService.getAvailableSlotsForStaff(staffId));
     }
 
     @PostMapping

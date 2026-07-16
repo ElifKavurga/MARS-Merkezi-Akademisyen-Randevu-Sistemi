@@ -177,12 +177,13 @@ class AvailabilitySlotServiceTest {
                 LocalTime.of(10, 0),
                 LocalTime.of(12, 0),
                 null,
+                null,
                 null);
 
         when(availabilitySlotRepository.existsOverlappingSlot(
                 10, slotDate, LocalTime.of(10, 0), LocalTime.of(12, 0)))
                 .thenReturn(false);
-        when(availabilitySlotMapper.toEntity(slotDate, LocalTime.of(10, 0), LocalTime.of(12, 0), academician))
+        when(availabilitySlotMapper.toEntity(slotDate, LocalTime.of(10, 0), LocalTime.of(12, 0), academician, "FACE_TO_FACE"))
                 .thenReturn(slot);
         when(availabilitySlotRepository.save(slot)).thenReturn(slot);
         when(availabilitySlotMapper.toResponse(slot)).thenReturn(responseDto);
@@ -206,6 +207,7 @@ class AvailabilitySlotServiceTest {
                 LocalTime.of(10, 0),
                 LocalTime.of(11, 0),
                 RecurrenceEndMode.TERM_END.name(),
+                null,
                 null);
 
         AvailabilitySlot wedSlot = new AvailabilitySlot();
@@ -217,9 +219,9 @@ class AvailabilitySlotServiceTest {
 
         when(availabilitySlotRepository.existsOverlappingSlot(eq(10), any(LocalDate.class), any(), any()))
                 .thenReturn(false);
-        when(availabilitySlotMapper.toEntity(wed, LocalTime.of(10, 0), LocalTime.of(11, 0), academician))
+        when(availabilitySlotMapper.toEntity(wed, LocalTime.of(10, 0), LocalTime.of(11, 0), academician, "FACE_TO_FACE"))
                 .thenReturn(wedSlot);
-        when(availabilitySlotMapper.toEntity(thu, LocalTime.of(10, 0), LocalTime.of(11, 0), academician))
+        when(availabilitySlotMapper.toEntity(thu, LocalTime.of(10, 0), LocalTime.of(11, 0), academician, "FACE_TO_FACE"))
                 .thenReturn(thuSlot);
         when(availabilitySlotRepository.save(wedSlot)).thenReturn(wedSlot);
         when(availabilitySlotRepository.save(thuSlot)).thenReturn(thuSlot);
@@ -252,12 +254,13 @@ class AvailabilitySlotServiceTest {
                 LocalTime.of(10, 0),
                 LocalTime.of(12, 0),
                 RecurrenceEndMode.UNTIL_DATE.name(),
-                endDate);
+                endDate,
+                null);
 
         when(availabilitySlotRepository.existsOverlappingSlot(
                 10, slotDate, LocalTime.of(10, 0), LocalTime.of(12, 0)))
                 .thenReturn(false);
-        when(availabilitySlotMapper.toEntity(slotDate, LocalTime.of(10, 0), LocalTime.of(12, 0), academician))
+        when(availabilitySlotMapper.toEntity(slotDate, LocalTime.of(10, 0), LocalTime.of(12, 0), academician, "FACE_TO_FACE"))
                 .thenReturn(slot);
         when(availabilitySlotRepository.save(slot)).thenReturn(slot);
         when(recurrenceRuleService.createRule(eq(1), any(RecurrenceRuleCreateRequest.class)))
@@ -293,12 +296,13 @@ class AvailabilitySlotServiceTest {
                 LocalTime.of(14, 0),
                 LocalTime.of(15, 0),
                 RecurrenceEndMode.TERM_END.name(),
+                null,
                 null);
 
         when(availabilitySlotRepository.existsOverlappingSlot(
                 10, slotDate, LocalTime.of(14, 0), LocalTime.of(15, 0)))
                 .thenReturn(false);
-        when(availabilitySlotMapper.toEntity(slotDate, LocalTime.of(14, 0), LocalTime.of(15, 0), academician))
+        when(availabilitySlotMapper.toEntity(slotDate, LocalTime.of(14, 0), LocalTime.of(15, 0), academician, "FACE_TO_FACE"))
                 .thenReturn(slot);
         when(availabilitySlotRepository.save(slot)).thenReturn(slot);
         when(recurrenceRuleService.createRule(eq(1), any(RecurrenceRuleCreateRequest.class)))
@@ -324,6 +328,7 @@ class AvailabilitySlotServiceTest {
                 LocalTime.of(10, 5),
                 LocalTime.of(12, 0),
                 null,
+                null,
                 null);
 
         assertThatThrownBy(() -> availabilitySlotService.createSlots(request))
@@ -342,6 +347,7 @@ class AvailabilitySlotServiceTest {
                 null,
                 LocalTime.of(10, 0),
                 LocalTime.of(12, 0),
+                null,
                 null,
                 null);
 
@@ -365,6 +371,7 @@ class AvailabilitySlotServiceTest {
                 LocalTime.of(12, 0),
                 LocalTime.of(10, 0),
                 null,
+                null,
                 null);
 
         assertThatThrownBy(() -> availabilitySlotService.createSlots(request))
@@ -383,6 +390,7 @@ class AvailabilitySlotServiceTest {
                 null,
                 LocalTime.of(10, 0),
                 LocalTime.of(12, 0),
+                null,
                 null,
                 null);
 

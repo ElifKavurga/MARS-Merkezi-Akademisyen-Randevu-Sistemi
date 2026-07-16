@@ -27,6 +27,25 @@ export const OFFICE_HOUR_TYPE = {
 
 export type OfficeHourType = (typeof OFFICE_HOUR_TYPE)[keyof typeof OFFICE_HOUR_TYPE];
 
+export const MEETING_TYPE = {
+  FACE_TO_FACE: 'FACE_TO_FACE',
+  ONLINE: 'ONLINE',
+  BOTH: 'BOTH',
+} as const;
+
+export type MeetingType = (typeof MEETING_TYPE)[keyof typeof MEETING_TYPE];
+
+export const MEETING_TYPE_OPTIONS = [
+  { value: MEETING_TYPE.FACE_TO_FACE, label: 'Yüz Yüze' },
+  { value: MEETING_TYPE.ONLINE, label: 'Online' },
+  { value: MEETING_TYPE.BOTH, label: 'Her İkisi' },
+] as const;
+
+export const APPOINTMENT_MEETING_TYPE_OPTIONS = [
+  { value: MEETING_TYPE.FACE_TO_FACE, label: 'Yüz Yüze' },
+  { value: MEETING_TYPE.ONLINE, label: 'Online' },
+] as const;
+
 export const APPOINTMENT_DURATION_MINUTES = 10;
 export const TIME_MINUTE_STEP = 10;
 export const TIME_MINUTE_OPTIONS = [0, 10, 20, 30, 40, 50] as const;
@@ -57,6 +76,7 @@ export const AVAILABILITY_MESSAGES = {
   OVERLAP: 'Bu tarih ve saat aralığında çakışan bir ofis saati bulunmaktadır.',
   DATE_REQUIRED: 'Tarih zorunludur.',
   DAYS_REQUIRED: 'En az bir gün seçilmelidir.',
+  MEETING_TYPE_REQUIRED: 'Görüşme tipi zorunludur.',
   START_REQUIRED: 'Başlangıç saati zorunludur.',
   END_REQUIRED: 'Bitiş saati zorunludur.',
   PAST_DATE: 'Geçmiş tarih seçilemez.',
@@ -178,9 +198,14 @@ export function validateAvailabilityCreateForm(form: {
   endTime: string;
   recurrenceEndMode: RecurrenceEndMode;
   recurrenceEndDate: string;
+  meetingType: string;
 }): string | null {
   const startTime = form.startTime.trim();
   const endTime = form.endTime.trim();
+
+  if (!form.meetingType.trim()) {
+    return AVAILABILITY_MESSAGES.MEETING_TYPE_REQUIRED;
+  }
 
   if (form.slotType === OFFICE_HOUR_TYPE.ONE_TIME) {
     const slotDate = form.slotDate.trim();

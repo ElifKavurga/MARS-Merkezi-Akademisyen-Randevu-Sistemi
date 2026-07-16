@@ -1,6 +1,7 @@
 package com.mars.repository;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Collection;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -30,5 +31,21 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
             @Param("staffId") Integer staffId,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
+            @Param("statuses") Collection<String> statuses);
+
+    @Query("""
+            SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END
+            FROM Appointment a
+            WHERE a.student.userId = :studentId
+              AND a.slot.slotDate = :slotDate
+              AND a.slot.startTime < :endTime
+              AND a.slot.endTime > :startTime
+              AND a.appointmentStatus IN :statuses
+            """)
+    boolean existsOverlappingActiveAppointmentForStudent(
+            @Param("studentId") Integer studentId,
+            @Param("slotDate") LocalDate slotDate,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime,
             @Param("statuses") Collection<String> statuses);
 }

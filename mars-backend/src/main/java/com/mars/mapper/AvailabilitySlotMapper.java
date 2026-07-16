@@ -9,13 +9,20 @@ import com.mars.dto.AvailabilitySlotBlockRequest;
 import com.mars.dto.AvailabilitySlotResponseDto;
 import com.mars.dto.AvailabilitySlotStatsResponseDto;
 import com.mars.dto.AvailabilitySlotUpdateRequest;
+import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.entity.AvailabilitySlot;
 import com.mars.entity.User;
+import com.mars.enums.MeetingType;
 
 @Component
 public class AvailabilitySlotMapper {
 
-    public AvailabilitySlot toEntity(LocalDate slotDate, LocalTime startTime, LocalTime endTime, User staff) {
+    public AvailabilitySlot toEntity(
+            LocalDate slotDate,
+            LocalTime startTime,
+            LocalTime endTime,
+            User staff,
+            String meetingType) {
         AvailabilitySlot slot = new AvailabilitySlot();
         slot.setStaff(staff);
         slot.setSlotDate(slotDate);
@@ -23,6 +30,7 @@ public class AvailabilitySlotMapper {
         slot.setEndTime(endTime);
         slot.setRecurrenceRule(null);
         slot.setIsBlocked(false);
+        slot.setMeetingType(meetingType);
         return slot;
     }
 
@@ -59,6 +67,24 @@ public class AvailabilitySlotMapper {
                         ? slot.getRecurrenceRule().getRecurrenceRuleId()
                         : null)
                 .isBlocked(Boolean.TRUE.equals(slot.getIsBlocked()))
+                .meetingType(slot.getMeetingType() != null
+                        ? slot.getMeetingType()
+                        : MeetingType.FACE_TO_FACE.name())
+                .build();
+    }
+
+    public AvailableSlotResponseDto toAvailableResponse(AvailabilitySlot slot) {
+        User staff = slot.getStaff();
+        return AvailableSlotResponseDto.builder()
+                .slotId(slot.getSlotId())
+                .staffId(staff != null ? staff.getUserId() : null)
+                .staffName(staff != null ? staff.getFullName() : null)
+                .slotDate(slot.getSlotDate())
+                .startTime(slot.getStartTime())
+                .endTime(slot.getEndTime())
+                .meetingType(slot.getMeetingType() != null
+                        ? slot.getMeetingType()
+                        : MeetingType.FACE_TO_FACE.name())
                 .build();
     }
 }

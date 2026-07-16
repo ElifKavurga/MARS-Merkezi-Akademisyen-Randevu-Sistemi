@@ -20,6 +20,7 @@ import AcademicianCalendarPage from '../pages/AcademicianCalendarPage';
 import AcademicianOutOfOfficePage from '../pages/AcademicianOutOfOfficePage';
 import AssistantDashboard from '../pages/AssistantDashboard';
 import StudentDashboard from '../pages/StudentDashboard';
+import StudentAppointmentCreatePage from '../pages/StudentAppointmentCreatePage';
 import NotFoundPage from '../pages/NotFoundPage';
 import { ROUTES } from '../constants/routes';
 import { ROLES } from '../constants/roles';
@@ -45,6 +46,7 @@ export default function AppRouter() {
 
           <Route element={<ProtectedRoute allowedRoles={[ROLES.STUDENT]} />}>
             <Route path={ROUTES.STUDENT} element={<StudentDashboard />} />
+            <Route path={ROUTES.STUDENT_APPOINTMENT_CREATE} element={<StudentAppointmentCreatePage />} />
           </Route>
         </Route>
 

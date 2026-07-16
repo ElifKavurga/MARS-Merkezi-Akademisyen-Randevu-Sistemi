@@ -28,7 +28,9 @@ public class UserQueryService {
         }
 
         String normalizedRole = role.trim().toUpperCase(Locale.ROOT);
-        if (!RoleType.ASSISTANT.name().equals(normalizedRole)) {
+        if (!RoleType.ASSISTANT.name().equals(normalizedRole)
+                && !RoleType.ACADEMICIAN.name().equals(normalizedRole)
+                && !RoleType.HOD.name().equals(normalizedRole)) {
             throw new BadRequestException("Geçersiz rol parametresi.");
         }
 
