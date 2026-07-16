@@ -10,7 +10,7 @@ import RoleSelect from '../components/RoleSelect';
 import { useToast } from '../hooks/useToast';
 import { changeAdminUserStatus, getAdminUsers } from '../services/adminUserService';
 import type { UserListItem } from '../types/user';
-import { getRoleLabel } from '../constants';
+import { getRoleLabel, UI_LABELS } from '../constants';
 import { formatDate, formatDateTime, getInitials } from '../utils';
 
 export default function AdminDashboard() {
@@ -271,11 +271,13 @@ export default function AdminDashboard() {
                             }}
                             disabled={statusBusy}
                           >
-                            {statusBusy
-                              ? 'Loading...'
-                              : user.isActive
-                                ? 'Pasif Yap'
-                                : 'Aktif Yap'}
+                            {statusBusy ? (
+                              <Loading variant="inline" label={UI_LABELS.submitting} />
+                            ) : user.isActive ? (
+                              'Pasif Yap'
+                            ) : (
+                              'Aktif Yap'
+                            )}
                           </AdminActionButton>
                         </div>
                       </td>

@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import marsLogo from '../assets/images/mars-logo.png';
-import { ROUTES, getHomePathForRole } from '../constants';
+import { ROUTES, UI_LABELS, getHomePathForRole } from '../constants';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 import { login } from '../services/authService';
@@ -144,7 +144,7 @@ export default function LoginPage() {
               disabled={loading}
             >
               {loading ? (
-                <Loading variant="inline" label="Loading..." className="text-on-primary" />
+                <Loading variant="inline" label={UI_LABELS.submitting} className="text-on-primary" />
               ) : (
                 <>
                   <span>Giriş Yap</span>

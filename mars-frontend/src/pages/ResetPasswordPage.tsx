@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import marsLogo from '../assets/images/mars-logo.png';
-import { ROUTES, getHomePathForRole } from '../constants';
+import { ROUTES, UI_LABELS, getHomePathForRole } from '../constants';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 import { resetPassword } from '../services/authService';
@@ -164,7 +164,7 @@ export default function ResetPasswordPage() {
                   disabled={loading}
                 >
                   {loading ? (
-                    <Loading variant="inline" label="Loading..." className="text-on-primary" />
+                    <Loading variant="inline" label={UI_LABELS.submitting} className="text-on-primary" />
                   ) : (
                     <>
                       <span>Sıfırlama Bağlantısı Gönder</span>

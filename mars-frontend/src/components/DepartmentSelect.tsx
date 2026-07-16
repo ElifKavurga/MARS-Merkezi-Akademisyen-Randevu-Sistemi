@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
+import { FORM_SELECT_CLASS, UI_LABELS } from '../constants';
 import { useDepartments } from '../hooks/useDepartments';
+import Loading from './Loading';
 
 type DepartmentSelectProps = {
   id: string;
@@ -15,16 +17,13 @@ type DepartmentSelectProps = {
   onNameChange?: (departmentName: string) => void;
 };
 
-const DEFAULT_CLASS =
-  'w-full py-2.5 pl-3 pr-8 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary-container';
-
 export default function DepartmentSelect({
   id,
   value,
   onChange,
   disabled = false,
   required = false,
-  className = DEFAULT_CLASS,
+  className = FORM_SELECT_CLASS,
   emptyLabel = 'Bölüm seçin',
   allowEmpty = false,
   valueMode = 'id',
@@ -44,11 +43,7 @@ export default function DepartmentSelect({
   }, [allowEmpty, departments, onChange, value, valueMode]);
 
   if (loading) {
-    return (
-      <p className="font-label-sm text-label-sm text-on-surface-variant" role="status">
-        Bölümler yükleniyor...
-      </p>
-    );
+    return <Loading variant="inline" label={UI_LABELS.departmentsLoading} />;
   }
 
   if (error) {

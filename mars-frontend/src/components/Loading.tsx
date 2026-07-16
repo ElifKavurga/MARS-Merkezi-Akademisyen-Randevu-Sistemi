@@ -1,3 +1,5 @@
+import { UI_LABELS } from '../constants/ui';
+
 type LoadingProps = {
   label?: string;
   variant?: 'page' | 'block' | 'inline';
@@ -11,7 +13,7 @@ const sizeClass: Record<NonNullable<LoadingProps['variant']>, string> = {
 };
 
 export default function Loading({
-  label = 'Yükleniyor...',
+  label = UI_LABELS.loading,
   variant = 'block',
   className = '',
 }: LoadingProps) {

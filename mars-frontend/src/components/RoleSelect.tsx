@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
-import { getRoleLabel } from '../constants';
+import { FORM_SELECT_CLASS, getRoleLabel, UI_LABELS } from '../constants';
 import { useRoles } from '../hooks/useRoles';
+import Loading from './Loading';
 
 type RoleSelectProps = {
   id: string;
@@ -16,16 +17,13 @@ type RoleSelectProps = {
   onNameChange?: (roleName: string) => void;
 };
 
-const DEFAULT_CLASS =
-  'w-full py-2.5 pl-3 pr-8 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary-container';
-
 export default function RoleSelect({
   id,
   value,
   onChange,
   disabled = false,
   required = false,
-  className = DEFAULT_CLASS,
+  className = FORM_SELECT_CLASS,
   emptyLabel = 'Rol seçin',
   allowEmpty = false,
   valueMode = 'id',
@@ -45,11 +43,7 @@ export default function RoleSelect({
   }, [allowEmpty, onChange, roles, value, valueMode]);
 
   if (loading) {
-    return (
-      <p className="font-label-sm text-label-sm text-on-surface-variant" role="status">
-        Roller yükleniyor...
-      </p>
-    );
+    return <Loading variant="inline" label={UI_LABELS.rolesLoading} />;
   }
 
   if (error) {

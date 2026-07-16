@@ -1,12 +1,13 @@
 import { useAuth } from '../hooks/useAuth';
-import { getRoleLabel } from '../constants';
+import { getRoleLabel, UI_LABELS } from '../constants';
 import { getInitials } from '../utils';
+import Loading from '../components/Loading';
 
 export default function AdminProfilePage() {
   const { user } = useAuth();
 
   if (!user) {
-    return null;
+    return <Loading variant="page" label={UI_LABELS.loading} />;
   }
 
   const accountStatusLabel =

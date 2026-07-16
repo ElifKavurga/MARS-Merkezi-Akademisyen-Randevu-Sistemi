@@ -1,19 +1,11 @@
-import { useNavigate } from 'react-router-dom';
 import marsLogo from '../assets/images/mars-logo.png';
 import { useAuth } from '../hooks/useAuth';
-import { useToast } from '../hooks/useToast';
-import { APP_NAME, ROUTES, getRoleLabel } from '../constants';
+import { useLogout } from '../hooks/useLogout';
+import { APP_NAME, getRoleLabel } from '../constants';
 
 export default function Header() {
-  const { user, clearSession } = useAuth();
-  const toast = useToast();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    clearSession();
-    toast.info('Oturum kapatıldı.');
-    navigate(ROUTES.LOGIN, { replace: true });
-  };
+  const { user } = useAuth();
+  const handleLogout = useLogout();
 
   return (
     <header className="app-header bg-surface sticky top-0 z-40 border-b border-outline-variant flex justify-between items-center h-16 px-6 md:px-8">

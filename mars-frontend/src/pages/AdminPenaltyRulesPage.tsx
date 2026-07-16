@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { isAxiosError } from 'axios';
 import Loading from '../components/Loading';
+import { UI_LABELS } from '../constants';
 import { useToast } from '../hooks/useToast';
 import {
   getAdminPenaltyRule,
@@ -255,7 +256,7 @@ export default function AdminPenaltyRulesPage() {
                       save
                     </span>
                     {submitting ? (
-                      <Loading variant="inline" label="Loading..." className="text-on-primary" />
+                      <Loading variant="inline" label={UI_LABELS.submitting} className="text-on-primary" />
                     ) : (
                       'Kuralları Kaydet'
                     )}

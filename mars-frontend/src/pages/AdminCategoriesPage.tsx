@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
 import AdminActionButton from '../components/AdminActionButton';
 import CategoryFormModal from '../components/CategoryFormModal';
-import DeleteCategoryModal from '../components/DeleteCategoryModal';
+import ConfirmModal from '../components/ConfirmModal';
 import Loading from '../components/Loading';
 import { useToast } from '../hooks/useToast';
 import { deleteAdminCategory, getAdminCategories } from '../services/adminCategoryService';
@@ -199,16 +199,20 @@ export default function AdminCategoriesPage() {
         }}
         onSaved={handleSaved}
       />
-      <DeleteCategoryModal
+      <ConfirmModal
         open={deletingCategory != null}
-        categoryName={deletingCategory?.categoryName ?? ''}
+        title="Kategori Sil"
+        description={`${deletingCategory?.categoryName ?? ''} kategorisini silmek istediğinize emin misiniz?`}
+        confirmLabel="Evet, Sil"
+        cancelLabel="İptal"
         loading={deleteLoading}
         error={deleteError}
+        variant="danger"
+        onConfirm={() => void handleConfirmDelete()}
         onClose={() => {
           setDeletingCategory(null);
           setDeleteError(null);
         }}
-        onConfirm={() => void handleConfirmDelete()}
       />
     </div>
   );
