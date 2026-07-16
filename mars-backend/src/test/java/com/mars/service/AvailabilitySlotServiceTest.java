@@ -28,6 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.mars.dto.AvailabilitySlotBlockRequest;
 import com.mars.dto.AvailabilitySlotCreateRequest;
 import com.mars.dto.AvailabilitySlotResponseDto;
+import com.mars.dto.AvailabilitySlotStatsResponseDto;
 import com.mars.dto.AvailabilitySlotUpdateRequest;
 import com.mars.entity.AvailabilitySlot;
 import com.mars.entity.User;
@@ -126,6 +127,30 @@ class AvailabilitySlotServiceTest {
 
         assertThatThrownBy(() -> availabilitySlotService.getMySlots())
                 .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    void getMyStats_returnsAggregatedCounts() {
+        when(availabilitySlotRepository.countByStaff_UserId(10)).thenReturn(8L);
+        when(availabilitySlotRepository.countByStaff_UserIdAndIsBlocked(10, true)).thenReturn(3L);
+        when(availabilitySlotRepository.countByStaff_UserIdAndIsBlocked(10, false)).thenReturn(5L);
+        when(availabilitySlotRepository.countByStaff_UserIdAndSlotDateBetween(
+                eq(10), any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(2L);
+        when(availabilitySlotMapper.toStatsResponse(8L, 5L, 3L, 2L))
+                .thenReturn(AvailabilitySlotStatsResponseDto.builder()
+                        .totalSlotCount(8)
+                        .availableSlotCount(5)
+                        .blockedSlotCount(3)
+                        .thisWeekSlotCount(2)
+                        .build());
+
+        AvailabilitySlotStatsResponseDto result = availabilitySlotService.getMyStats();
+
+        assertThat(result.getTotalSlotCount()).isEqualTo(8);
+        assertThat(result.getAvailableSlotCount()).isEqualTo(5);
+        assertThat(result.getBlockedSlotCount()).isEqualTo(3);
+        assertThat(result.getThisWeekSlotCount()).isEqualTo(2);
     }
 
     @Test

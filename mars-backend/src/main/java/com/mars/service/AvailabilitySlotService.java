@@ -1,6 +1,8 @@
 package com.mars.service;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -11,9 +13,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mars.AvailabilitySlotMessages;
 import com.mars.dto.AvailabilitySlotBlockRequest;
 import com.mars.dto.AvailabilitySlotCreateRequest;
 import com.mars.dto.AvailabilitySlotResponseDto;
+import com.mars.dto.AvailabilitySlotStatsResponseDto;
 import com.mars.dto.AvailabilitySlotUpdateRequest;
 import com.mars.entity.AvailabilitySlot;
 import com.mars.entity.User;
@@ -51,18 +55,35 @@ public class AvailabilitySlotService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public AvailabilitySlotStatsResponseDto getMyStats() {
+        User currentUser = getCurrentUser();
+        Integer staffId = currentUser.getUserId();
+
+        LocalDate weekStart = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate weekEnd = weekStart.plusDays(6);
+
+        long total = availabilitySlotRepository.countByStaff_UserId(staffId);
+        long blocked = availabilitySlotRepository.countByStaff_UserIdAndIsBlocked(staffId, true);
+        long available = availabilitySlotRepository.countByStaff_UserIdAndIsBlocked(staffId, false);
+        long thisWeek = availabilitySlotRepository.countByStaff_UserIdAndSlotDateBetween(
+                staffId, weekStart, weekEnd);
+
+        return availabilitySlotMapper.toStatsResponse(total, available, blocked, thisWeek);
+    }
+
     @Transactional
     public AvailabilitySlotResponseDto createSlot(AvailabilitySlotCreateRequest request) {
         User currentUser = getCurrentUser();
         validateTimeRange(request.getStartTime(), request.getEndTime());
-        validateNotPastDate(request.getSlotDate(), "Geçmiş tarih için ofis saati oluşturulamaz.");
+        validateNotPastDate(request.getSlotDate(), AvailabilitySlotMessages.PAST_DATE_CREATE);
 
         if (availabilitySlotRepository.existsOverlappingSlot(
                 currentUser.getUserId(),
                 request.getSlotDate(),
                 request.getStartTime(),
                 request.getEndTime())) {
-            throw new ConflictException("Bu tarih ve saat aralığında çakışan bir ofis saati bulunmaktadır.");
+            throw new ConflictException(AvailabilitySlotMessages.OVERLAP);
         }
 
         AvailabilitySlot slot = availabilitySlotMapper.toEntity(request, currentUser);
@@ -73,19 +94,17 @@ public class AvailabilitySlotService {
     @Transactional
     public AvailabilitySlotResponseDto updateSlot(Integer slotId, AvailabilitySlotUpdateRequest request) {
         User currentUser = getCurrentUser();
-        AvailabilitySlot slot = getOwnedSlot(slotId, currentUser, "Bu ofis saatini güncelleme yetkiniz yok.");
+        AvailabilitySlot slot = getOwnedSlot(slotId, currentUser, AvailabilitySlotMessages.UPDATE_DENIED);
 
         if (Boolean.TRUE.equals(slot.getIsBlocked())) {
-            throw new BadRequestException("Pasif ofis saati güncellenemez.");
+            throw new BadRequestException(AvailabilitySlotMessages.BLOCKED_NOT_EDITABLE);
         }
 
         validateTimeRange(request.getStartTime(), request.getEndTime());
-        validateNotPastDate(request.getSlotDate(), "Geçmiş tarih için ofis saati güncellenemez.");
+        validateNotPastDate(request.getSlotDate(), AvailabilitySlotMessages.PAST_DATE_UPDATE);
 
-        if (appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(
-                slotId, ACTIVE_APPOINTMENT_STATUSES)) {
-            throw new ConflictException(
-                    "Bu ofis saatine ait aktif randevular bulunduğu için güncelleme yapılamaz.");
+        if (hasActiveAppointments(slotId)) {
+            throw new ConflictException(AvailabilitySlotMessages.UPDATE_ACTIVE_APPOINTMENTS);
         }
 
         if (availabilitySlotRepository.existsOverlappingSlotExcludingId(
@@ -94,7 +113,7 @@ public class AvailabilitySlotService {
                 request.getStartTime(),
                 request.getEndTime(),
                 slotId)) {
-            throw new ConflictException("Bu tarih ve saat aralığında çakışan bir ofis saati bulunmaktadır.");
+            throw new ConflictException(AvailabilitySlotMessages.OVERLAP);
         }
 
         availabilitySlotMapper.updateEntity(slot, request);
@@ -105,22 +124,19 @@ public class AvailabilitySlotService {
     @Transactional
     public AvailabilitySlotResponseDto updateBlockedStatus(Integer slotId, AvailabilitySlotBlockRequest request) {
         User currentUser = getCurrentUser();
-        AvailabilitySlot slot = getOwnedSlot(slotId, currentUser, "Bu ofis saatinin durumunu değiştirme yetkiniz yok.");
+        AvailabilitySlot slot = getOwnedSlot(slotId, currentUser, AvailabilitySlotMessages.BLOCK_DENIED);
 
         boolean currentlyBlocked = Boolean.TRUE.equals(slot.getIsBlocked());
         boolean targetBlocked = Boolean.TRUE.equals(request.getIsBlocked());
 
         if (currentlyBlocked == targetBlocked) {
             throw new BadRequestException(targetBlocked
-                    ? "Bu ofis saati zaten engelli."
-                    : "Bu ofis saati zaten uygun durumda.");
+                    ? AvailabilitySlotMessages.ALREADY_BLOCKED
+                    : AvailabilitySlotMessages.ALREADY_AVAILABLE);
         }
 
-        if (targetBlocked
-                && appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(
-                        slotId, ACTIVE_APPOINTMENT_STATUSES)) {
-            throw new ConflictException(
-                    "Bu ofis saatine ait aktif randevular bulunduğu için slot engellenemez.");
+        if (targetBlocked && hasActiveAppointments(slotId)) {
+            throw new ConflictException(AvailabilitySlotMessages.BLOCK_ACTIVE_APPOINTMENTS);
         }
 
         availabilitySlotMapper.applyBlockStatus(slot, request);
@@ -128,9 +144,14 @@ public class AvailabilitySlotService {
         return availabilitySlotMapper.toResponse(saved);
     }
 
+    private boolean hasActiveAppointments(Integer slotId) {
+        return appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(
+                slotId, ACTIVE_APPOINTMENT_STATUSES);
+    }
+
     private void validateTimeRange(java.time.LocalTime startTime, java.time.LocalTime endTime) {
         if (!startTime.isBefore(endTime)) {
-            throw new BadRequestException("Başlangıç saati bitiş saatinden önce olmalıdır.");
+            throw new BadRequestException(AvailabilitySlotMessages.START_BEFORE_END);
         }
     }
 
@@ -142,7 +163,7 @@ public class AvailabilitySlotService {
 
     private AvailabilitySlot getOwnedSlot(Integer slotId, User currentUser, String accessDeniedMessage) {
         AvailabilitySlot slot = availabilitySlotRepository.findByIdWithStaff(slotId)
-                .orElseThrow(() -> new ResourceNotFoundException("Ofis saati bulunamadı."));
+                .orElseThrow(() -> new ResourceNotFoundException(AvailabilitySlotMessages.SLOT_NOT_FOUND));
 
         if (slot.getStaff() == null
                 || !Objects.equals(slot.getStaff().getUserId(), currentUser.getUserId())) {

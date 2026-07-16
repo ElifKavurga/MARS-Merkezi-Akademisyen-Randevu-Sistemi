@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import com.mars.dto.AvailabilitySlotBlockRequest;
 import com.mars.dto.AvailabilitySlotCreateRequest;
 import com.mars.dto.AvailabilitySlotResponseDto;
+import com.mars.dto.AvailabilitySlotStatsResponseDto;
 import com.mars.dto.AvailabilitySlotUpdateRequest;
 import com.mars.entity.AvailabilitySlot;
 import com.mars.entity.User;
@@ -31,6 +32,19 @@ public class AvailabilitySlotMapper {
 
     public void applyBlockStatus(AvailabilitySlot slot, AvailabilitySlotBlockRequest request) {
         slot.setIsBlocked(request.getIsBlocked());
+    }
+
+    public AvailabilitySlotStatsResponseDto toStatsResponse(
+            long totalSlotCount,
+            long availableSlotCount,
+            long blockedSlotCount,
+            long thisWeekSlotCount) {
+        return AvailabilitySlotStatsResponseDto.builder()
+                .totalSlotCount(totalSlotCount)
+                .availableSlotCount(availableSlotCount)
+                .blockedSlotCount(blockedSlotCount)
+                .thisWeekSlotCount(thisWeekSlotCount)
+                .build();
     }
 
     public AvailabilitySlotResponseDto toResponse(AvailabilitySlot slot) {

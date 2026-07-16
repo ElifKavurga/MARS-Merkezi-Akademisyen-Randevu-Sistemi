@@ -22,4 +22,11 @@ export type AvailabilitySlotBlockPayload = {
   isBlocked: boolean;
 };
 
+export type AvailabilitySlotStats = {
+  totalSlotCount: number;
+  availableSlotCount: number;
+  blockedSlotCount: number;
+  thisWeekSlotCount: number;
+};
+
 export type AvailabilityStatusFilter = 'AVAILABLE' | 'BLOCKED' | 'ALL';

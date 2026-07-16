@@ -5,23 +5,33 @@ import AvailabilityCreateModal from '../components/AvailabilityCreateModal';
 import AvailabilityEditModal from '../components/AvailabilityEditModal';
 import AvailabilityStatusBadge from '../components/AvailabilityStatusBadge';
 import ConfirmModal from '../components/ConfirmModal';
+import CourseStatCard from '../components/CourseStatCard';
 import Loading from '../components/Loading';
 import { FORM_FIELD_CLASS, FORM_SELECT_CLASS } from '../constants';
 import {
   AVAILABILITY_MESSAGES,
+  AVAILABILITY_SORT_FIELD,
   AVAILABILITY_STATUS_FILTER,
   DAY_OF_WEEK_LABELS,
   formatTimeLabel,
   getDayOfWeekLabel,
   getDayOfWeekValue,
   getDurationMinutes,
+  type AvailabilitySortField,
 } from '../constants/availability';
 import { useToast } from '../hooks/useToast';
 import {
   getMyAvailabilitySlots,
+  getMyAvailabilityStats,
   updateAvailabilitySlotBlocked,
 } from '../services/availabilityService';
-import type { AvailabilitySlot, AvailabilityStatusFilter } from '../types/availability';
+import type {
+  AvailabilitySlot,
+  AvailabilitySlotStats,
+  AvailabilityStatusFilter,
+} from '../types/availability';
+
+type SortDirection = 'asc' | 'desc';
 
 const DAY_FILTER_OPTIONS = [
   { value: '', label: 'Gün: Tümü' },
@@ -34,9 +44,66 @@ const DAY_FILTER_OPTIONS = [
   { value: '0', label: DAY_OF_WEEK_LABELS[0] },
 ] as const;
 
+const EMPTY_STATS: AvailabilitySlotStats = {
+  totalSlotCount: 0,
+  availableSlotCount: 0,
+  blockedSlotCount: 0,
+  thisWeekSlotCount: 0,
+};
+
+function compareSlots(
+  a: AvailabilitySlot,
+  b: AvailabilitySlot,
+  field: AvailabilitySortField,
+  direction: SortDirection,
+): number {
+  const factor = direction === 'asc' ? 1 : -1;
+  const left = String(a[field] ?? '');
+  const right = String(b[field] ?? '');
+  return left.localeCompare(right, 'tr-TR') * factor;
+}
+
+function SortableHeader({
+  label,
+  field,
+  activeField,
+  direction,
+  onSort,
+}: {
+  label: string;
+  field: AvailabilitySortField;
+  activeField: AvailabilitySortField;
+  direction: SortDirection;
+  onSort: (field: AvailabilitySortField) => void;
+}) {
+  const isActive = activeField === field;
+
+  return (
+    <th className="font-label-md text-label-md text-on-surface-variant py-4 px-6 font-semibold">
+      <button
+        type="button"
+        className="inline-flex w-full items-center gap-1 justify-start border-0 bg-transparent p-0 m-0 shadow-none appearance-none cursor-pointer font-inherit text-inherit hover:text-on-background transition-colors focus:outline-none focus-visible:text-on-background"
+        onClick={() => onSort(field)}
+        aria-label={`${label} sütununa göre sırala`}
+      >
+        <span className={isActive ? 'text-on-background' : undefined}>{label}</span>
+        <span
+          className={`material-symbols-outlined text-[16px] leading-none ${
+            isActive ? 'text-on-background' : 'text-on-surface-variant/50'
+          }`}
+          aria-hidden="true"
+        >
+          {isActive ? (direction === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more'}
+        </span>
+      </button>
+    </th>
+  );
+}
+
 export default function AcademicianAvailabilityPage() {
   const toast = useToast();
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
+  const [stats, setStats] = useState<AvailabilitySlotStats>(EMPTY_STATS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -44,18 +111,26 @@ export default function AcademicianAvailabilityPage() {
   const [statusFilter, setStatusFilter] = useState<AvailabilityStatusFilter>(
     AVAILABILITY_STATUS_FILTER.ALL,
   );
+  const [sortField, setSortField] = useState<AvailabilitySortField>(
+    AVAILABILITY_SORT_FIELD.SLOT_DATE,
+  );
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [createOpen, setCreateOpen] = useState(false);
   const [editingSlot, setEditingSlot] = useState<AvailabilitySlot | null>(null);
   const [blockTarget, setBlockTarget] = useState<AvailabilitySlot | null>(null);
   const [blockLoading, setBlockLoading] = useState(false);
   const [blockError, setBlockError] = useState<string | null>(null);
 
-  const loadSlots = useCallback(async () => {
+  const loadPageData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getMyAvailabilitySlots();
-      setSlots(data);
+      const [slotData, statsData] = await Promise.all([
+        getMyAvailabilitySlots(),
+        getMyAvailabilityStats(),
+      ]);
+      setSlots(slotData);
+      setStats(statsData);
     } catch (err) {
       if (isAxiosError(err) && err.response?.status === 403) {
         setError(AVAILABILITY_MESSAGES.ACCESS_DENIED);
@@ -70,13 +145,13 @@ export default function AcademicianAvailabilityPage() {
   }, [toast]);
 
   useEffect(() => {
-    void loadSlots();
-  }, [loadSlots]);
+    void loadPageData();
+  }, [loadPageData]);
 
   const filteredSlots = useMemo(() => {
     const query = searchQuery.trim().toLocaleLowerCase('tr-TR');
 
-    return slots.filter((slot) => {
+    const filtered = slots.filter((slot) => {
       if (statusFilter === AVAILABILITY_STATUS_FILTER.AVAILABLE && slot.isBlocked) {
         return false;
       }
@@ -111,7 +186,18 @@ export default function AcademicianAvailabilityPage() {
         statusLabel.includes(query)
       );
     });
-  }, [slots, searchQuery, dayFilter, statusFilter]);
+
+    return [...filtered].sort((a, b) => compareSlots(a, b, sortField, sortDirection));
+  }, [slots, searchQuery, dayFilter, statusFilter, sortField, sortDirection]);
+
+  const handleSort = (field: AvailabilitySortField) => {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+    setSortField(field);
+    setSortDirection('asc');
+  };
 
   const handleConfirmBlockChange = async () => {
     if (!blockTarget || blockLoading) {
@@ -127,7 +213,7 @@ export default function AcademicianAvailabilityPage() {
         nextBlocked ? AVAILABILITY_MESSAGES.BLOCK_SUCCESS : AVAILABILITY_MESSAGES.UNBLOCK_SUCCESS,
       );
       setBlockTarget(null);
-      await loadSlots();
+      await loadPageData();
     } catch (err) {
       if (isAxiosError(err)) {
         const backendMessage = err.response?.data?.message;
@@ -136,7 +222,7 @@ export default function AcademicianAvailabilityPage() {
         } else if (err.response?.status === 403) {
           setBlockError(AVAILABILITY_MESSAGES.ACCESS_DENIED);
         } else if (err.response?.status === 404) {
-          setBlockError('Ofis saati bulunamadı.');
+          setBlockError(AVAILABILITY_MESSAGES.NOT_FOUND);
         } else {
           setBlockError(AVAILABILITY_MESSAGES.BLOCK_ERROR);
         }
@@ -153,24 +239,45 @@ export default function AcademicianAvailabilityPage() {
       <div className="mb-8">
         <h1 className="font-headline-lg text-headline-lg text-on-background">Ofis Saatleri</h1>
         <p className="mt-2 max-w-2xl font-body-lg text-body-lg text-on-surface-variant">
-          Tanımlı ofis saatlerinizi görüntüleyin ve filtreleyin.
+          Tanımlı ofis saatlerinizi görüntüleyin, filtreleyin ve yönetin.
         </p>
+      </div>
+
+      <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+        <CourseStatCard label="Toplam Slot" value={stats.totalSlotCount} icon="calendar_month" />
+        <CourseStatCard
+          label="Kullanılabilir Slot"
+          value={stats.availableSlotCount}
+          icon="event_available"
+        />
+        <CourseStatCard label="Engellenen Slot" value={stats.blockedSlotCount} icon="event_busy" />
+        <CourseStatCard
+          label="Bu Haftaki Slot Sayısı"
+          value={stats.thisWeekSlotCount}
+          icon="date_range"
+        />
       </div>
 
       <div className="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
         <div className="p-4 border-b border-outline-variant flex flex-col gap-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary-container">
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                schedule
-              </span>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary-container shrink-0">
+                <span
+                  className="material-symbols-outlined"
+                  style={{ fontVariationSettings: "'FILL' 1" }}
+                  aria-hidden="true"
+                >
+                  schedule
+                </span>
+              </div>
+              <p className="font-body-md text-body-md text-on-surface-variant text-sm">
+                Size ait müsaitlik slotları
+              </p>
             </div>
-            <p className="font-body-md text-body-md text-on-surface-variant text-sm">
-              Size ait müsaitlik slotları
-            </p>
             <button
               type="button"
-              className="bg-[#0b1641] text-white px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-[#152a5c] transition-colors flex items-center gap-2"
+              className="bg-[#0b1641] text-white px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-[#152a5c] transition-colors flex items-center gap-2 shrink-0"
               onClick={() => setCreateOpen(true)}
             >
               <span className="material-symbols-outlined text-[18px] leading-none">add</span>
@@ -207,19 +314,27 @@ export default function AcademicianAvailabilityPage() {
               <option value={AVAILABILITY_STATUS_FILTER.BLOCKED}>Durum: Engelli</option>
             </select>
 
-            <input
-              id="availability-search"
-              type="search"
-              aria-label="Ofis saati ara"
-              className={`${FORM_FIELD_CLASS} sm:col-span-2 xl:col-span-2`}
-              placeholder="Gün, saat veya tarih ara..."
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-            />
+            <div className="relative sm:col-span-2 xl:col-span-2">
+              <span
+                className="pointer-events-none absolute inset-y-0 left-3 flex items-center material-symbols-outlined text-on-surface-variant text-[20px] leading-none"
+                aria-hidden="true"
+              >
+                search
+              </span>
+              <input
+                id="availability-search"
+                type="search"
+                aria-label="Ofis saati ara"
+                className={`${FORM_FIELD_CLASS} pl-10`}
+                placeholder="Gün, saat veya tarih ara..."
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+              />
+            </div>
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-w-full">
           {loading ? (
             <div className="p-8">
               <Loading label="Ofis saatleri yükleniyor..." />
@@ -231,10 +346,23 @@ export default function AcademicianAvailabilityPage() {
               </p>
             </div>
           ) : slots.length === 0 ? (
-            <div className="p-8 text-center">
-              <p className="font-body-md text-body-md text-on-surface-variant">
+            <div className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+              <div className="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center text-primary-container">
+                <span className="material-symbols-outlined text-[28px]" aria-hidden="true">
+                  schedule
+                </span>
+              </div>
+              <p className="font-body-md text-body-md text-on-surface-variant max-w-md">
                 {AVAILABILITY_MESSAGES.EMPTY_TITLE}
               </p>
+              <button
+                type="button"
+                className="bg-[#0b1641] text-white px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-[#152a5c] transition-colors flex items-center gap-2"
+                onClick={() => setCreateOpen(true)}
+              >
+                <span className="material-symbols-outlined text-[18px] leading-none">add</span>
+                {AVAILABILITY_MESSAGES.EMPTY_CTA}
+              </button>
             </div>
           ) : filteredSlots.length === 0 ? (
             <div className="p-8 text-center">
@@ -243,18 +371,30 @@ export default function AcademicianAvailabilityPage() {
               </p>
             </div>
           ) : (
-            <table className="w-full text-left">
-              <thead className="bg-surface-container/50 border-b border-outline-variant">
-                <tr>
-                  <th className="font-label-md text-label-md text-on-surface-variant py-4 px-6 font-semibold">
-                    Gün
-                  </th>
-                  <th className="font-label-md text-label-md text-on-surface-variant py-4 px-6 font-semibold">
-                    Başlangıç
-                  </th>
-                  <th className="font-label-md text-label-md text-on-surface-variant py-4 px-6 font-semibold">
-                    Bitiş
-                  </th>
+            <table className="w-full min-w-[780px] text-left border-collapse">
+              <thead>
+                <tr className="bg-surface-tint/5 border-b border-outline-variant">
+                  <SortableHeader
+                    label="Tarih"
+                    field={AVAILABILITY_SORT_FIELD.SLOT_DATE}
+                    activeField={sortField}
+                    direction={sortDirection}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    label="Başlangıç Saati"
+                    field={AVAILABILITY_SORT_FIELD.START_TIME}
+                    activeField={sortField}
+                    direction={sortDirection}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    label="Bitiş Saati"
+                    field={AVAILABILITY_SORT_FIELD.END_TIME}
+                    activeField={sortField}
+                    direction={sortDirection}
+                    onSort={handleSort}
+                  />
                   <th className="font-label-md text-label-md text-on-surface-variant py-4 px-6 font-semibold">
                     Slot Süresi
                   </th>
@@ -342,7 +482,7 @@ export default function AcademicianAvailabilityPage() {
         onClose={() => setCreateOpen(false)}
         onCreated={(message) => {
           toast.success(message);
-          void loadSlots();
+          void loadPageData();
         }}
       />
 
@@ -352,19 +492,21 @@ export default function AcademicianAvailabilityPage() {
         onClose={() => setEditingSlot(null)}
         onUpdated={(message) => {
           toast.success(message);
-          void loadSlots();
+          void loadPageData();
         }}
       />
 
       <ConfirmModal
         open={blockTarget !== null}
         title={
-          blockTarget?.isBlocked ? 'Ofis Saatini Yeniden Aktif Et' : 'Ofis Saatini Engelle'
+          blockTarget?.isBlocked
+            ? AVAILABILITY_MESSAGES.UNBLOCK_CONFIRM_TITLE
+            : AVAILABILITY_MESSAGES.BLOCK_CONFIRM_TITLE
         }
         description={
           blockTarget?.isBlocked
-            ? 'Bu ofis saatini tekrar kullanılabilir hale getirmek istediğinize emin misiniz?'
-            : 'Bu ofis saatini geçici olarak kullanıma kapatmak istediğinize emin misiniz?'
+            ? AVAILABILITY_MESSAGES.UNBLOCK_CONFIRM_DESCRIPTION
+            : AVAILABILITY_MESSAGES.BLOCK_CONFIRM_DESCRIPTION
         }
         confirmLabel={blockTarget?.isBlocked ? 'Engeli Kaldır' : 'Engelle'}
         cancelLabel="İptal"

@@ -33,6 +33,7 @@ export {
 export { getUsersByRole, getActiveAssistants } from './userService';
 export {
   getMyAvailabilitySlots,
+  getMyAvailabilityStats,
   createAvailabilitySlot,
   updateAvailabilitySlot,
   updateAvailabilitySlotBlocked,

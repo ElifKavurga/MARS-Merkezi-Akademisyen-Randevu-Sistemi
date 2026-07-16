@@ -31,6 +31,7 @@ import com.mars.config.CorsConfig;
 import com.mars.dto.AvailabilitySlotBlockRequest;
 import com.mars.dto.AvailabilitySlotCreateRequest;
 import com.mars.dto.AvailabilitySlotResponseDto;
+import com.mars.dto.AvailabilitySlotStatsResponseDto;
 import com.mars.dto.AvailabilitySlotUpdateRequest;
 import com.mars.exception.handler.GlobalExceptionHandler;
 import com.mars.security.JwtAuthenticationFilter;
@@ -93,6 +94,34 @@ class AvailabilitySlotControllerTest {
                 .andExpect(jsonPath("$[0].startTime").value("10:00:00"))
                 .andExpect(jsonPath("$[0].endTime").value("12:00:00"))
                 .andExpect(jsonPath("$[0].isBlocked").value(false));
+    }
+
+    @Test
+    @WithMockUser(roles = "ACADEMICIAN")
+    void getMyStats_asAcademician_returnsStats() throws Exception {
+        when(availabilitySlotService.getMyStats()).thenReturn(
+                AvailabilitySlotStatsResponseDto.builder()
+                        .totalSlotCount(10)
+                        .availableSlotCount(7)
+                        .blockedSlotCount(3)
+                        .thisWeekSlotCount(4)
+                        .build());
+
+        mockMvc.perform(get("/availability-slots/my/stats"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalSlotCount").value(10))
+                .andExpect(jsonPath("$.availableSlotCount").value(7))
+                .andExpect(jsonPath("$.blockedSlotCount").value(3))
+                .andExpect(jsonPath("$.thisWeekSlotCount").value(4));
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    void getMyStats_asStudent_returnsForbidden() throws Exception {
+        mockMvc.perform(get("/availability-slots/my/stats"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.status").value(403));
     }
 
     @Test

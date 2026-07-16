@@ -1,10 +1,14 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { isAxiosError } from 'axios';
+import AvailabilitySlotFormFields from './AvailabilitySlotFormFields';
 import ModalFormFooter from './ModalFormFooter';
 import ModalHeader from './ModalHeader';
 import ModalShell from './ModalShell';
-import { AVAILABILITY_MESSAGES } from '../constants/availability';
-import { FORM_FIELD_CLASS } from '../constants/ui';
+import {
+  AVAILABILITY_MESSAGES,
+  toApiTimeValue,
+  validateAvailabilitySlotForm,
+} from '../constants/availability';
 import { createAvailabilitySlot } from '../services/availabilityService';
 import type { AvailabilitySlotCreatePayload } from '../types/availability';
 
@@ -20,12 +24,20 @@ const INITIAL_FORM: AvailabilitySlotCreatePayload = {
   endTime: '',
 };
 
-function todayIsoDate(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+function resolveError(err: unknown): string {
+  if (isAxiosError(err)) {
+    const backendMessage = err.response?.data?.message;
+    if (typeof backendMessage === 'string' && backendMessage.length > 0) {
+      return backendMessage;
+    }
+    if (err.response?.status === 409) {
+      return AVAILABILITY_MESSAGES.OVERLAP;
+    }
+    if (err.response?.status === 403) {
+      return AVAILABILITY_MESSAGES.ACCESS_DENIED;
+    }
+  }
+  return AVAILABILITY_MESSAGES.CREATE_ERROR;
 }
 
 export default function AvailabilityCreateModal({
@@ -65,57 +77,24 @@ export default function AvailabilityCreateModal({
     }
 
     setError(null);
-
-    const slotDate = form.slotDate.trim();
-    const startTime = form.startTime.trim();
-    const endTime = form.endTime.trim();
-
-    if (!slotDate) {
-      setError('Tarih zorunludur.');
-      return;
-    }
-    if (!startTime) {
-      setError('Başlangıç saati zorunludur.');
-      return;
-    }
-    if (!endTime) {
-      setError('Bitiş saati zorunludur.');
-      return;
-    }
-    if (slotDate < todayIsoDate()) {
-      setError('Geçmiş tarih seçilemez.');
-      return;
-    }
-    if (startTime >= endTime) {
-      setError('Başlangıç saati bitiş saatinden önce olmalıdır.');
+    const validationError = validateAvailabilitySlotForm(form);
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
     setSubmitting(true);
     try {
       await createAvailabilitySlot({
-        slotDate,
-        startTime: startTime.length === 5 ? `${startTime}:00` : startTime,
-        endTime: endTime.length === 5 ? `${endTime}:00` : endTime,
+        slotDate: form.slotDate.trim(),
+        startTime: toApiTimeValue(form.startTime.trim()),
+        endTime: toApiTimeValue(form.endTime.trim()),
       });
       setForm({ ...INITIAL_FORM });
       onCreated(AVAILABILITY_MESSAGES.CREATE_SUCCESS);
       onClose();
     } catch (err) {
-      if (isAxiosError(err)) {
-        const backendMessage = err.response?.data?.message;
-        if (typeof backendMessage === 'string' && backendMessage.length > 0) {
-          setError(backendMessage);
-        } else if (err.response?.status === 409) {
-          setError('Bu tarih ve saat aralığında çakışan bir ofis saati bulunmaktadır.');
-        } else if (err.response?.status === 403) {
-          setError(AVAILABILITY_MESSAGES.ACCESS_DENIED);
-        } else {
-          setError(AVAILABILITY_MESSAGES.CREATE_ERROR);
-        }
-      } else {
-        setError(AVAILABILITY_MESSAGES.CREATE_ERROR);
-      }
+      setError(resolveError(err));
     } finally {
       setSubmitting(false);
     }
@@ -138,68 +117,18 @@ export default function AvailabilityCreateModal({
           description="Tek seferlik müsaitlik aralığı tanımlayın."
         />
 
-        <div className="mt-4 space-y-4 text-left">
-          <div className="space-y-1.5">
-            <label
-              htmlFor="availability-slot-date"
-              className="block font-label-md text-label-md text-on-surface-variant"
-            >
-              Tarih
-            </label>
-            <input
-              id="availability-slot-date"
-              type="date"
-              className={FORM_FIELD_CLASS}
-              required
-              min={todayIsoDate()}
-              value={form.slotDate}
-              disabled={submitting}
-              onChange={(event) => setForm((prev) => ({ ...prev, slotDate: event.target.value }))}
-            />
-          </div>
+        <AvailabilitySlotFormFields
+          idPrefix="availability-create"
+          form={form}
+          disabled={submitting}
+          onChange={setForm}
+        />
 
-          <div className="space-y-1.5">
-            <label
-              htmlFor="availability-start-time"
-              className="block font-label-md text-label-md text-on-surface-variant"
-            >
-              Başlangıç Saati
-            </label>
-            <input
-              id="availability-start-time"
-              type="time"
-              className={FORM_FIELD_CLASS}
-              required
-              value={form.startTime}
-              disabled={submitting}
-              onChange={(event) => setForm((prev) => ({ ...prev, startTime: event.target.value }))}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label
-              htmlFor="availability-end-time"
-              className="block font-label-md text-label-md text-on-surface-variant"
-            >
-              Bitiş Saati
-            </label>
-            <input
-              id="availability-end-time"
-              type="time"
-              className={FORM_FIELD_CLASS}
-              required
-              value={form.endTime}
-              disabled={submitting}
-              onChange={(event) => setForm((prev) => ({ ...prev, endTime: event.target.value }))}
-            />
-          </div>
-
-          {error ? (
-            <p className="font-label-sm text-label-sm text-error" role="alert">
-              {error}
-            </p>
-          ) : null}
-        </div>
+        {error ? (
+          <p className="mt-4 font-label-sm text-label-sm text-error" role="alert">
+            {error}
+          </p>
+        ) : null}
       </div>
     </ModalShell>
   );

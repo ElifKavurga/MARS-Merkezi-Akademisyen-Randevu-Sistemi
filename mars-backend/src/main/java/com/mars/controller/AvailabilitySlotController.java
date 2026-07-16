@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.mars.dto.AvailabilitySlotBlockRequest;
 import com.mars.dto.AvailabilitySlotCreateRequest;
 import com.mars.dto.AvailabilitySlotResponseDto;
+import com.mars.dto.AvailabilitySlotStatsResponseDto;
 import com.mars.dto.AvailabilitySlotUpdateRequest;
 import com.mars.service.AvailabilitySlotService;
 
@@ -32,6 +33,11 @@ public class AvailabilitySlotController {
     @GetMapping("/my")
     public ResponseEntity<List<AvailabilitySlotResponseDto>> getMySlots() {
         return ResponseEntity.ok(availabilitySlotService.getMySlots());
+    }
+
+    @GetMapping("/my/stats")
+    public ResponseEntity<AvailabilitySlotStatsResponseDto> getMyStats() {
+        return ResponseEntity.ok(availabilitySlotService.getMyStats());
     }
 
     @PostMapping

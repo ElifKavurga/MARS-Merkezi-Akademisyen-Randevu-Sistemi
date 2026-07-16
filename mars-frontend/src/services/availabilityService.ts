@@ -3,11 +3,17 @@ import type {
   AvailabilitySlot,
   AvailabilitySlotBlockPayload,
   AvailabilitySlotCreatePayload,
+  AvailabilitySlotStats,
   AvailabilitySlotUpdatePayload,
 } from '../types/availability';
 
 export async function getMyAvailabilitySlots(): Promise<AvailabilitySlot[]> {
   const { data } = await apiClient.get<AvailabilitySlot[]>('/availability-slots/my');
+  return data;
+}
+
+export async function getMyAvailabilityStats(): Promise<AvailabilitySlotStats> {
+  const { data } = await apiClient.get<AvailabilitySlotStats>('/availability-slots/my/stats');
   return data;
 }
 
