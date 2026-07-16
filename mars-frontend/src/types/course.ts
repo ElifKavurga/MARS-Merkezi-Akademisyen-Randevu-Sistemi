@@ -33,6 +33,10 @@ export type CourseAssistantCreatePayload = {
   assistantId: number;
 };
 
+export type CourseAssignmentUpdatePayload = {
+  assistantId: number;
+};
+
 export type AssistantUserOption = {
   userId: number;
   fullName: string;

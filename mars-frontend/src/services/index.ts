@@ -23,6 +23,8 @@ export {
   getMyCourse,
   getCourseAssistants,
   assignCourseAssistant,
+  updateCourseAssignment,
+  removeCourseAssignment,
   createCourse,
   updateCourse,
   changeCourseStatus,

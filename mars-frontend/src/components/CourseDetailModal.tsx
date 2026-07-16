@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
 import AdminActionButton from './AdminActionButton';
+import ConfirmModal from './ConfirmModal';
 import CourseAssignAssistantModal from './CourseAssignAssistantModal';
+import CourseEditAssistantModal from './CourseEditAssistantModal';
 import Loading from './Loading';
 import ModalHeader from './ModalHeader';
 import ModalShell from './ModalShell';
 import { COURSE_MESSAGES } from '../constants/course';
 import { useToast } from '../hooks/useToast';
-import { getCourseAssistants, getMyCourse } from '../services/courseService';
+import { getCourseAssistants, getMyCourse, removeCourseAssignment } from '../services/courseService';
 import type { Course, CourseAssistant } from '../types/course';
 import { formatDateTime } from '../utils';
 
@@ -33,6 +35,15 @@ export default function CourseDetailModal({ open, courseId, onClose }: CourseDet
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [assignOpen, setAssignOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<CourseAssistant | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<CourseAssistant | null>(null);
+  const [removeLoading, setRemoveLoading] = useState(false);
+  const [removeError, setRemoveError] = useState<string | null>(null);
+
+  const refreshAssistants = useCallback(async (id: number) => {
+    const assistantData = await getCourseAssistants(id);
+    setAssistants(assistantData);
+  }, []);
 
   const loadDetail = useCallback(async (id: number) => {
     const [courseData, assistantData] = await Promise.all([
@@ -54,6 +65,9 @@ export default function CourseDetailModal({ open, courseId, onClose }: CourseDet
     setCourse(null);
     setAssistants([]);
     setAssignOpen(false);
+    setEditTarget(null);
+    setRemoveTarget(null);
+    setRemoveError(null);
 
     void (async () => {
       try {
@@ -88,6 +102,51 @@ export default function CourseDetailModal({ open, courseId, onClose }: CourseDet
       cancelled = true;
     };
   }, [open, courseId, toast, loadDetail]);
+
+  const handleAssistantsChanged = (message: string) => {
+    toast.success(message);
+    if (courseId == null) {
+      return;
+    }
+    void (async () => {
+      try {
+        await refreshAssistants(courseId);
+      } catch {
+        toast.error(COURSE_MESSAGES.ASSISTANTS_ERROR);
+      }
+    })();
+  };
+
+  const handleConfirmRemove = async () => {
+    if (removeTarget == null || courseId == null || removeLoading) {
+      return;
+    }
+
+    setRemoveLoading(true);
+    setRemoveError(null);
+    try {
+      await removeCourseAssignment(removeTarget.assignmentId);
+      setRemoveTarget(null);
+      toast.success(COURSE_MESSAGES.ASSIGNMENT_REMOVE_SUCCESS);
+      await refreshAssistants(courseId);
+    } catch (err) {
+      let message: string = COURSE_MESSAGES.ASSIGNMENT_REMOVE_ERROR;
+      if (isAxiosError(err)) {
+        const backendMessage = err.response?.data?.message;
+        if (typeof backendMessage === 'string' && backendMessage.length > 0) {
+          message = backendMessage;
+        } else if (err.response?.status === 403) {
+          message = 'Yetkiniz bulunmamaktadır.';
+        } else if (err.response?.status === 404) {
+          message = 'Atama bulunamadı.';
+        }
+      }
+      setRemoveError(message);
+      toast.error(message);
+    } finally {
+      setRemoveLoading(false);
+    }
+  };
 
   if (!open) {
     return null;
@@ -155,14 +214,40 @@ export default function CourseDetailModal({ open, courseId, onClose }: CourseDet
                 ) : (
                   <ul className="mt-3 divide-y divide-outline-variant/40">
                     {assistants.map((assistant) => (
-                      <li key={assistant.assignmentId} className="py-3">
-                        <p className="font-body-md text-body-md text-on-background">{assistant.assistantName}</p>
-                        <p className="mt-0.5 font-label-sm text-label-sm text-on-surface-variant">
-                          {assistant.institutionalEmail}
-                        </p>
-                        <p className="mt-0.5 font-label-sm text-label-sm text-on-surface-variant">
-                          {assistant.departmentName}
-                        </p>
+                      <li
+                        key={assistant.assignmentId}
+                        className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="font-body-md text-body-md text-on-background">
+                            {assistant.assistantName}
+                          </p>
+                          <p className="mt-0.5 font-label-sm text-label-sm text-on-surface-variant">
+                            {assistant.institutionalEmail}
+                          </p>
+                          <p className="mt-0.5 font-label-sm text-label-sm text-on-surface-variant">
+                            {assistant.departmentName}
+                          </p>
+                        </div>
+                        <div className="flex flex-row flex-wrap items-center justify-end gap-2 ml-auto shrink-0">
+                          <AdminActionButton
+                            variant="neutral"
+                            icon="edit"
+                            onClick={() => setEditTarget(assistant)}
+                          >
+                            Düzenle
+                          </AdminActionButton>
+                          <AdminActionButton
+                            variant="danger"
+                            icon="person_remove"
+                            onClick={() => {
+                              setRemoveError(null);
+                              setRemoveTarget(assistant);
+                            }}
+                          >
+                            Kaldır
+                          </AdminActionButton>
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -178,19 +263,36 @@ export default function CourseDetailModal({ open, courseId, onClose }: CourseDet
           open={assignOpen}
           courseId={courseId}
           onClose={() => setAssignOpen(false)}
-          onAssigned={(message) => {
-            toast.success(message);
-            void (async () => {
-              try {
-                const assistantData = await getCourseAssistants(courseId);
-                setAssistants(assistantData);
-              } catch {
-                toast.error(COURSE_MESSAGES.ASSISTANTS_ERROR);
-              }
-            })();
-          }}
+          onAssigned={handleAssistantsChanged}
         />
       ) : null}
+
+      <CourseEditAssistantModal
+        open={editTarget != null}
+        assignment={editTarget}
+        onClose={() => setEditTarget(null)}
+        onUpdated={handleAssistantsChanged}
+      />
+
+      <ConfirmModal
+        open={removeTarget != null}
+        title="Asistan Atamasını Kaldır"
+        description="Bu asistanı dersten kaldırmak istediğinize emin misiniz?"
+        confirmLabel="Kaldır"
+        cancelLabel="İptal"
+        loading={removeLoading}
+        error={removeError}
+        variant="danger"
+        zIndexClass="z-[60]"
+        onConfirm={() => void handleConfirmRemove()}
+        onClose={() => {
+          if (removeLoading) {
+            return;
+          }
+          setRemoveTarget(null);
+          setRemoveError(null);
+        }}
+      />
     </>
   );
 }

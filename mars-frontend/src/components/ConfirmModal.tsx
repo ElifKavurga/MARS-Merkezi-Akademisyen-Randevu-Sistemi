@@ -11,6 +11,7 @@ type ConfirmModalProps = {
   loading?: boolean;
   error?: string | null;
   variant?: 'danger' | 'primary';
+  zIndexClass?: string;
   onConfirm: () => void;
   onClose: () => void;
 };
@@ -24,6 +25,7 @@ export default function ConfirmModal({
   loading = false,
   error = null,
   variant = 'danger',
+  zIndexClass,
   onConfirm,
   onClose,
 }: ConfirmModalProps) {
@@ -44,6 +46,7 @@ export default function ConfirmModal({
       accentClass={accentClass}
       onClose={onClose}
       disableBackdropClose={loading}
+      zIndexClass={zIndexClass}
       footer={
         <div className="bg-surface-bright px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 border-t border-outline-variant gap-2">
           <button

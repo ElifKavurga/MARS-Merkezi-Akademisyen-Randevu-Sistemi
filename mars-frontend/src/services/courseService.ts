@@ -3,6 +3,7 @@ import type {
   Course,
   CourseAssistant,
   CourseAssistantCreatePayload,
+  CourseAssignmentUpdatePayload,
   CourseCreatePayload,
   CourseUpdatePayload,
 } from '../types/course';
@@ -28,6 +29,18 @@ export async function assignCourseAssistant(
 ): Promise<CourseAssistant> {
   const { data } = await apiClient.post<CourseAssistant>(`/courses/${courseId}/assistants`, payload);
   return data;
+}
+
+export async function updateCourseAssignment(
+  assignmentId: number,
+  payload: CourseAssignmentUpdatePayload,
+): Promise<CourseAssistant> {
+  const { data } = await apiClient.put<CourseAssistant>(`/course-assignments/${assignmentId}`, payload);
+  return data;
+}
+
+export async function removeCourseAssignment(assignmentId: number): Promise<void> {
+  await apiClient.patch(`/course-assignments/${assignmentId}/remove`);
 }
 
 export async function createCourse(payload: CourseCreatePayload): Promise<Course> {
