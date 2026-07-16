@@ -15,6 +15,7 @@ import HodDashboard from '../pages/HodDashboard';
 import AcademicianDashboard from '../pages/AcademicianDashboard';
 import AcademicianCoursesPage from '../pages/AcademicianCoursesPage';
 import CourseDetailPage from '../pages/CourseDetailPage';
+import AcademicianAvailabilityPage from '../pages/AcademicianAvailabilityPage';
 import AssistantDashboard from '../pages/AssistantDashboard';
 import StudentDashboard from '../pages/StudentDashboard';
 import NotFoundPage from '../pages/NotFoundPage';
@@ -50,6 +51,7 @@ export default function AppRouter() {
             <Route path={ROUTES.ACADEMICIAN} element={<AcademicianDashboard />} />
             <Route path={ROUTES.ACADEMICIAN_COURSES} element={<AcademicianCoursesPage />} />
             <Route path={ROUTES.ACADEMICIAN_COURSE_DETAIL} element={<CourseDetailPage />} />
+            <Route path={ROUTES.ACADEMICIAN_AVAILABILITY} element={<AcademicianAvailabilityPage />} />
           </Route>
         </Route>
 

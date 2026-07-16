@@ -5,6 +5,7 @@ import { ROUTES } from '../constants';
 const academicianNavItems = [
   { label: 'Dashboard', path: ROUTES.ACADEMICIAN, icon: 'dashboard', end: true },
   { label: 'Derslerim', path: ROUTES.ACADEMICIAN_COURSES, icon: 'menu_book', end: false },
+  { label: 'Ofis Saatleri', path: ROUTES.ACADEMICIAN_AVAILABILITY, icon: 'schedule', end: false },
 ] as const;
 
 type AcademicianSidebarProps = {

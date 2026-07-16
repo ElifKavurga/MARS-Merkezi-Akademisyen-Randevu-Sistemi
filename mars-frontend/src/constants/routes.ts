@@ -12,6 +12,7 @@ export const ROUTES = {
   ACADEMICIAN: '/akademisyen',
   ACADEMICIAN_COURSES: '/academician/courses',
   ACADEMICIAN_COURSE_DETAIL: '/academician/courses/:courseId',
+  ACADEMICIAN_AVAILABILITY: '/academician/availability',
   ASSISTANT: '/asistan',
   STUDENT: '/ogrenci',
 } as const;

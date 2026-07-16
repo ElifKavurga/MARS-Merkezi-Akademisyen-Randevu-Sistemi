@@ -10,6 +10,7 @@ export { default as HodDashboard } from './HodDashboard';
 export { default as AcademicianDashboard } from './AcademicianDashboard';
 export { default as AcademicianCoursesPage } from './AcademicianCoursesPage';
 export { default as CourseDetailPage } from './CourseDetailPage';
+export { default as AcademicianAvailabilityPage } from './AcademicianAvailabilityPage';
 export { default as AssistantDashboard } from './AssistantDashboard';
 export { default as StudentDashboard } from './StudentDashboard';
 export { default as NotFoundPage } from './NotFoundPage';
