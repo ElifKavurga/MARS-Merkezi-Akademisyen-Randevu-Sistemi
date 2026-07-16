@@ -28,4 +28,8 @@ export { default as AvailabilityCreateModal } from './AvailabilityCreateModal';
 export { default as AvailabilityEditModal } from './AvailabilityEditModal';
 export { default as AvailabilitySlotFormFields } from './AvailabilitySlotFormFields';
 export { default as AvailabilityStatusBadge } from './AvailabilityStatusBadge';
+export { default as RecurrenceRuleCreateModal } from './RecurrenceRuleCreateModal';
+export { default as RecurrenceRuleEditModal } from './RecurrenceRuleEditModal';
+export { default as AcademicianCalendar } from './AcademicianCalendar';
+export { default as CalendarEventDetailModal } from './CalendarEventDetailModal';
 export { ErrorBoundary } from './ErrorBoundary';

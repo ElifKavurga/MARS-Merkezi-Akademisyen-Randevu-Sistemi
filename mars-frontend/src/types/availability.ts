@@ -3,6 +3,7 @@ export type AvailabilitySlot = {
   slotDate: string;
   startTime: string;
   endTime: string;
+  recurrenceRuleId: number | null;
   isBlocked: boolean;
 };
 

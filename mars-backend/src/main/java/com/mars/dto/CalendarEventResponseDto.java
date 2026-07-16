@@ -14,7 +14,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AvailabilitySlotResponseDto {
+public class CalendarEventResponseDto {
 
     private Integer slotId;
     private LocalDate slotDate;

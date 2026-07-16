@@ -53,6 +53,9 @@ public class AvailabilitySlotMapper {
                 .slotDate(slot.getSlotDate())
                 .startTime(slot.getStartTime())
                 .endTime(slot.getEndTime())
+                .recurrenceRuleId(slot.getRecurrenceRule() != null
+                        ? slot.getRecurrenceRule().getRecurrenceRuleId()
+                        : null)
                 .isBlocked(Boolean.TRUE.equals(slot.getIsBlocked()))
                 .build();
     }

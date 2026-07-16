@@ -38,3 +38,10 @@ export {
   updateAvailabilitySlot,
   updateAvailabilitySlotBlocked,
 } from './availabilityService';
+export {
+  createRecurrenceRule,
+  getRecurrenceRule,
+  updateRecurrenceRule,
+  endRecurrenceRule,
+} from './recurrenceService';
+export { getCalendarEvents } from './calendarService';

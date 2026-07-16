@@ -15,6 +15,7 @@ public interface AvailabilitySlotRepository extends JpaRepository<AvailabilitySl
 
     @Query("""
             SELECT s FROM AvailabilitySlot s
+            LEFT JOIN FETCH s.recurrenceRule
             WHERE s.staff.userId = :staffId
             ORDER BY s.slotDate ASC, s.startTime ASC
             """)
@@ -26,6 +27,14 @@ public interface AvailabilitySlotRepository extends JpaRepository<AvailabilitySl
             WHERE s.slotId = :slotId
             """)
     Optional<AvailabilitySlot> findByIdWithStaff(@Param("slotId") Integer slotId);
+
+    @Query("""
+            SELECT s FROM AvailabilitySlot s
+            JOIN FETCH s.staff
+            LEFT JOIN FETCH s.recurrenceRule
+            WHERE s.slotId = :slotId
+            """)
+    Optional<AvailabilitySlot> findByIdWithStaffAndRecurrenceRule(@Param("slotId") Integer slotId);
 
     @Query("""
             SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END
@@ -62,4 +71,23 @@ public interface AvailabilitySlotRepository extends JpaRepository<AvailabilitySl
     long countByStaff_UserIdAndIsBlocked(Integer staffId, Boolean isBlocked);
 
     long countByStaff_UserIdAndSlotDateBetween(Integer staffId, LocalDate startInclusive, LocalDate endInclusive);
+
+    List<AvailabilitySlot> findByRecurrenceRule_RecurrenceRuleId(Integer recurrenceRuleId);
+
+    @Query("""
+            SELECT s FROM AvailabilitySlot s
+            LEFT JOIN FETCH s.recurrenceRule
+            WHERE s.staff.userId = :staffId
+              AND (
+                (s.recurrenceRule IS NULL AND s.slotDate BETWEEN :from AND :to)
+                OR (s.recurrenceRule IS NOT NULL
+                    AND s.recurrenceRule.startDate <= :to
+                    AND s.recurrenceRule.endDate >= :from)
+              )
+            ORDER BY s.slotDate ASC, s.startTime ASC
+            """)
+    List<AvailabilitySlot> findCalendarSlotsForStaffInRange(
+            @Param("staffId") Integer staffId,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to);
 }

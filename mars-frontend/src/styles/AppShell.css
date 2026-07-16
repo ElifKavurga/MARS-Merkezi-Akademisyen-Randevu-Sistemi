@@ -626,3 +626,65 @@
 .mars-action-btn--neutral:hover:not(:disabled) {
   background-color: #eff4ff;
 }
+
+/* Academician calendar (FullCalendar) — kurumsal tema uyumu */
+.academician-calendar .fc {
+  --fc-border-color: #c6c5d0;
+  --fc-button-bg-color: #0b1641;
+  --fc-button-border-color: #0b1641;
+  --fc-button-hover-bg-color: #152a5c;
+  --fc-button-hover-border-color: #152a5c;
+  --fc-button-active-bg-color: #0b1641;
+  --fc-button-active-border-color: #0b1641;
+  --fc-today-bg-color: rgba(11, 22, 65, 0.06);
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: #f5f5f7;
+  font-family: inherit;
+}
+
+.academician-calendar .fc .fc-toolbar-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0b1641;
+}
+
+.academician-calendar .fc .fc-button {
+  font-size: 0.8125rem;
+  text-transform: none;
+  border-radius: 0.5rem;
+  box-shadow: none !important;
+}
+
+.academician-calendar .fc .fc-event {
+  cursor: pointer;
+  border-radius: 0.375rem;
+  border-width: 0;
+  font-size: 0.75rem;
+  padding: 1px 4px;
+}
+
+.academician-calendar .fc .fc-col-header-cell-cushion,
+.academician-calendar .fc .fc-timegrid-slot-label-cushion {
+  color: #49454f;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .academician-calendar .fc .fc-toolbar {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+
+  .academician-calendar .fc .fc-toolbar-chunk {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .academician-calendar .fc .fc-toolbar-title {
+    font-size: 1rem;
+    text-align: center;
+  }
+}

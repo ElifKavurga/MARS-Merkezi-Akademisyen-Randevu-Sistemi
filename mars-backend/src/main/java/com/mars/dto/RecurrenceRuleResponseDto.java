@@ -1,7 +1,6 @@
 package com.mars.dto;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,12 +13,11 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AvailabilitySlotResponseDto {
+public class RecurrenceRuleResponseDto {
 
-    private Integer slotId;
-    private LocalDate slotDate;
-    private LocalTime startTime;
-    private LocalTime endTime;
     private Integer recurrenceRuleId;
-    private Boolean isBlocked;
+    private String repeatType;
+    private Integer repeatCount;
+    private LocalDate startDate;
+    private LocalDate endDate;
 }
