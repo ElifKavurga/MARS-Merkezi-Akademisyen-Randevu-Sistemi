@@ -12,4 +12,14 @@ export type AvailabilitySlotCreatePayload = {
   endTime: string;
 };
 
-export type AvailabilityStatusFilter = 'ACTIVE' | 'BLOCKED' | 'ALL';
+export type AvailabilitySlotUpdatePayload = {
+  slotDate: string;
+  startTime: string;
+  endTime: string;
+};
+
+export type AvailabilitySlotBlockPayload = {
+  isBlocked: boolean;
+};
+
+export type AvailabilityStatusFilter = 'AVAILABLE' | 'BLOCKED' | 'ALL';

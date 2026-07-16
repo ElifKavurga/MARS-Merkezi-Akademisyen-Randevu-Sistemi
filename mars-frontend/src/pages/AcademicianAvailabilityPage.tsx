@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { isAxiosError } from 'axios';
+import AdminActionButton from '../components/AdminActionButton';
 import AvailabilityCreateModal from '../components/AvailabilityCreateModal';
-import CourseStatusBadge from '../components/CourseStatusBadge';
+import AvailabilityEditModal from '../components/AvailabilityEditModal';
+import AvailabilityStatusBadge from '../components/AvailabilityStatusBadge';
+import ConfirmModal from '../components/ConfirmModal';
 import Loading from '../components/Loading';
 import { FORM_FIELD_CLASS, FORM_SELECT_CLASS } from '../constants';
 import {
@@ -14,7 +17,10 @@ import {
   getDurationMinutes,
 } from '../constants/availability';
 import { useToast } from '../hooks/useToast';
-import { getMyAvailabilitySlots } from '../services/availabilityService';
+import {
+  getMyAvailabilitySlots,
+  updateAvailabilitySlotBlocked,
+} from '../services/availabilityService';
 import type { AvailabilitySlot, AvailabilityStatusFilter } from '../types/availability';
 
 const DAY_FILTER_OPTIONS = [
@@ -36,9 +42,13 @@ export default function AcademicianAvailabilityPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [dayFilter, setDayFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<AvailabilityStatusFilter>(
-    AVAILABILITY_STATUS_FILTER.ACTIVE,
+    AVAILABILITY_STATUS_FILTER.ALL,
   );
   const [createOpen, setCreateOpen] = useState(false);
+  const [editingSlot, setEditingSlot] = useState<AvailabilitySlot | null>(null);
+  const [blockTarget, setBlockTarget] = useState<AvailabilitySlot | null>(null);
+  const [blockLoading, setBlockLoading] = useState(false);
+  const [blockError, setBlockError] = useState<string | null>(null);
 
   const loadSlots = useCallback(async () => {
     setLoading(true);
@@ -67,11 +77,10 @@ export default function AcademicianAvailabilityPage() {
     const query = searchQuery.trim().toLocaleLowerCase('tr-TR');
 
     return slots.filter((slot) => {
-      const isActive = !slot.isBlocked;
-      if (statusFilter === AVAILABILITY_STATUS_FILTER.ACTIVE && !isActive) {
+      if (statusFilter === AVAILABILITY_STATUS_FILTER.AVAILABLE && slot.isBlocked) {
         return false;
       }
-      if (statusFilter === AVAILABILITY_STATUS_FILTER.BLOCKED && isActive) {
+      if (statusFilter === AVAILABILITY_STATUS_FILTER.BLOCKED && !slot.isBlocked) {
         return false;
       }
 
@@ -91,7 +100,7 @@ export default function AcademicianAvailabilityPage() {
       const end = formatTimeLabel(slot.endTime).toLocaleLowerCase('tr-TR');
       const date = slot.slotDate.toLocaleLowerCase('tr-TR');
       const duration = String(getDurationMinutes(slot.startTime, slot.endTime));
-      const statusLabel = isActive ? 'aktif' : 'pasif';
+      const statusLabel = slot.isBlocked ? 'engelli' : 'uygun';
 
       return (
         dayLabel.includes(query) ||
@@ -103,6 +112,41 @@ export default function AcademicianAvailabilityPage() {
       );
     });
   }, [slots, searchQuery, dayFilter, statusFilter]);
+
+  const handleConfirmBlockChange = async () => {
+    if (!blockTarget || blockLoading) {
+      return;
+    }
+
+    const nextBlocked = !blockTarget.isBlocked;
+    setBlockLoading(true);
+    setBlockError(null);
+    try {
+      await updateAvailabilitySlotBlocked(blockTarget.slotId, { isBlocked: nextBlocked });
+      toast.success(
+        nextBlocked ? AVAILABILITY_MESSAGES.BLOCK_SUCCESS : AVAILABILITY_MESSAGES.UNBLOCK_SUCCESS,
+      );
+      setBlockTarget(null);
+      await loadSlots();
+    } catch (err) {
+      if (isAxiosError(err)) {
+        const backendMessage = err.response?.data?.message;
+        if (typeof backendMessage === 'string' && backendMessage.length > 0) {
+          setBlockError(backendMessage);
+        } else if (err.response?.status === 403) {
+          setBlockError(AVAILABILITY_MESSAGES.ACCESS_DENIED);
+        } else if (err.response?.status === 404) {
+          setBlockError('Ofis saati bulunamadı.');
+        } else {
+          setBlockError(AVAILABILITY_MESSAGES.BLOCK_ERROR);
+        }
+      } else {
+        setBlockError(AVAILABILITY_MESSAGES.BLOCK_ERROR);
+      }
+    } finally {
+      setBlockLoading(false);
+    }
+  };
 
   return (
     <div className="admin-page animate-fade-in">
@@ -158,9 +202,9 @@ export default function AcademicianAvailabilityPage() {
                 setStatusFilter(event.target.value as AvailabilityStatusFilter)
               }
             >
-              <option value={AVAILABILITY_STATUS_FILTER.ACTIVE}>Durum: Aktif</option>
-              <option value={AVAILABILITY_STATUS_FILTER.BLOCKED}>Durum: Pasif</option>
               <option value={AVAILABILITY_STATUS_FILTER.ALL}>Durum: Tümü</option>
+              <option value={AVAILABILITY_STATUS_FILTER.AVAILABLE}>Durum: Uygun</option>
+              <option value={AVAILABILITY_STATUS_FILTER.BLOCKED}>Durum: Engelli</option>
             </select>
 
             <input
@@ -217,6 +261,9 @@ export default function AcademicianAvailabilityPage() {
                   <th className="font-label-md text-label-md text-on-surface-variant py-4 px-6 font-semibold text-center">
                     Durum
                   </th>
+                  <th className="font-label-md text-label-md text-on-surface-variant py-4 px-6 font-semibold text-right">
+                    İşlem
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -243,7 +290,43 @@ export default function AcademicianAvailabilityPage() {
                         {duration} dk
                       </td>
                       <td className="py-4 px-6 text-center">
-                        <CourseStatusBadge isActive={!slot.isBlocked} />
+                        <AvailabilityStatusBadge isBlocked={slot.isBlocked} />
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="flex flex-wrap justify-end gap-2">
+                          {!slot.isBlocked ? (
+                            <>
+                              <AdminActionButton
+                                variant="primary"
+                                icon="edit"
+                                onClick={() => setEditingSlot(slot)}
+                              >
+                                Düzenle
+                              </AdminActionButton>
+                              <AdminActionButton
+                                variant="danger"
+                                icon="block"
+                                onClick={() => {
+                                  setBlockError(null);
+                                  setBlockTarget(slot);
+                                }}
+                              >
+                                Engelle
+                              </AdminActionButton>
+                            </>
+                          ) : (
+                            <AdminActionButton
+                              variant="primary"
+                              icon="check_circle"
+                              onClick={() => {
+                                setBlockError(null);
+                                setBlockTarget(slot);
+                              }}
+                            >
+                              Engeli Kaldır
+                            </AdminActionButton>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -260,6 +343,41 @@ export default function AcademicianAvailabilityPage() {
         onCreated={(message) => {
           toast.success(message);
           void loadSlots();
+        }}
+      />
+
+      <AvailabilityEditModal
+        open={editingSlot !== null}
+        slot={editingSlot}
+        onClose={() => setEditingSlot(null)}
+        onUpdated={(message) => {
+          toast.success(message);
+          void loadSlots();
+        }}
+      />
+
+      <ConfirmModal
+        open={blockTarget !== null}
+        title={
+          blockTarget?.isBlocked ? 'Ofis Saatini Yeniden Aktif Et' : 'Ofis Saatini Engelle'
+        }
+        description={
+          blockTarget?.isBlocked
+            ? 'Bu ofis saatini tekrar kullanılabilir hale getirmek istediğinize emin misiniz?'
+            : 'Bu ofis saatini geçici olarak kullanıma kapatmak istediğinize emin misiniz?'
+        }
+        confirmLabel={blockTarget?.isBlocked ? 'Engeli Kaldır' : 'Engelle'}
+        cancelLabel="İptal"
+        loading={blockLoading}
+        error={blockError}
+        variant={blockTarget?.isBlocked ? 'primary' : 'danger'}
+        onConfirm={() => void handleConfirmBlockChange()}
+        onClose={() => {
+          if (blockLoading) {
+            return;
+          }
+          setBlockError(null);
+          setBlockTarget(null);
         }}
       />
     </div>

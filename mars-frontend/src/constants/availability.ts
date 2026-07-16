@@ -1,5 +1,5 @@
 export const AVAILABILITY_STATUS_FILTER = {
-  ACTIVE: 'ACTIVE',
+  AVAILABLE: 'AVAILABLE',
   BLOCKED: 'BLOCKED',
   ALL: 'ALL',
 } as const;
@@ -11,6 +11,11 @@ export const AVAILABILITY_MESSAGES = {
   ACCESS_DENIED: 'Bu sayfaya erişim yetkiniz yok.',
   CREATE_SUCCESS: 'Ofis saati başarıyla oluşturuldu.',
   CREATE_ERROR: 'Ofis saati oluşturulamadı. Lütfen tekrar deneyin.',
+  UPDATE_SUCCESS: 'Ofis saati başarıyla güncellendi.',
+  UPDATE_ERROR: 'Ofis saati güncellenemedi. Lütfen tekrar deneyin.',
+  BLOCK_SUCCESS: 'Ofis saati engellendi.',
+  UNBLOCK_SUCCESS: 'Ofis saati engeli kaldırıldı.',
+  BLOCK_ERROR: 'Ofis saati durumu güncellenemedi. Lütfen tekrar deneyin.',
 } as const;
 
 export const DAY_OF_WEEK_LABELS: Record<number, string> = {

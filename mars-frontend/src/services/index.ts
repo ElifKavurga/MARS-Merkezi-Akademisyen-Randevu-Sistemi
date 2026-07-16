@@ -31,4 +31,9 @@ export {
   changeCourseStatus,
 } from './courseService';
 export { getUsersByRole, getActiveAssistants } from './userService';
-export { getMyAvailabilitySlots, createAvailabilitySlot } from './availabilityService';
+export {
+  getMyAvailabilitySlots,
+  createAvailabilitySlot,
+  updateAvailabilitySlot,
+  updateAvailabilitySlotBlocked,
+} from './availabilityService';

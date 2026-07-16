@@ -5,13 +5,18 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mars.dto.AvailabilitySlotBlockRequest;
 import com.mars.dto.AvailabilitySlotCreateRequest;
 import com.mars.dto.AvailabilitySlotResponseDto;
+import com.mars.dto.AvailabilitySlotUpdateRequest;
 import com.mars.service.AvailabilitySlotService;
 
 import jakarta.validation.Valid;
@@ -33,5 +38,19 @@ public class AvailabilitySlotController {
     public ResponseEntity<AvailabilitySlotResponseDto> createSlot(
             @Valid @RequestBody AvailabilitySlotCreateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(availabilitySlotService.createSlot(request));
+    }
+
+    @PutMapping("/{slotId}")
+    public ResponseEntity<AvailabilitySlotResponseDto> updateSlot(
+            @PathVariable Integer slotId,
+            @Valid @RequestBody AvailabilitySlotUpdateRequest request) {
+        return ResponseEntity.ok(availabilitySlotService.updateSlot(slotId, request));
+    }
+
+    @PatchMapping("/{slotId}/blocked")
+    public ResponseEntity<AvailabilitySlotResponseDto> updateBlockedStatus(
+            @PathVariable Integer slotId,
+            @Valid @RequestBody AvailabilitySlotBlockRequest request) {
+        return ResponseEntity.ok(availabilitySlotService.updateBlockedStatus(slotId, request));
     }
 }

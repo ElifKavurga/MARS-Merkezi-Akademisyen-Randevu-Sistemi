@@ -13,4 +13,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
     boolean existsByCourse_CourseIdAndAppointmentStatusIn(Integer courseId, Collection<String> statuses);
 
     boolean existsByCourse_CourseIdAndSlot_IsBlockedFalse(Integer courseId);
+
+    boolean existsBySlot_SlotIdAndAppointmentStatusIn(Integer slotId, Collection<String> statuses);
 }
