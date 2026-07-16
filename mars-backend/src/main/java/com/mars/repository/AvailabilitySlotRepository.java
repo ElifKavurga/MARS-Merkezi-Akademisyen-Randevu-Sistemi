@@ -74,6 +74,9 @@ public interface AvailabilitySlotRepository extends JpaRepository<AvailabilitySl
 
     List<AvailabilitySlot> findByRecurrenceRule_RecurrenceRuleId(Integer recurrenceRuleId);
 
+    List<AvailabilitySlot> findByStaff_UserIdAndSlotDateBetween(
+            Integer staffId, LocalDate startInclusive, LocalDate endInclusive);
+
     @Query("""
             SELECT s FROM AvailabilitySlot s
             LEFT JOIN FETCH s.recurrenceRule

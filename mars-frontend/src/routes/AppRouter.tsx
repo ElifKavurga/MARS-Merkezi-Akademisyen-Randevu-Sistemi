@@ -17,6 +17,7 @@ import AcademicianCoursesPage from '../pages/AcademicianCoursesPage';
 import CourseDetailPage from '../pages/CourseDetailPage';
 import AcademicianAvailabilityPage from '../pages/AcademicianAvailabilityPage';
 import AcademicianCalendarPage from '../pages/AcademicianCalendarPage';
+import AcademicianOutOfOfficePage from '../pages/AcademicianOutOfOfficePage';
 import AssistantDashboard from '../pages/AssistantDashboard';
 import StudentDashboard from '../pages/StudentDashboard';
 import NotFoundPage from '../pages/NotFoundPage';
@@ -54,6 +55,7 @@ export default function AppRouter() {
             <Route path={ROUTES.ACADEMICIAN_COURSE_DETAIL} element={<CourseDetailPage />} />
             <Route path={ROUTES.ACADEMICIAN_AVAILABILITY} element={<AcademicianAvailabilityPage />} />
             <Route path={ROUTES.ACADEMICIAN_CALENDAR} element={<AcademicianCalendarPage />} />
+            <Route path={ROUTES.ACADEMICIAN_OUT_OF_OFFICE} element={<AcademicianOutOfOfficePage />} />
           </Route>
         </Route>
 

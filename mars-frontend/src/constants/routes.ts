@@ -14,6 +14,7 @@ export const ROUTES = {
   ACADEMICIAN_COURSE_DETAIL: '/academician/courses/:courseId',
   ACADEMICIAN_AVAILABILITY: '/academician/availability',
   ACADEMICIAN_CALENDAR: '/academician/calendar',
+  ACADEMICIAN_OUT_OF_OFFICE: '/academician/out-of-office',
   ASSISTANT: '/asistan',
   STUDENT: '/ogrenci',
 } as const;

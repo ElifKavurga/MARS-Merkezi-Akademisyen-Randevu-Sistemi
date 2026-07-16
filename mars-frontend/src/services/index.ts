@@ -45,3 +45,9 @@ export {
   endRecurrenceRule,
 } from './recurrenceService';
 export { getCalendarEvents } from './calendarService';
+export {
+  getMyOutOfOfficePeriods,
+  createOutOfOfficePeriod,
+  updateOutOfOfficePeriod,
+  endOutOfOfficePeriod,
+} from './outOfOfficeService';

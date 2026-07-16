@@ -62,6 +62,8 @@ public class SecurityConfig {
                                 .hasAnyRole("ACADEMICIAN", "HOD")
                         .requestMatchers("/calendar", "/calendar/**")
                                 .hasAnyRole("ACADEMICIAN", "HOD")
+                        .requestMatchers("/out-of-office", "/out-of-office/**")
+                                .hasAnyRole("ACADEMICIAN", "HOD")
                         .requestMatchers(HttpMethod.GET, "/users").hasAnyRole("ACADEMICIAN", "HOD")
                         .anyRequest().authenticated()
                 )

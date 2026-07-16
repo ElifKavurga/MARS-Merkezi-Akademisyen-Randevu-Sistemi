@@ -32,4 +32,6 @@ export { default as AvailabilityStatusBadge } from './AvailabilityStatusBadge';
 export { default as RecurrenceRuleEditModal } from './RecurrenceRuleEditModal';
 export { default as AcademicianCalendar } from './AcademicianCalendar';
 export { default as CalendarEventDetailModal } from './CalendarEventDetailModal';
+export { default as OutOfOfficeCreateModal } from './OutOfOfficeCreateModal';
+export { default as OutOfOfficeEditModal } from './OutOfOfficeEditModal';
 export { ErrorBoundary } from './ErrorBoundary';
