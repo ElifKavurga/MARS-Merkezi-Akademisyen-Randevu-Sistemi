@@ -3,12 +3,74 @@ import { isAxiosError } from 'axios';
 import AdminActionButton from '../components/AdminActionButton';
 import ConfirmModal from '../components/ConfirmModal';
 import CourseCreateModal from '../components/CourseCreateModal';
+import CourseDetailModal from '../components/CourseDetailModal';
 import CourseEditModal from '../components/CourseEditModal';
 import Loading from '../components/Loading';
 import { FORM_FIELD_CLASS, FORM_SELECT_CLASS } from '../constants';
+import {
+  COURSE_MESSAGES,
+  COURSE_SORT_FIELD,
+  COURSE_STATUS_FILTER,
+  type CourseSortField,
+} from '../constants/course';
 import { useToast } from '../hooks/useToast';
 import { changeCourseStatus, getMyCourses } from '../services/courseService';
 import type { Course, CourseStatusFilter } from '../types/course';
+
+type SortDirection = 'asc' | 'desc';
+
+function compareCourses(a: Course, b: Course, field: CourseSortField, direction: SortDirection): number {
+  const factor = direction === 'asc' ? 1 : -1;
+  if (field === COURSE_SORT_FIELD.STATUS) {
+    const left = a.isActive ? 1 : 0;
+    const right = b.isActive ? 1 : 0;
+    return (left - right) * factor;
+  }
+  const left = String(a[field] ?? '').toLocaleLowerCase('tr-TR');
+  const right = String(b[field] ?? '').toLocaleLowerCase('tr-TR');
+  return left.localeCompare(right, 'tr-TR') * factor;
+}
+
+function SortableHeader({
+  label,
+  field,
+  activeField,
+  direction,
+  onSort,
+  align = 'left',
+}: {
+  label: string;
+  field: CourseSortField;
+  activeField: CourseSortField;
+  direction: SortDirection;
+  onSort: (field: CourseSortField) => void;
+  align?: 'left' | 'center' | 'right';
+}) {
+  const isActive = activeField === field;
+  const alignClass =
+    align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start';
+
+  return (
+    <th className="font-label-md text-label-md text-on-surface-variant py-4 px-6 font-semibold">
+      <button
+        type="button"
+        className={`inline-flex w-full items-center gap-1 ${alignClass} border-0 bg-transparent p-0 m-0 shadow-none appearance-none cursor-pointer font-inherit text-inherit hover:text-on-background transition-colors focus:outline-none focus-visible:text-on-background`}
+        onClick={() => onSort(field)}
+        aria-label={`${label} sütununa göre sırala`}
+      >
+        <span className={isActive ? 'text-on-background' : undefined}>{label}</span>
+        <span
+          className={`material-symbols-outlined text-[16px] leading-none ${
+            isActive ? 'text-on-background' : 'text-on-surface-variant/50'
+          }`}
+          aria-hidden="true"
+        >
+          {isActive ? (direction === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more'}
+        </span>
+      </button>
+    </th>
+  );
+}
 
 export default function AcademicianCoursesPage() {
   const toast = useToast();
@@ -16,9 +78,14 @@ export default function AcademicianCoursesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<CourseStatusFilter>('ACTIVE');
+  const [statusFilter, setStatusFilter] = useState<CourseStatusFilter>(COURSE_STATUS_FILTER.ACTIVE);
+  const [termFilter, setTermFilter] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('');
+  const [sortField, setSortField] = useState<CourseSortField>(COURSE_SORT_FIELD.COURSE_NAME);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [detailCourseId, setDetailCourseId] = useState<number | null>(null);
   const [statusTarget, setStatusTarget] = useState<Course | null>(null);
   const [statusLoading, setStatusLoading] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
@@ -31,13 +98,11 @@ export default function AcademicianCoursesPage() {
       setCourses(data);
     } catch (err) {
       if (isAxiosError(err) && err.response?.status === 403) {
-        const message = 'Bu sayfaya erişim yetkiniz yok.';
-        setError(message);
-        toast.error(message);
+        setError(COURSE_MESSAGES.ACCESS_DENIED);
+        toast.error(COURSE_MESSAGES.ACCESS_DENIED);
       } else {
-        const message = 'Ders listesi yüklenemedi. Lütfen tekrar deneyin.';
-        setError(message);
-        toast.error(message);
+        setError(COURSE_MESSAGES.LOAD_ERROR);
+        toast.error(COURSE_MESSAGES.LOAD_ERROR);
       }
     } finally {
       setLoading(false);
@@ -48,13 +113,35 @@ export default function AcademicianCoursesPage() {
     void loadCourses();
   }, [loadCourses]);
 
+  const termOptions = useMemo(() => {
+    return Array.from(new Set(courses.map((course) => course.academicTerm).filter(Boolean))).sort((a, b) =>
+      a.localeCompare(b, 'tr-TR'),
+    );
+  }, [courses]);
+
+  const departmentOptions = useMemo(() => {
+    const map = new Map<number, string>();
+    courses.forEach((course) => {
+      map.set(course.departmentId, course.departmentName);
+    });
+    return Array.from(map.entries())
+      .map(([departmentId, departmentName]) => ({ departmentId, departmentName }))
+      .sort((a, b) => a.departmentName.localeCompare(b.departmentName, 'tr-TR'));
+  }, [courses]);
+
   const filteredCourses = useMemo(() => {
     const query = searchQuery.trim().toLocaleLowerCase('tr-TR');
-    return courses.filter((course) => {
-      if (statusFilter === 'ACTIVE' && !course.isActive) {
+    const filtered = courses.filter((course) => {
+      if (statusFilter === COURSE_STATUS_FILTER.ACTIVE && !course.isActive) {
         return false;
       }
-      if (statusFilter === 'INACTIVE' && course.isActive) {
+      if (statusFilter === COURSE_STATUS_FILTER.INACTIVE && course.isActive) {
+        return false;
+      }
+      if (termFilter && course.academicTerm !== termFilter) {
+        return false;
+      }
+      if (departmentFilter && String(course.departmentId) !== departmentFilter) {
         return false;
       }
       if (!query) {
@@ -64,7 +151,18 @@ export default function AcademicianCoursesPage() {
       const name = course.courseName.toLocaleLowerCase('tr-TR');
       return code.includes(query) || name.includes(query);
     });
-  }, [courses, searchQuery, statusFilter]);
+
+    return [...filtered].sort((a, b) => compareCourses(a, b, sortField, sortDirection));
+  }, [courses, searchQuery, statusFilter, termFilter, departmentFilter, sortField, sortDirection]);
+
+  const handleSort = (field: CourseSortField) => {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+    setSortField(field);
+    setSortDirection('asc');
+  };
 
   const handleConfirmStatusChange = async () => {
     if (!statusTarget || statusLoading) {
@@ -78,9 +176,7 @@ export default function AcademicianCoursesPage() {
     try {
       await changeCourseStatus(statusTarget.courseId);
       setStatusTarget(null);
-      toast.success(
-        wasActive ? 'Ders başarıyla pasifleştirildi.' : 'Ders başarıyla aktifleştirildi.',
-      );
+      toast.success(wasActive ? COURSE_MESSAGES.DEACTIVATE_SUCCESS : COURSE_MESSAGES.ACTIVATE_SUCCESS);
       await loadCourses();
     } catch (err) {
       let message = wasActive
@@ -103,6 +199,8 @@ export default function AcademicianCoursesPage() {
     }
   };
 
+  const openCreateModal = () => setCreateModalOpen(true);
+
   return (
     <div className="admin-page animate-fade-in">
       <div className="mb-8">
@@ -113,7 +211,7 @@ export default function AcademicianCoursesPage() {
       </div>
 
       <div className="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
-        <div className="p-4 border-b border-outline-variant flex flex-col gap-3 lg:flex-row lg:justify-between lg:items-center">
+        <div className="p-4 border-b border-outline-variant flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary-container">
               <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
@@ -125,28 +223,58 @@ export default function AcademicianCoursesPage() {
             </p>
             <button
               type="button"
-              className="bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-primary/90 transition-colors flex items-center gap-2"
-              onClick={() => setCreateModalOpen(true)}
+              className="bg-[#0b1641] text-white px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-[#152a5c] transition-colors flex items-center gap-2"
+              onClick={openCreateModal}
             >
-              <span className="material-symbols-outlined text-[18px]">add</span>
+              <span className="material-symbols-outlined text-[18px] leading-none">add</span>
               Yeni Ders
             </button>
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
             <select
               id="course-status-filter"
               aria-label="Ders durumu filtresi"
-              className={`${FORM_SELECT_CLASS} w-full sm:w-40`}
+              className={FORM_SELECT_CLASS}
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value as CourseStatusFilter)}
             >
-              <option value="ACTIVE">Aktif</option>
-              <option value="INACTIVE">Pasif</option>
-              <option value="ALL">Tümü</option>
+              <option value={COURSE_STATUS_FILTER.ACTIVE}>Durum: Aktif</option>
+              <option value={COURSE_STATUS_FILTER.INACTIVE}>Durum: Pasif</option>
+              <option value={COURSE_STATUS_FILTER.ALL}>Durum: Tümü</option>
             </select>
 
-            <div className="relative w-full sm:w-72">
+            <select
+              id="course-term-filter"
+              aria-label="Akademik dönem filtresi"
+              className={FORM_SELECT_CLASS}
+              value={termFilter}
+              onChange={(event) => setTermFilter(event.target.value)}
+            >
+              <option value="">Akademik Dönem: Tümü</option>
+              {termOptions.map((term) => (
+                <option key={term} value={term}>
+                  {term}
+                </option>
+              ))}
+            </select>
+
+            <select
+              id="course-department-filter"
+              aria-label="Bölüm filtresi"
+              className={FORM_SELECT_CLASS}
+              value={departmentFilter}
+              onChange={(event) => setDepartmentFilter(event.target.value)}
+            >
+              <option value="">Bölüm: Tümü</option>
+              {departmentOptions.map((department) => (
+                <option key={department.departmentId} value={String(department.departmentId)}>
+                  {department.departmentName}
+                </option>
+              ))}
+            </select>
+
+            <div className="relative">
               <span
                 className="pointer-events-none absolute inset-y-0 left-3 flex items-center material-symbols-outlined text-on-surface-variant text-[20px] leading-none"
                 aria-hidden="true"
@@ -165,7 +293,7 @@ export default function AcademicianCoursesPage() {
           </div>
         </div>
 
-        <div className="admin-table-wrap">
+        <div className="overflow-x-auto max-w-full">
           {loading ? (
             <Loading label="Dersler yükleniyor..." />
           ) : error ? (
@@ -173,30 +301,62 @@ export default function AcademicianCoursesPage() {
               {error}
             </p>
           ) : courses.length === 0 ? (
-            <p className="p-6 font-body-md text-on-surface-variant">Kayıtlı ders bulunamadı.</p>
+            <div className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+              <div className="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center text-primary-container">
+                <span className="material-symbols-outlined text-[28px]" aria-hidden="true">
+                  menu_book
+                </span>
+              </div>
+              <p className="font-body-md text-body-md text-on-surface-variant max-w-md">
+                {COURSE_MESSAGES.EMPTY_TITLE}
+              </p>
+              <button
+                type="button"
+                className="bg-[#0b1641] text-white px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-[#152a5c] transition-colors flex items-center gap-2"
+                onClick={openCreateModal}
+              >
+                <span className="material-symbols-outlined text-[18px] leading-none">add</span>
+                Yeni Ders Oluştur
+              </button>
+            </div>
           ) : filteredCourses.length === 0 ? (
-            <p className="p-6 font-body-md text-on-surface-variant">
-              Seçili filtreye uygun ders bulunamadı.
-            </p>
+            <p className="p-6 font-body-md text-on-surface-variant">{COURSE_MESSAGES.EMPTY_FILTER}</p>
           ) : (
-            <table className="w-full text-left border-collapse">
+            <table className="w-full min-w-[720px] text-left border-collapse">
               <thead>
                 <tr className="bg-surface-tint/5 border-b border-outline-variant">
-                  <th className="font-label-md text-label-md text-on-surface-variant py-4 px-6 font-semibold">
-                    Ders Kodu
-                  </th>
-                  <th className="font-label-md text-label-md text-on-surface-variant py-4 px-6 font-semibold">
-                    Ders Adı
-                  </th>
-                  <th className="font-label-md text-label-md text-on-surface-variant py-4 px-6 font-semibold">
-                    Akademik Dönem
-                  </th>
+                  <SortableHeader
+                    label="Ders Kodu"
+                    field={COURSE_SORT_FIELD.COURSE_CODE}
+                    activeField={sortField}
+                    direction={sortDirection}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    label="Ders Adı"
+                    field={COURSE_SORT_FIELD.COURSE_NAME}
+                    activeField={sortField}
+                    direction={sortDirection}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    label="Akademik Dönem"
+                    field={COURSE_SORT_FIELD.ACADEMIC_TERM}
+                    activeField={sortField}
+                    direction={sortDirection}
+                    onSort={handleSort}
+                  />
                   <th className="font-label-md text-label-md text-on-surface-variant py-4 px-6 font-semibold">
                     Bölüm
                   </th>
-                  <th className="font-label-md text-label-md text-on-surface-variant py-4 px-6 font-semibold text-center">
-                    Durum
-                  </th>
+                  <SortableHeader
+                    label="Durum"
+                    field={COURSE_SORT_FIELD.STATUS}
+                    activeField={sortField}
+                    direction={sortDirection}
+                    onSort={handleSort}
+                    align="center"
+                  />
                   <th className="font-label-md text-label-md text-on-surface-variant py-4 px-6 font-semibold text-right">
                     İşlemler
                   </th>
@@ -213,7 +373,7 @@ export default function AcademicianCoursesPage() {
                       }`}
                     >
                       <td
-                        className={`py-4 px-6 font-body-md text-body-md text-on-background font-medium ${
+                        className={`py-4 px-6 font-body-md text-body-md text-on-background font-medium whitespace-nowrap ${
                           inactive ? 'opacity-60' : ''
                         }`}
                       >
@@ -227,7 +387,7 @@ export default function AcademicianCoursesPage() {
                         {course.courseName}
                       </td>
                       <td
-                        className={`py-4 px-6 font-body-md text-body-md text-on-surface ${
+                        className={`py-4 px-6 font-body-md text-body-md text-on-surface whitespace-nowrap ${
                           inactive ? 'opacity-60' : ''
                         }`}
                       >
@@ -253,6 +413,13 @@ export default function AcademicianCoursesPage() {
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex flex-wrap justify-end gap-2">
+                          <AdminActionButton
+                            variant="neutral"
+                            icon="info"
+                            onClick={() => setDetailCourseId(course.courseId)}
+                          >
+                            Detay
+                          </AdminActionButton>
                           {!inactive ? (
                             <AdminActionButton
                               variant="primary"
@@ -300,6 +467,12 @@ export default function AcademicianCoursesPage() {
           toast.success(message);
           void loadCourses();
         }}
+      />
+
+      <CourseDetailModal
+        open={detailCourseId != null}
+        courseId={detailCourseId}
+        onClose={() => setDetailCourseId(null)}
       />
 
       <ConfirmModal

@@ -95,6 +95,36 @@ class CourseControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ACADEMICIAN")
+    void getMyCourse_asAcademician_returnsCourse() throws Exception {
+        when(courseService.getMyCourse(1)).thenReturn(
+                CourseResponseDto.builder()
+                        .courseId(1)
+                        .courseCode("CENG 301")
+                        .courseName("Algoritma Analizi")
+                        .academicTerm("2024-2025 Güz")
+                        .departmentId(1)
+                        .departmentName("Bilgisayar Mühendisliği")
+                        .isActive(true)
+                        .build());
+
+        mockMvc.perform(get("/courses/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.courseId").value(1))
+                .andExpect(jsonPath("$.courseCode").value("CENG 301"))
+                .andExpect(jsonPath("$.isActive").value(true));
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    void getMyCourse_asStudent_returnsForbidden() throws Exception {
+        mockMvc.perform(get("/courses/1"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.status").value(403));
+    }
+
+    @Test
     @WithMockUser(roles = "HOD")
     void getMyCourses_asHod_returnsOk() throws Exception {
         when(courseService.getMyCourses()).thenReturn(List.of());

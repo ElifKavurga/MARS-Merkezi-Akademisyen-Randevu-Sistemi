@@ -14,3 +14,9 @@ export {
 } from './roles';
 export type { Role } from './roles';
 export { UI_LABELS, FORM_FIELD_CLASS, FORM_SELECT_CLASS } from './ui';
+export {
+  COURSE_STATUS_FILTER,
+  COURSE_SORT_FIELD,
+  COURSE_MESSAGES,
+} from './course';
+export type { CourseSortField } from './course';

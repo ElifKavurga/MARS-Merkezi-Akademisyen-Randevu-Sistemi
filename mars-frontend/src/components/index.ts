@@ -17,4 +17,5 @@ export { default as EditUserModal } from './EditUserModal';
 export { default as CategoryFormModal } from './CategoryFormModal';
 export { default as CourseCreateModal } from './CourseCreateModal';
 export { default as CourseEditModal } from './CourseEditModal';
+export { default as CourseDetailModal } from './CourseDetailModal';
 export { ErrorBoundary } from './ErrorBoundary';

@@ -5,6 +5,7 @@ import ModalFormFooter from './ModalFormFooter';
 import ModalHeader from './ModalHeader';
 import ModalShell from './ModalShell';
 import { FORM_FIELD_CLASS, FORM_SELECT_CLASS } from '../constants/ui';
+import { COURSE_MESSAGES } from '../constants/course';
 import { createCourse } from '../services/courseService';
 import type { CourseCreatePayload } from '../types/course';
 import { getAcademicTermOptions } from '../utils';
@@ -85,7 +86,7 @@ export default function CourseCreateModal({ open, onClose, onCreated }: CourseCr
         departmentId: Number(form.departmentId),
       });
       setForm({ ...INITIAL_FORM });
-      onCreated('Ders başarıyla oluşturuldu.');
+      onCreated(COURSE_MESSAGES.CREATE_SUCCESS);
       onClose();
     } catch (err) {
       if (isAxiosError(err)) {

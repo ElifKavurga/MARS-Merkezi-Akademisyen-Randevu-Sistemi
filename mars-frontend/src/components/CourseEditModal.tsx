@@ -5,6 +5,7 @@ import ModalFormFooter from './ModalFormFooter';
 import ModalHeader from './ModalHeader';
 import ModalShell from './ModalShell';
 import { FORM_FIELD_CLASS, FORM_SELECT_CLASS } from '../constants/ui';
+import { COURSE_MESSAGES } from '../constants/course';
 import { updateCourse } from '../services/courseService';
 import type { Course, CourseUpdatePayload } from '../types/course';
 import { getAcademicTermOptions } from '../utils';
@@ -93,7 +94,7 @@ export default function CourseEditModal({ open, course, onClose, onUpdated }: Co
         academicTerm,
         departmentId: Number(form.departmentId),
       });
-      onUpdated('Ders başarıyla güncellendi.');
+      onUpdated(COURSE_MESSAGES.UPDATE_SUCCESS);
       onClose();
     } catch (err) {
       if (isAxiosError(err)) {

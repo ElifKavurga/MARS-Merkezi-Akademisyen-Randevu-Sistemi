@@ -18,4 +18,4 @@ export {
   getAdminPenaltyRule,
   updateAdminPenaltyRule,
 } from './adminPenaltyRuleService';
-export { getMyCourses, createCourse, updateCourse, changeCourseStatus } from './courseService';
+export { getMyCourses, getMyCourse, createCourse, updateCourse, changeCourseStatus } from './courseService';

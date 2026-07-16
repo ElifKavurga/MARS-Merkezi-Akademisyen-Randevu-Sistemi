@@ -8,6 +8,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -77,6 +78,9 @@ class CourseServiceTest {
         course.setDepartment(department);
         course.setOwnerAcademician(academician);
         course.setIsActive(true);
+        LocalDateTime now = LocalDateTime.of(2026, 7, 16, 10, 0);
+        course.setCreatedAt(now);
+        course.setUpdatedAt(now);
 
         responseDto = CourseResponseDto.builder()
                 .courseId(1)
@@ -86,6 +90,8 @@ class CourseServiceTest {
                 .departmentId(1)
                 .departmentName("Bilgisayar Mühendisliği")
                 .isActive(true)
+                .createdAt(now)
+                .updatedAt(now)
                 .build();
 
         CustomUserDetails userDetails = new CustomUserDetails(academician);
@@ -130,6 +136,30 @@ class CourseServiceTest {
 
         assertThatThrownBy(() -> courseService.getMyCourses())
                 .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    void getMyCourse_returnsOwnedCourse() {
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+        when(courseMapper.toResponse(course)).thenReturn(responseDto);
+
+        CourseResponseDto result = courseService.getMyCourse(1);
+
+        assertThat(result.getCourseId()).isEqualTo(1);
+        assertThat(result.getCreatedAt()).isEqualTo(course.getCreatedAt());
+        verify(courseMapper).toResponse(course);
+    }
+
+    @Test
+    void getMyCourse_otherAcademician_throwsAccessDenied() {
+        User otherOwner = new User();
+        otherOwner.setUserId(99);
+        course.setOwnerAcademician(otherOwner);
+        when(courseRepository.findById(1)).thenReturn(Optional.of(course));
+
+        assertThatThrownBy(() -> courseService.getMyCourse(1))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("görüntüleme");
     }
 
     @Test

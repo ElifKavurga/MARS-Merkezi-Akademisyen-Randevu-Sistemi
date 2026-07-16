@@ -33,6 +33,11 @@ public class CourseController {
         return ResponseEntity.ok(courseService.getMyCourses());
     }
 
+    @GetMapping("/{courseId}")
+    public ResponseEntity<CourseResponseDto> getMyCourse(@PathVariable Integer courseId) {
+        return ResponseEntity.ok(courseService.getMyCourse(courseId));
+    }
+
     @PostMapping
     public ResponseEntity<CourseResponseDto> createCourse(@Valid @RequestBody CourseCreateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(courseService.createCourse(request));

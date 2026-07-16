@@ -1,5 +1,6 @@
 package com.mars.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -52,6 +53,13 @@ public class CourseService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public CourseResponseDto getMyCourse(Integer courseId) {
+        User currentUser = getCurrentUser();
+        Course course = getOwnedCourse(courseId, currentUser, "Bu dersi görüntüleme yetkiniz yok.");
+        return courseMapper.toResponse(course);
+    }
+
     @Transactional
     public CourseResponseDto createCourse(CourseCreateRequest request) {
         User currentUser = getCurrentUser();
@@ -91,13 +99,7 @@ public class CourseService {
     @Transactional
     public CourseResponseDto changeCourseStatus(Integer courseId) {
         User currentUser = getCurrentUser();
-        Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Ders bulunamadı."));
-
-        if (course.getOwnerAcademician() == null
-                || !Objects.equals(course.getOwnerAcademician().getUserId(), currentUser.getUserId())) {
-            throw new AccessDeniedException("Bu dersin durumunu değiştirme yetkiniz yok.");
-        }
+        Course course = getOwnedCourse(courseId, currentUser, "Bu dersin durumunu değiştirme yetkiniz yok.");
 
         if (Boolean.TRUE.equals(course.getIsActive())) {
             deactivateCourse(course);
@@ -105,6 +107,7 @@ public class CourseService {
             activateCourse(course);
         }
 
+        course.setUpdatedAt(LocalDateTime.now());
         Course saved = courseRepository.save(course);
         return courseMapper.toResponse(saved);
     }
@@ -130,16 +133,20 @@ public class CourseService {
     }
 
     private Course getOwnedActiveCourse(Integer courseId, User currentUser, String accessDeniedMessage) {
+        Course course = getOwnedCourse(courseId, currentUser, accessDeniedMessage);
+        if (!Boolean.TRUE.equals(course.getIsActive())) {
+            throw new BadRequestException("Pasif ders güncellenemez.");
+        }
+        return course;
+    }
+
+    private Course getOwnedCourse(Integer courseId, User currentUser, String accessDeniedMessage) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ders bulunamadı."));
 
         if (course.getOwnerAcademician() == null
                 || !Objects.equals(course.getOwnerAcademician().getUserId(), currentUser.getUserId())) {
             throw new AccessDeniedException(accessDeniedMessage);
-        }
-
-        if (!Boolean.TRUE.equals(course.getIsActive())) {
-            throw new BadRequestException("Pasif ders güncellenemez.");
         }
 
         return course;

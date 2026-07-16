@@ -6,6 +6,8 @@ export type Course = {
   departmentId: number;
   departmentName: string;
   isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type CourseCreatePayload = {
