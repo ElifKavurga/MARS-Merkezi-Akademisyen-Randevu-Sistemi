@@ -9,6 +9,8 @@ export const AVAILABILITY_MESSAGES = {
   EMPTY_FILTER: 'Seçili filtreye uygun ofis saati bulunamadı.',
   LOAD_ERROR: 'Ofis saatleri yüklenemedi. Lütfen tekrar deneyin.',
   ACCESS_DENIED: 'Bu sayfaya erişim yetkiniz yok.',
+  CREATE_SUCCESS: 'Ofis saati başarıyla oluşturuldu.',
+  CREATE_ERROR: 'Ofis saati oluşturulamadı. Lütfen tekrar deneyin.',
 } as const;
 
 export const DAY_OF_WEEK_LABELS: Record<number, string> = {

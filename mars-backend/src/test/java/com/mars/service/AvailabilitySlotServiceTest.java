@@ -2,6 +2,9 @@ package com.mars.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -20,9 +23,12 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.mars.dto.AvailabilitySlotCreateRequest;
 import com.mars.dto.AvailabilitySlotResponseDto;
 import com.mars.entity.AvailabilitySlot;
 import com.mars.entity.User;
+import com.mars.exception.BadRequestException;
+import com.mars.exception.ConflictException;
 import com.mars.mapper.AvailabilitySlotMapper;
 import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.security.CustomUserDetails;
@@ -106,5 +112,86 @@ class AvailabilitySlotServiceTest {
 
         assertThatThrownBy(() -> availabilitySlotService.getMySlots())
                 .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    void createSlot_successfulCreation() {
+        LocalDate futureDate = LocalDate.now().plusDays(1);
+        AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(
+                futureDate,
+                LocalTime.of(10, 0),
+                LocalTime.of(12, 0));
+
+        when(availabilitySlotRepository.existsOverlappingSlot(10, futureDate, LocalTime.of(10, 0), LocalTime.of(12, 0)))
+                .thenReturn(false);
+        when(availabilitySlotMapper.toEntity(request, academician)).thenReturn(slot);
+        when(availabilitySlotRepository.save(slot)).thenReturn(slot);
+        when(availabilitySlotMapper.toResponse(slot)).thenReturn(responseDto);
+
+        AvailabilitySlotResponseDto result = availabilitySlotService.createSlot(request);
+
+        assertThat(result.getSlotId()).isEqualTo(1);
+        verify(availabilitySlotRepository).save(slot);
+    }
+
+    @Test
+    void createSlot_overlappingSlot_throwsConflict() {
+        LocalDate futureDate = LocalDate.now().plusDays(1);
+        AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(
+                futureDate,
+                LocalTime.of(10, 30),
+                LocalTime.of(12, 0));
+
+        when(availabilitySlotRepository.existsOverlappingSlot(
+                eq(10), eq(futureDate), eq(LocalTime.of(10, 30)), eq(LocalTime.of(12, 0))))
+                .thenReturn(true);
+
+        assertThatThrownBy(() -> availabilitySlotService.createSlot(request))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("çakışan");
+
+        verify(availabilitySlotRepository, never()).save(any());
+    }
+
+    @Test
+    void createSlot_pastDate_throwsBadRequest() {
+        AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(
+                LocalDate.now().minusDays(1),
+                LocalTime.of(10, 0),
+                LocalTime.of(12, 0));
+
+        assertThatThrownBy(() -> availabilitySlotService.createSlot(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Geçmiş tarih");
+
+        verify(availabilitySlotRepository, never()).save(any());
+    }
+
+    @Test
+    void createSlot_startAfterEnd_throwsBadRequest() {
+        AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(
+                LocalDate.now().plusDays(1),
+                LocalTime.of(12, 0),
+                LocalTime.of(10, 0));
+
+        assertThatThrownBy(() -> availabilitySlotService.createSlot(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Başlangıç saati");
+
+        verify(availabilitySlotRepository, never()).save(any());
+    }
+
+    @Test
+    void createSlot_withoutAuthentication_throwsAccessDenied() {
+        SecurityContextHolder.clearContext();
+        AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(
+                LocalDate.now().plusDays(1),
+                LocalTime.of(10, 0),
+                LocalTime.of(12, 0));
+
+        assertThatThrownBy(() -> availabilitySlotService.createSlot(request))
+                .isInstanceOf(AccessDeniedException.class);
+
+        verify(availabilitySlotRepository, never()).save(any());
     }
 }

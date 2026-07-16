@@ -24,4 +24,5 @@ export { default as CourseStatCard } from './CourseStatCard';
 export { default as CourseStatusBadge } from './CourseStatusBadge';
 export { default as CourseDetailBreadcrumb } from './CourseDetailBreadcrumb';
 export { default as CourseDetailField } from './CourseDetailField';
+export { default as AvailabilityCreateModal } from './AvailabilityCreateModal';
 export { ErrorBoundary } from './ErrorBoundary';

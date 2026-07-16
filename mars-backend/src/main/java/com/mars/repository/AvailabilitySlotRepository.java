@@ -1,5 +1,7 @@
 package com.mars.repository;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,4 +18,18 @@ public interface AvailabilitySlotRepository extends JpaRepository<AvailabilitySl
             ORDER BY s.slotDate ASC, s.startTime ASC
             """)
     List<AvailabilitySlot> findByStaffIdOrderBySlotDateAscStartTimeAsc(@Param("staffId") Integer staffId);
+
+    @Query("""
+            SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END
+            FROM AvailabilitySlot s
+            WHERE s.staff.userId = :staffId
+              AND s.slotDate = :slotDate
+              AND s.startTime < :endTime
+              AND s.endTime > :startTime
+            """)
+    boolean existsOverlappingSlot(
+            @Param("staffId") Integer staffId,
+            @Param("slotDate") LocalDate slotDate,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime);
 }

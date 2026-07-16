@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { isAxiosError } from 'axios';
+import AvailabilityCreateModal from '../components/AvailabilityCreateModal';
 import CourseStatusBadge from '../components/CourseStatusBadge';
 import Loading from '../components/Loading';
 import { FORM_FIELD_CLASS, FORM_SELECT_CLASS } from '../constants';
@@ -37,6 +38,7 @@ export default function AcademicianAvailabilityPage() {
   const [statusFilter, setStatusFilter] = useState<AvailabilityStatusFilter>(
     AVAILABILITY_STATUS_FILTER.ACTIVE,
   );
+  const [createOpen, setCreateOpen] = useState(false);
 
   const loadSlots = useCallback(async () => {
     setLoading(true);
@@ -122,6 +124,14 @@ export default function AcademicianAvailabilityPage() {
             <p className="font-body-md text-body-md text-on-surface-variant text-sm">
               Size ait müsaitlik slotları
             </p>
+            <button
+              type="button"
+              className="bg-[#0b1641] text-white px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-[#152a5c] transition-colors flex items-center gap-2"
+              onClick={() => setCreateOpen(true)}
+            >
+              <span className="material-symbols-outlined text-[18px] leading-none">add</span>
+              Yeni Ofis Saati
+            </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
@@ -243,6 +253,15 @@ export default function AcademicianAvailabilityPage() {
           )}
         </div>
       </div>
+
+      <AvailabilityCreateModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={(message) => {
+          toast.success(message);
+          void loadSlots();
+        }}
+      />
     </div>
   );
 }
