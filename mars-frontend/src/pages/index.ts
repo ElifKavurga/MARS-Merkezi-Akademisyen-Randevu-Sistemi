@@ -8,6 +8,8 @@ export { default as AdminPenaltyRulesPage } from './AdminPenaltyRulesPage';
 export { default as AdminProfilePage } from './AdminProfilePage';
 export { default as HodDashboard } from './HodDashboard';
 export { default as AcademicianDashboard } from './AcademicianDashboard';
+export { default as AcademicianCoursesPage } from './AcademicianCoursesPage';
+export { default as CourseDetailPage } from './CourseDetailPage';
 export { default as AssistantDashboard } from './AssistantDashboard';
 export { default as StudentDashboard } from './StudentDashboard';
 export { default as NotFoundPage } from './NotFoundPage';

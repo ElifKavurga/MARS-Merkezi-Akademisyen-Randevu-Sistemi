@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { isAxiosError } from 'axios';
+import { useNavigate } from 'react-router-dom';
 import AdminActionButton from '../components/AdminActionButton';
 import ConfirmModal from '../components/ConfirmModal';
 import CourseCreateModal from '../components/CourseCreateModal';
-import CourseDetailModal from '../components/CourseDetailModal';
 import CourseEditModal from '../components/CourseEditModal';
 import Loading from '../components/Loading';
 import { FORM_FIELD_CLASS, FORM_SELECT_CLASS } from '../constants';
@@ -13,6 +13,7 @@ import {
   COURSE_STATUS_FILTER,
   type CourseSortField,
 } from '../constants/course';
+import { academicianCourseDetailPath } from '../constants/routes';
 import { useToast } from '../hooks/useToast';
 import { changeCourseStatus, getMyCourses } from '../services/courseService';
 import type { Course, CourseStatusFilter } from '../types/course';
@@ -74,6 +75,7 @@ function SortableHeader({
 
 export default function AcademicianCoursesPage() {
   const toast = useToast();
+  const navigate = useNavigate();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,7 +87,6 @@ export default function AcademicianCoursesPage() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
-  const [detailCourseId, setDetailCourseId] = useState<number | null>(null);
   const [statusTarget, setStatusTarget] = useState<Course | null>(null);
   const [statusLoading, setStatusLoading] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
@@ -416,7 +417,7 @@ export default function AcademicianCoursesPage() {
                           <AdminActionButton
                             variant="neutral"
                             icon="info"
-                            onClick={() => setDetailCourseId(course.courseId)}
+                            onClick={() => navigate(academicianCourseDetailPath(course.courseId))}
                           >
                             Detay
                           </AdminActionButton>
@@ -467,12 +468,6 @@ export default function AcademicianCoursesPage() {
           toast.success(message);
           void loadCourses();
         }}
-      />
-
-      <CourseDetailModal
-        open={detailCourseId != null}
-        courseId={detailCourseId}
-        onClose={() => setDetailCourseId(null)}
       />
 
       <ConfirmModal

@@ -5,6 +5,7 @@ import type {
   CourseAssistantCreatePayload,
   CourseAssignmentUpdatePayload,
   CourseCreatePayload,
+  CourseDetail,
   CourseUpdatePayload,
 } from '../types/course';
 
@@ -13,8 +14,8 @@ export async function getMyCourses(): Promise<Course[]> {
   return data;
 }
 
-export async function getMyCourse(courseId: number): Promise<Course> {
-  const { data } = await apiClient.get<Course>(`/courses/${courseId}`);
+export async function getMyCourse(courseId: number): Promise<CourseDetail> {
+  const { data } = await apiClient.get<CourseDetail>(`/courses/${courseId}`);
   return data;
 }
 

@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.mars.dto.CourseAssistantCreateRequest;
 import com.mars.dto.CourseAssistantResponseDto;
 import com.mars.dto.CourseCreateRequest;
+import com.mars.dto.CourseDetailResponseDto;
 import com.mars.dto.CourseResponseDto;
 import com.mars.dto.CourseUpdateRequest;
 import com.mars.entity.Course;
@@ -64,10 +65,10 @@ public class CourseService {
     }
 
     @Transactional(readOnly = true)
-    public CourseResponseDto getMyCourse(Integer courseId) {
+    public CourseDetailResponseDto getMyCourse(Integer courseId) {
         User currentUser = getCurrentUser();
         Course course = getOwnedCourse(courseId, currentUser, "Bu dersi görüntüleme yetkiniz yok.");
-        return courseMapper.toResponse(course);
+        return courseMapper.toDetailResponse(course);
     }
 
     @Transactional(readOnly = true)

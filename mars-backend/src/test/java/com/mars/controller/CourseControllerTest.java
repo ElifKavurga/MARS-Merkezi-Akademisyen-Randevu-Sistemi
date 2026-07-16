@@ -29,6 +29,7 @@ import com.mars.config.CorsConfig;
 import com.mars.dto.CourseAssistantCreateRequest;
 import com.mars.dto.CourseAssistantResponseDto;
 import com.mars.dto.CourseCreateRequest;
+import com.mars.dto.CourseDetailResponseDto;
 import com.mars.dto.CourseResponseDto;
 import com.mars.dto.CourseUpdateRequest;
 import com.mars.exception.handler.GlobalExceptionHandler;
@@ -100,12 +101,11 @@ class CourseControllerTest {
     @WithMockUser(roles = "ACADEMICIAN")
     void getMyCourse_asAcademician_returnsCourse() throws Exception {
         when(courseService.getMyCourse(1)).thenReturn(
-                CourseResponseDto.builder()
+                CourseDetailResponseDto.builder()
                         .courseId(1)
                         .courseCode("CENG 301")
                         .courseName("Algoritma Analizi")
                         .academicTerm("2024-2025 Güz")
-                        .departmentId(1)
                         .departmentName("Bilgisayar Mühendisliği")
                         .isActive(true)
                         .build());
@@ -114,7 +114,9 @@ class CourseControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.courseId").value(1))
                 .andExpect(jsonPath("$.courseCode").value("CENG 301"))
-                .andExpect(jsonPath("$.isActive").value(true));
+                .andExpect(jsonPath("$.departmentName").value("Bilgisayar Mühendisliği"))
+                .andExpect(jsonPath("$.isActive").value(true))
+                .andExpect(jsonPath("$.departmentId").doesNotExist());
     }
 
     @Test

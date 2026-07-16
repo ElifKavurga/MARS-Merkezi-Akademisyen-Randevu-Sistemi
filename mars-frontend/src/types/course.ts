@@ -29,6 +29,17 @@ export type CourseAssistant = {
   departmentName: string;
 };
 
+export type CourseDetail = {
+  courseId: number;
+  courseCode: string;
+  courseName: string;
+  academicTerm: string;
+  departmentName: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type CourseAssistantCreatePayload = {
   assistantId: number;
 };

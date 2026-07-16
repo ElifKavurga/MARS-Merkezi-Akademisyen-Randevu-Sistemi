@@ -26,6 +26,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.mars.dto.CourseAssistantCreateRequest;
 import com.mars.dto.CourseAssistantResponseDto;
 import com.mars.dto.CourseCreateRequest;
+import com.mars.dto.CourseDetailResponseDto;
 import com.mars.dto.CourseResponseDto;
 import com.mars.dto.CourseUpdateRequest;
 import com.mars.entity.Course;
@@ -78,6 +79,7 @@ class CourseServiceTest {
     private Department department;
     private Course course;
     private CourseResponseDto responseDto;
+    private CourseDetailResponseDto detailResponseDto;
 
     @BeforeEach
     void setUp() {
@@ -118,6 +120,17 @@ class CourseServiceTest {
                 .courseName("Algoritma Analizi")
                 .academicTerm("2024-2025 Güz")
                 .departmentId(1)
+                .departmentName("Bilgisayar Mühendisliği")
+                .isActive(true)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+
+        detailResponseDto = CourseDetailResponseDto.builder()
+                .courseId(1)
+                .courseCode("CENG 301")
+                .courseName("Algoritma Analizi")
+                .academicTerm("2024-2025 Güz")
                 .departmentName("Bilgisayar Mühendisliği")
                 .isActive(true)
                 .createdAt(now)
@@ -171,13 +184,14 @@ class CourseServiceTest {
     @Test
     void getMyCourse_returnsOwnedCourse() {
         when(courseRepository.findById(1)).thenReturn(Optional.of(course));
-        when(courseMapper.toResponse(course)).thenReturn(responseDto);
+        when(courseMapper.toDetailResponse(course)).thenReturn(detailResponseDto);
 
-        CourseResponseDto result = courseService.getMyCourse(1);
+        CourseDetailResponseDto result = courseService.getMyCourse(1);
 
         assertThat(result.getCourseId()).isEqualTo(1);
         assertThat(result.getCreatedAt()).isEqualTo(course.getCreatedAt());
-        verify(courseMapper).toResponse(course);
+        assertThat(result.getDepartmentName()).isEqualTo("Bilgisayar Mühendisliği");
+        verify(courseMapper).toDetailResponse(course);
     }
 
     @Test

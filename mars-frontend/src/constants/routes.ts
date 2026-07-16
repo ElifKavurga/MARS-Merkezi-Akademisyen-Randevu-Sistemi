@@ -11,6 +11,11 @@ export const ROUTES = {
   HOD: '/bolum-baskani',
   ACADEMICIAN: '/akademisyen',
   ACADEMICIAN_COURSES: '/academician/courses',
+  ACADEMICIAN_COURSE_DETAIL: '/academician/courses/:courseId',
   ASSISTANT: '/asistan',
   STUDENT: '/ogrenci',
 } as const;
+
+export function academicianCourseDetailPath(courseId: number | string): string {
+  return `/academician/courses/${courseId}`;
+}

@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import org.springframework.stereotype.Component;
 
 import com.mars.dto.CourseCreateRequest;
+import com.mars.dto.CourseDetailResponseDto;
 import com.mars.dto.CourseResponseDto;
 import com.mars.dto.CourseUpdateRequest;
 import com.mars.entity.Course;
@@ -22,6 +23,20 @@ public class CourseMapper {
                 .courseName(course.getCourseName())
                 .academicTerm(course.getAcademicTerm())
                 .departmentId(department != null ? department.getDepartmentId() : null)
+                .departmentName(department != null ? department.getDepartmentName() : null)
+                .isActive(Boolean.TRUE.equals(course.getIsActive()))
+                .createdAt(course.getCreatedAt())
+                .updatedAt(course.getUpdatedAt())
+                .build();
+    }
+
+    public CourseDetailResponseDto toDetailResponse(Course course) {
+        Department department = course.getDepartment();
+        return CourseDetailResponseDto.builder()
+                .courseId(course.getCourseId())
+                .courseCode(course.getCourseCode())
+                .courseName(course.getCourseName())
+                .academicTerm(course.getAcademicTerm())
                 .departmentName(department != null ? department.getDepartmentName() : null)
                 .isActive(Boolean.TRUE.equals(course.getIsActive()))
                 .createdAt(course.getCreatedAt())
