@@ -1,4 +1,4 @@
-import { useToast, type ToastType } from '../hooks/useToast';
+import { useToast, useToastState, type ToastType } from '../hooks/useToast';
 
 const toastStyles: Record<ToastType, { bar: string; icon: string }> = {
   success: { bar: 'border-l-emerald-600', icon: 'check_circle' },
@@ -8,7 +8,8 @@ const toastStyles: Record<ToastType, { bar: string; icon: string }> = {
 };
 
 export default function ToastViewport() {
-  const { toasts, dismiss } = useToast();
+  const toasts = useToastState();
+  const { dismiss } = useToast();
 
   if (toasts.length === 0) {
     return null;

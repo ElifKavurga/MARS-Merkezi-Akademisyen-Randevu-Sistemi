@@ -1,5 +1,10 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
-import { ToastContext, type ToastItem, type ToastType } from './toastContextBase';
+import {
+  ToastActionsContext,
+  ToastStateContext,
+  type ToastItem,
+  type ToastType,
+} from './toastContextBase';
 
 const TOAST_DURATION_MS = 4000;
 
@@ -21,18 +26,38 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     [dismiss],
   );
 
-  const value = useMemo(
-    () => ({
-      toasts,
-      showToast,
-      success: (message: string) => showToast('success', message),
-      error: (message: string) => showToast('error', message),
-      info: (message: string) => showToast('info', message),
-      warning: (message: string) => showToast('warning', message),
-      dismiss,
-    }),
-    [toasts, showToast, dismiss],
+  const success = useCallback(
+    (message: string) => showToast('success', message),
+    [showToast],
+  );
+  const error = useCallback(
+    (message: string) => showToast('error', message),
+    [showToast],
+  );
+  const info = useCallback(
+    (message: string) => showToast('info', message),
+    [showToast],
+  );
+  const warning = useCallback(
+    (message: string) => showToast('warning', message),
+    [showToast],
   );
 
-  return <ToastContext.Provider value={value}>{children}</ToastContext.Provider>;
+  const actions = useMemo(
+    () => ({
+      showToast,
+      success,
+      error,
+      info,
+      warning,
+      dismiss,
+    }),
+    [showToast, success, error, info, warning, dismiss],
+  );
+
+  return (
+    <ToastActionsContext.Provider value={actions}>
+      <ToastStateContext.Provider value={toasts}>{children}</ToastStateContext.Provider>
+    </ToastActionsContext.Provider>
+  );
 }

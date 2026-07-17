@@ -8,8 +8,7 @@ export type ToastItem = {
   message: string;
 };
 
-export type ToastContextValue = {
-  toasts: ToastItem[];
+export type ToastActions = {
   showToast: (type: ToastType, message: string) => void;
   success: (message: string) => void;
   error: (message: string) => void;
@@ -18,4 +17,9 @@ export type ToastContextValue = {
   dismiss: (id: string) => void;
 };
 
-export const ToastContext = createContext<ToastContextValue | undefined>(undefined);
+export type ToastContextValue = ToastActions & {
+  toasts: ToastItem[];
+};
+
+export const ToastActionsContext = createContext<ToastActions | undefined>(undefined);
+export const ToastStateContext = createContext<ToastItem[]>([]);

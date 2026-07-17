@@ -101,7 +101,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
               AND a.appointmentStatus = :status
             ORDER BY
               CASE WHEN (s.slotDate > :today
-                         OR (s.slotDate = :today AND s.endTime >= :now))
+                         OR (s.slotDate = :today AND s.startTime >= :now))
                    THEN 0 ELSE 1 END,
               s.slotDate ASC,
               s.startTime ASC
