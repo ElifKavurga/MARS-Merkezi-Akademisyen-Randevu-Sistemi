@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 import AdminLayout from '../layouts/AdminLayout';
 import AcademicianLayout from '../layouts/AcademicianLayout';
+import AssistantLayout from '../layouts/AssistantLayout';
 import ProtectedRoute from './ProtectedRoute';
 import LoginPage from '../pages/LoginPage';
 import ResetPasswordPage from '../pages/ResetPasswordPage';
@@ -18,7 +19,7 @@ import CourseDetailPage from '../pages/CourseDetailPage';
 import AcademicianAvailabilityPage from '../pages/AcademicianAvailabilityPage';
 import AcademicianCalendarPage from '../pages/AcademicianCalendarPage';
 import AcademicianOutOfOfficePage from '../pages/AcademicianOutOfOfficePage';
-import AssistantDashboard from '../pages/AssistantDashboard';
+import AssistantDashboardPage from '../pages/AssistantDashboardPage';
 import StudentDashboard from '../pages/StudentDashboard';
 import StudentAppointmentCreatePage from '../pages/StudentAppointmentCreatePage';
 import NotFoundPage from '../pages/NotFoundPage';
@@ -40,13 +41,22 @@ export default function AppRouter() {
             <Route path={ROUTES.HOD} element={<HodDashboard />} />
           </Route>
 
-          <Route element={<ProtectedRoute allowedRoles={[ROLES.ASSISTANT]} />}>
-            <Route path={ROUTES.ASSISTANT} element={<AssistantDashboard />} />
-          </Route>
-
           <Route element={<ProtectedRoute allowedRoles={[ROLES.STUDENT]} />}>
             <Route path={ROUTES.STUDENT} element={<StudentDashboard />} />
             <Route path={ROUTES.STUDENT_APPOINTMENT_CREATE} element={<StudentAppointmentCreatePage />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={[ROLES.ASSISTANT]} />}>
+          <Route element={<AssistantLayout />}>
+            <Route
+              path={ROUTES.ASSISTANT}
+              element={<Navigate to={ROUTES.ASSISTANT_DASHBOARD} replace />}
+            />
+            <Route
+              path={ROUTES.ASSISTANT_DASHBOARD}
+              element={<AssistantDashboardPage />}
+            />
           </Route>
         </Route>
 

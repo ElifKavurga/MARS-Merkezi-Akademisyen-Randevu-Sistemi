@@ -1,6 +1,9 @@
 export { default as Header } from './Header';
 export { default as AdminSidebar } from './AdminSidebar';
 export { default as AcademicianSidebar } from './AcademicianSidebar';
+export { default as AssistantSidebar } from './AssistantSidebar';
+export { default as ModuleLayout } from './ModuleLayout';
+export { default as ModuleSidebar } from './ModuleSidebar';
 export { default as MarsLogo } from './MarsLogo';
 export { default as AdminActionButton } from './AdminActionButton';
 export { default as RoleWelcomeView } from './RoleWelcomeView';
