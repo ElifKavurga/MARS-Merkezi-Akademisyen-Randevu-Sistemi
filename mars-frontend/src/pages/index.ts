@@ -13,5 +13,6 @@ export { default as CourseDetailPage } from './CourseDetailPage';
 export { default as AcademicianAvailabilityPage } from './AcademicianAvailabilityPage';
 export { default as AssistantDashboardPage } from './AssistantDashboardPage';
 export { default as AssistantCoursesPage } from './AssistantCoursesPage';
+export { default as AssistantAvailabilityPage } from './AssistantAvailabilityPage';
 export { default as StudentDashboard } from './StudentDashboard';
 export { default as NotFoundPage } from './NotFoundPage';

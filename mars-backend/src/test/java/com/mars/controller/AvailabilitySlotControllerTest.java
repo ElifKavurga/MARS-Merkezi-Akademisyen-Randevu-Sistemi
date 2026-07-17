@@ -306,6 +306,79 @@ class AvailabilitySlotControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ASSISTANT")
+    void getMySlots_asAssistant_returnsOwnSlots() throws Exception {
+        when(availabilitySlotService.getMySlots()).thenReturn(List.of(
+                AvailabilitySlotResponseDto.builder()
+                        .slotId(3)
+                        .meetingType("ONLINE")
+                        .isBlocked(false)
+                        .build()));
+
+        mockMvc.perform(get("/availability-slots/my"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].slotId").value(3))
+                .andExpect(jsonPath("$[0].meetingType").value("ONLINE"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ASSISTANT")
+    void createSlots_asAssistant_returnsCreated() throws Exception {
+        AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(
+                "ONE_TIME",
+                LocalDate.of(2026, 7, 22),
+                null,
+                LocalTime.of(10, 0),
+                LocalTime.of(12, 0),
+                null,
+                null,
+                "BOTH");
+        when(availabilitySlotService.createSlots(any(AvailabilitySlotCreateRequest.class)))
+                .thenReturn(List.of(AvailabilitySlotResponseDto.builder()
+                        .slotId(3)
+                        .meetingType("BOTH")
+                        .isBlocked(false)
+                        .build()));
+
+        mockMvc.perform(post("/availability-slots")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$[0].meetingType").value("BOTH"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ASSISTANT")
+    void updateSlot_asAssistant_returnsOk() throws Exception {
+        AvailabilitySlotUpdateRequest request = new AvailabilitySlotUpdateRequest(
+                LocalDate.of(2026, 7, 23),
+                LocalTime.of(11, 0),
+                LocalTime.of(13, 0));
+        when(availabilitySlotService.updateSlot(eq(3), any(AvailabilitySlotUpdateRequest.class)))
+                .thenReturn(AvailabilitySlotResponseDto.builder().slotId(3).isBlocked(false).build());
+
+        mockMvc.perform(put("/availability-slots/3")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.slotId").value(3));
+    }
+
+    @Test
+    @WithMockUser(roles = "ASSISTANT")
+    void updateBlockedStatus_asAssistant_returnsOk() throws Exception {
+        AvailabilitySlotBlockRequest request = new AvailabilitySlotBlockRequest(true);
+        when(availabilitySlotService.updateBlockedStatus(eq(3), any(AvailabilitySlotBlockRequest.class)))
+                .thenReturn(AvailabilitySlotResponseDto.builder().slotId(3).isBlocked(true).build());
+
+        mockMvc.perform(patch("/availability-slots/3/blocked")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isBlocked").value(true));
+    }
+
+    @Test
     @WithMockUser(roles = "STUDENT")
     void getMySlots_asStudent_returnsForbidden() throws Exception {
         mockMvc.perform(get("/availability-slots/my"))

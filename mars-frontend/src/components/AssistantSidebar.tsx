@@ -15,6 +15,12 @@ const assistantNavItems = [
     icon: 'menu_book',
     end: true,
   },
+  {
+    label: 'Müsaitliklerim',
+    path: ROUTES.ASSISTANT_AVAILABILITY,
+    icon: 'schedule',
+    end: true,
+  },
 ] as const;
 
 export default function AssistantSidebar({ mobileOpen, onClose }: ModuleSidebarProps) {

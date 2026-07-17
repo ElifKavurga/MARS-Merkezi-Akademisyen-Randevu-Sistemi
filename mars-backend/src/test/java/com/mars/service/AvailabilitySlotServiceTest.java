@@ -20,6 +20,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -37,11 +39,14 @@ import com.mars.dto.AvailabilitySlotUpdateRequest;
 import com.mars.dto.RecurrenceRuleCreateRequest;
 import com.mars.dto.RecurrenceRuleResponseDto;
 import com.mars.entity.AvailabilitySlot;
+import com.mars.entity.Role;
 import com.mars.entity.User;
 import com.mars.enums.AppointmentStatus;
+import com.mars.enums.MeetingType;
 import com.mars.enums.OfficeHourType;
 import com.mars.enums.RecurrenceEndMode;
 import com.mars.enums.RepeatType;
+import com.mars.enums.RoleType;
 import com.mars.exception.BadRequestException;
 import com.mars.exception.ConflictException;
 import com.mars.exception.ResourceNotFoundException;
@@ -193,6 +198,48 @@ class AvailabilitySlotServiceTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getSlotId()).isEqualTo(1);
         verify(recurrenceRuleService, never()).createRule(any(), any());
+        verify(availabilitySlotMapper).toEntity(
+                slotDate,
+                LocalTime.of(10, 0),
+                LocalTime.of(12, 0),
+                academician,
+                MeetingType.FACE_TO_FACE.name());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"FACE_TO_FACE", "ONLINE", "BOTH"})
+    void createSlots_supportedMeetingType_isPersisted(String meetingType) {
+        LocalDate slotDate = LocalDate.now().plusDays(1);
+        AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(
+                OfficeHourType.ONE_TIME.name(),
+                slotDate,
+                null,
+                LocalTime.of(10, 0),
+                LocalTime.of(12, 0),
+                null,
+                null,
+                meetingType);
+
+        AvailabilitySlot meetingTypeSlot = new AvailabilitySlot();
+        meetingTypeSlot.setSlotId(5);
+        when(availabilitySlotRepository.existsOverlappingSlot(
+                10, slotDate, LocalTime.of(10, 0), LocalTime.of(12, 0)))
+                .thenReturn(false);
+        when(availabilitySlotMapper.toEntity(
+                slotDate, LocalTime.of(10, 0), LocalTime.of(12, 0), academician, meetingType))
+                .thenReturn(meetingTypeSlot);
+        when(availabilitySlotRepository.save(meetingTypeSlot)).thenReturn(meetingTypeSlot);
+        when(availabilitySlotMapper.toResponse(meetingTypeSlot)).thenReturn(
+                AvailabilitySlotResponseDto.builder()
+                        .slotId(5)
+                        .meetingType(meetingType)
+                        .build());
+
+        List<AvailabilitySlotResponseDto> result = availabilitySlotService.createSlots(request);
+
+        assertThat(result).singleElement()
+                .extracting(AvailabilitySlotResponseDto::getMeetingType)
+                .isEqualTo(meetingType);
     }
 
     @Test
@@ -486,10 +533,21 @@ class AvailabilitySlotServiceTest {
         verify(availabilitySlotRepository, never()).save(any());
     }
 
-    @Test
-    void updateSlot_otherAcademicianSlot_throwsAccessDenied() {
+    @ParameterizedTest
+    @ValueSource(strings = {"ASSISTANT", "ACADEMICIAN"})
+    void updateSlot_otherStaffSlot_throwsAccessDenied(String ownerRoleName) {
+        Role assistantRole = new Role();
+        assistantRole.setRoleName(RoleType.ASSISTANT.name());
+        academician.setRole(assistantRole);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        new CustomUserDetails(academician), null, List.of()));
+
         User other = new User();
         other.setUserId(99);
+        Role ownerRole = new Role();
+        ownerRole.setRoleName(ownerRoleName);
+        other.setRole(ownerRole);
         slot.setStaff(other);
 
         AvailabilitySlotUpdateRequest request = new AvailabilitySlotUpdateRequest(

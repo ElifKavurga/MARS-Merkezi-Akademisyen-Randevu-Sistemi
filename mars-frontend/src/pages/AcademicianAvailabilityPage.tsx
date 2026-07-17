@@ -36,6 +36,28 @@ import type {
 
 type SortDirection = 'asc' | 'desc';
 
+type AvailabilityPageLabels = {
+  title: string;
+  subtitle: string;
+  createButton: string;
+  emptyTitle: string;
+  emptyCta: string;
+  loading: string;
+};
+
+type AcademicianAvailabilityPageProps = {
+  labels?: Partial<AvailabilityPageLabels>;
+};
+
+const DEFAULT_PAGE_LABELS: AvailabilityPageLabels = {
+  title: 'Ofis Saatleri',
+  subtitle: 'Tanımlı ofis saatlerinizi görüntüleyin, filtreleyin ve yönetin.',
+  createButton: 'Yeni Ofis Saati',
+  emptyTitle: AVAILABILITY_MESSAGES.EMPTY_TITLE,
+  emptyCta: AVAILABILITY_MESSAGES.EMPTY_CTA,
+  loading: 'Ofis saatleri yükleniyor...',
+};
+
 const DAY_FILTER_OPTIONS = [
   { value: '', label: 'Gün: Tümü' },
   { value: '1', label: DAY_OF_WEEK_LABELS[1] },
@@ -103,7 +125,10 @@ function SortableHeader({
   );
 }
 
-export default function AcademicianAvailabilityPage() {
+export default function AcademicianAvailabilityPage({
+  labels: labelOverrides,
+}: AcademicianAvailabilityPageProps = {}) {
+  const labels = { ...DEFAULT_PAGE_LABELS, ...labelOverrides };
   const toast = useToast();
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
   const [stats, setStats] = useState<AvailabilitySlotStats>(EMPTY_STATS);
@@ -276,9 +301,9 @@ export default function AcademicianAvailabilityPage() {
   return (
     <div className="admin-page animate-fade-in">
       <div className="mb-8">
-        <h1 className="font-headline-lg text-headline-lg text-on-background">Ofis Saatleri</h1>
+        <h1 className="font-headline-lg text-headline-lg text-on-background">{labels.title}</h1>
         <p className="mt-2 max-w-2xl font-body-lg text-body-lg text-on-surface-variant">
-          Tanımlı ofis saatlerinizi görüntüleyin, filtreleyin ve yönetin.
+          {labels.subtitle}
         </p>
       </div>
 
@@ -320,7 +345,7 @@ export default function AcademicianAvailabilityPage() {
               onClick={() => setCreateOpen(true)}
             >
               <span className="material-symbols-outlined text-[18px] leading-none">add</span>
-              Yeni Ofis Saati
+              {labels.createButton}
             </button>
           </div>
 
@@ -376,7 +401,7 @@ export default function AcademicianAvailabilityPage() {
         <div className="overflow-x-auto max-w-full">
           {loading ? (
             <div className="p-8">
-              <Loading label="Ofis saatleri yükleniyor..." />
+              <Loading label={labels.loading} />
             </div>
           ) : error ? (
             <div className="p-8">
@@ -392,7 +417,7 @@ export default function AcademicianAvailabilityPage() {
                 </span>
               </div>
               <p className="font-body-md text-body-md text-on-surface-variant max-w-md">
-                {AVAILABILITY_MESSAGES.EMPTY_TITLE}
+                {labels.emptyTitle}
               </p>
               <button
                 type="button"
@@ -400,7 +425,7 @@ export default function AcademicianAvailabilityPage() {
                 onClick={() => setCreateOpen(true)}
               >
                 <span className="material-symbols-outlined text-[18px] leading-none">add</span>
-                {AVAILABILITY_MESSAGES.EMPTY_CTA}
+                {labels.emptyCta}
               </button>
             </div>
           ) : filteredSlots.length === 0 ? (

@@ -218,6 +218,31 @@ class RecurrenceRuleControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ASSISTANT")
+    void createRule_asAssistant_returnsCreated() throws Exception {
+        RecurrenceRuleCreateRequest request = new RecurrenceRuleCreateRequest(
+                RepeatType.WEEKLY.name(),
+                1,
+                LocalDate.of(2026, 7, 20),
+                LocalDate.of(2026, 9, 14));
+        when(recurrenceRuleService.createRule(eq(3), any(RecurrenceRuleCreateRequest.class)))
+                .thenReturn(RecurrenceRuleResponseDto.builder()
+                        .recurrenceRuleId(7)
+                        .repeatType(RepeatType.WEEKLY.name())
+                        .repeatCount(1)
+                        .startDate(LocalDate.of(2026, 7, 20))
+                        .endDate(LocalDate.of(2026, 9, 14))
+                        .build());
+
+        mockMvc.perform(post("/recurrence-rules")
+                        .param("slotId", "3")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.recurrenceRuleId").value(7));
+    }
+
+    @Test
     @WithMockUser(roles = "ACADEMICIAN")
     void endRule_successfulEnd_returnsOk() throws Exception {
         when(recurrenceRuleService.endRule(5)).thenReturn(RecurrenceRuleResponseDto.builder()
