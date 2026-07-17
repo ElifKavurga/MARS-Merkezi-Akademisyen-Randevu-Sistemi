@@ -42,6 +42,8 @@ export {
   createAppointment,
   getAvailableSlots,
   getAppointmentCategories,
+  getAssistantAppointments,
+  getAssistantAppointment,
 } from './appointmentService';
 export {
   createRecurrenceRule,

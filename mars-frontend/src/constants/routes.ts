@@ -19,6 +19,7 @@ export const ROUTES = {
   ASSISTANT_DASHBOARD: '/assistant/dashboard',
   ASSISTANT_COURSES: '/assistant/courses',
   ASSISTANT_AVAILABILITY: '/assistant/availability',
+  ASSISTANT_APPOINTMENTS: '/assistant/appointments',
   STUDENT: '/ogrenci',
   STUDENT_APPOINTMENT_CREATE: '/ogrenci/randevu-olustur',
 } as const;

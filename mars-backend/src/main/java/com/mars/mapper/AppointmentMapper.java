@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Component;
 
+import com.mars.dto.AssistantAppointmentResponseDto;
 import com.mars.dto.AppointmentCreateRequest;
 import com.mars.dto.AppointmentResponseDto;
 import com.mars.entity.Appointment;
@@ -54,6 +55,35 @@ public class AppointmentMapper {
                 .isLimitedDuration(Boolean.TRUE.equals(appointment.getIsLimitedDuration()))
                 .createdAt(appointment.getCreatedAt())
                 .updatedAt(appointment.getUpdatedAt())
+                .build();
+    }
+
+    public AssistantAppointmentResponseDto toAssistantResponse(Appointment appointment) {
+        return AssistantAppointmentResponseDto.builder()
+                .appointmentId(appointment.getAppointmentId())
+                .studentName(appointment.getStudent() != null
+                        ? appointment.getStudent().getFullName()
+                        : null)
+                .appointmentDate(appointment.getSlot() != null
+                        ? appointment.getSlot().getSlotDate()
+                        : null)
+                .startTime(appointment.getSlot() != null
+                        ? appointment.getSlot().getStartTime()
+                        : null)
+                .endTime(appointment.getSlot() != null
+                        ? appointment.getSlot().getEndTime()
+                        : null)
+                .categoryName(appointment.getCategory() != null
+                        ? appointment.getCategory().getCategoryName()
+                        : null)
+                .courseCode(appointment.getCourse() != null
+                        ? appointment.getCourse().getCourseCode()
+                        : null)
+                .courseName(appointment.getCourse() != null
+                        ? appointment.getCourse().getCourseName()
+                        : null)
+                .meetingType(appointment.getMeetingType())
+                .appointmentStatus(appointment.getAppointmentStatus())
                 .build();
     }
 }

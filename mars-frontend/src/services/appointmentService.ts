@@ -1,5 +1,10 @@
 import { apiClient } from './apiClient';
-import type { Appointment, AppointmentCreatePayload, AvailableSlot } from '../types/appointment';
+import type {
+  Appointment,
+  AppointmentCreatePayload,
+  AssistantAppointment,
+  AvailableSlot,
+} from '../types/appointment';
 import type { AppointmentCategory } from '../types/category';
 
 export async function createAppointment(
@@ -18,5 +23,23 @@ export async function getAvailableSlots(staffId: number): Promise<AvailableSlot[
 
 export async function getAppointmentCategories(): Promise<AppointmentCategory[]> {
   const { data } = await apiClient.get<AppointmentCategory[]>('/categories');
+  return data;
+}
+
+export async function getAssistantAppointments(
+  status?: string,
+): Promise<AssistantAppointment[]> {
+  const { data } = await apiClient.get<AssistantAppointment[]>('/assistant/appointments', {
+    params: status ? { status } : undefined,
+  });
+  return data;
+}
+
+export async function getAssistantAppointment(
+  appointmentId: number,
+): Promise<AssistantAppointment> {
+  const { data } = await apiClient.get<AssistantAppointment>(
+    `/assistant/appointments/${appointmentId}`,
+  );
   return data;
 }

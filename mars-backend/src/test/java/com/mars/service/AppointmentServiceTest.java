@@ -26,6 +26,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.mars.AppointmentMessages;
+import com.mars.dto.AssistantAppointmentResponseDto;
 import com.mars.dto.AppointmentCreateRequest;
 import com.mars.dto.AppointmentResponseDto;
 import com.mars.entity.Appointment;
@@ -39,6 +40,7 @@ import com.mars.enums.MeetingType;
 import com.mars.enums.RoleType;
 import com.mars.exception.BadRequestException;
 import com.mars.exception.ConflictException;
+import com.mars.exception.ResourceNotFoundException;
 import com.mars.mapper.AppointmentMapper;
 import com.mars.repository.AppointmentCategoryRepository;
 import com.mars.repository.AppointmentRepository;
@@ -83,6 +85,7 @@ class AppointmentServiceTest {
 
         student = new User();
         student.setUserId(20);
+        student.setFullName("Öğrenci Test");
         student.setRole(studentRole);
 
         staff = new User();
@@ -100,6 +103,7 @@ class AppointmentServiceTest {
 
         category = new AppointmentCategory();
         category.setCategoryId(3);
+        category.setCategoryName("Akademik Danışmanlık");
         category.setRequiresCourseSelection(false);
 
         baseRequest = new AppointmentCreateRequest(5, 3, null, null, false);
@@ -298,5 +302,133 @@ class AppointmentServiceTest {
         assertThatThrownBy(() -> appointmentService.createAppointment(baseRequest))
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessage(AppointmentMessages.ONLY_STUDENT);
+    }
+
+    @Test
+    void getAssistantAppointments_pendingFilter_returnsOnlyOwnedPendingAppointments() {
+        authenticateAsAssistant();
+        Appointment appointment = assistantAppointment(100, AppointmentStatus.PENDING.name());
+        AssistantAppointmentResponseDto response = AssistantAppointmentResponseDto.builder()
+                .appointmentId(100)
+                .studentName("Öğrenci Test")
+                .appointmentDate(slot.getSlotDate())
+                .startTime(slot.getStartTime())
+                .endTime(slot.getEndTime())
+                .categoryName("Akademik Danışmanlık")
+                .meetingType(MeetingType.FACE_TO_FACE.name())
+                .appointmentStatus(AppointmentStatus.PENDING.name())
+                .build();
+
+        when(appointmentRepository.findAllByStaffIdWithDetails(
+                10, AppointmentStatus.PENDING.name())).thenReturn(List.of(appointment));
+        when(appointmentMapper.toAssistantResponse(appointment)).thenReturn(response);
+
+        List<AssistantAppointmentResponseDto> result =
+                appointmentService.getAssistantAppointments("pending");
+
+        assertThat(result).singleElement()
+                .extracting(AssistantAppointmentResponseDto::getAppointmentId)
+                .isEqualTo(100);
+        verify(appointmentRepository).findAllByStaffIdWithDetails(
+                10, AppointmentStatus.PENDING.name());
+    }
+
+    @Test
+    void getAssistantAppointments_withoutStatus_returnsAllOwnedAppointments() {
+        authenticateAsAssistant();
+        Appointment pending = assistantAppointment(100, AppointmentStatus.PENDING.name());
+        Appointment approved = assistantAppointment(101, AppointmentStatus.APPROVED.name());
+        approved.getSlot().setSlotDate(LocalDate.now().plusDays(1));
+
+        when(appointmentRepository.findAllByStaffIdWithDetails(10, null))
+                .thenReturn(List.of(pending, approved));
+        when(appointmentMapper.toAssistantResponse(pending)).thenReturn(
+                AssistantAppointmentResponseDto.builder().appointmentId(100).build());
+        when(appointmentMapper.toAssistantResponse(approved)).thenReturn(
+                AssistantAppointmentResponseDto.builder().appointmentId(101).build());
+
+        List<AssistantAppointmentResponseDto> result =
+                appointmentService.getAssistantAppointments(null);
+
+        assertThat(result).extracting(AssistantAppointmentResponseDto::getAppointmentId)
+                .containsExactly(101, 100);
+    }
+
+    @Test
+    void getAssistantAppointment_ownedAppointment_returnsDetailWithNullCourse() {
+        authenticateAsAssistant();
+        Appointment appointment = assistantAppointment(100, AppointmentStatus.PENDING.name());
+        appointment.setCourse(null);
+        appointment.setMeetingType(MeetingType.ONLINE.name());
+        AssistantAppointmentResponseDto response =
+                new AppointmentMapper().toAssistantResponse(appointment);
+
+        when(appointmentRepository.findByIdAndStaffIdWithDetails(100, 10))
+                .thenReturn(Optional.of(appointment));
+        when(appointmentMapper.toAssistantResponse(appointment)).thenReturn(response);
+
+        AssistantAppointmentResponseDto result =
+                appointmentService.getAssistantAppointment(100);
+
+        assertThat(result.getAppointmentId()).isEqualTo(100);
+        assertThat(result.getCourseName()).isNull();
+        assertThat(result.getMeetingType()).isEqualTo(MeetingType.ONLINE.name());
+    }
+
+    @Test
+    void getAssistantAppointment_otherStaffAppointment_throwsNotFound() {
+        authenticateAsAssistant();
+        when(appointmentRepository.findByIdAndStaffIdWithDetails(999, 10))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> appointmentService.getAssistantAppointment(999))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(AppointmentMessages.APPOINTMENT_NOT_FOUND);
+    }
+
+    @Test
+    void getAssistantAppointments_invalidStatus_throwsBadRequest() {
+        authenticateAsAssistant();
+
+        assertThatThrownBy(() -> appointmentService.getAssistantAppointments("BOTH"))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage(AppointmentMessages.INVALID_STATUS);
+
+        verify(appointmentRepository, never()).findAllByStaffIdWithDetails(any(), any());
+    }
+
+    @Test
+    void getAssistantAppointments_nonAssistant_throwsAccessDenied() {
+        assertThatThrownBy(() -> appointmentService.getAssistantAppointments(null))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage(AppointmentMessages.ONLY_ASSISTANT);
+    }
+
+    private void authenticateAsAssistant() {
+        Role assistantRole = new Role();
+        assistantRole.setRoleName(RoleType.ASSISTANT.name());
+        staff.setRole(assistantRole);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        new CustomUserDetails(staff), null, List.of()));
+    }
+
+    private Appointment assistantAppointment(Integer appointmentId, String status) {
+        AvailabilitySlot appointmentSlot = new AvailabilitySlot();
+        appointmentSlot.setSlotId(appointmentId);
+        appointmentSlot.setStaff(staff);
+        appointmentSlot.setSlotDate(LocalDate.now().plusDays(2));
+        appointmentSlot.setStartTime(LocalTime.of(10, 0));
+        appointmentSlot.setEndTime(LocalTime.of(10, 10));
+
+        Appointment appointment = new Appointment();
+        appointment.setAppointmentId(appointmentId);
+        appointment.setStaff(staff);
+        appointment.setStudent(student);
+        appointment.setCategory(category);
+        appointment.setSlot(appointmentSlot);
+        appointment.setAppointmentStatus(status);
+        appointment.setMeetingType(MeetingType.FACE_TO_FACE.name());
+        return appointment;
     }
 }

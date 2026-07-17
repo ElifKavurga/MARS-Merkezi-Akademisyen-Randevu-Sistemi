@@ -38,4 +38,6 @@ export { default as CalendarEventDetailModal } from './CalendarEventDetailModal'
 export { default as OutOfOfficeCreateModal } from './OutOfOfficeCreateModal';
 export { default as OutOfOfficeEditModal } from './OutOfOfficeEditModal';
 export { default as AppointmentCreateModal } from './AppointmentCreateModal';
+export { default as AppointmentStatusBadge } from './AppointmentStatusBadge';
+export { default as AssistantAppointmentDetailModal } from './AssistantAppointmentDetailModal';
 export { ErrorBoundary } from './ErrorBoundary';

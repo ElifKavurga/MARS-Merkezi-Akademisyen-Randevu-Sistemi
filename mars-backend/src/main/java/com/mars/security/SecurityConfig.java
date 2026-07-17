@@ -53,7 +53,12 @@ public class SecurityConfig {
                         .requestMatchers("/admin/users", "/admin/users/**").hasRole("ADMIN")
                         .requestMatchers("/admin/categories", "/admin/categories/**").hasRole("ADMIN")
                         .requestMatchers("/admin/penalty-rule", "/admin/penalty-rule/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/assistant/courses", "/assistant/dashboard")
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/assistant/courses",
+                                "/assistant/dashboard",
+                                "/assistant/appointments",
+                                "/assistant/appointments/**")
                                 .hasRole("ASSISTANT")
                         .requestMatchers(HttpMethod.POST, "/appointments").hasRole("STUDENT")
                         .requestMatchers(HttpMethod.GET, "/categories").hasRole("STUDENT")

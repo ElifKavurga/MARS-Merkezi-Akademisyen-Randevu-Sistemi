@@ -21,6 +21,12 @@ const assistantNavItems = [
     icon: 'schedule',
     end: true,
   },
+  {
+    label: 'Randevularım',
+    path: ROUTES.ASSISTANT_APPOINTMENTS,
+    icon: 'event_note',
+    end: true,
+  },
 ] as const;
 
 export default function AssistantSidebar({ mobileOpen, onClose }: ModuleSidebarProps) {

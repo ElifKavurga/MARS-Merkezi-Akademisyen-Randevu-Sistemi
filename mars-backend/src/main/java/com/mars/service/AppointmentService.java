@@ -2,6 +2,9 @@ package com.mars.service;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
@@ -12,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mars.AppointmentMessages;
+import com.mars.dto.AssistantAppointmentResponseDto;
 import com.mars.dto.AppointmentCreateRequest;
 import com.mars.dto.AppointmentResponseDto;
 import com.mars.entity.Appointment;
@@ -97,6 +101,29 @@ public class AppointmentService {
                 request, student, slot, category, course, meetingType);
         Appointment saved = appointmentRepository.save(appointment);
         return appointmentMapper.toResponse(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AssistantAppointmentResponseDto> getAssistantAppointments(String status) {
+        User assistant = getCurrentAssistant();
+        String resolvedStatus = resolveStatusFilter(status);
+
+        return appointmentRepository.findAllByStaffIdWithDetails(
+                        assistant.getUserId(), resolvedStatus)
+                .stream()
+                .sorted(assistantAppointmentComparator())
+                .map(appointmentMapper::toAssistantResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public AssistantAppointmentResponseDto getAssistantAppointment(Integer appointmentId) {
+        User assistant = getCurrentAssistant();
+        Appointment appointment = appointmentRepository.findByIdAndStaffIdWithDetails(
+                        appointmentId, assistant.getUserId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(AppointmentMessages.APPOINTMENT_NOT_FOUND));
+        return appointmentMapper.toAssistantResponse(appointment);
     }
 
     private Course resolveCourse(Integer courseId, AppointmentCategory category, User staff) {
@@ -200,5 +227,57 @@ public class AppointmentService {
             throw new AccessDeniedException(AppointmentMessages.ONLY_STUDENT);
         }
         return user;
+    }
+
+    private User getCurrentAssistant() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails userDetails)) {
+            throw new AccessDeniedException(SecurityMessages.ACCESS_DENIED);
+        }
+        User user = userDetails.getUser();
+        String roleName = user.getRole() != null ? user.getRole().getRoleName() : null;
+        if (!RoleType.ASSISTANT.name().equals(roleName)) {
+            throw new AccessDeniedException(AppointmentMessages.ONLY_ASSISTANT);
+        }
+        return user;
+    }
+
+    private String resolveStatusFilter(String status) {
+        if (status == null || status.isBlank()) {
+            return null;
+        }
+        try {
+            return AppointmentStatus.valueOf(status.trim().toUpperCase(Locale.ROOT)).name();
+        } catch (IllegalArgumentException exception) {
+            throw new BadRequestException(AppointmentMessages.INVALID_STATUS);
+        }
+    }
+
+    private Comparator<Appointment> assistantAppointmentComparator() {
+        return (left, right) -> {
+            boolean leftPast = isAppointmentInPast(left);
+            boolean rightPast = isAppointmentInPast(right);
+            if (leftPast != rightPast) {
+                return leftPast ? 1 : -1;
+            }
+
+            int dateComparison = left.getSlot().getSlotDate()
+                    .compareTo(right.getSlot().getSlotDate());
+            if (dateComparison == 0) {
+                dateComparison = left.getSlot().getStartTime()
+                        .compareTo(right.getSlot().getStartTime());
+            }
+            return leftPast ? -dateComparison : dateComparison;
+        };
+    }
+
+    private boolean isAppointmentInPast(Appointment appointment) {
+        AvailabilitySlot slot = appointment.getSlot();
+        LocalDate today = LocalDate.now();
+        if (slot.getSlotDate().isBefore(today)) {
+            return true;
+        }
+        return slot.getSlotDate().isEqual(today)
+                && slot.getEndTime().isBefore(LocalTime.now());
     }
 }

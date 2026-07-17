@@ -14,5 +14,6 @@ export { default as AcademicianAvailabilityPage } from './AcademicianAvailabilit
 export { default as AssistantDashboardPage } from './AssistantDashboardPage';
 export { default as AssistantCoursesPage } from './AssistantCoursesPage';
 export { default as AssistantAvailabilityPage } from './AssistantAvailabilityPage';
+export { default as AssistantAppointmentsPage } from './AssistantAppointmentsPage';
 export { default as StudentDashboard } from './StudentDashboard';
 export { default as NotFoundPage } from './NotFoundPage';

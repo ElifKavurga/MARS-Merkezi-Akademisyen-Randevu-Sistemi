@@ -22,6 +22,7 @@ import AcademicianOutOfOfficePage from '../pages/AcademicianOutOfOfficePage';
 import AssistantDashboardPage from '../pages/AssistantDashboardPage';
 import AssistantCoursesPage from '../pages/AssistantCoursesPage';
 import AssistantAvailabilityPage from '../pages/AssistantAvailabilityPage';
+import AssistantAppointmentsPage from '../pages/AssistantAppointmentsPage';
 import StudentDashboard from '../pages/StudentDashboard';
 import StudentAppointmentCreatePage from '../pages/StudentAppointmentCreatePage';
 import NotFoundPage from '../pages/NotFoundPage';
@@ -63,6 +64,10 @@ export default function AppRouter() {
             <Route
               path={ROUTES.ASSISTANT_AVAILABILITY}
               element={<AssistantAvailabilityPage />}
+            />
+            <Route
+              path={ROUTES.ASSISTANT_APPOINTMENTS}
+              element={<AssistantAppointmentsPage />}
             />
           </Route>
         </Route>

@@ -29,3 +29,23 @@ export type AppointmentCreatePayload = {
   meetingType?: string | null;
   isLimitedDuration?: boolean;
 };
+
+export type AppointmentStatus =
+  | 'PENDING'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'COMPLETED'
+  | 'NO_SHOW';
+
+export type AssistantAppointment = {
+  appointmentId: number;
+  studentName: string;
+  appointmentDate: string;
+  startTime: string;
+  endTime: string;
+  categoryName: string;
+  courseCode: string | null;
+  courseName: string | null;
+  meetingType: 'FACE_TO_FACE' | 'ONLINE';
+  appointmentStatus: AppointmentStatus;
+};

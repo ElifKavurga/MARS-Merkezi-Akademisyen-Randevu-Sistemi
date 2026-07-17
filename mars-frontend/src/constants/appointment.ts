@@ -22,6 +22,30 @@ export const APPOINTMENT_MESSAGES = {
   REQUEST_BUTTON: 'Randevu Talep Et',
 } as const;
 
+export const ASSISTANT_APPOINTMENT_MESSAGES = {
+  TITLE: 'Randevularım',
+  SUBTITLE: 'Size gelen randevu taleplerini ve randevu geçmişinizi görüntüleyin.',
+  PENDING_TAB: 'Gelen Talepler',
+  ALL_TAB: 'Tümü',
+  PENDING_EMPTY: 'Bekleyen randevu talebiniz bulunmuyor.',
+  ALL_EMPTY: 'Henüz size oluşturulmuş bir randevu bulunmuyor.',
+  LOAD_ERROR: 'Randevular yüklenirken bir hata oluştu.',
+  ACCESS_DENIED: 'Bu sayfayı görüntüleme yetkiniz bulunmuyor.',
+  DETAIL_TITLE: 'Randevu Detayı',
+} as const;
+
+export const APPOINTMENT_STATUS_LABELS: Record<string, string> = {
+  PENDING: 'Bekliyor',
+  APPROVED: 'Onaylandı',
+  REJECTED: 'Reddedildi',
+  COMPLETED: 'Tamamlandı',
+  NO_SHOW: 'Gelmedi',
+};
+
+export function getAppointmentStatusLabel(status: string): string {
+  return APPOINTMENT_STATUS_LABELS[status] ?? status;
+}
+
 export function getMeetingTypeLabel(meetingType: string): string {
   const option = APPOINTMENT_MEETING_TYPE_OPTIONS.find((item) => item.value === meetingType)
     ?? (meetingType === MEETING_TYPE.BOTH
