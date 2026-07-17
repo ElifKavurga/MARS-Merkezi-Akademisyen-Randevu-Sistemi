@@ -33,6 +33,11 @@ const QUICK_ACTIONS = [
     icon: 'event_available',
     title: 'Müsaitliklerim',
   },
+  {
+    route: ROUTES.ASSISTANT_COURSES,
+    icon: 'menu_book',
+    title: 'Atandığım Dersler',
+  },
 ] as const;
 
 export default function AssistantDashboardPage() {
@@ -84,10 +89,6 @@ export default function AssistantDashboardPage() {
                 {
                   label: 'Atanan Ders',
                   value: summary.assignedCourseCount,
-                },
-                {
-                  label: 'Akademisyen',
-                  value: summary.relatedAcademicianCount,
                 },
               ]
             : []
