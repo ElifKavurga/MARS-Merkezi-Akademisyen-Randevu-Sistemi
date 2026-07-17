@@ -25,7 +25,8 @@ public class CalendarController {
     @GetMapping("/events")
     public ResponseEntity<List<CalendarEventResponseDto>> getEvents(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return ResponseEntity.ok(calendarService.getEvents(from, to));
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(defaultValue = "false") boolean includeAppointments) {
+        return ResponseEntity.ok(calendarService.getEvents(from, to, includeAppointments));
     }
 }

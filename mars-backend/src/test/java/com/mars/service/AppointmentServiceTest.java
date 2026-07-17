@@ -28,9 +28,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.mars.AppointmentMessages;
-import com.mars.dto.AssistantAppointmentResponseDto;
 import com.mars.dto.AppointmentCreateRequest;
 import com.mars.dto.AppointmentResponseDto;
+import com.mars.dto.StaffAppointmentResponseDto;
 import com.mars.entity.Appointment;
 import com.mars.entity.AppointmentCategory;
 import com.mars.entity.AvailabilitySlot;
@@ -310,7 +310,7 @@ class AppointmentServiceTest {
     void getAssistantAppointments_pendingFilter_returnsOnlyOwnedPendingAppointments() {
         authenticateAsAssistant();
         Appointment appointment = assistantAppointment(100, AppointmentStatus.PENDING.name());
-        AssistantAppointmentResponseDto response = AssistantAppointmentResponseDto.builder()
+        StaffAppointmentResponseDto response = StaffAppointmentResponseDto.builder()
                 .appointmentId(100)
                 .studentName("Öğrenci Test")
                 .appointmentDate(slot.getSlotDate())
@@ -323,13 +323,13 @@ class AppointmentServiceTest {
 
         when(appointmentRepository.findAllByStaffIdWithDetails(
                 10, AppointmentStatus.PENDING.name())).thenReturn(List.of(appointment));
-        when(appointmentMapper.toAssistantResponse(appointment)).thenReturn(response);
+        when(appointmentMapper.toStaffResponse(appointment)).thenReturn(response);
 
-        List<AssistantAppointmentResponseDto> result =
-                appointmentService.getAssistantAppointments("pending");
+        List<StaffAppointmentResponseDto> result =
+                appointmentService.getStaffAppointments("pending", RoleType.ASSISTANT);
 
         assertThat(result).singleElement()
-                .extracting(AssistantAppointmentResponseDto::getAppointmentId)
+                .extracting(StaffAppointmentResponseDto::getAppointmentId)
                 .isEqualTo(100);
         verify(appointmentRepository).findAllByStaffIdWithDetails(
                 10, AppointmentStatus.PENDING.name());
@@ -344,15 +344,15 @@ class AppointmentServiceTest {
 
         when(appointmentRepository.findAllByStaffIdWithDetails(10, null))
                 .thenReturn(List.of(pending, approved));
-        when(appointmentMapper.toAssistantResponse(pending)).thenReturn(
-                AssistantAppointmentResponseDto.builder().appointmentId(100).build());
-        when(appointmentMapper.toAssistantResponse(approved)).thenReturn(
-                AssistantAppointmentResponseDto.builder().appointmentId(101).build());
+        when(appointmentMapper.toStaffResponse(pending)).thenReturn(
+                StaffAppointmentResponseDto.builder().appointmentId(100).build());
+        when(appointmentMapper.toStaffResponse(approved)).thenReturn(
+                StaffAppointmentResponseDto.builder().appointmentId(101).build());
 
-        List<AssistantAppointmentResponseDto> result =
-                appointmentService.getAssistantAppointments(null);
+        List<StaffAppointmentResponseDto> result =
+                appointmentService.getStaffAppointments(null, RoleType.ASSISTANT);
 
-        assertThat(result).extracting(AssistantAppointmentResponseDto::getAppointmentId)
+        assertThat(result).extracting(StaffAppointmentResponseDto::getAppointmentId)
                 .containsExactly(101, 100);
     }
 
@@ -362,15 +362,15 @@ class AppointmentServiceTest {
         Appointment appointment = assistantAppointment(100, AppointmentStatus.PENDING.name());
         appointment.setCourse(null);
         appointment.setMeetingType(MeetingType.ONLINE.name());
-        AssistantAppointmentResponseDto response =
-                new AppointmentMapper().toAssistantResponse(appointment);
+        StaffAppointmentResponseDto response =
+                new AppointmentMapper().toStaffResponse(appointment);
 
         when(appointmentRepository.findByIdAndStaffIdWithDetails(100, 10))
                 .thenReturn(Optional.of(appointment));
-        when(appointmentMapper.toAssistantResponse(appointment)).thenReturn(response);
+        when(appointmentMapper.toStaffResponse(appointment)).thenReturn(response);
 
-        AssistantAppointmentResponseDto result =
-                appointmentService.getAssistantAppointment(100);
+        StaffAppointmentResponseDto result =
+                appointmentService.getStaffAppointment(100, RoleType.ASSISTANT);
 
         assertThat(result.getAppointmentId()).isEqualTo(100);
         assertThat(result.getCourseName()).isNull();
@@ -383,7 +383,8 @@ class AppointmentServiceTest {
         when(appointmentRepository.findByIdAndStaffIdWithDetails(999, 10))
                 .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> appointmentService.getAssistantAppointment(999))
+        assertThatThrownBy(() ->
+                appointmentService.getStaffAppointment(999, RoleType.ASSISTANT))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage(AppointmentMessages.APPOINTMENT_NOT_FOUND);
     }
@@ -392,7 +393,8 @@ class AppointmentServiceTest {
     void getAssistantAppointments_invalidStatus_throwsBadRequest() {
         authenticateAsAssistant();
 
-        assertThatThrownBy(() -> appointmentService.getAssistantAppointments("BOTH"))
+        assertThatThrownBy(() ->
+                appointmentService.getStaffAppointments("BOTH", RoleType.ASSISTANT))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage(AppointmentMessages.INVALID_STATUS);
 
@@ -401,7 +403,8 @@ class AppointmentServiceTest {
 
     @Test
     void getAssistantAppointments_nonAssistant_throwsAccessDenied() {
-        assertThatThrownBy(() -> appointmentService.getAssistantAppointments(null))
+        assertThatThrownBy(() ->
+                appointmentService.getStaffAppointments(null, RoleType.ASSISTANT))
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessage(AppointmentMessages.ONLY_ASSISTANT);
     }
@@ -414,11 +417,11 @@ class AppointmentServiceTest {
         when(appointmentRepository.findByIdAndStaffIdForUpdate(100, 10))
                 .thenReturn(Optional.of(appointment));
         when(appointmentRepository.save(appointment)).thenReturn(appointment);
-        when(appointmentMapper.toAssistantResponse(appointment))
-                .thenAnswer(invocation -> new AppointmentMapper().toAssistantResponse(appointment));
+        when(appointmentMapper.toStaffResponse(appointment))
+                .thenAnswer(invocation -> new AppointmentMapper().toStaffResponse(appointment));
 
-        AssistantAppointmentResponseDto result =
-                appointmentService.approveAssistantAppointment(100);
+        StaffAppointmentResponseDto result =
+                appointmentService.approveStaffAppointment(100, RoleType.ASSISTANT);
 
         assertThat(result.getAppointmentStatus()).isEqualTo(AppointmentStatus.APPROVED.name());
         assertThat(result.getMeetingType()).isEqualTo(MeetingType.FACE_TO_FACE.name());
@@ -434,11 +437,11 @@ class AppointmentServiceTest {
         when(appointmentRepository.findByIdAndStaffIdForUpdate(100, 10))
                 .thenReturn(Optional.of(appointment));
         when(appointmentRepository.save(appointment)).thenReturn(appointment);
-        when(appointmentMapper.toAssistantResponse(appointment))
-                .thenAnswer(invocation -> new AppointmentMapper().toAssistantResponse(appointment));
+        when(appointmentMapper.toStaffResponse(appointment))
+                .thenAnswer(invocation -> new AppointmentMapper().toStaffResponse(appointment));
 
-        AssistantAppointmentResponseDto result =
-                appointmentService.approveAssistantAppointment(100);
+        StaffAppointmentResponseDto result =
+                appointmentService.approveStaffAppointment(100, RoleType.ASSISTANT);
 
         assertThat(result.getAppointmentStatus()).isEqualTo(AppointmentStatus.APPROVED.name());
         assertThat(result.getMeetingType()).isEqualTo(MeetingType.ONLINE.name());
@@ -451,11 +454,11 @@ class AppointmentServiceTest {
         when(appointmentRepository.findByIdAndStaffIdForUpdate(100, 10))
                 .thenReturn(Optional.of(appointment));
         when(appointmentRepository.save(appointment)).thenReturn(appointment);
-        when(appointmentMapper.toAssistantResponse(appointment))
-                .thenAnswer(invocation -> new AppointmentMapper().toAssistantResponse(appointment));
+        when(appointmentMapper.toStaffResponse(appointment))
+                .thenAnswer(invocation -> new AppointmentMapper().toStaffResponse(appointment));
 
-        AssistantAppointmentResponseDto result =
-                appointmentService.rejectAssistantAppointment(100);
+        StaffAppointmentResponseDto result =
+                appointmentService.rejectStaffAppointment(100, RoleType.ASSISTANT);
 
         assertThat(result.getAppointmentStatus()).isEqualTo(AppointmentStatus.REJECTED.name());
         assertThat(appointment.getMeetingType()).isEqualTo(MeetingType.FACE_TO_FACE.name());
@@ -471,7 +474,8 @@ class AppointmentServiceTest {
         when(appointmentRepository.findByIdAndStaffIdForUpdate(100, 10))
                 .thenReturn(Optional.of(appointment));
 
-        assertThatThrownBy(() -> appointmentService.approveAssistantAppointment(100))
+        assertThatThrownBy(() ->
+                appointmentService.approveStaffAppointment(100, RoleType.ASSISTANT))
                 .isInstanceOf(ConflictException.class);
 
         verify(appointmentRepository, never()).save(any());
@@ -487,7 +491,8 @@ class AppointmentServiceTest {
         when(appointmentRepository.findByIdAndStaffIdForUpdate(100, 10))
                 .thenReturn(Optional.of(appointment));
 
-        assertThatThrownBy(() -> appointmentService.rejectAssistantAppointment(100))
+        assertThatThrownBy(() ->
+                appointmentService.rejectStaffAppointment(100, RoleType.ASSISTANT))
                 .isInstanceOf(ConflictException.class);
 
         verify(appointmentRepository, never()).save(any());
@@ -499,7 +504,8 @@ class AppointmentServiceTest {
         when(appointmentRepository.findByIdAndStaffIdForUpdate(999, 10))
                 .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> appointmentService.approveAssistantAppointment(999))
+        assertThatThrownBy(() ->
+                appointmentService.approveStaffAppointment(999, RoleType.ASSISTANT))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage(AppointmentMessages.APPOINTMENT_NOT_FOUND);
     }
@@ -510,7 +516,8 @@ class AppointmentServiceTest {
         when(appointmentRepository.findByIdAndStaffIdForUpdate(999, 10))
                 .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> appointmentService.rejectAssistantAppointment(999))
+        assertThatThrownBy(() ->
+                appointmentService.rejectStaffAppointment(999, RoleType.ASSISTANT))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage(AppointmentMessages.APPOINTMENT_NOT_FOUND);
     }
@@ -522,21 +529,125 @@ class AppointmentServiceTest {
         when(appointmentRepository.findByIdAndStaffIdForUpdate(100, 10))
                 .thenReturn(Optional.of(appointment));
         when(appointmentRepository.save(appointment)).thenReturn(appointment);
-        when(appointmentMapper.toAssistantResponse(appointment))
-                .thenAnswer(invocation -> new AppointmentMapper().toAssistantResponse(appointment));
+        when(appointmentMapper.toStaffResponse(appointment))
+                .thenAnswer(invocation -> new AppointmentMapper().toStaffResponse(appointment));
 
-        appointmentService.approveAssistantAppointment(100);
+        appointmentService.approveStaffAppointment(100, RoleType.ASSISTANT);
 
-        assertThatThrownBy(() -> appointmentService.approveAssistantAppointment(100))
+        assertThatThrownBy(() ->
+                appointmentService.approveStaffAppointment(100, RoleType.ASSISTANT))
                 .isInstanceOf(ConflictException.class)
                 .hasMessage(AppointmentMessages.ALREADY_APPROVED);
         verify(appointmentRepository).save(appointment);
+    }
+
+    @Test
+    void getStaffAppointments_asAcademician_returnsOnlyOwnedPendingAppointments() {
+        authenticateAsAcademician();
+        Appointment appointment = assistantAppointment(100, AppointmentStatus.PENDING.name());
+        StaffAppointmentResponseDto response =
+                new AppointmentMapper().toStaffResponse(appointment);
+
+        when(appointmentRepository.findAllByStaffIdWithDetails(
+                10, AppointmentStatus.PENDING.name()))
+                .thenReturn(List.of(appointment));
+        when(appointmentMapper.toStaffResponse(appointment)).thenReturn(response);
+
+        List<StaffAppointmentResponseDto> result =
+                appointmentService.getStaffAppointments("PENDING", RoleType.ACADEMICIAN);
+
+        assertThat(result).singleElement()
+                .extracting(StaffAppointmentResponseDto::getAppointmentId)
+                .isEqualTo(100);
+        verify(appointmentRepository).findAllByStaffIdWithDetails(
+                10, AppointmentStatus.PENDING.name());
+    }
+
+    @Test
+    void getStaffAppointment_asAcademician_otherStaffAppointment_throwsNotFound() {
+        authenticateAsAcademician();
+        when(appointmentRepository.findByIdAndStaffIdWithDetails(999, 10))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() ->
+                appointmentService.getStaffAppointment(999, RoleType.ACADEMICIAN))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(AppointmentMessages.APPOINTMENT_NOT_FOUND);
+    }
+
+    @Test
+    void approveStaffAppointment_asAcademician_updatesPendingAndRejectsSecondRequest() {
+        authenticateAsAcademician();
+        Appointment appointment = assistantAppointment(100, AppointmentStatus.PENDING.name());
+        appointment.setMeetingType(MeetingType.ONLINE.name());
+        when(appointmentRepository.findByIdAndStaffIdForUpdate(100, 10))
+                .thenReturn(Optional.of(appointment));
+        when(appointmentRepository.save(appointment)).thenReturn(appointment);
+        when(appointmentMapper.toStaffResponse(appointment))
+                .thenAnswer(invocation -> new AppointmentMapper().toStaffResponse(appointment));
+
+        StaffAppointmentResponseDto result =
+                appointmentService.approveStaffAppointment(100, RoleType.ACADEMICIAN);
+
+        assertThat(result.getAppointmentStatus()).isEqualTo(AppointmentStatus.APPROVED.name());
+        assertThat(result.getMeetingType()).isEqualTo(MeetingType.ONLINE.name());
+        assertThatThrownBy(() ->
+                appointmentService.approveStaffAppointment(100, RoleType.ACADEMICIAN))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage(AppointmentMessages.ALREADY_APPROVED);
+        verify(appointmentRepository).save(appointment);
+    }
+
+    @Test
+    void rejectStaffAppointment_asAcademician_updatesPending() {
+        authenticateAsAcademician();
+        Appointment appointment = assistantAppointment(100, AppointmentStatus.PENDING.name());
+        when(appointmentRepository.findByIdAndStaffIdForUpdate(100, 10))
+                .thenReturn(Optional.of(appointment));
+        when(appointmentRepository.save(appointment)).thenReturn(appointment);
+        when(appointmentMapper.toStaffResponse(appointment))
+                .thenAnswer(invocation -> new AppointmentMapper().toStaffResponse(appointment));
+
+        StaffAppointmentResponseDto result =
+                appointmentService.rejectStaffAppointment(100, RoleType.ACADEMICIAN);
+
+        assertThat(result.getAppointmentStatus()).isEqualTo(AppointmentStatus.REJECTED.name());
+    }
+
+    @Test
+    void getStaffAppointments_academicianEndpointRoleWithAssistantPrincipal_throwsAccessDenied() {
+        authenticateAsAssistant();
+
+        assertThatThrownBy(() ->
+                appointmentService.getStaffAppointments(null, RoleType.ACADEMICIAN))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage(AppointmentMessages.ONLY_ACADEMICIAN);
+        verify(appointmentRepository, never()).findAllByStaffIdWithDetails(any(), any());
+    }
+
+    @Test
+    void getStaffAppointments_unsupportedRequiredRole_throwsAccessDenied() {
+        authenticateAsAcademician();
+
+        assertThatThrownBy(() ->
+                appointmentService.getStaffAppointments(null, RoleType.HOD))
+                .isInstanceOf(AccessDeniedException.class);
+        verify(appointmentRepository, never()).findAllByStaffIdWithDetails(any(), any());
     }
 
     private void authenticateAsAssistant() {
         Role assistantRole = new Role();
         assistantRole.setRoleName(RoleType.ASSISTANT.name());
         staff.setRole(assistantRole);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        new CustomUserDetails(staff), null, List.of()));
+    }
+
+    private void authenticateAsAcademician() {
+        Role academicianRole = new Role();
+        academicianRole.setRoleName(RoleType.ACADEMICIAN.name());
+        staff.setRole(academicianRole);
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(
                         new CustomUserDetails(staff), null, List.of()));

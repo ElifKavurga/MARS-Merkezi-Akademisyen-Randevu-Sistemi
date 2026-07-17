@@ -22,6 +22,22 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
             FROM Appointment a
             JOIN FETCH a.student
             JOIN FETCH a.category
+            JOIN FETCH a.slot s
+            LEFT JOIN FETCH a.course
+            WHERE a.staff.userId = :staffId
+              AND s.slotDate BETWEEN :from AND :to
+            ORDER BY s.slotDate ASC, s.startTime ASC
+            """)
+    List<Appointment> findCalendarAppointmentsForStaffInRange(
+            @Param("staffId") Integer staffId,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to);
+
+    @Query("""
+            SELECT a
+            FROM Appointment a
+            JOIN FETCH a.student
+            JOIN FETCH a.category
             JOIN FETCH a.slot
             LEFT JOIN FETCH a.course
             WHERE a.staff.userId = :staffId

@@ -30,7 +30,7 @@ export default function AcademicianCalendar({
       events.map((event) => {
         const color = getCalendarEventColor(event);
         return {
-          id: `${event.slotId}-${event.slotDate}-${event.startTime}`,
+          id: `${event.eventType}-${event.appointmentId ?? event.slotId}-${event.slotDate}-${event.startTime}`,
           title: formatCalendarEventTitle(event),
           start: toFullCalendarDateTime(event.slotDate, event.startTime),
           end: toFullCalendarDateTime(event.slotDate, event.endTime),

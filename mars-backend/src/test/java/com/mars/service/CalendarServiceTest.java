@@ -23,12 +23,15 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.mars.CalendarMessages;
 import com.mars.dto.CalendarEventResponseDto;
+import com.mars.entity.Appointment;
+import com.mars.entity.AppointmentCategory;
 import com.mars.entity.AvailabilitySlot;
 import com.mars.entity.RecurrenceRule;
 import com.mars.entity.User;
 import com.mars.enums.RepeatType;
 import com.mars.exception.BadRequestException;
 import com.mars.mapper.CalendarMapper;
+import com.mars.repository.AppointmentRepository;
 import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.security.CustomUserDetails;
 
@@ -37,6 +40,9 @@ class CalendarServiceTest {
 
     @Mock
     private AvailabilitySlotRepository availabilitySlotRepository;
+
+    @Mock
+    private AppointmentRepository appointmentRepository;
 
     @Mock
     private CalendarMapper calendarMapper;
@@ -131,13 +137,9 @@ class CalendarServiceTest {
         LocalDate to = LocalDate.of(2026, 7, 19);
 
         AvailabilitySlot slot = oneTimeSlot(3, LocalDate.of(2026, 7, 16), true);
-        CalendarEventResponseDto mapped = CalendarEventResponseDto.builder()
-                .slotId(3)
-                .slotDate(LocalDate.of(2026, 7, 16))
-                .startTime(LocalTime.of(10, 0))
-                .endTime(LocalTime.of(12, 0))
-                .isBlocked(true)
-                .build();
+        slot.setMeetingType("BOTH");
+        CalendarEventResponseDto mapped =
+                new CalendarMapper().toEvent(slot, LocalDate.of(2026, 7, 16));
 
         when(availabilitySlotRepository.findCalendarSlotsForStaffInRange(eq(10), eq(from), eq(to)))
                 .thenReturn(List.of(slot));
@@ -147,6 +149,36 @@ class CalendarServiceTest {
 
         assertThat(events).hasSize(1);
         assertThat(events.get(0).getIsBlocked()).isTrue();
+        assertThat(events.get(0).getEventType()).isEqualTo("AVAILABILITY");
+        assertThat(events.get(0).getMeetingType()).isEqualTo("BOTH");
+    }
+
+    @Test
+    void getEvents_withAppointments_returnsOnlyAuthenticatedStaffCalendarData() {
+        LocalDate from = LocalDate.of(2026, 7, 13);
+        LocalDate to = LocalDate.of(2026, 7, 19);
+        Appointment appointment = appointment(
+                11, LocalDate.of(2026, 7, 16), "PENDING", "ONLINE");
+        Appointment approvedAppointment = appointment(
+                12, LocalDate.of(2026, 7, 17), "APPROVED", "FACE_TO_FACE");
+        CalendarEventResponseDto mapped = new CalendarMapper().toEvent(appointment);
+        CalendarEventResponseDto approvedMapped =
+                new CalendarMapper().toEvent(approvedAppointment);
+
+        when(availabilitySlotRepository.findCalendarSlotsForStaffInRange(10, from, to))
+                .thenReturn(List.of());
+        when(appointmentRepository.findCalendarAppointmentsForStaffInRange(10, from, to))
+                .thenReturn(List.of(appointment, approvedAppointment));
+        when(calendarMapper.toEvent(appointment)).thenReturn(mapped);
+        when(calendarMapper.toEvent(approvedAppointment)).thenReturn(approvedMapped);
+
+        List<CalendarEventResponseDto> events =
+                calendarService.getEvents(from, to, true);
+
+        assertThat(events).containsExactly(mapped, approvedMapped);
+        assertThat(events.get(0).getCourseName()).isNull();
+        assertThat(events.get(0).getMeetingType()).isEqualTo("ONLINE");
+        verify(appointmentRepository).findCalendarAppointmentsForStaffInRange(10, from, to);
     }
 
     @Test
@@ -232,5 +264,33 @@ class CalendarServiceTest {
         slot.setIsBlocked(blocked);
         slot.setRecurrenceRule(rule);
         return slot;
+    }
+
+    private Appointment appointment(
+            Integer appointmentId,
+            LocalDate date,
+            String status,
+            String meetingType) {
+        User student = new User();
+        student.setUserId(20);
+        student.setFullName("Öğrenci Test");
+
+        AppointmentCategory category = new AppointmentCategory();
+        category.setCategoryId(3);
+        category.setCategoryName("Danışmanlık");
+
+        AvailabilitySlot appointmentSlot = oneTimeSlot(appointmentId, date, false);
+        appointmentSlot.setEndTime(LocalTime.of(10, 10));
+
+        Appointment appointment = new Appointment();
+        appointment.setAppointmentId(appointmentId);
+        appointment.setStudent(student);
+        appointment.setStaff(academician);
+        appointment.setCategory(category);
+        appointment.setCourse(null);
+        appointment.setSlot(appointmentSlot);
+        appointment.setAppointmentStatus(status);
+        appointment.setMeetingType(meetingType);
+        return appointment;
     }
 }

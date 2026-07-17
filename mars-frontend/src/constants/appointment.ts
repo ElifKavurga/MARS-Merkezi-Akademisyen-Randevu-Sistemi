@@ -22,7 +22,7 @@ export const APPOINTMENT_MESSAGES = {
   REQUEST_BUTTON: 'Randevu Talep Et',
 } as const;
 
-export const ASSISTANT_APPOINTMENT_MESSAGES = {
+export const STAFF_APPOINTMENT_MESSAGES = {
   TITLE: 'Randevularım',
   SUBTITLE: 'Size gelen randevu taleplerini ve randevu geçmişinizi görüntüleyin.',
   PENDING_TAB: 'Gelen Talepler',

@@ -55,6 +55,8 @@ public class SecurityConfig {
                         .requestMatchers("/admin/penalty-rule", "/admin/penalty-rule/**").hasRole("ADMIN")
                         .requestMatchers("/assistant/appointments", "/assistant/appointments/**")
                                 .hasRole("ASSISTANT")
+                        .requestMatchers("/academician/appointments", "/academician/appointments/**")
+                                .hasRole("ACADEMICIAN")
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/assistant/courses",
@@ -71,7 +73,7 @@ public class SecurityConfig {
                         .requestMatchers("/recurrence-rules", "/recurrence-rules/**")
                                 .hasAnyRole("ASSISTANT", "ACADEMICIAN", "HOD")
                         .requestMatchers("/calendar", "/calendar/**")
-                                .hasAnyRole("ACADEMICIAN", "HOD")
+                                .hasAnyRole("ASSISTANT", "ACADEMICIAN", "HOD")
                         .requestMatchers("/out-of-office", "/out-of-office/**")
                                 .hasAnyRole("ACADEMICIAN", "HOD")
                         .requestMatchers(HttpMethod.GET, "/users")

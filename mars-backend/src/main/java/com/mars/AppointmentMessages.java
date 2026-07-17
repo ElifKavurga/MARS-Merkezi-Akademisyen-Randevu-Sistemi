@@ -25,6 +25,8 @@ public final class AppointmentMessages {
     public static final String ONLY_STUDENT = "Randevu talebi yalnızca öğrenciler tarafından oluşturulabilir.";
     public static final String ONLY_ASSISTANT =
             "Bu randevu bilgileri yalnızca asistanlar tarafından görüntülenebilir.";
+    public static final String ONLY_ACADEMICIAN =
+            "Bu randevu bilgileri yalnızca akademisyenler tarafından görüntülenebilir.";
     public static final String APPOINTMENT_NOT_FOUND = "Randevu bulunamadı.";
     public static final String INVALID_STATUS = "Geçersiz randevu durumu.";
     public static final String ALREADY_APPROVED = "Randevu zaten onaylanmış.";

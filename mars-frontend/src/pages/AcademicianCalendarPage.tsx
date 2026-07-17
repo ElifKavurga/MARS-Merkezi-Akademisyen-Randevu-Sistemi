@@ -6,7 +6,9 @@ import Loading from '../components/Loading';
 import { FORM_SELECT_CLASS } from '../constants';
 import {
   CALENDAR_FILTER_OPTIONS,
+  CALENDAR_EVENT_COLORS,
   CALENDAR_MESSAGES,
+  STAFF_CALENDAR_FILTER_OPTIONS,
   matchesCalendarFilter,
   toLocalIsoDate,
 } from '../constants/calendar';
@@ -33,7 +35,17 @@ function initialWeekRange(): CalendarDateRange {
   };
 }
 
-export default function AcademicianCalendarPage() {
+type AcademicianCalendarPageProps = {
+  includeAppointments?: boolean;
+  title?: string;
+  subtitle?: string;
+};
+
+export default function AcademicianCalendarPage({
+  includeAppointments = false,
+  title = CALENDAR_MESSAGES.TITLE,
+  subtitle = CALENDAR_MESSAGES.SUBTITLE,
+}: AcademicianCalendarPageProps = {}) {
   const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -46,7 +58,7 @@ export default function AcademicianCalendarPage() {
     async (nextRange: CalendarDateRange) => {
       setLoading(true);
       try {
-        const data = await getCalendarEvents(nextRange);
+        const data = await getCalendarEvents(nextRange, includeAppointments);
         setEvents(data);
       } catch (error) {
         if (isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
@@ -59,7 +71,7 @@ export default function AcademicianCalendarPage() {
         setLoading(false);
       }
     },
-    [toast],
+    [includeAppointments, toast],
   );
 
   useEffect(() => {
@@ -84,9 +96,9 @@ export default function AcademicianCalendarPage() {
     <div className="flex flex-col gap-6 p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto w-full">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="font-headline-lg text-headline-lg text-on-background">{CALENDAR_MESSAGES.TITLE}</h1>
+          <h1 className="font-headline-lg text-headline-lg text-on-background">{title}</h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-1">
-            {CALENDAR_MESSAGES.SUBTITLE}
+            {subtitle}
           </p>
         </div>
         <label className="flex flex-col gap-1.5 sm:min-w-[200px]">
@@ -97,7 +109,10 @@ export default function AcademicianCalendarPage() {
             onChange={(e) => setFilter(e.target.value as CalendarFilter)}
             aria-label="Takvim filtresi"
           >
-            {CALENDAR_FILTER_OPTIONS.map((option) => (
+            {(includeAppointments
+              ? STAFF_CALENDAR_FILTER_OPTIONS
+              : CALENDAR_FILTER_OPTIONS
+            ).map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -105,6 +120,15 @@ export default function AcademicianCalendarPage() {
           </select>
         </label>
       </div>
+
+      {includeAppointments ? (
+        <div className="flex flex-wrap items-center gap-4 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-3 font-label-sm text-label-sm text-on-surface-variant">
+          <LegendItem color={CALENDAR_EVENT_COLORS.NORMAL} label="Müsaitlik" />
+          <LegendItem color={CALENDAR_EVENT_COLORS.RECURRING} label="Tekrarlayan müsaitlik" />
+          <LegendItem color={CALENDAR_EVENT_COLORS.BLOCKED} label="Engellenmiş müsaitlik" />
+          <LegendItem color={CALENDAR_EVENT_COLORS.APPOINTMENT} label="Randevu" />
+        </div>
+      ) : null}
 
       <div className="relative min-h-[420px]">
         {loading ? (
@@ -138,5 +162,14 @@ export default function AcademicianCalendarPage() {
         }}
       />
     </div>
+  );
+}
+
+function LegendItem({ color, label }: { color: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-2">
+      <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: color }} aria-hidden="true" />
+      {label}
+    </span>
   );
 }

@@ -7,7 +7,7 @@ export const CALENDAR_MESSAGES = {
   SUBTITLE: 'Ofis saatlerinizi aylık, haftalık veya günlük görünümde inceleyin.',
   LOAD_ERROR: 'Takvim verileri yüklenemedi. Lütfen tekrar deneyin.',
   ACCESS_DENIED: 'Bu sayfaya erişim yetkiniz yok.',
-  EMPTY_RANGE: 'Seçili tarih aralığında görüntülenecek ofis saati bulunamadı.',
+  EMPTY_RANGE: 'Bu tarih aralığında takvim kaydı bulunmuyor.',
   DETAIL_TITLE: 'Ofis Saati Detayı',
   DETAIL_DESCRIPTION: 'Bu sprintte takvim üzerinden yalnızca görüntüleme yapılabilir.',
   CLOSE: 'Kapat',
@@ -20,11 +20,21 @@ export const CALENDAR_FILTER_OPTIONS = [
   { value: CALENDAR_FILTER.BLOCKED, label: 'Engellenmiş' },
 ] as const;
 
+export const STAFF_CALENDAR_FILTER_OPTIONS = [
+  { value: CALENDAR_FILTER.ALL, label: 'Tümü' },
+  { value: CALENDAR_FILTER.AVAILABILITY, label: 'Müsaitlikler' },
+  { value: CALENDAR_FILTER.APPOINTMENT, label: 'Randevular' },
+  { value: CALENDAR_FILTER.ONE_TIME, label: 'Tek Seferlik' },
+  { value: CALENDAR_FILTER.RECURRING, label: 'Tekrarlayan' },
+  { value: CALENDAR_FILTER.BLOCKED, label: 'Engellenmiş' },
+] as const;
+
 /** Kurumsal tema ile uyumlu mevcut renkler (yeni palet değil). */
 export const CALENDAR_EVENT_COLORS = {
   NORMAL: '#3B82F6',
   BLOCKED: '#9CA3AF',
   RECURRING: '#0b1641',
+  APPOINTMENT: '#F59E0B',
 } as const;
 
 export function toLocalIsoDate(date: Date): string {
@@ -41,6 +51,9 @@ export function exclusiveEndToInclusiveIso(endExclusive: Date): string {
 }
 
 export function getCalendarEventColor(event: CalendarEvent): string {
+  if (event.eventType === 'APPOINTMENT') {
+    return CALENDAR_EVENT_COLORS.APPOINTMENT;
+  }
   if (event.isBlocked) {
     return CALENDAR_EVENT_COLORS.BLOCKED;
   }
@@ -53,11 +66,15 @@ export function getCalendarEventColor(event: CalendarEvent): string {
 export function matchesCalendarFilter(event: CalendarEvent, filter: CalendarFilter): boolean {
   switch (filter) {
     case CALENDAR_FILTER.ONE_TIME:
-      return event.recurrenceRuleId == null;
+      return event.eventType === 'AVAILABILITY' && event.recurrenceRuleId == null;
     case CALENDAR_FILTER.RECURRING:
-      return event.recurrenceRuleId != null;
+      return event.eventType === 'AVAILABILITY' && event.recurrenceRuleId != null;
     case CALENDAR_FILTER.BLOCKED:
-      return event.isBlocked;
+      return event.eventType === 'AVAILABILITY' && Boolean(event.isBlocked);
+    case CALENDAR_FILTER.AVAILABILITY:
+      return event.eventType === 'AVAILABILITY';
+    case CALENDAR_FILTER.APPOINTMENT:
+      return event.eventType === 'APPOINTMENT';
     case CALENDAR_FILTER.ALL:
     default:
       return true;

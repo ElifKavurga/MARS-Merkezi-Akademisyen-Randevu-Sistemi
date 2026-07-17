@@ -1,8 +1,10 @@
 import { ROUTES } from '../constants';
+import { ROLES } from '../constants/roles';
+import { useAuth } from '../hooks/useAuth';
 import ModuleSidebar from './ModuleSidebar';
 import type { ModuleSidebarProps } from './ModuleLayout';
 
-const academicianNavItems = [
+const commonNavItems = [
   { label: 'Dashboard', path: ROUTES.ACADEMICIAN, icon: 'dashboard', end: true },
   { label: 'Derslerim', path: ROUTES.ACADEMICIAN_COURSES, icon: 'menu_book', end: false },
   { label: 'Ofis Saatleri', path: ROUTES.ACADEMICIAN_AVAILABILITY, icon: 'schedule', end: false },
@@ -11,13 +13,27 @@ const academicianNavItems = [
 ] as const;
 
 export default function AcademicianSidebar({ mobileOpen, onClose }: ModuleSidebarProps) {
+  const { user } = useAuth();
+  const navItems = user?.role === ROLES.ACADEMICIAN
+    ? [
+        ...commonNavItems.slice(0, 3),
+        {
+          label: 'Randevularım',
+          path: ROUTES.ACADEMICIAN_APPOINTMENTS,
+          icon: 'event_note',
+          end: false,
+        },
+        ...commonNavItems.slice(3),
+      ]
+    : commonNavItems;
+
   return (
     <ModuleSidebar
       mobileOpen={mobileOpen}
       onClose={onClose}
       ariaLabel="Akademisyen menü"
       navAriaLabel="Akademisyen sayfa menüsü"
-      navItems={academicianNavItems}
+      navItems={navItems}
     />
   );
 }

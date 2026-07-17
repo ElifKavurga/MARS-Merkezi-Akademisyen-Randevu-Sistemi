@@ -37,7 +37,7 @@ export type AppointmentStatus =
   | 'COMPLETED'
   | 'NO_SHOW';
 
-export type AssistantAppointment = {
+export type StaffAppointment = {
   appointmentId: number;
   studentName: string;
   appointmentDate: string;
@@ -49,3 +49,5 @@ export type AssistantAppointment = {
   meetingType: 'FACE_TO_FACE' | 'ONLINE';
   appointmentStatus: AppointmentStatus;
 };
+
+export type StaffAppointmentScope = 'assistant' | 'academician';

@@ -17,9 +17,9 @@ import com.mars.service.AppointmentService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/assistant/appointments")
+@RequestMapping("/academician/appointments")
 @RequiredArgsConstructor
-public class AssistantAppointmentController {
+public class AcademicianAppointmentController {
 
     private final AppointmentService appointmentService;
 
@@ -27,27 +27,29 @@ public class AssistantAppointmentController {
     public ResponseEntity<List<StaffAppointmentResponseDto>> getAppointments(
             @RequestParam(required = false) String status) {
         return ResponseEntity.ok(
-                appointmentService.getStaffAppointments(status, RoleType.ASSISTANT));
+                appointmentService.getStaffAppointments(status, RoleType.ACADEMICIAN));
     }
 
     @GetMapping("/{appointmentId}")
     public ResponseEntity<StaffAppointmentResponseDto> getAppointment(
             @PathVariable Integer appointmentId) {
         return ResponseEntity.ok(
-                appointmentService.getStaffAppointment(appointmentId, RoleType.ASSISTANT));
+                appointmentService.getStaffAppointment(appointmentId, RoleType.ACADEMICIAN));
     }
 
     @PatchMapping("/{appointmentId}/approve")
     public ResponseEntity<StaffAppointmentResponseDto> approveAppointment(
             @PathVariable Integer appointmentId) {
         return ResponseEntity.ok(
-                appointmentService.approveStaffAppointment(appointmentId, RoleType.ASSISTANT));
+                appointmentService.approveStaffAppointment(
+                        appointmentId, RoleType.ACADEMICIAN));
     }
 
     @PatchMapping("/{appointmentId}/reject")
     public ResponseEntity<StaffAppointmentResponseDto> rejectAppointment(
             @PathVariable Integer appointmentId) {
         return ResponseEntity.ok(
-                appointmentService.rejectStaffAppointment(appointmentId, RoleType.ASSISTANT));
+                appointmentService.rejectStaffAppointment(
+                        appointmentId, RoleType.ACADEMICIAN));
     }
 }

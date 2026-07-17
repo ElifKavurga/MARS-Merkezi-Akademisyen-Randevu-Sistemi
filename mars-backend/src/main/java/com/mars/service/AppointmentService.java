@@ -16,9 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mars.AppointmentMessages;
-import com.mars.dto.AssistantAppointmentResponseDto;
 import com.mars.dto.AppointmentCreateRequest;
 import com.mars.dto.AppointmentResponseDto;
+import com.mars.dto.StaffAppointmentResponseDto;
 import com.mars.entity.Appointment;
 import com.mars.entity.AppointmentCategory;
 import com.mars.entity.AvailabilitySlot;
@@ -105,44 +105,55 @@ public class AppointmentService {
     }
 
     @Transactional(readOnly = true)
-    public List<AssistantAppointmentResponseDto> getAssistantAppointments(String status) {
-        User assistant = getCurrentAssistant();
+    public List<StaffAppointmentResponseDto> getStaffAppointments(
+            String status,
+            RoleType requiredRole) {
+        User staff = getCurrentStaff(requiredRole);
         String resolvedStatus = resolveStatusFilter(status);
 
         return appointmentRepository.findAllByStaffIdWithDetails(
-                        assistant.getUserId(), resolvedStatus)
+                        staff.getUserId(), resolvedStatus)
                 .stream()
-                .sorted(assistantAppointmentComparator())
-                .map(appointmentMapper::toAssistantResponse)
+                .sorted(staffAppointmentComparator())
+                .map(appointmentMapper::toStaffResponse)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public AssistantAppointmentResponseDto getAssistantAppointment(Integer appointmentId) {
-        User assistant = getCurrentAssistant();
+    public StaffAppointmentResponseDto getStaffAppointment(
+            Integer appointmentId,
+            RoleType requiredRole) {
+        User staff = getCurrentStaff(requiredRole);
         Appointment appointment = appointmentRepository.findByIdAndStaffIdWithDetails(
-                        appointmentId, assistant.getUserId())
+                        appointmentId, staff.getUserId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException(AppointmentMessages.APPOINTMENT_NOT_FOUND));
-        return appointmentMapper.toAssistantResponse(appointment);
+        return appointmentMapper.toStaffResponse(appointment);
     }
 
     @Transactional
-    public AssistantAppointmentResponseDto approveAssistantAppointment(Integer appointmentId) {
-        return updateAssistantAppointmentStatus(appointmentId, AppointmentStatus.APPROVED);
-    }
-
-    @Transactional
-    public AssistantAppointmentResponseDto rejectAssistantAppointment(Integer appointmentId) {
-        return updateAssistantAppointmentStatus(appointmentId, AppointmentStatus.REJECTED);
-    }
-
-    private AssistantAppointmentResponseDto updateAssistantAppointmentStatus(
+    public StaffAppointmentResponseDto approveStaffAppointment(
             Integer appointmentId,
-            AppointmentStatus targetStatus) {
-        User assistant = getCurrentAssistant();
+            RoleType requiredRole) {
+        return updateStaffAppointmentStatus(
+                appointmentId, AppointmentStatus.APPROVED, requiredRole);
+    }
+
+    @Transactional
+    public StaffAppointmentResponseDto rejectStaffAppointment(
+            Integer appointmentId,
+            RoleType requiredRole) {
+        return updateStaffAppointmentStatus(
+                appointmentId, AppointmentStatus.REJECTED, requiredRole);
+    }
+
+    private StaffAppointmentResponseDto updateStaffAppointmentStatus(
+            Integer appointmentId,
+            AppointmentStatus targetStatus,
+            RoleType requiredRole) {
+        User staff = getCurrentStaff(requiredRole);
         Appointment appointment = appointmentRepository.findByIdAndStaffIdForUpdate(
-                        appointmentId, assistant.getUserId())
+                        appointmentId, staff.getUserId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException(AppointmentMessages.APPOINTMENT_NOT_FOUND));
 
@@ -151,7 +162,7 @@ public class AppointmentService {
         appointment.setUpdatedAt(LocalDateTime.now());
 
         Appointment saved = appointmentRepository.save(appointment);
-        return appointmentMapper.toAssistantResponse(saved);
+        return appointmentMapper.toStaffResponse(saved);
     }
 
     private void validatePendingStatus(String currentStatus) {
@@ -270,15 +281,22 @@ public class AppointmentService {
         return user;
     }
 
-    private User getCurrentAssistant() {
+    private User getCurrentStaff(RoleType requiredRole) {
+        if (requiredRole != RoleType.ASSISTANT && requiredRole != RoleType.ACADEMICIAN) {
+            throw new AccessDeniedException(SecurityMessages.ACCESS_DENIED);
+        }
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails userDetails)) {
             throw new AccessDeniedException(SecurityMessages.ACCESS_DENIED);
         }
         User user = userDetails.getUser();
         String roleName = user.getRole() != null ? user.getRole().getRoleName() : null;
-        if (!RoleType.ASSISTANT.name().equals(roleName)) {
-            throw new AccessDeniedException(AppointmentMessages.ONLY_ASSISTANT);
+        if (!requiredRole.name().equals(roleName)) {
+            String message = requiredRole == RoleType.ASSISTANT
+                    ? AppointmentMessages.ONLY_ASSISTANT
+                    : AppointmentMessages.ONLY_ACADEMICIAN;
+            throw new AccessDeniedException(message);
         }
         return user;
     }
@@ -294,7 +312,7 @@ public class AppointmentService {
         }
     }
 
-    private Comparator<Appointment> assistantAppointmentComparator() {
+    private Comparator<Appointment> staffAppointmentComparator() {
         return (left, right) -> {
             boolean leftPast = isAppointmentInPast(left);
             boolean rightPast = isAppointmentInPast(right);

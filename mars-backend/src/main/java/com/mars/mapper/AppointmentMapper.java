@@ -4,9 +4,9 @@ import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Component;
 
-import com.mars.dto.AssistantAppointmentResponseDto;
 import com.mars.dto.AppointmentCreateRequest;
 import com.mars.dto.AppointmentResponseDto;
+import com.mars.dto.StaffAppointmentResponseDto;
 import com.mars.entity.Appointment;
 import com.mars.entity.AppointmentCategory;
 import com.mars.entity.AvailabilitySlot;
@@ -58,8 +58,8 @@ public class AppointmentMapper {
                 .build();
     }
 
-    public AssistantAppointmentResponseDto toAssistantResponse(Appointment appointment) {
-        return AssistantAppointmentResponseDto.builder()
+    public StaffAppointmentResponseDto toStaffResponse(Appointment appointment) {
+        return StaffAppointmentResponseDto.builder()
                 .appointmentId(appointment.getAppointmentId())
                 .studentName(appointment.getStudent() != null
                         ? appointment.getStudent().getFullName()

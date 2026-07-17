@@ -66,7 +66,10 @@ class CalendarControllerTest {
     @Test
     @WithMockUser(roles = "ACADEMICIAN")
     void getEvents_asAcademician_returnsEvents() throws Exception {
-        when(calendarService.getEvents(eq(LocalDate.of(2026, 7, 13)), eq(LocalDate.of(2026, 7, 19))))
+        when(calendarService.getEvents(
+                eq(LocalDate.of(2026, 7, 13)),
+                eq(LocalDate.of(2026, 7, 19)),
+                eq(false)))
                 .thenReturn(List.of(
                         CalendarEventResponseDto.builder()
                                 .slotId(1)
@@ -97,7 +100,40 @@ class CalendarControllerTest {
                 .andExpect(jsonPath("$[1].recurrenceRuleId").value(5))
                 .andExpect(jsonPath("$[1].isBlocked").value(true));
 
-        verify(calendarService).getEvents(LocalDate.of(2026, 7, 13), LocalDate.of(2026, 7, 19));
+        verify(calendarService).getEvents(
+                LocalDate.of(2026, 7, 13),
+                LocalDate.of(2026, 7, 19),
+                false);
+    }
+
+    @Test
+    @WithMockUser(roles = "ASSISTANT")
+    void getEvents_asAssistant_includesOwnedAppointments() throws Exception {
+        when(calendarService.getEvents(
+                eq(LocalDate.of(2026, 7, 13)),
+                eq(LocalDate.of(2026, 7, 19)),
+                eq(true)))
+                .thenReturn(List.of(
+                        CalendarEventResponseDto.builder()
+                                .eventType("APPOINTMENT")
+                                .appointmentId(11)
+                                .slotId(5)
+                                .slotDate(LocalDate.of(2026, 7, 15))
+                                .startTime(LocalTime.of(10, 0))
+                                .endTime(LocalTime.of(10, 10))
+                                .appointmentStatus("PENDING")
+                                .meetingType("ONLINE")
+                                .build()));
+
+        mockMvc.perform(get("/calendar/events")
+                        .param("from", "2026-07-13")
+                        .param("to", "2026-07-19")
+                        .param("includeAppointments", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].eventType").value("APPOINTMENT"))
+                .andExpect(jsonPath("$[0].appointmentId").value(11))
+                .andExpect(jsonPath("$[0].appointmentStatus").value("PENDING"))
+                .andExpect(jsonPath("$[0].meetingType").value("ONLINE"));
     }
 
     @Test
@@ -106,6 +142,16 @@ class CalendarControllerTest {
         mockMvc.perform(get("/calendar/events")
                         .param("from", "2026-07-13")
                         .param("to", "2026-07-19"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void getEvents_asAdmin_returnsForbidden() throws Exception {
+        mockMvc.perform(get("/calendar/events")
+                        .param("from", "2026-07-13")
+                        .param("to", "2026-07-19")
+                        .param("includeAppointments", "true"))
                 .andExpect(status().isForbidden());
     }
 

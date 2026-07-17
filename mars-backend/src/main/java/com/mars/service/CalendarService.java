@@ -15,12 +15,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mars.CalendarMessages;
 import com.mars.dto.CalendarEventResponseDto;
+import com.mars.entity.Appointment;
 import com.mars.entity.AvailabilitySlot;
 import com.mars.entity.RecurrenceRule;
 import com.mars.entity.User;
 import com.mars.enums.RepeatType;
 import com.mars.exception.BadRequestException;
 import com.mars.mapper.CalendarMapper;
+import com.mars.repository.AppointmentRepository;
 import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.security.CustomUserDetails;
 import com.mars.security.SecurityMessages;
@@ -32,10 +34,19 @@ import lombok.RequiredArgsConstructor;
 public class CalendarService {
 
     private final AvailabilitySlotRepository availabilitySlotRepository;
+    private final AppointmentRepository appointmentRepository;
     private final CalendarMapper calendarMapper;
 
     @Transactional(readOnly = true)
     public List<CalendarEventResponseDto> getEvents(LocalDate from, LocalDate to) {
+        return getEvents(from, to, false);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CalendarEventResponseDto> getEvents(
+            LocalDate from,
+            LocalDate to,
+            boolean includeAppointments) {
         validateRange(from, to);
 
         User currentUser = getCurrentUser();
@@ -45,6 +56,14 @@ public class CalendarService {
         List<CalendarEventResponseDto> events = new ArrayList<>();
         for (AvailabilitySlot slot : slots) {
             events.addAll(expandSlotOccurrences(slot, from, to));
+        }
+        if (includeAppointments) {
+            List<Appointment> appointments =
+                    appointmentRepository.findCalendarAppointmentsForStaffInRange(
+                            currentUser.getUserId(), from, to);
+            appointments.stream()
+                    .map(calendarMapper::toEvent)
+                    .forEach(events::add);
         }
 
         events.sort(Comparator

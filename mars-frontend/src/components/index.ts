@@ -39,5 +39,6 @@ export { default as OutOfOfficeCreateModal } from './OutOfOfficeCreateModal';
 export { default as OutOfOfficeEditModal } from './OutOfOfficeEditModal';
 export { default as AppointmentCreateModal } from './AppointmentCreateModal';
 export { default as AppointmentStatusBadge } from './AppointmentStatusBadge';
-export { default as AssistantAppointmentDetailModal } from './AssistantAppointmentDetailModal';
+export { default as StaffAppointmentDetailModal } from './StaffAppointmentDetailModal';
+export { default as StaffAppointmentsView } from './StaffAppointmentsView';
 export { ErrorBoundary } from './ErrorBoundary';

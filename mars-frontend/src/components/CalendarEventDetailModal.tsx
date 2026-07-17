@@ -2,11 +2,13 @@ import ModalHeader from './ModalHeader';
 import ModalShell from './ModalShell';
 import CourseDetailField from './CourseDetailField';
 import AvailabilityStatusBadge from './AvailabilityStatusBadge';
+import AppointmentStatusBadge from './AppointmentStatusBadge';
 import {
   CALENDAR_MESSAGES,
   formatCalendarDateLabel,
 } from '../constants/calendar';
 import { formatTimeLabel } from '../constants/availability';
+import { getMeetingTypeLabel } from '../constants/appointment';
 import type { CalendarEvent } from '../types/calendar';
 
 type CalendarEventDetailModalProps = {
@@ -25,6 +27,7 @@ export default function CalendarEventDetailModal({
   }
 
   const isRecurring = event.recurrenceRuleId != null;
+  const isAppointment = event.eventType === 'APPOINTMENT';
 
   return (
     <ModalShell
@@ -48,19 +51,45 @@ export default function CalendarEventDetailModal({
         <ModalHeader
           titleId="calendar-event-detail-title"
           icon="event"
-          title={CALENDAR_MESSAGES.DETAIL_TITLE}
+          title={isAppointment ? 'Randevu Detayı' : CALENDAR_MESSAGES.DETAIL_TITLE}
           description={CALENDAR_MESSAGES.DETAIL_DESCRIPTION}
         />
         <div className="mt-2">
+          {isAppointment ? (
+            <CourseDetailField label="Öğrenci">{event.studentName ?? '-'}</CourseDetailField>
+          ) : null}
           <CourseDetailField label="Tarih">{formatCalendarDateLabel(event.slotDate)}</CourseDetailField>
-          <CourseDetailField label="Başlangıç Saati">
-            {formatTimeLabel(event.startTime)}
+          <CourseDetailField label="Saat">
+            {formatTimeLabel(event.startTime)} - {formatTimeLabel(event.endTime)}
           </CourseDetailField>
-          <CourseDetailField label="Bitiş Saati">{formatTimeLabel(event.endTime)}</CourseDetailField>
-          <CourseDetailField label="Tekrarlayan mı?">{isRecurring ? 'Evet' : 'Hayır'}</CourseDetailField>
-          <CourseDetailField label="Durum">
-            <AvailabilityStatusBadge isBlocked={event.isBlocked} />
-          </CourseDetailField>
+          {isAppointment ? (
+            <>
+              <CourseDetailField label="Kategori">{event.categoryName ?? '-'}</CourseDetailField>
+              <CourseDetailField label="Ders">
+                {event.courseName
+                  ? `${event.courseCode ?? ''} ${event.courseName}`.trim()
+                  : '-'}
+              </CourseDetailField>
+              <CourseDetailField label="Görüşme Türü">
+                {getMeetingTypeLabel(event.meetingType)}
+              </CourseDetailField>
+              <CourseDetailField label="Durum">
+                <AppointmentStatusBadge status={event.appointmentStatus ?? ''} />
+              </CourseDetailField>
+            </>
+          ) : (
+            <>
+              <CourseDetailField label="Görüşme Türü">
+                {getMeetingTypeLabel(event.meetingType)}
+              </CourseDetailField>
+              <CourseDetailField label="Tekrarlayan mı?">
+                {isRecurring ? 'Evet' : 'Hayır'}
+              </CourseDetailField>
+              <CourseDetailField label="Durum">
+                <AvailabilityStatusBadge isBlocked={Boolean(event.isBlocked)} />
+              </CourseDetailField>
+            </>
+          )}
         </div>
       </div>
     </ModalShell>

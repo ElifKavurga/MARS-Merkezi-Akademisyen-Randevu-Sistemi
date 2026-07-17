@@ -14,7 +14,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AssistantAppointmentResponseDto {
+public class StaffAppointmentResponseDto {
 
     private Integer appointmentId;
     private String studentName;

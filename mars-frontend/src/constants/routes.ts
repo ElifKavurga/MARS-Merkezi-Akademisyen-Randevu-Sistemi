@@ -13,6 +13,7 @@ export const ROUTES = {
   ACADEMICIAN_COURSES: '/academician/courses',
   ACADEMICIAN_COURSE_DETAIL: '/academician/courses/:courseId',
   ACADEMICIAN_AVAILABILITY: '/academician/availability',
+  ACADEMICIAN_APPOINTMENTS: '/academician/appointments',
   ACADEMICIAN_CALENDAR: '/academician/calendar',
   ACADEMICIAN_OUT_OF_OFFICE: '/academician/out-of-office',
   ASSISTANT: '/assistant',
@@ -20,6 +21,7 @@ export const ROUTES = {
   ASSISTANT_COURSES: '/assistant/courses',
   ASSISTANT_AVAILABILITY: '/assistant/availability',
   ASSISTANT_APPOINTMENTS: '/assistant/appointments',
+  ASSISTANT_CALENDAR: '/assistant/calendar',
   STUDENT: '/ogrenci',
   STUDENT_APPOINTMENT_CREATE: '/ogrenci/randevu-olustur',
 } as const;

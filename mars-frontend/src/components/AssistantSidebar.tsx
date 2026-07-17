@@ -27,6 +27,12 @@ const assistantNavItems = [
     icon: 'event_note',
     end: true,
   },
+  {
+    label: 'Takvimim',
+    path: ROUTES.ASSISTANT_CALENDAR,
+    icon: 'calendar_month',
+    end: true,
+  },
 ] as const;
 
 export default function AssistantSidebar({ mobileOpen, onClose }: ModuleSidebarProps) {

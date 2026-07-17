@@ -17,12 +17,14 @@ import AcademicianDashboard from '../pages/AcademicianDashboard';
 import AcademicianCoursesPage from '../pages/AcademicianCoursesPage';
 import CourseDetailPage from '../pages/CourseDetailPage';
 import AcademicianAvailabilityPage from '../pages/AcademicianAvailabilityPage';
+import AcademicianAppointmentsPage from '../pages/AcademicianAppointmentsPage';
 import AcademicianCalendarPage from '../pages/AcademicianCalendarPage';
 import AcademicianOutOfOfficePage from '../pages/AcademicianOutOfOfficePage';
 import AssistantDashboardPage from '../pages/AssistantDashboardPage';
 import AssistantCoursesPage from '../pages/AssistantCoursesPage';
 import AssistantAvailabilityPage from '../pages/AssistantAvailabilityPage';
 import AssistantAppointmentsPage from '../pages/AssistantAppointmentsPage';
+import AssistantCalendarPage from '../pages/AssistantCalendarPage';
 import StudentDashboard from '../pages/StudentDashboard';
 import StudentAppointmentCreatePage from '../pages/StudentAppointmentCreatePage';
 import NotFoundPage from '../pages/NotFoundPage';
@@ -69,6 +71,7 @@ export default function AppRouter() {
               path={ROUTES.ASSISTANT_APPOINTMENTS}
               element={<AssistantAppointmentsPage />}
             />
+            <Route path={ROUTES.ASSISTANT_CALENDAR} element={<AssistantCalendarPage />} />
           </Route>
         </Route>
 
@@ -78,6 +81,12 @@ export default function AppRouter() {
             <Route path={ROUTES.ACADEMICIAN_COURSES} element={<AcademicianCoursesPage />} />
             <Route path={ROUTES.ACADEMICIAN_COURSE_DETAIL} element={<CourseDetailPage />} />
             <Route path={ROUTES.ACADEMICIAN_AVAILABILITY} element={<AcademicianAvailabilityPage />} />
+            <Route element={<ProtectedRoute allowedRoles={[ROLES.ACADEMICIAN]} />}>
+              <Route
+                path={ROUTES.ACADEMICIAN_APPOINTMENTS}
+                element={<AcademicianAppointmentsPage />}
+              />
+            </Route>
             <Route path={ROUTES.ACADEMICIAN_CALENDAR} element={<AcademicianCalendarPage />} />
             <Route path={ROUTES.ACADEMICIAN_OUT_OF_OFFICE} element={<AcademicianOutOfOfficePage />} />
           </Route>

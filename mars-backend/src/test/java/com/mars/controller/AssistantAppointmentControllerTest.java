@@ -23,9 +23,10 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.mars.config.CorsConfig;
-import com.mars.dto.AssistantAppointmentResponseDto;
+import com.mars.dto.StaffAppointmentResponseDto;
 import com.mars.enums.AppointmentStatus;
 import com.mars.enums.MeetingType;
+import com.mars.enums.RoleType;
 import com.mars.exception.handler.GlobalExceptionHandler;
 import com.mars.security.JwtAuthenticationFilter;
 import com.mars.security.SecurityConfig;
@@ -68,7 +69,8 @@ class AssistantAppointmentControllerTest {
     @Test
     @WithMockUser(roles = "ASSISTANT")
     void getAppointments_asAssistant_returnsOwnPendingAppointments() throws Exception {
-        when(appointmentService.getAssistantAppointments(AppointmentStatus.PENDING.name()))
+        when(appointmentService.getStaffAppointments(
+                AppointmentStatus.PENDING.name(), RoleType.ASSISTANT))
                 .thenReturn(List.of(appointmentResponse()));
 
         mockMvc.perform(get("/assistant/appointments")
@@ -79,13 +81,14 @@ class AssistantAppointmentControllerTest {
                 .andExpect(jsonPath("$[0].appointmentStatus").value("PENDING"))
                 .andExpect(jsonPath("$[0].meetingType").value("FACE_TO_FACE"));
 
-        verify(appointmentService).getAssistantAppointments(AppointmentStatus.PENDING.name());
+        verify(appointmentService).getStaffAppointments(
+                AppointmentStatus.PENDING.name(), RoleType.ASSISTANT);
     }
 
     @Test
     @WithMockUser(roles = "ASSISTANT")
     void getAppointments_asAssistant_withoutFilter_returnsAll() throws Exception {
-        when(appointmentService.getAssistantAppointments(null))
+        when(appointmentService.getStaffAppointments(null, RoleType.ASSISTANT))
                 .thenReturn(List.of(appointmentResponse()));
 
         mockMvc.perform(get("/assistant/appointments"))
@@ -96,20 +99,21 @@ class AssistantAppointmentControllerTest {
     @Test
     @WithMockUser(roles = "ASSISTANT")
     void getAppointment_asAssistant_returnsOwnedDetail() throws Exception {
-        when(appointmentService.getAssistantAppointment(11)).thenReturn(appointmentResponse());
+        when(appointmentService.getStaffAppointment(11, RoleType.ASSISTANT))
+                .thenReturn(appointmentResponse());
 
         mockMvc.perform(get("/assistant/appointments/11"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.appointmentId").value(11))
                 .andExpect(jsonPath("$.courseCode").isEmpty());
 
-        verify(appointmentService).getAssistantAppointment(11);
+        verify(appointmentService).getStaffAppointment(11, RoleType.ASSISTANT);
     }
 
     @Test
     @WithMockUser(roles = "ASSISTANT")
     void approveAppointment_asAssistant_returnsApproved() throws Exception {
-        when(appointmentService.approveAssistantAppointment(11))
+        when(appointmentService.approveStaffAppointment(11, RoleType.ASSISTANT))
                 .thenReturn(appointmentResponse(AppointmentStatus.APPROVED));
 
         mockMvc.perform(patch("/assistant/appointments/11/approve"))
@@ -118,20 +122,20 @@ class AssistantAppointmentControllerTest {
                 .andExpect(jsonPath("$.appointmentStatus").value("APPROVED"))
                 .andExpect(jsonPath("$.meetingType").value("FACE_TO_FACE"));
 
-        verify(appointmentService).approveAssistantAppointment(11);
+        verify(appointmentService).approveStaffAppointment(11, RoleType.ASSISTANT);
     }
 
     @Test
     @WithMockUser(roles = "ASSISTANT")
     void rejectAppointment_asAssistant_returnsRejected() throws Exception {
-        when(appointmentService.rejectAssistantAppointment(11))
+        when(appointmentService.rejectStaffAppointment(11, RoleType.ASSISTANT))
                 .thenReturn(appointmentResponse(AppointmentStatus.REJECTED));
 
         mockMvc.perform(patch("/assistant/appointments/11/reject"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.appointmentStatus").value("REJECTED"));
 
-        verify(appointmentService).rejectAssistantAppointment(11);
+        verify(appointmentService).rejectStaffAppointment(11, RoleType.ASSISTANT);
     }
 
     @Test
@@ -202,12 +206,12 @@ class AssistantAppointmentControllerTest {
                 .andExpect(jsonPath("$.status").value(403));
     }
 
-    private AssistantAppointmentResponseDto appointmentResponse() {
+    private StaffAppointmentResponseDto appointmentResponse() {
         return appointmentResponse(AppointmentStatus.PENDING);
     }
 
-    private AssistantAppointmentResponseDto appointmentResponse(AppointmentStatus status) {
-        return AssistantAppointmentResponseDto.builder()
+    private StaffAppointmentResponseDto appointmentResponse(AppointmentStatus status) {
+        return StaffAppointmentResponseDto.builder()
                 .appointmentId(11)
                 .studentName("Öğrenci Test")
                 .appointmentDate(LocalDate.of(2026, 7, 20))

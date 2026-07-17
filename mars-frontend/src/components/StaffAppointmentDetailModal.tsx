@@ -1,17 +1,17 @@
 import {
-  ASSISTANT_APPOINTMENT_MESSAGES,
+  STAFF_APPOINTMENT_MESSAGES,
   getMeetingTypeLabel,
 } from '../constants/appointment';
-import type { AssistantAppointment } from '../types/appointment';
+import type { StaffAppointment } from '../types/appointment';
 import AdminActionButton from './AdminActionButton';
 import AppointmentStatusBadge from './AppointmentStatusBadge';
 import ModalShell from './ModalShell';
 
-type AssistantAppointmentDetailModalProps = {
-  appointment: AssistantAppointment | null;
+type StaffAppointmentDetailModalProps = {
+  appointment: StaffAppointment | null;
   actionDisabled?: boolean;
-  onApprove: (appointment: AssistantAppointment) => void;
-  onReject: (appointment: AssistantAppointment) => void;
+  onApprove: (appointment: StaffAppointment) => void;
+  onReject: (appointment: StaffAppointment) => void;
   onClose: () => void;
 };
 
@@ -27,17 +27,17 @@ function formatTime(time: string): string {
   return time.slice(0, 5);
 }
 
-export default function AssistantAppointmentDetailModal({
+export default function StaffAppointmentDetailModal({
   appointment,
   actionDisabled = false,
   onApprove,
   onReject,
   onClose,
-}: AssistantAppointmentDetailModalProps) {
+}: StaffAppointmentDetailModalProps) {
   return (
     <ModalShell
       open={appointment !== null}
-      titleId="assistant-appointment-detail-title"
+      titleId="staff-appointment-detail-title"
       maxWidthClass="sm:max-w-xl"
       onClose={onClose}
       footer={
@@ -77,10 +77,10 @@ export default function AssistantAppointmentDetailModal({
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2
-                id="assistant-appointment-detail-title"
+                id="staff-appointment-detail-title"
                 className="font-headline-md text-headline-md text-on-background"
               >
-                {ASSISTANT_APPOINTMENT_MESSAGES.DETAIL_TITLE}
+                {STAFF_APPOINTMENT_MESSAGES.DETAIL_TITLE}
               </h2>
               <p className="mt-1 font-body-md text-body-md text-on-surface-variant">
                 Randevu #{appointment.appointmentId}

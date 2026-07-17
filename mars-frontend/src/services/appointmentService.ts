@@ -2,8 +2,9 @@ import { apiClient } from './apiClient';
 import type {
   Appointment,
   AppointmentCreatePayload,
-  AssistantAppointment,
   AvailableSlot,
+  StaffAppointment,
+  StaffAppointmentScope,
 } from '../types/appointment';
 import type { AppointmentCategory } from '../types/category';
 
@@ -26,38 +27,42 @@ export async function getAppointmentCategories(): Promise<AppointmentCategory[]>
   return data;
 }
 
-export async function getAssistantAppointments(
+export async function getStaffAppointments(
+  scope: StaffAppointmentScope,
   status?: string,
-): Promise<AssistantAppointment[]> {
-  const { data } = await apiClient.get<AssistantAppointment[]>('/assistant/appointments', {
+): Promise<StaffAppointment[]> {
+  const { data } = await apiClient.get<StaffAppointment[]>(`/${scope}/appointments`, {
     params: status ? { status } : undefined,
   });
   return data;
 }
 
-export async function getAssistantAppointment(
+export async function getStaffAppointment(
+  scope: StaffAppointmentScope,
   appointmentId: number,
-): Promise<AssistantAppointment> {
-  const { data } = await apiClient.get<AssistantAppointment>(
-    `/assistant/appointments/${appointmentId}`,
+): Promise<StaffAppointment> {
+  const { data } = await apiClient.get<StaffAppointment>(
+    `/${scope}/appointments/${appointmentId}`,
   );
   return data;
 }
 
-export async function approveAssistantAppointment(
+export async function approveStaffAppointment(
+  scope: StaffAppointmentScope,
   appointmentId: number,
-): Promise<AssistantAppointment> {
-  const { data } = await apiClient.patch<AssistantAppointment>(
-    `/assistant/appointments/${appointmentId}/approve`,
+): Promise<StaffAppointment> {
+  const { data } = await apiClient.patch<StaffAppointment>(
+    `/${scope}/appointments/${appointmentId}/approve`,
   );
   return data;
 }
 
-export async function rejectAssistantAppointment(
+export async function rejectStaffAppointment(
+  scope: StaffAppointmentScope,
   appointmentId: number,
-): Promise<AssistantAppointment> {
-  const { data } = await apiClient.patch<AssistantAppointment>(
-    `/assistant/appointments/${appointmentId}/reject`,
+): Promise<StaffAppointment> {
+  const { data } = await apiClient.patch<StaffAppointment>(
+    `/${scope}/appointments/${appointmentId}/reject`,
   );
   return data;
 }
