@@ -2,7 +2,6 @@ package com.mars.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -20,33 +19,31 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.mars.config.CorsConfig;
-import com.mars.dto.AssistantCourseResponseDto;
-import com.mars.dto.AssistantDashboardResponseDto;
-import com.mars.dto.StaffAppointmentResponseDto;
+import com.mars.dto.AcademicianDashboardResponseDto;
 import com.mars.exception.handler.GlobalExceptionHandler;
 import com.mars.security.JwtAuthenticationFilter;
 import com.mars.security.SecurityConfig;
 import com.mars.security.SecurityErrorWriter;
-import com.mars.service.AssistantCourseService;
+import com.mars.service.AcademicianDashboardService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 
-@WebMvcTest(controllers = AssistantDashboardController.class)
+@WebMvcTest(controllers = AcademicianDashboardController.class)
 @Import({
         SecurityConfig.class,
         SecurityErrorWriter.class,
         CorsConfig.class,
         GlobalExceptionHandler.class
 })
-class AssistantDashboardControllerTest {
+class AcademicianDashboardControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockBean
-    private AssistantCourseService assistantCourseService;
+    private AcademicianDashboardService academicianDashboardService;
 
     @MockBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -63,56 +60,35 @@ class AssistantDashboardControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ASSISTANT")
-    void getDashboardSummary_asAssistant_returnsRealSummary() throws Exception {
-        when(assistantCourseService.getDashboardSummary()).thenReturn(
-                AssistantDashboardResponseDto.builder()
-                        .assignedCourseCount(2)
-                        .relatedAcademicianCount(1)
-                        .assignedCoursesPreview(List.of(
-                                AssistantCourseResponseDto.builder()
-                                        .courseId(1)
-                                        .courseCode("BLM101")
-                                        .courseName("Programlamaya Giriş")
-                                        .academicTerm("2026-2027 Güz")
-                                        .ownerAcademicianName("Dr. Akademisyen")
-                                        .build()))
+    @WithMockUser(roles = "ACADEMICIAN")
+    void getDashboardSummary_asAcademician_returnsSummary() throws Exception {
+        when(academicianDashboardService.getDashboardSummary()).thenReturn(
+                AcademicianDashboardResponseDto.builder()
                         .pendingAppointmentCount(2)
                         .upcomingAppointmentCount(1)
-                        .pendingAppointments(List.of(
-                                StaffAppointmentResponseDto.builder()
-                                        .appointmentId(11)
-                                        .appointmentStatus("PENDING")
-                                        .build()))
-                        .upcomingAppointments(List.of(
-                                StaffAppointmentResponseDto.builder()
-                                        .appointmentId(12)
-                                        .appointmentStatus("APPROVED")
-                                        .build()))
+                        .activeCourseCount(3)
+                        .pendingAppointments(List.of())
+                        .upcomingAppointments(List.of())
                         .build());
 
-        mockMvc.perform(get("/assistant/dashboard"))
+        mockMvc.perform(get("/academician/dashboard"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.assignedCourseCount").value(2))
-                .andExpect(jsonPath("$.relatedAcademicianCount").value(1))
-                .andExpect(jsonPath("$.assignedCoursesPreview[0].courseCode").value("BLM101"))
                 .andExpect(jsonPath("$.pendingAppointmentCount").value(2))
                 .andExpect(jsonPath("$.upcomingAppointmentCount").value(1))
-                .andExpect(jsonPath("$.pendingAppointments[0].appointmentId").value(11))
-                .andExpect(jsonPath("$.upcomingAppointments[0].appointmentId").value(12));
+                .andExpect(jsonPath("$.activeCourseCount").value(3))
+                .andExpect(jsonPath("$.pendingAppointments").isArray())
+                .andExpect(jsonPath("$.upcomingAppointments").isArray());
+    }
 
-        verify(assistantCourseService).getDashboardSummary();
+    @Test
+    @WithMockUser(roles = "ASSISTANT")
+    void getDashboardSummary_asAssistant_returnsForbidden() throws Exception {
+        assertForbidden();
     }
 
     @Test
     @WithMockUser(roles = "STUDENT")
     void getDashboardSummary_asStudent_returnsForbidden() throws Exception {
-        assertForbidden();
-    }
-
-    @Test
-    @WithMockUser(roles = "ACADEMICIAN")
-    void getDashboardSummary_asAcademician_returnsForbidden() throws Exception {
         assertForbidden();
     }
 
@@ -129,7 +105,7 @@ class AssistantDashboardControllerTest {
     }
 
     private void assertForbidden() throws Exception {
-        mockMvc.perform(get("/assistant/dashboard"))
+        mockMvc.perform(get("/academician/dashboard"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status").value(403));
     }

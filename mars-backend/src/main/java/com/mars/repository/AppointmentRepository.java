@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Pageable;
 
 import com.mars.entity.Appointment;
 
@@ -71,6 +72,82 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
     Optional<Appointment> findByIdAndStaffIdForUpdate(
             @Param("appointmentId") Integer appointmentId,
             @Param("staffId") Integer staffId);
+
+    long countByStaff_UserIdAndAppointmentStatus(Integer staffId, String appointmentStatus);
+
+    @Query("""
+            SELECT COUNT(a)
+            FROM Appointment a
+            JOIN a.slot s
+            WHERE a.staff.userId = :staffId
+              AND a.appointmentStatus = :status
+              AND (s.slotDate > :today
+                   OR (s.slotDate = :today AND s.startTime >= :now))
+            """)
+    long countUpcomingByStaffIdAndStatus(
+            @Param("staffId") Integer staffId,
+            @Param("status") String status,
+            @Param("today") LocalDate today,
+            @Param("now") LocalTime now);
+
+    @Query("""
+            SELECT a
+            FROM Appointment a
+            JOIN FETCH a.student
+            JOIN FETCH a.category
+            JOIN FETCH a.slot s
+            LEFT JOIN FETCH a.course
+            WHERE a.staff.userId = :staffId
+              AND a.appointmentStatus = :status
+            ORDER BY
+              CASE WHEN (s.slotDate > :today
+                         OR (s.slotDate = :today AND s.endTime >= :now))
+                   THEN 0 ELSE 1 END,
+              s.slotDate ASC,
+              s.startTime ASC
+            """)
+    List<Appointment> findPendingDashboardPreview(
+            @Param("staffId") Integer staffId,
+            @Param("status") String status,
+            @Param("today") LocalDate today,
+            @Param("now") LocalTime now,
+            Pageable pageable);
+
+    @Query("""
+            SELECT a
+            FROM Appointment a
+            JOIN FETCH a.student
+            JOIN FETCH a.category
+            JOIN FETCH a.slot
+            LEFT JOIN FETCH a.course
+            WHERE a.staff.userId = :staffId
+              AND a.appointmentStatus = :status
+            ORDER BY a.createdAt DESC
+            """)
+    List<Appointment> findRecentPendingDashboardPreview(
+            @Param("staffId") Integer staffId,
+            @Param("status") String status,
+            Pageable pageable);
+
+    @Query("""
+            SELECT a
+            FROM Appointment a
+            JOIN FETCH a.student
+            JOIN FETCH a.category
+            JOIN FETCH a.slot s
+            LEFT JOIN FETCH a.course
+            WHERE a.staff.userId = :staffId
+              AND a.appointmentStatus = :status
+              AND (s.slotDate > :today
+                   OR (s.slotDate = :today AND s.startTime >= :now))
+            ORDER BY s.slotDate ASC, s.startTime ASC
+            """)
+    List<Appointment> findUpcomingDashboardPreview(
+            @Param("staffId") Integer staffId,
+            @Param("status") String status,
+            @Param("today") LocalDate today,
+            @Param("now") LocalTime now,
+            Pageable pageable);
 
     boolean existsByCategory_CategoryId(Integer categoryId);
 

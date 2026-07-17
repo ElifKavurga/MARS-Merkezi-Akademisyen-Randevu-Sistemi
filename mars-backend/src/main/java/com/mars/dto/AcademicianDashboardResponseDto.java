@@ -13,13 +13,11 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AssistantDashboardResponseDto {
+public class AcademicianDashboardResponseDto {
 
-    private Integer assignedCourseCount;
-    private Integer relatedAcademicianCount;
-    private List<AssistantCourseResponseDto> assignedCoursesPreview;
     private long pendingAppointmentCount;
     private long upcomingAppointmentCount;
+    private long activeCourseCount;
     private List<StaffAppointmentResponseDto> pendingAppointments;
     private List<StaffAppointmentResponseDto> upcomingAppointments;
 }

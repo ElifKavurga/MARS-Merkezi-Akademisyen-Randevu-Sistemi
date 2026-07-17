@@ -55,6 +55,7 @@ export {
 } from './recurrenceService';
 export { getCalendarEvents } from './calendarService';
 export { getAssistantCourses, getAssistantDashboard } from './assistantCourseService';
+export { getAcademicianDashboardSummary } from './academicianDashboardService';
 export {
   getMyOutOfOfficePeriods,
   createOutOfOfficePeriod,

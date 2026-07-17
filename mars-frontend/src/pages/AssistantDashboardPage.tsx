@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
-import { Link } from 'react-router-dom';
+import {
+  DashboardPendingAppointmentRow,
+  DashboardUpcomingAppointmentRow,
+} from '../components/DashboardAppointmentRows';
+import DashboardEmptyState from '../components/DashboardEmptyState';
+import DashboardQuickActions from '../components/DashboardQuickActions';
+import DashboardSectionHeader from '../components/DashboardSectionHeader';
+import DashboardWelcomeBanner from '../components/DashboardWelcomeBanner';
 import Loading from '../components/Loading';
 import { ASSISTANT_DASHBOARD_MESSAGES } from '../constants/assistantCourse';
 import { ROUTES } from '../constants/routes';
@@ -8,6 +15,25 @@ import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 import { getAssistantDashboard } from '../services/assistantCourseService';
 import type { AssistantDashboardSummary } from '../types/assistantCourse';
+
+const QUICK_ACTIONS = [
+  {
+    route: ROUTES.ASSISTANT_APPOINTMENTS,
+    icon: 'event_note',
+    title: 'Randevularım',
+    primary: true,
+  },
+  {
+    route: ROUTES.ASSISTANT_CALENDAR,
+    icon: 'calendar_month',
+    title: 'Takvimim',
+  },
+  {
+    route: ROUTES.ASSISTANT_AVAILABILITY,
+    icon: 'event_available',
+    title: 'Müsaitliklerim',
+  },
+] as const;
 
 export default function AssistantDashboardPage() {
   const { user } = useAuth();
@@ -38,117 +64,114 @@ export default function AssistantDashboardPage() {
   }, [toast]);
 
   return (
-    <div className="flex w-full min-w-0 flex-col gap-6 animate-fade-in">
-      <section className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest">
-        <div className="border-b border-outline-variant bg-[#0b1641] px-5 py-6 text-white sm:px-8 sm:py-8">
-          <p className="font-label-md text-label-md text-white/70">
-            {ASSISTANT_DASHBOARD_MESSAGES.PANEL_LABEL}
-          </p>
-          <h1 className="mt-1 font-headline-lg text-headline-lg text-white">
-            Hoş Geldiniz{user?.fullName ? `, ${user.fullName}` : ''}
-          </h1>
-        </div>
+    <div className="w-full min-w-0 animate-fade-in">
+      <DashboardWelcomeBanner
+        fullName={user?.fullName ?? ''}
+        description="Atandığınız dersleri, randevularınızı ve müsaitliklerinizi tek yerden takip edin."
+        loading={loading}
+        loadingLabel="Akademik görev özetiniz yükleniyor..."
+        stats={
+          summary && !loading
+            ? [
+                {
+                  label: 'Bekleyen',
+                  value: summary.pendingAppointmentCount,
+                },
+                {
+                  label: 'Yaklaşan',
+                  value: summary.upcomingAppointmentCount,
+                },
+                {
+                  label: 'Atanan Ders',
+                  value: summary.assignedCourseCount,
+                },
+                {
+                  label: 'Akademisyen',
+                  value: summary.relatedAcademicianCount,
+                },
+              ]
+            : []
+        }
+      />
 
-        <div className="px-5 py-6 sm:px-8 sm:py-8">
-          <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-surface-container text-primary">
-              <span className="material-symbols-outlined" aria-hidden="true">
-                school
-              </span>
-            </div>
-            <div className="min-w-0">
-              <h2 className="font-headline-md text-headline-md text-on-background">
-                Asistan Modülü
-              </h2>
-              <p className="mt-2 max-w-2xl font-body-md text-body-md text-on-surface-variant">
-                Asistan panelinden size atanan akademik görevleri ve yetkilendirildiğiniz işlemleri
-                yönetebilirsiniz.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {loading ? (
-        <section className="flex min-h-48 items-center justify-center rounded-xl border border-outline-variant bg-surface-container-lowest">
-          <Loading label="Akademik görev özetiniz yükleniyor..." />
-        </section>
-      ) : error || !summary ? (
-        <section className="rounded-xl border border-outline-variant bg-surface-container-lowest px-5 py-8 text-center">
-          <p className="font-body-md text-body-md text-error" role="alert">
-            {error ?? ASSISTANT_DASHBOARD_MESSAGES.LOAD_ERROR}
-          </p>
-        </section>
-      ) : (
-        <>
-          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <article className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-6">
-              <div className="flex items-center gap-4">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-surface-container text-primary">
-                  <span className="material-symbols-outlined" aria-hidden="true">
-                    menu_book
-                  </span>
-                </div>
-                <div>
-                  <p className="font-body-md text-body-md text-on-surface-variant">
-                    {ASSISTANT_DASHBOARD_MESSAGES.COURSES_STAT}
-                  </p>
-                  <p className="mt-1 font-headline-lg text-headline-lg text-on-background">
-                    {summary.assignedCourseCount}
-                  </p>
-                </div>
-              </div>
-            </article>
-
-            <article className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-6">
-              <div className="flex items-center gap-4">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-surface-container text-primary">
-                  <span className="material-symbols-outlined" aria-hidden="true">
-                    groups
-                  </span>
-                </div>
-                <div>
-                  <p className="font-body-md text-body-md text-on-surface-variant">
-                    {ASSISTANT_DASHBOARD_MESSAGES.ACADEMICIANS_STAT}
-                  </p>
-                  <p className="mt-1 font-headline-lg text-headline-lg text-on-background">
-                    {summary.relatedAcademicianCount}
-                  </p>
-                </div>
-              </div>
-            </article>
-          </section>
-
-          <section className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest">
-            <div className="flex flex-col gap-3 border-b border-outline-variant px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="font-headline-md text-headline-md text-on-background">
-                {ASSISTANT_DASHBOARD_MESSAGES.PREVIEW_TITLE}
-              </h2>
-              <Link
-                to={ROUTES.ASSISTANT_COURSES}
-                className="inline-flex items-center gap-1 self-start font-label-md text-label-md text-primary hover:underline sm:self-auto"
-              >
-                {ASSISTANT_DASHBOARD_MESSAGES.VIEW_ALL}
-                <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
-                  arrow_forward
-                </span>
-              </Link>
-            </div>
-
-            {summary.assignedCoursesPreview.length === 0 ? (
-              <div className="px-6 py-12 text-center">
-                <span
-                  className="material-symbols-outlined text-[40px] text-on-surface-variant/50"
-                  aria-hidden="true"
-                >
-                  menu_book
-                </span>
-                <p className="mt-3 font-body-md text-body-md text-on-surface-variant">
-                  {ASSISTANT_DASHBOARD_MESSAGES.EMPTY}
-                </p>
-              </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <section className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest lg:col-span-8">
+          <DashboardSectionHeader
+            title="Yaklaşan Randevular"
+            actionLabel="Tümünü Gör"
+            actionPath={ROUTES.ASSISTANT_APPOINTMENTS}
+          />
+          <div className="px-4 pb-4 sm:px-6 sm:pb-6">
+            {loading ? (
+              <SectionLoading label="Randevular yükleniyor..." />
+            ) : error || !summary ? (
+              <SectionError message={error ?? ASSISTANT_DASHBOARD_MESSAGES.LOAD_ERROR} />
+            ) : summary.upcomingAppointments.length === 0 ? (
+              <DashboardEmptyState
+                icon="event_available"
+                message="Yaklaşan randevunuz bulunmuyor."
+              />
             ) : (
-              <div className="overflow-x-auto">
+              <div className="divide-y divide-outline-variant">
+                {summary.upcomingAppointments.map((appointment) => (
+                  <DashboardUpcomingAppointmentRow
+                    key={appointment.appointmentId}
+                    appointment={appointment}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest lg:col-span-4">
+          <DashboardSectionHeader
+            title="Bekleyen Talepler"
+            actionLabel="Tümünü Gör"
+            actionPath={ROUTES.ASSISTANT_APPOINTMENTS}
+          />
+          <div className="px-4 pb-4 sm:px-6 sm:pb-6">
+            {loading ? (
+              <SectionLoading label="Talepler yükleniyor..." />
+            ) : error || !summary ? (
+              <SectionError message={error ?? ASSISTANT_DASHBOARD_MESSAGES.LOAD_ERROR} />
+            ) : summary.pendingAppointments.length === 0 ? (
+              <DashboardEmptyState
+                icon="pending_actions"
+                message="Bekleyen randevu talebiniz bulunmuyor."
+              />
+            ) : (
+              <div className="space-y-3">
+                {summary.pendingAppointments.map((appointment) => (
+                  <DashboardPendingAppointmentRow
+                    key={appointment.appointmentId}
+                    appointment={appointment}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest lg:col-span-8">
+          <DashboardSectionHeader
+            title={ASSISTANT_DASHBOARD_MESSAGES.PREVIEW_TITLE}
+            actionLabel={ASSISTANT_DASHBOARD_MESSAGES.VIEW_ALL}
+            actionPath={ROUTES.ASSISTANT_COURSES}
+          />
+
+          <div className="px-4 pb-4 sm:px-6 sm:pb-6">
+            {loading ? (
+              <SectionLoading label="Dersler yükleniyor..." />
+            ) : error || !summary ? (
+              <SectionError message={error ?? ASSISTANT_DASHBOARD_MESSAGES.LOAD_ERROR} />
+            ) : summary.assignedCoursesPreview.length === 0 ? (
+              <DashboardEmptyState
+                icon="menu_book"
+                message={ASSISTANT_DASHBOARD_MESSAGES.EMPTY}
+              />
+            ) : (
+              <div className="overflow-x-auto rounded-lg border border-outline-variant">
                 <table className="w-full min-w-[680px] border-collapse">
                   <thead>
                     <tr className="border-b border-outline-variant bg-surface-container/40">
@@ -170,7 +193,7 @@ export default function AssistantDashboardPage() {
                     {summary.assignedCoursesPreview.map((course) => (
                       <tr
                         key={course.courseId}
-                        className="border-b border-outline-variant/40"
+                        className="border-b border-outline-variant/40 last:border-b-0"
                       >
                         <td className="px-5 py-3 font-label-md text-label-md font-semibold text-on-background">
                           {course.courseCode}
@@ -190,9 +213,31 @@ export default function AssistantDashboardPage() {
                 </table>
               </div>
             )}
-          </section>
-        </>
-      )}
+          </div>
+        </section>
+
+        <div className="lg:col-span-4">
+          <DashboardQuickActions actions={QUICK_ACTIONS} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionLoading({ label }: { label: string }) {
+  return (
+    <div className="flex min-h-40 items-center justify-center">
+      <Loading label={label} />
+    </div>
+  );
+}
+
+function SectionError({ message }: { message: string }) {
+  return (
+    <div className="flex min-h-32 items-center justify-center rounded-lg bg-error-container/40 px-5 py-8 text-center">
+      <p className="font-body-md text-body-md text-on-error-container" role="alert">
+        {message}
+      </p>
     </div>
   );
 }

@@ -2,9 +2,13 @@ package com.mars.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
@@ -14,18 +18,27 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.mars.dto.AssistantCourseResponseDto;
 import com.mars.dto.AssistantDashboardResponseDto;
+import com.mars.dto.StaffAppointmentResponseDto;
+import com.mars.entity.Appointment;
+import com.mars.entity.AppointmentCategory;
+import com.mars.entity.AvailabilitySlot;
 import com.mars.entity.Course;
 import com.mars.entity.CourseAssignment;
 import com.mars.entity.Role;
 import com.mars.entity.User;
 import com.mars.enums.RoleType;
+import com.mars.enums.AppointmentStatus;
+import com.mars.enums.MeetingType;
+import com.mars.mapper.AppointmentMapper;
 import com.mars.mapper.AssistantCourseMapper;
+import com.mars.repository.AppointmentRepository;
 import com.mars.repository.CourseAssignmentRepository;
 import com.mars.security.CustomUserDetails;
 
@@ -37,6 +50,12 @@ class AssistantCourseServiceTest {
 
     @Mock
     private AssistantCourseMapper assistantCourseMapper;
+
+    @Mock
+    private AppointmentRepository appointmentRepository;
+
+    @Mock
+    private AppointmentMapper appointmentMapper;
 
     @InjectMocks
     private AssistantCourseService assistantCourseService;
@@ -171,6 +190,45 @@ class AssistantCourseServiceTest {
         assertThat(result.getAssignedCoursesPreview()).isEmpty();
     }
 
+    @Test
+    void getDashboardSummary_returnsOnlyOwnedAppointmentCountsAndPreviews() {
+        Appointment pending = appointment(101, AppointmentStatus.PENDING);
+        Appointment upcoming = appointment(102, AppointmentStatus.APPROVED);
+        StaffAppointmentResponseDto pendingDto =
+                StaffAppointmentResponseDto.builder().appointmentId(101).build();
+        StaffAppointmentResponseDto upcomingDto =
+                StaffAppointmentResponseDto.builder().appointmentId(102).build();
+
+        when(courseAssignmentRepository.findAssignedCoursesByAssistantId(20))
+                .thenReturn(List.of());
+        when(appointmentRepository.countByStaff_UserIdAndAppointmentStatus(
+                20, AppointmentStatus.PENDING.name())).thenReturn(2L);
+        when(appointmentRepository.countUpcomingByStaffIdAndStatus(
+                eq(20), eq(AppointmentStatus.APPROVED.name()), any(), any()))
+                .thenReturn(1L);
+        when(appointmentRepository.findRecentPendingDashboardPreview(
+                eq(20), eq(AppointmentStatus.PENDING.name()), any(Pageable.class)))
+                .thenReturn(List.of(pending));
+        when(appointmentRepository.findUpcomingDashboardPreview(
+                eq(20),
+                eq(AppointmentStatus.APPROVED.name()),
+                any(),
+                any(),
+                any(Pageable.class)))
+                .thenReturn(List.of(upcoming));
+        when(appointmentMapper.toStaffResponse(pending)).thenReturn(pendingDto);
+        when(appointmentMapper.toStaffResponse(upcoming)).thenReturn(upcomingDto);
+
+        AssistantDashboardResponseDto result = assistantCourseService.getDashboardSummary();
+
+        assertThat(result.getPendingAppointmentCount()).isEqualTo(2);
+        assertThat(result.getUpcomingAppointmentCount()).isEqualTo(1);
+        assertThat(result.getPendingAppointments()).containsExactly(pendingDto);
+        assertThat(result.getUpcomingAppointments()).containsExactly(upcomingDto);
+        verify(appointmentRepository).countByStaff_UserIdAndAppointmentStatus(
+                20, AppointmentStatus.PENDING.name());
+    }
+
     private void setAuthenticatedUser(User user) {
         CustomUserDetails userDetails = new CustomUserDetails(user);
         SecurityContextHolder.getContext().setAuthentication(
@@ -203,5 +261,28 @@ class AssistantCourseServiceTest {
         assignment.setCourse(course);
         assignment.setAssistant(assistant);
         return assignment;
+    }
+
+    private Appointment appointment(Integer appointmentId, AppointmentStatus status) {
+        User student = new User();
+        student.setFullName("Öğrenci Test");
+
+        AppointmentCategory category = new AppointmentCategory();
+        category.setCategoryName("Akademik Danışmanlık");
+
+        AvailabilitySlot slot = new AvailabilitySlot();
+        slot.setSlotDate(LocalDate.now().plusDays(1));
+        slot.setStartTime(LocalTime.of(10, 0));
+        slot.setEndTime(LocalTime.of(10, 10));
+
+        Appointment appointment = new Appointment();
+        appointment.setAppointmentId(appointmentId);
+        appointment.setStudent(student);
+        appointment.setStaff(assistant);
+        appointment.setCategory(category);
+        appointment.setSlot(slot);
+        appointment.setAppointmentStatus(status.name());
+        appointment.setMeetingType(MeetingType.FACE_TO_FACE.name());
+        return appointment;
     }
 }

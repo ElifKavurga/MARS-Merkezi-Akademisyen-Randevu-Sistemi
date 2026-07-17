@@ -12,6 +12,8 @@ public interface CourseRepository extends JpaRepository<Course, Integer> {
 
     List<Course> findByOwnerAcademician_UserIdAndIsActiveTrueOrderByCourseNameAsc(Integer userId);
 
+    long countByOwnerAcademician_UserIdAndIsActiveTrue(Integer userId);
+
     boolean existsByOwnerAcademician_UserIdAndCourseCode(Integer userId, String courseCode);
 
     boolean existsByOwnerAcademician_UserIdAndCourseCodeAndCourseIdNot(

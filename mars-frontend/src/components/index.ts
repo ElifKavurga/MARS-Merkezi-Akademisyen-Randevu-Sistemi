@@ -41,4 +41,12 @@ export { default as AppointmentCreateModal } from './AppointmentCreateModal';
 export { default as AppointmentStatusBadge } from './AppointmentStatusBadge';
 export { default as StaffAppointmentDetailModal } from './StaffAppointmentDetailModal';
 export { default as StaffAppointmentsView } from './StaffAppointmentsView';
+export { default as DashboardEmptyState } from './DashboardEmptyState';
+export {
+  DashboardPendingAppointmentRow,
+  DashboardUpcomingAppointmentRow,
+} from './DashboardAppointmentRows';
+export { default as DashboardQuickActions } from './DashboardQuickActions';
+export { default as DashboardSectionHeader } from './DashboardSectionHeader';
+export { default as DashboardWelcomeBanner } from './DashboardWelcomeBanner';
 export { ErrorBoundary } from './ErrorBoundary';

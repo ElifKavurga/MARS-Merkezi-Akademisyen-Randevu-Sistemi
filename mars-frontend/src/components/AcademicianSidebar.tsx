@@ -14,18 +14,23 @@ const commonNavItems = [
 
 export default function AcademicianSidebar({ mobileOpen, onClose }: ModuleSidebarProps) {
   const { user } = useAuth();
+  const roleNavItems = commonNavItems.map((item, index) =>
+    index === 0 && user?.role === ROLES.HOD
+      ? { ...item, path: ROUTES.HOD }
+      : item,
+  );
   const navItems = user?.role === ROLES.ACADEMICIAN
     ? [
-        ...commonNavItems.slice(0, 3),
+        ...roleNavItems.slice(0, 3),
         {
           label: 'Randevularım',
           path: ROUTES.ACADEMICIAN_APPOINTMENTS,
           icon: 'event_note',
           end: false,
         },
-        ...commonNavItems.slice(3),
+        ...roleNavItems.slice(3),
       ]
-    : commonNavItems;
+    : roleNavItems;
 
   return (
     <ModuleSidebar
