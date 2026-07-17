@@ -5,3 +5,9 @@ export type AssistantAssignedCourse = {
   academicTerm: string;
   ownerAcademicianName: string;
 };
+
+export type AssistantDashboardSummary = {
+  assignedCourseCount: number;
+  relatedAcademicianCount: number;
+  assignedCoursesPreview: AssistantAssignedCourse[];
+};

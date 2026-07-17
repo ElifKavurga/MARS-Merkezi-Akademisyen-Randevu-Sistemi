@@ -9,3 +9,14 @@ export const ASSISTANT_COURSE_MESSAGES = {
   LOAD_ERROR: 'Dersler yüklenirken bir hata oluştu.',
   ACCESS_DENIED: 'Bu sayfaya erişim yetkiniz yok.',
 } as const;
+
+export const ASSISTANT_DASHBOARD_MESSAGES = {
+  PANEL_LABEL: 'Asistan Paneli',
+  COURSES_STAT: 'Atandığım Dersler',
+  ACADEMICIANS_STAT: 'Çalıştığım Akademisyenler',
+  PREVIEW_TITLE: 'Atandığım Dersler',
+  VIEW_ALL: 'Tüm Dersleri Gör',
+  EMPTY: 'Henüz size atanmış bir ders bulunmuyor.',
+  LOAD_ERROR: 'Dashboard verileri yüklenirken bir hata oluştu.',
+  ACCESS_DENIED: 'Dashboard verilerine erişim yetkiniz yok.',
+} as const;

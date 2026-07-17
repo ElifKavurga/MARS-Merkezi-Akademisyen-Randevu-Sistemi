@@ -19,6 +19,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.mars.dto.AssistantCourseResponseDto;
+import com.mars.dto.AssistantDashboardResponseDto;
+import com.mars.entity.Course;
 import com.mars.entity.CourseAssignment;
 import com.mars.entity.Role;
 import com.mars.entity.User;
@@ -104,6 +106,71 @@ class AssistantCourseServiceTest {
                 .isInstanceOf(AccessDeniedException.class);
     }
 
+    @Test
+    void getDashboardSummary_sameOwnerAcrossCourses_countsAcademicianOnce() {
+        User owner = user(10);
+        CourseAssignment first = assignment(1, owner);
+        CourseAssignment second = assignment(2, owner);
+        AssistantCourseResponseDto firstResponse = response(1, "BLM101");
+        AssistantCourseResponseDto secondResponse = response(2, "BLM202");
+
+        when(courseAssignmentRepository.findAssignedCoursesByAssistantId(20))
+                .thenReturn(List.of(first, second));
+        when(assistantCourseMapper.toResponse(first)).thenReturn(firstResponse);
+        when(assistantCourseMapper.toResponse(second)).thenReturn(secondResponse);
+
+        AssistantDashboardResponseDto result = assistantCourseService.getDashboardSummary();
+
+        assertThat(result.getAssignedCourseCount()).isEqualTo(2);
+        assertThat(result.getRelatedAcademicianCount()).isEqualTo(1);
+        assertThat(result.getAssignedCoursesPreview()).containsExactly(firstResponse, secondResponse);
+        verify(courseAssignmentRepository).findAssignedCoursesByAssistantId(20);
+    }
+
+    @Test
+    void getDashboardSummary_multipleOwners_countsDistinctAcademicians() {
+        CourseAssignment first = assignment(1, user(10));
+        CourseAssignment second = assignment(2, user(11));
+
+        when(courseAssignmentRepository.findAssignedCoursesByAssistantId(20))
+                .thenReturn(List.of(first, second));
+        when(assistantCourseMapper.toResponse(first)).thenReturn(response(1, "BLM101"));
+        when(assistantCourseMapper.toResponse(second)).thenReturn(response(2, "BLM202"));
+
+        AssistantDashboardResponseDto result = assistantCourseService.getDashboardSummary();
+
+        assertThat(result.getAssignedCourseCount()).isEqualTo(2);
+        assertThat(result.getRelatedAcademicianCount()).isEqualTo(2);
+    }
+
+    @Test
+    void getDashboardSummary_duplicateCourse_countsAndPreviewsOnce() {
+        User owner = user(10);
+        CourseAssignment first = assignment(1, owner);
+        CourseAssignment duplicate = assignment(1, owner);
+        AssistantCourseResponseDto response = response(1, "BLM101");
+
+        when(courseAssignmentRepository.findAssignedCoursesByAssistantId(20))
+                .thenReturn(List.of(first, duplicate));
+        when(assistantCourseMapper.toResponse(first)).thenReturn(response);
+
+        AssistantDashboardResponseDto result = assistantCourseService.getDashboardSummary();
+
+        assertThat(result.getAssignedCourseCount()).isEqualTo(1);
+        assertThat(result.getAssignedCoursesPreview()).containsExactly(response);
+    }
+
+    @Test
+    void getDashboardSummary_noAssignments_returnsZerosAndEmptyPreview() {
+        when(courseAssignmentRepository.findAssignedCoursesByAssistantId(20)).thenReturn(List.of());
+
+        AssistantDashboardResponseDto result = assistantCourseService.getDashboardSummary();
+
+        assertThat(result.getAssignedCourseCount()).isZero();
+        assertThat(result.getRelatedAcademicianCount()).isZero();
+        assertThat(result.getAssignedCoursesPreview()).isEmpty();
+    }
+
     private void setAuthenticatedUser(User user) {
         CustomUserDetails userDetails = new CustomUserDetails(user);
         SecurityContextHolder.getContext().setAuthentication(
@@ -118,5 +185,23 @@ class AssistantCourseServiceTest {
                 .academicTerm("2026-2027 Güz")
                 .ownerAcademicianName("Dr. Akademisyen")
                 .build();
+    }
+
+    private User user(Integer userId) {
+        User user = new User();
+        user.setUserId(userId);
+        user.setFullName("Akademisyen " + userId);
+        return user;
+    }
+
+    private CourseAssignment assignment(Integer courseId, User owner) {
+        Course course = new Course();
+        course.setCourseId(courseId);
+        course.setOwnerAcademician(owner);
+
+        CourseAssignment assignment = new CourseAssignment();
+        assignment.setCourse(course);
+        assignment.setAssistant(assistant);
+        return assignment;
     }
 }
