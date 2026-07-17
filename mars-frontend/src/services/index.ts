@@ -44,6 +44,8 @@ export {
   getAppointmentCategories,
   getAssistantAppointments,
   getAssistantAppointment,
+  approveAssistantAppointment,
+  rejectAssistantAppointment,
 } from './appointmentService';
 export {
   createRecurrenceRule,

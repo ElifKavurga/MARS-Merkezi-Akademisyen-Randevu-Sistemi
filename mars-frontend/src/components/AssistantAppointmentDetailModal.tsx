@@ -3,11 +3,15 @@ import {
   getMeetingTypeLabel,
 } from '../constants/appointment';
 import type { AssistantAppointment } from '../types/appointment';
+import AdminActionButton from './AdminActionButton';
 import AppointmentStatusBadge from './AppointmentStatusBadge';
 import ModalShell from './ModalShell';
 
 type AssistantAppointmentDetailModalProps = {
   appointment: AssistantAppointment | null;
+  actionDisabled?: boolean;
+  onApprove: (appointment: AssistantAppointment) => void;
+  onReject: (appointment: AssistantAppointment) => void;
   onClose: () => void;
 };
 
@@ -25,6 +29,9 @@ function formatTime(time: string): string {
 
 export default function AssistantAppointmentDetailModal({
   appointment,
+  actionDisabled = false,
+  onApprove,
+  onReject,
   onClose,
 }: AssistantAppointmentDetailModalProps) {
   return (
@@ -34,7 +41,7 @@ export default function AssistantAppointmentDetailModal({
       maxWidthClass="sm:max-w-xl"
       onClose={onClose}
       footer={
-        <div className="flex justify-end border-t border-outline-variant bg-surface-bright px-6 py-4">
+        <div className="flex flex-col-reverse gap-2 border-t border-outline-variant bg-surface-bright px-6 py-4 sm:flex-row sm:justify-end">
           <button
             type="button"
             className="rounded-lg border border-outline-variant bg-surface px-5 py-2 font-label-md text-label-md text-primary transition-colors hover:bg-surface-container"
@@ -42,6 +49,26 @@ export default function AssistantAppointmentDetailModal({
           >
             Kapat
           </button>
+          {appointment?.appointmentStatus === 'PENDING' ? (
+            <>
+              <AdminActionButton
+                variant="danger"
+                icon="close"
+                disabled={actionDisabled}
+                onClick={() => onReject(appointment)}
+              >
+                Reddet
+              </AdminActionButton>
+              <AdminActionButton
+                variant="primary"
+                icon="check"
+                disabled={actionDisabled}
+                onClick={() => onApprove(appointment)}
+              >
+                Onayla
+              </AdminActionButton>
+            </>
+          ) : null}
         </div>
       }
     >

@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
+import AdminActionButton from '../components/AdminActionButton';
 import AssistantAppointmentDetailModal from '../components/AssistantAppointmentDetailModal';
 import AppointmentStatusBadge from '../components/AppointmentStatusBadge';
+import ConfirmModal from '../components/ConfirmModal';
 import Loading from '../components/Loading';
 import {
   ASSISTANT_APPOINTMENT_MESSAGES,
@@ -9,12 +11,18 @@ import {
 } from '../constants/appointment';
 import { useToast } from '../hooks/useToast';
 import {
+  approveAssistantAppointment,
   getAssistantAppointment,
   getAssistantAppointments,
+  rejectAssistantAppointment,
 } from '../services/appointmentService';
 import type { AssistantAppointment } from '../types/appointment';
 
 type AppointmentView = 'PENDING' | 'ALL';
+type AppointmentAction = {
+  type: 'approve' | 'reject';
+  appointment: AssistantAppointment;
+};
 
 function formatDate(date: string): string {
   return new Intl.DateTimeFormat('tr-TR', {
@@ -39,6 +47,9 @@ export default function AssistantAppointmentsPage() {
   const [selectedAppointment, setSelectedAppointment] =
     useState<AssistantAppointment | null>(null);
   const [detailLoadingId, setDetailLoadingId] = useState<number | null>(null);
+  const [pendingAction, setPendingAction] = useState<AppointmentAction | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const loadAppointments = useCallback(
     async (view: AppointmentView) => {
@@ -79,7 +90,7 @@ export default function AssistantAppointmentsPage() {
   };
 
   const handleShowDetail = async (appointmentId: number) => {
-    if (detailLoadingId !== null) {
+    if (detailLoadingId !== null || actionLoading) {
       return;
     }
     setDetailLoadingId(appointmentId);
@@ -89,6 +100,54 @@ export default function AssistantAppointmentsPage() {
       toast.error(ASSISTANT_APPOINTMENT_MESSAGES.LOAD_ERROR);
     } finally {
       setDetailLoadingId(null);
+    }
+  };
+
+  const openActionConfirmation = (
+    type: AppointmentAction['type'],
+    appointment: AssistantAppointment,
+  ) => {
+    if (actionLoading || appointment.appointmentStatus !== 'PENDING') {
+      return;
+    }
+    setActionError(null);
+    setPendingAction({ type, appointment });
+  };
+
+  const handleConfirmAction = async () => {
+    if (!pendingAction || actionLoading) {
+      return;
+    }
+
+    setActionLoading(true);
+    setActionError(null);
+    try {
+      if (pendingAction.type === 'approve') {
+        await approveAssistantAppointment(pendingAction.appointment.appointmentId);
+        toast.success(ASSISTANT_APPOINTMENT_MESSAGES.APPROVE_SUCCESS);
+      } else {
+        await rejectAssistantAppointment(pendingAction.appointment.appointmentId);
+        toast.success(ASSISTANT_APPOINTMENT_MESSAGES.REJECT_SUCCESS);
+      }
+
+      setPendingAction(null);
+      setSelectedAppointment(null);
+      setAppointmentsByView({});
+      await loadAppointments(activeView);
+    } catch (err) {
+      let message: string = ASSISTANT_APPOINTMENT_MESSAGES.ACTION_ERROR;
+      if (isAxiosError(err)) {
+        if (err.response?.status === 403) {
+          message = ASSISTANT_APPOINTMENT_MESSAGES.ACTION_ACCESS_DENIED;
+        } else if (err.response?.status === 404) {
+          message = ASSISTANT_APPOINTMENT_MESSAGES.ACTION_NOT_FOUND;
+        } else if (err.response?.status === 409) {
+          message = ASSISTANT_APPOINTMENT_MESSAGES.ACTION_NOT_PENDING;
+        }
+      }
+      setActionError(message);
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -196,14 +255,38 @@ export default function AssistantAppointmentsPage() {
                       <AppointmentStatusBadge status={appointment.appointmentStatus} />
                     </td>
                     <td className="px-5 py-4 text-right">
-                      <button
-                        type="button"
-                        className="rounded-lg border border-outline-variant px-3 py-1.5 font-label-sm text-label-sm text-primary transition-colors hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-60"
-                        disabled={detailLoadingId !== null}
-                        onClick={() => void handleShowDetail(appointment.appointmentId)}
-                      >
-                        {detailLoadingId === appointment.appointmentId ? 'Yükleniyor...' : 'Detay'}
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        {appointment.appointmentStatus === 'PENDING' ? (
+                          <>
+                            <AdminActionButton
+                              variant="primary"
+                              icon="check"
+                              disabled={actionLoading}
+                              onClick={() => openActionConfirmation('approve', appointment)}
+                            >
+                              Onayla
+                            </AdminActionButton>
+                            <AdminActionButton
+                              variant="danger"
+                              icon="close"
+                              disabled={actionLoading}
+                              onClick={() => openActionConfirmation('reject', appointment)}
+                            >
+                              Reddet
+                            </AdminActionButton>
+                          </>
+                        ) : null}
+                        <AdminActionButton
+                          variant="neutral"
+                          icon="visibility"
+                          disabled={detailLoadingId !== null || actionLoading}
+                          onClick={() => void handleShowDetail(appointment.appointmentId)}
+                        >
+                          {detailLoadingId === appointment.appointmentId
+                            ? 'Yükleniyor...'
+                            : 'Detay'}
+                        </AdminActionButton>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -215,7 +298,36 @@ export default function AssistantAppointmentsPage() {
 
       <AssistantAppointmentDetailModal
         appointment={selectedAppointment}
+        actionDisabled={actionLoading}
+        onApprove={(appointment) => openActionConfirmation('approve', appointment)}
+        onReject={(appointment) => openActionConfirmation('reject', appointment)}
         onClose={() => setSelectedAppointment(null)}
+      />
+
+      <ConfirmModal
+        open={pendingAction !== null}
+        title={
+          pendingAction?.type === 'approve'
+            ? ASSISTANT_APPOINTMENT_MESSAGES.APPROVE_TITLE
+            : ASSISTANT_APPOINTMENT_MESSAGES.REJECT_TITLE
+        }
+        description={
+          pendingAction?.type === 'approve'
+            ? ASSISTANT_APPOINTMENT_MESSAGES.APPROVE_DESCRIPTION
+            : ASSISTANT_APPOINTMENT_MESSAGES.REJECT_DESCRIPTION
+        }
+        confirmLabel={pendingAction?.type === 'approve' ? 'Onayla' : 'Reddet'}
+        variant={pendingAction?.type === 'approve' ? 'primary' : 'danger'}
+        loading={actionLoading}
+        error={actionError}
+        zIndexClass="z-[60]"
+        onConfirm={() => void handleConfirmAction()}
+        onClose={() => {
+          if (!actionLoading) {
+            setPendingAction(null);
+            setActionError(null);
+          }
+        }}
       />
     </div>
   );

@@ -5,6 +5,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -106,6 +107,34 @@ class AssistantAppointmentControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ASSISTANT")
+    void approveAppointment_asAssistant_returnsApproved() throws Exception {
+        when(appointmentService.approveAssistantAppointment(11))
+                .thenReturn(appointmentResponse(AppointmentStatus.APPROVED));
+
+        mockMvc.perform(patch("/assistant/appointments/11/approve"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.appointmentId").value(11))
+                .andExpect(jsonPath("$.appointmentStatus").value("APPROVED"))
+                .andExpect(jsonPath("$.meetingType").value("FACE_TO_FACE"));
+
+        verify(appointmentService).approveAssistantAppointment(11);
+    }
+
+    @Test
+    @WithMockUser(roles = "ASSISTANT")
+    void rejectAppointment_asAssistant_returnsRejected() throws Exception {
+        when(appointmentService.rejectAssistantAppointment(11))
+                .thenReturn(appointmentResponse(AppointmentStatus.REJECTED));
+
+        mockMvc.perform(patch("/assistant/appointments/11/reject"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.appointmentStatus").value("REJECTED"));
+
+        verify(appointmentService).rejectAssistantAppointment(11);
+    }
+
+    @Test
     @WithMockUser(roles = "STUDENT")
     void getAppointments_asStudent_returnsForbidden() throws Exception {
         assertListForbidden();
@@ -137,13 +166,47 @@ class AssistantAppointmentControllerTest {
                 .andExpect(jsonPath("$.status").value(403));
     }
 
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    void approveAppointment_asStudent_returnsForbidden() throws Exception {
+        assertPatchForbidden("/assistant/appointments/11/approve");
+    }
+
+    @Test
+    @WithMockUser(roles = "ACADEMICIAN")
+    void rejectAppointment_asAcademician_returnsForbidden() throws Exception {
+        assertPatchForbidden("/assistant/appointments/11/reject");
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void approveAppointment_asAdmin_returnsForbidden() throws Exception {
+        assertPatchForbidden("/assistant/appointments/11/approve");
+    }
+
+    @Test
+    @WithMockUser(roles = "HOD")
+    void rejectAppointment_asHod_returnsForbidden() throws Exception {
+        assertPatchForbidden("/assistant/appointments/11/reject");
+    }
+
     private void assertListForbidden() throws Exception {
         mockMvc.perform(get("/assistant/appointments"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status").value(403));
     }
 
+    private void assertPatchForbidden(String path) throws Exception {
+        mockMvc.perform(patch(path))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
+    }
+
     private AssistantAppointmentResponseDto appointmentResponse() {
+        return appointmentResponse(AppointmentStatus.PENDING);
+    }
+
+    private AssistantAppointmentResponseDto appointmentResponse(AppointmentStatus status) {
         return AssistantAppointmentResponseDto.builder()
                 .appointmentId(11)
                 .studentName("Öğrenci Test")
@@ -154,7 +217,7 @@ class AssistantAppointmentControllerTest {
                 .courseCode(null)
                 .courseName(null)
                 .meetingType(MeetingType.FACE_TO_FACE.name())
-                .appointmentStatus(AppointmentStatus.PENDING.name())
+                .appointmentStatus(status.name())
                 .build();
     }
 }

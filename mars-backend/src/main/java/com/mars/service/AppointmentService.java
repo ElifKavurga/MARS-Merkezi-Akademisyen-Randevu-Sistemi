@@ -1,6 +1,7 @@
 package com.mars.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
@@ -124,6 +125,46 @@ public class AppointmentService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException(AppointmentMessages.APPOINTMENT_NOT_FOUND));
         return appointmentMapper.toAssistantResponse(appointment);
+    }
+
+    @Transactional
+    public AssistantAppointmentResponseDto approveAssistantAppointment(Integer appointmentId) {
+        return updateAssistantAppointmentStatus(appointmentId, AppointmentStatus.APPROVED);
+    }
+
+    @Transactional
+    public AssistantAppointmentResponseDto rejectAssistantAppointment(Integer appointmentId) {
+        return updateAssistantAppointmentStatus(appointmentId, AppointmentStatus.REJECTED);
+    }
+
+    private AssistantAppointmentResponseDto updateAssistantAppointmentStatus(
+            Integer appointmentId,
+            AppointmentStatus targetStatus) {
+        User assistant = getCurrentAssistant();
+        Appointment appointment = appointmentRepository.findByIdAndStaffIdForUpdate(
+                        appointmentId, assistant.getUserId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(AppointmentMessages.APPOINTMENT_NOT_FOUND));
+
+        validatePendingStatus(appointment.getAppointmentStatus());
+        appointment.setAppointmentStatus(targetStatus.name());
+        appointment.setUpdatedAt(LocalDateTime.now());
+
+        Appointment saved = appointmentRepository.save(appointment);
+        return appointmentMapper.toAssistantResponse(saved);
+    }
+
+    private void validatePendingStatus(String currentStatus) {
+        if (AppointmentStatus.PENDING.name().equals(currentStatus)) {
+            return;
+        }
+        if (AppointmentStatus.APPROVED.name().equals(currentStatus)) {
+            throw new ConflictException(AppointmentMessages.ALREADY_APPROVED);
+        }
+        if (AppointmentStatus.REJECTED.name().equals(currentStatus)) {
+            throw new ConflictException(AppointmentMessages.ALREADY_REJECTED);
+        }
+        throw new ConflictException(AppointmentMessages.NOT_PENDING);
     }
 
     private Course resolveCourse(Integer courseId, AppointmentCategory category, User staff) {

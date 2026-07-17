@@ -27,6 +27,10 @@ public final class AppointmentMessages {
             "Bu randevu bilgileri yalnızca asistanlar tarafından görüntülenebilir.";
     public static final String APPOINTMENT_NOT_FOUND = "Randevu bulunamadı.";
     public static final String INVALID_STATUS = "Geçersiz randevu durumu.";
+    public static final String ALREADY_APPROVED = "Randevu zaten onaylanmış.";
+    public static final String ALREADY_REJECTED = "Randevu zaten reddedilmiş.";
+    public static final String NOT_PENDING =
+            "Yalnızca bekleyen randevu talepleri üzerinde işlem yapılabilir.";
 
     private AppointmentMessages() {
     }

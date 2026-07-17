@@ -43,3 +43,21 @@ export async function getAssistantAppointment(
   );
   return data;
 }
+
+export async function approveAssistantAppointment(
+  appointmentId: number,
+): Promise<AssistantAppointment> {
+  const { data } = await apiClient.patch<AssistantAppointment>(
+    `/assistant/appointments/${appointmentId}/approve`,
+  );
+  return data;
+}
+
+export async function rejectAssistantAppointment(
+  appointmentId: number,
+): Promise<AssistantAppointment> {
+  const { data } = await apiClient.patch<AssistantAppointment>(
+    `/assistant/appointments/${appointmentId}/reject`,
+  );
+  return data;
+}

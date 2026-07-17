@@ -32,6 +32,16 @@ export const ASSISTANT_APPOINTMENT_MESSAGES = {
   LOAD_ERROR: 'Randevular yüklenirken bir hata oluştu.',
   ACCESS_DENIED: 'Bu sayfayı görüntüleme yetkiniz bulunmuyor.',
   DETAIL_TITLE: 'Randevu Detayı',
+  APPROVE_TITLE: 'Randevu Talebini Onayla',
+  APPROVE_DESCRIPTION: 'Bu randevu talebini onaylamak istediğinize emin misiniz?',
+  APPROVE_SUCCESS: 'Randevu talebi başarıyla onaylandı.',
+  REJECT_TITLE: 'Randevu Talebini Reddet',
+  REJECT_DESCRIPTION: 'Bu randevu talebini reddetmek istediğinize emin misiniz?',
+  REJECT_SUCCESS: 'Randevu talebi reddedildi.',
+  ACTION_NOT_FOUND: 'Randevu bulunamadı.',
+  ACTION_ACCESS_DENIED: 'Bu randevu üzerinde işlem yapma yetkiniz yok.',
+  ACTION_NOT_PENDING: 'Randevu artık beklemede değil.',
+  ACTION_ERROR: 'İşlem sırasında beklenmeyen bir hata oluştu.',
 } as const;
 
 export const APPOINTMENT_STATUS_LABELS: Record<string, string> = {

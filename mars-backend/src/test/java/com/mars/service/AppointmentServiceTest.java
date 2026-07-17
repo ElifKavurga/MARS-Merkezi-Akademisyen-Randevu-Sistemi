@@ -18,6 +18,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -402,6 +404,133 @@ class AppointmentServiceTest {
         assertThatThrownBy(() -> appointmentService.getAssistantAppointments(null))
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessage(AppointmentMessages.ONLY_ASSISTANT);
+    }
+
+    @Test
+    void approveAssistantAppointment_ownedPending_updatesStatusAndPreservesFaceToFace() {
+        authenticateAsAssistant();
+        Appointment appointment = assistantAppointment(100, AppointmentStatus.PENDING.name());
+        appointment.setMeetingType(MeetingType.FACE_TO_FACE.name());
+        when(appointmentRepository.findByIdAndStaffIdForUpdate(100, 10))
+                .thenReturn(Optional.of(appointment));
+        when(appointmentRepository.save(appointment)).thenReturn(appointment);
+        when(appointmentMapper.toAssistantResponse(appointment))
+                .thenAnswer(invocation -> new AppointmentMapper().toAssistantResponse(appointment));
+
+        AssistantAppointmentResponseDto result =
+                appointmentService.approveAssistantAppointment(100);
+
+        assertThat(result.getAppointmentStatus()).isEqualTo(AppointmentStatus.APPROVED.name());
+        assertThat(result.getMeetingType()).isEqualTo(MeetingType.FACE_TO_FACE.name());
+        assertThat(appointment.getUpdatedAt()).isNotNull();
+        verify(appointmentRepository).save(appointment);
+    }
+
+    @Test
+    void approveAssistantAppointment_online_preservesOnlineMeetingType() {
+        authenticateAsAssistant();
+        Appointment appointment = assistantAppointment(100, AppointmentStatus.PENDING.name());
+        appointment.setMeetingType(MeetingType.ONLINE.name());
+        when(appointmentRepository.findByIdAndStaffIdForUpdate(100, 10))
+                .thenReturn(Optional.of(appointment));
+        when(appointmentRepository.save(appointment)).thenReturn(appointment);
+        when(appointmentMapper.toAssistantResponse(appointment))
+                .thenAnswer(invocation -> new AppointmentMapper().toAssistantResponse(appointment));
+
+        AssistantAppointmentResponseDto result =
+                appointmentService.approveAssistantAppointment(100);
+
+        assertThat(result.getAppointmentStatus()).isEqualTo(AppointmentStatus.APPROVED.name());
+        assertThat(result.getMeetingType()).isEqualTo(MeetingType.ONLINE.name());
+    }
+
+    @Test
+    void rejectAssistantAppointment_ownedPending_updatesStatus() {
+        authenticateAsAssistant();
+        Appointment appointment = assistantAppointment(100, AppointmentStatus.PENDING.name());
+        when(appointmentRepository.findByIdAndStaffIdForUpdate(100, 10))
+                .thenReturn(Optional.of(appointment));
+        when(appointmentRepository.save(appointment)).thenReturn(appointment);
+        when(appointmentMapper.toAssistantResponse(appointment))
+                .thenAnswer(invocation -> new AppointmentMapper().toAssistantResponse(appointment));
+
+        AssistantAppointmentResponseDto result =
+                appointmentService.rejectAssistantAppointment(100);
+
+        assertThat(result.getAppointmentStatus()).isEqualTo(AppointmentStatus.REJECTED.name());
+        assertThat(appointment.getMeetingType()).isEqualTo(MeetingType.FACE_TO_FACE.name());
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+            value = AppointmentStatus.class,
+            names = {"APPROVED", "REJECTED", "COMPLETED", "NO_SHOW"})
+    void approveAssistantAppointment_nonPendingStatus_throwsConflict(AppointmentStatus status) {
+        authenticateAsAssistant();
+        Appointment appointment = assistantAppointment(100, status.name());
+        when(appointmentRepository.findByIdAndStaffIdForUpdate(100, 10))
+                .thenReturn(Optional.of(appointment));
+
+        assertThatThrownBy(() -> appointmentService.approveAssistantAppointment(100))
+                .isInstanceOf(ConflictException.class);
+
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+            value = AppointmentStatus.class,
+            names = {"APPROVED", "REJECTED", "COMPLETED", "NO_SHOW"})
+    void rejectAssistantAppointment_nonPendingStatus_throwsConflict(AppointmentStatus status) {
+        authenticateAsAssistant();
+        Appointment appointment = assistantAppointment(100, status.name());
+        when(appointmentRepository.findByIdAndStaffIdForUpdate(100, 10))
+                .thenReturn(Optional.of(appointment));
+
+        assertThatThrownBy(() -> appointmentService.rejectAssistantAppointment(100))
+                .isInstanceOf(ConflictException.class);
+
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
+    void approveAssistantAppointment_otherStaffAppointment_throwsNotFound() {
+        authenticateAsAssistant();
+        when(appointmentRepository.findByIdAndStaffIdForUpdate(999, 10))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> appointmentService.approveAssistantAppointment(999))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(AppointmentMessages.APPOINTMENT_NOT_FOUND);
+    }
+
+    @Test
+    void rejectAssistantAppointment_otherStaffAppointment_throwsNotFound() {
+        authenticateAsAssistant();
+        when(appointmentRepository.findByIdAndStaffIdForUpdate(999, 10))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> appointmentService.rejectAssistantAppointment(999))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(AppointmentMessages.APPOINTMENT_NOT_FOUND);
+    }
+
+    @Test
+    void approveAssistantAppointment_secondRequest_isRejected() {
+        authenticateAsAssistant();
+        Appointment appointment = assistantAppointment(100, AppointmentStatus.PENDING.name());
+        when(appointmentRepository.findByIdAndStaffIdForUpdate(100, 10))
+                .thenReturn(Optional.of(appointment));
+        when(appointmentRepository.save(appointment)).thenReturn(appointment);
+        when(appointmentMapper.toAssistantResponse(appointment))
+                .thenAnswer(invocation -> new AppointmentMapper().toAssistantResponse(appointment));
+
+        appointmentService.approveAssistantAppointment(100);
+
+        assertThatThrownBy(() -> appointmentService.approveAssistantAppointment(100))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage(AppointmentMessages.ALREADY_APPROVED);
+        verify(appointmentRepository).save(appointment);
     }
 
     private void authenticateAsAssistant() {
