@@ -50,6 +50,7 @@ export {
   endRecurrenceRule,
 } from './recurrenceService';
 export { getCalendarEvents } from './calendarService';
+export { getAssistantCourses } from './assistantCourseService';
 export {
   getMyOutOfOfficePeriods,
   createOutOfOfficePeriod,

@@ -9,6 +9,12 @@ const assistantNavItems = [
     icon: 'dashboard',
     end: true,
   },
+  {
+    label: 'Atandığım Dersler',
+    path: ROUTES.ASSISTANT_COURSES,
+    icon: 'menu_book',
+    end: true,
+  },
 ] as const;
 
 export default function AssistantSidebar({ mobileOpen, onClose }: ModuleSidebarProps) {

@@ -25,6 +25,15 @@ public interface CourseAssignmentRepository extends JpaRepository<CourseAssignme
             SELECT ca FROM CourseAssignment ca
             JOIN FETCH ca.course c
             JOIN FETCH c.ownerAcademician
+            WHERE ca.assistant.userId = :assistantId
+            ORDER BY c.courseCode ASC, c.courseName ASC
+            """)
+    List<CourseAssignment> findAssignedCoursesByAssistantId(@Param("assistantId") Integer assistantId);
+
+    @Query("""
+            SELECT ca FROM CourseAssignment ca
+            JOIN FETCH ca.course c
+            JOIN FETCH c.ownerAcademician
             JOIN FETCH ca.assistant
             WHERE ca.courseAssignmentId = :assignmentId
             """)
