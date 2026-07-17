@@ -4,7 +4,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import trLocale from '@fullcalendar/core/locales/tr';
-import type { DatesSetArg, EventClickArg } from '@fullcalendar/core';
+import type { DatesSetArg, EventClickArg, EventContentArg } from '@fullcalendar/core';
 import {
   exclusiveEndToInclusiveIso,
   formatCalendarEventTitle,
@@ -57,6 +57,12 @@ export default function AcademicianCalendar({
     }
   };
 
+  const renderEventContent = (arg: EventContentArg) => (
+    <div className="flex h-full w-full items-center justify-center overflow-hidden text-center leading-tight">
+      <span className="truncate">{arg.event.title}</span>
+    </div>
+  );
+
   return (
     <div className="academician-calendar rounded-xl border border-outline-variant bg-surface p-2 sm:p-4 overflow-x-auto">
       <FullCalendar
@@ -82,6 +88,7 @@ export default function AcademicianCalendar({
         events={calendarEvents}
         datesSet={handleDatesSet}
         eventClick={handleEventClick}
+        eventContent={renderEventContent}
         slotMinTime="08:00:00"
         slotMaxTime="22:00:00"
         allDaySlot={false}
