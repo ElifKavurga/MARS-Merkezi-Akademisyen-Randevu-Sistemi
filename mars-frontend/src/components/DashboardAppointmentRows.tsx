@@ -36,28 +36,49 @@ export function DashboardUpcomingAppointmentRow({
 
 export function DashboardPendingAppointmentRow({
   appointment,
+  onClick,
 }: {
   appointment: StaffAppointment;
+  onClick?: () => void;
 }) {
-  return (
-    <div className="rounded-lg border border-outline-variant bg-surface p-4">
-      <div className="flex items-start gap-3">
-        <StudentAvatar name={appointment.studentName} compact />
-        <div className="min-w-0 flex-1">
+  const content = (
+    <div className="flex items-start gap-3">
+      <StudentAvatar name={appointment.studentName} compact />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-2">
           <p className="truncate font-body-md text-body-md font-semibold text-primary">
             {appointment.studentName}
           </p>
-          <p className="mt-1 truncate font-label-sm text-label-sm text-outline">
-            {appointment.categoryName}
-          </p>
-          <p className="mt-2 font-label-sm text-label-sm text-on-surface-variant">
-            {formatDate(appointment.appointmentDate)} · {formatTimeRange(appointment)}
-          </p>
-          <p className="mt-1 font-label-sm text-label-sm text-on-surface-variant">
-            {formatCourse(appointment)} · {getMeetingTypeLabel(appointment.meetingType)}
-          </p>
+          <AppointmentStatusBadge status={appointment.appointmentStatus} />
         </div>
+        <p className="mt-1 truncate font-label-sm text-label-sm text-outline">
+          {appointment.categoryName}
+        </p>
+        <p className="mt-2 font-label-sm text-label-sm text-on-surface-variant">
+          {formatDate(appointment.appointmentDate)} · {formatTimeRange(appointment)}
+        </p>
+        <p className="mt-1 font-label-sm text-label-sm text-on-surface-variant">
+          {getMeetingTypeLabel(appointment.meetingType)}
+        </p>
       </div>
+    </div>
+  );
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        className="w-full rounded-lg border border-outline-variant bg-surface p-4 text-left transition-colors hover:bg-surface-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim"
+        onClick={onClick}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <div className="rounded-lg border border-outline-variant bg-surface p-4">
+      {content}
     </div>
   );
 }

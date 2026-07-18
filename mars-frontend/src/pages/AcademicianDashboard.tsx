@@ -1,15 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  DashboardPendingAppointmentRow,
-  DashboardUpcomingAppointmentRow,
-} from '../components/DashboardAppointmentRows';
-import DashboardEmptyState from '../components/DashboardEmptyState';
+import DashboardDailySchedule from '../components/DashboardDailySchedule';
+import DashboardPendingRequests from '../components/DashboardPendingRequests';
 import DashboardQuickActions from '../components/DashboardQuickActions';
-import DashboardSectionHeader from '../components/DashboardSectionHeader';
 import DashboardWelcomeBanner from '../components/DashboardWelcomeBanner';
-import Loading from '../components/Loading';
 import { ROUTES } from '../constants/routes';
 import { useAuth } from '../hooks/useAuth';
+import { useDashboardDailySchedule } from '../hooks/useDashboardDailySchedule';
 import { useToast } from '../hooks/useToast';
 import { getAcademicianDashboardSummary } from '../services/academicianDashboardService';
 import type { AcademicianDashboardSummary } from '../types/dashboard';
@@ -41,6 +37,7 @@ const QUICK_ACTIONS = [
 export default function AcademicianDashboard() {
   const { user } = useAuth();
   const toast = useToast();
+  const dailySchedule = useDashboardDailySchedule();
   const [summary, setSummary] = useState<AcademicianDashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,9 +73,21 @@ export default function AcademicianDashboard() {
         stats={
           summary && !loading
             ? [
-                { label: 'Bekleyen', value: summary.pendingAppointmentCount },
-                { label: 'Yaklaşan', value: summary.upcomingAppointmentCount },
-                { label: 'Aktif Ders', value: summary.activeCourseCount },
+                {
+                  label: 'Bekleyen',
+                  value: summary.pendingAppointmentCount,
+                  to: ROUTES.ACADEMICIAN_APPOINTMENTS,
+                },
+                {
+                  label: 'Yaklaşan',
+                  value: summary.upcomingAppointmentCount,
+                  to: ROUTES.ACADEMICIAN_CALENDAR,
+                },
+                {
+                  label: 'Aktif Ders',
+                  value: summary.activeCourseCount,
+                  to: ROUTES.ACADEMICIAN_COURSES,
+                },
               ]
             : []
         }
@@ -99,74 +108,30 @@ export default function AcademicianDashboard() {
         </section>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <section className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest lg:col-span-8">
-          <DashboardSectionHeader
-            title="Yaklaşan Randevular"
-            actionLabel="Tümünü Gör"
-            actionPath={ROUTES.ACADEMICIAN_APPOINTMENTS}
-          />
-          <div className="px-4 pb-4 sm:px-6 sm:pb-6">
-            {loading ? (
-              <SectionLoading />
-            ) : summary?.upcomingAppointments.length ? (
-              <div className="divide-y divide-outline-variant">
-                {summary.upcomingAppointments.map((appointment) => (
-                  <DashboardUpcomingAppointmentRow
-                    key={appointment.appointmentId}
-                    appointment={appointment}
-                  />
-                ))}
-              </div>
-            ) : (
-              <DashboardEmptyState
-                icon="event_available"
-                message="Yaklaşan randevunuz bulunmuyor."
-              />
-            )}
-          </div>
-        </section>
+      <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <DashboardDailySchedule
+          className="lg:col-span-8"
+          selectedDate={dailySchedule.selectedDate}
+          events={dailySchedule.events}
+          loading={dailySchedule.loading}
+          error={dailySchedule.error}
+          calendarPath={ROUTES.ACADEMICIAN_CALENDAR}
+          onPreviousDay={dailySchedule.showPreviousDay}
+          onNextDay={dailySchedule.showNextDay}
+          onToday={dailySchedule.showToday}
+          onRetry={() => void dailySchedule.retry()}
+        />
 
-        <div className="space-y-6 lg:col-span-4">
-          <section className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest">
-            <DashboardSectionHeader
-              title="Bekleyen Talepler"
-              actionLabel="Tümünü Gör"
-              actionPath={ROUTES.ACADEMICIAN_APPOINTMENTS}
-            />
-            <div className="px-4 pb-4 sm:px-6 sm:pb-6">
-              {loading ? (
-                <SectionLoading />
-              ) : summary?.pendingAppointments.length ? (
-                <div className="space-y-3">
-                  {summary.pendingAppointments.map((appointment) => (
-                    <DashboardPendingAppointmentRow
-                      key={appointment.appointmentId}
-                      appointment={appointment}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <DashboardEmptyState
-                  icon="pending_actions"
-                  message="Bekleyen randevu talebiniz bulunmuyor."
-                />
-              )}
-            </div>
-          </section>
-
-          <DashboardQuickActions actions={QUICK_ACTIONS} />
-        </div>
+        <DashboardPendingRequests
+          className="lg:col-span-4"
+          appointments={summary?.pendingAppointments ?? []}
+          loading={loading}
+          errorMessage={error}
+          appointmentsPath={ROUTES.ACADEMICIAN_APPOINTMENTS}
+        />
       </div>
+
+      <DashboardQuickActions actions={QUICK_ACTIONS} />
     </div>
   );
 }
-
-function SectionLoading() {
-  return (
-    <div className="flex min-h-40 items-center justify-center">
-      <Loading label="Veriler yükleniyor..." />
-    </div>
-  );
-}
-

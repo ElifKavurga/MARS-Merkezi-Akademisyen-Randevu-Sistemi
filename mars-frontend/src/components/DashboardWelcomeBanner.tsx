@@ -1,8 +1,10 @@
 import Loading from './Loading';
+import { Link } from 'react-router-dom';
 
 export type DashboardWelcomeStat = {
   label: string;
   value: number;
+  to?: string;
 };
 
 type DashboardWelcomeBannerProps = {
@@ -46,19 +48,36 @@ export default function DashboardWelcomeBanner({
                   : 'grid-cols-3'
             }`}
           >
-            {stats.map((stat) => (
-              <div
-                key={stat.label}
-                className="min-w-0 rounded-lg bg-white/10 px-2 py-3 text-center backdrop-blur-sm sm:min-w-24 sm:px-4 sm:py-4"
-              >
-                <p className="min-h-8 break-words font-label-sm text-label-sm uppercase tracking-wider text-on-primary/60">
-                  {stat.label}
-                </p>
-                <p className="mt-1 font-headline-md text-headline-md font-bold">
-                  {stat.value}
-                </p>
-              </div>
-            ))}
+            {stats.map((stat) =>
+              stat.to ? (
+                <Link
+                  key={stat.label}
+                  to={stat.to}
+                  className="min-w-0 rounded-lg bg-white/10 px-2 py-3 text-center no-underline backdrop-blur-sm transition-colors hover:bg-white/20 hover:no-underline focus:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 sm:min-w-24 sm:px-4 sm:py-4"
+                  style={{ textDecoration: 'none' }}
+                  aria-label={`${stat.label}: ${stat.value}`}
+                >
+                  <p className="min-h-8 break-words font-label-sm text-label-sm uppercase tracking-wider text-on-primary/60">
+                    {stat.label}
+                  </p>
+                  <p className="mt-1 font-headline-md text-headline-md font-bold text-on-primary">
+                    {stat.value}
+                  </p>
+                </Link>
+              ) : (
+                <div
+                  key={stat.label}
+                  className="min-w-0 rounded-lg bg-white/10 px-2 py-3 text-center backdrop-blur-sm sm:min-w-24 sm:px-4 sm:py-4"
+                >
+                  <p className="min-h-8 break-words font-label-sm text-label-sm uppercase tracking-wider text-on-primary/60">
+                    {stat.label}
+                  </p>
+                  <p className="mt-1 font-headline-md text-headline-md font-bold">
+                    {stat.value}
+                  </p>
+                </div>
+              ),
+            )}
           </div>
         ) : null}
       </div>
