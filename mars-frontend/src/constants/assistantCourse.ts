@@ -17,6 +17,6 @@ export const ASSISTANT_DASHBOARD_MESSAGES = {
   PREVIEW_TITLE: 'Atandığım Dersler',
   VIEW_ALL: 'Tüm Dersleri Gör',
   EMPTY: 'Henüz size atanmış bir ders bulunmuyor.',
-  LOAD_ERROR: 'Dashboard verileri yüklenirken bir hata oluştu.',
-  ACCESS_DENIED: 'Dashboard verilerine erişim yetkiniz yok.',
+  LOAD_ERROR: 'Ana ekran verileri yüklenirken bir hata oluştu.',
+  ACCESS_DENIED: 'Ana ekran verilerine erişim yetkiniz yok.',
 } as const;

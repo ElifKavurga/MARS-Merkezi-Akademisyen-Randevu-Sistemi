@@ -4,7 +4,7 @@ import type { ModuleSidebarProps } from './ModuleLayout';
 
 const assistantNavItems = [
   {
-    label: 'Dashboard',
+    label: 'Ana Ekran',
     path: ROUTES.ASSISTANT_DASHBOARD,
     icon: 'dashboard',
     end: true,

@@ -5,7 +5,7 @@ import ModuleSidebar from './ModuleSidebar';
 import type { ModuleSidebarProps } from './ModuleLayout';
 
 const commonNavItems = [
-  { label: 'Dashboard', path: ROUTES.ACADEMICIAN, icon: 'dashboard', end: true },
+  { label: 'Ana Ekran', path: ROUTES.ACADEMICIAN, icon: 'dashboard', end: true },
   { label: 'Derslerim', path: ROUTES.ACADEMICIAN_COURSES, icon: 'menu_book', end: false },
   { label: 'Ofis Saatleri', path: ROUTES.ACADEMICIAN_AVAILABILITY, icon: 'schedule', end: false },
   { label: 'Takvim', path: ROUTES.ACADEMICIAN_CALENDAR, icon: 'calendar_month', end: false },

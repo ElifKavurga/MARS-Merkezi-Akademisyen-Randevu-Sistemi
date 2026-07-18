@@ -35,7 +35,7 @@ export default function AcademicianDashboard() {
     try {
       setSummary(await getAcademicianDashboardSummary());
     } catch {
-      const message = 'Dashboard verileri yüklenirken bir hata oluştu.';
+      const message = 'Ana ekran verileri yüklenirken bir hata oluştu.';
       setError(message);
       toast.error(message);
     } finally {

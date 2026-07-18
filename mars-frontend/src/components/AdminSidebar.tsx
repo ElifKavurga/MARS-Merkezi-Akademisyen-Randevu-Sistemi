@@ -3,7 +3,7 @@ import ModuleSidebar from './ModuleSidebar';
 import type { ModuleSidebarProps } from './ModuleLayout';
 
 const adminNavItems = [
-  { label: 'Dashboard', path: ROUTES.ADMIN, icon: 'dashboard', end: true },
+  { label: 'Ana Ekran', path: ROUTES.ADMIN, icon: 'dashboard', end: true },
   { label: 'Kullanıcı Yönetimi', path: ROUTES.ADMIN_USERS, icon: 'group', end: false },
   { label: 'Kategori Yönetimi', path: ROUTES.ADMIN_CATEGORIES, icon: 'category', end: false },
   { label: 'Ceza Kuralları', path: ROUTES.ADMIN_PENALTY_RULES, icon: 'gavel', end: false },
