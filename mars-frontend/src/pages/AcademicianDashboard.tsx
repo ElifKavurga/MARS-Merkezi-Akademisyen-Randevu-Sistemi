@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import DashboardDailySchedule from '../components/DashboardDailySchedule';
 import DashboardEntityListCard from '../components/DashboardEntityListCard';
 import DashboardPendingRequests from '../components/DashboardPendingRequests';
-import DashboardQuickActions from '../components/DashboardQuickActions';
 import DashboardWelcomeBanner from '../components/DashboardWelcomeBanner';
 import { ROUTES } from '../constants/routes';
 import { useAuth } from '../hooks/useAuth';
@@ -12,30 +11,6 @@ import { getAcademicianDashboardSummary } from '../services/academicianDashboard
 import { getCourseAssistants, getMyCourses } from '../services/courseService';
 import type { CourseAssistant } from '../types/course';
 import type { AcademicianDashboardSummary } from '../types/dashboard';
-
-const QUICK_ACTIONS = [
-  {
-    route: ROUTES.ACADEMICIAN_APPOINTMENTS,
-    icon: 'event_note',
-    title: 'Randevularım',
-    primary: true,
-  },
-  {
-    route: ROUTES.ACADEMICIAN_CALENDAR,
-    icon: 'calendar_month',
-    title: 'Takvimi Gör',
-  },
-  {
-    route: ROUTES.ACADEMICIAN_AVAILABILITY,
-    icon: 'event_available',
-    title: 'Ofis Saatlerini Yönet',
-  },
-  {
-    route: ROUTES.ACADEMICIAN_COURSES,
-    icon: 'menu_book',
-    title: 'Derslerim',
-  },
-] as const;
 
 const PREVIEW_LIMIT = 5;
 
@@ -216,8 +191,6 @@ export default function AcademicianDashboard() {
           actionPath={ROUTES.ACADEMICIAN_COURSES}
         />
       </div>
-
-      <DashboardQuickActions actions={QUICK_ACTIONS} />
     </div>
   );
 }

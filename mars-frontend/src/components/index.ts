@@ -46,7 +46,6 @@ export {
   DashboardPendingAppointmentRow,
   DashboardUpcomingAppointmentRow,
 } from './DashboardAppointmentRows';
-export { default as DashboardQuickActions } from './DashboardQuickActions';
 export { default as DashboardSectionHeader } from './DashboardSectionHeader';
 export { default as DashboardWelcomeBanner } from './DashboardWelcomeBanner';
 export { ErrorBoundary } from './ErrorBoundary';

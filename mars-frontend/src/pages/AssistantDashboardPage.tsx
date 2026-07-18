@@ -3,7 +3,6 @@ import { isAxiosError } from 'axios';
 import DashboardDailySchedule from '../components/DashboardDailySchedule';
 import DashboardEntityListCard from '../components/DashboardEntityListCard';
 import DashboardPendingRequests from '../components/DashboardPendingRequests';
-import DashboardQuickActions from '../components/DashboardQuickActions';
 import DashboardWelcomeBanner from '../components/DashboardWelcomeBanner';
 import { ASSISTANT_DASHBOARD_MESSAGES } from '../constants/assistantCourse';
 import { ROUTES } from '../constants/routes';
@@ -12,30 +11,6 @@ import { useDashboardDailySchedule } from '../hooks/useDashboardDailySchedule';
 import { useToast } from '../hooks/useToast';
 import { getAssistantDashboard } from '../services/assistantCourseService';
 import type { AssistantDashboardSummary } from '../types/assistantCourse';
-
-const QUICK_ACTIONS = [
-  {
-    route: ROUTES.ASSISTANT_APPOINTMENTS,
-    icon: 'event_note',
-    title: 'Randevularım',
-    primary: true,
-  },
-  {
-    route: ROUTES.ASSISTANT_CALENDAR,
-    icon: 'calendar_month',
-    title: 'Takvimim',
-  },
-  {
-    route: ROUTES.ASSISTANT_AVAILABILITY,
-    icon: 'event_available',
-    title: 'Müsaitliklerim',
-  },
-  {
-    route: ROUTES.ASSISTANT_COURSES,
-    icon: 'menu_book',
-    title: 'Atandığım Dersler',
-  },
-] as const;
 
 export default function AssistantDashboardPage() {
   const { user } = useAuth();
@@ -137,8 +112,6 @@ export default function AssistantDashboardPage() {
           actionPath={ROUTES.ASSISTANT_COURSES}
         />
       </div>
-
-      <DashboardQuickActions actions={QUICK_ACTIONS} />
     </div>
   );
 }
