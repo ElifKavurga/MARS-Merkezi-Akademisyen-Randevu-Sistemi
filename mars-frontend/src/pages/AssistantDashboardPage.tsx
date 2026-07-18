@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
 import DashboardDailySchedule from '../components/DashboardDailySchedule';
+import DashboardEntityListCard from '../components/DashboardEntityListCard';
 import DashboardPendingRequests from '../components/DashboardPendingRequests';
 import DashboardQuickActions from '../components/DashboardQuickActions';
 import DashboardWelcomeBanner from '../components/DashboardWelcomeBanner';
@@ -65,6 +66,13 @@ export default function AssistantDashboardPage() {
     void loadDashboard();
   }, [toast]);
 
+  const courseItems =
+    summary?.assignedCoursesPreview.slice(0, 5).map((course) => ({
+      id: course.courseId,
+      title: course.courseName,
+      subtitle: `${course.courseCode} · ${course.academicTerm}`,
+    })) ?? [];
+
   return (
     <div className="w-full min-w-0 animate-fade-in">
       <DashboardWelcomeBanner
@@ -115,6 +123,18 @@ export default function AssistantDashboardPage() {
           loading={loading}
           errorMessage={error}
           appointmentsPath={ROUTES.ASSISTANT_APPOINTMENTS}
+        />
+      </div>
+
+      <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <DashboardEntityListCard
+          title="Atandığım Dersler"
+          items={courseItems}
+          loading={loading}
+          emptyMessage={ASSISTANT_DASHBOARD_MESSAGES.EMPTY}
+          emptyIcon="menu_book"
+          actionLabel="Tüm Dersleri Gör"
+          actionPath={ROUTES.ASSISTANT_COURSES}
         />
       </div>
 

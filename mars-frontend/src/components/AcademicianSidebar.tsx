@@ -39,6 +39,7 @@ export default function AcademicianSidebar({ mobileOpen, onClose }: ModuleSideba
       ariaLabel="Akademisyen menü"
       navAriaLabel="Akademisyen sayfa menüsü"
       navItems={navItems}
+      profilePath={ROUTES.ACADEMICIAN_PROFILE}
     />
   );
 }

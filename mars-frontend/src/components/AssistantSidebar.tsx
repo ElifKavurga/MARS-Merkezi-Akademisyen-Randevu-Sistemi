@@ -43,6 +43,7 @@ export default function AssistantSidebar({ mobileOpen, onClose }: ModuleSidebarP
       ariaLabel="Asistan menü"
       navAriaLabel="Asistan sayfa menüsü"
       navItems={assistantNavItems}
+      profilePath={ROUTES.ASSISTANT_PROFILE}
     />
   );
 }

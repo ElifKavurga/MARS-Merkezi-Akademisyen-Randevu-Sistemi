@@ -11,7 +11,6 @@ import AdminHomePage from '../pages/AdminHomePage';
 import AdminDashboard from '../pages/AdminDashboard';
 import AdminCategoriesPage from '../pages/AdminCategoriesPage';
 import AdminPenaltyRulesPage from '../pages/AdminPenaltyRulesPage';
-import AdminProfilePage from '../pages/AdminProfilePage';
 import HodDashboard from '../pages/HodDashboard';
 import AcademicianDashboard from '../pages/AcademicianDashboard';
 import AcademicianCoursesPage from '../pages/AcademicianCoursesPage';
@@ -25,6 +24,7 @@ import AssistantCoursesPage from '../pages/AssistantCoursesPage';
 import AssistantAvailabilityPage from '../pages/AssistantAvailabilityPage';
 import AssistantAppointmentsPage from '../pages/AssistantAppointmentsPage';
 import AssistantCalendarPage from '../pages/AssistantCalendarPage';
+import ProfilePage from '../pages/ProfilePage';
 import StudentDashboard from '../pages/StudentDashboard';
 import StudentAppointmentCreatePage from '../pages/StudentAppointmentCreatePage';
 import NotFoundPage from '../pages/NotFoundPage';
@@ -72,6 +72,7 @@ export default function AppRouter() {
               element={<AssistantAppointmentsPage />}
             />
             <Route path={ROUTES.ASSISTANT_CALENDAR} element={<AssistantCalendarPage />} />
+            <Route path={ROUTES.ASSISTANT_PROFILE} element={<ProfilePage />} />
           </Route>
         </Route>
 
@@ -91,6 +92,7 @@ export default function AppRouter() {
             </Route>
             <Route path={ROUTES.ACADEMICIAN_CALENDAR} element={<AcademicianCalendarPage />} />
             <Route path={ROUTES.ACADEMICIAN_OUT_OF_OFFICE} element={<AcademicianOutOfOfficePage />} />
+            <Route path={ROUTES.ACADEMICIAN_PROFILE} element={<ProfilePage />} />
           </Route>
         </Route>
 
@@ -100,7 +102,7 @@ export default function AppRouter() {
             <Route path={ROUTES.ADMIN_USERS} element={<AdminDashboard />} />
             <Route path={ROUTES.ADMIN_CATEGORIES} element={<AdminCategoriesPage />} />
             <Route path={ROUTES.ADMIN_PENALTY_RULES} element={<AdminPenaltyRulesPage />} />
-            <Route path={ROUTES.ADMIN_PROFILE} element={<AdminProfilePage />} />
+            <Route path={ROUTES.ADMIN_PROFILE} element={<ProfilePage />} />
           </Route>
         </Route>
       </Route>

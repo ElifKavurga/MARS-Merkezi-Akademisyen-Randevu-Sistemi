@@ -1,4 +1,6 @@
 import marsLogo from '../assets/images/mars-logo.png';
+import NotificationBell from './NotificationBell';
+import UserAvatar from './UserAvatar';
 import { useAuth } from '../hooks/useAuth';
 import { useLogout } from '../hooks/useLogout';
 import { APP_NAME, getRoleLabel } from '../constants';
@@ -8,25 +10,24 @@ export default function Header() {
   const handleLogout = useLogout();
 
   return (
-    <header className="app-header bg-surface sticky top-0 z-40 border-b border-outline-variant flex justify-between items-center h-16 px-6 md:px-8">
+    <header className="app-header sticky top-0 z-40 flex h-16 items-center justify-between border-b border-outline-variant bg-surface px-6 md:px-8">
       <div className="flex items-center gap-3">
         <img src={marsLogo} alt={`${APP_NAME} Logo`} className="h-10 w-auto object-contain" />
-        <span className="font-headline-md text-headline-md text-primary tracking-wider hidden sm:inline">
+        <span className="hidden font-headline-md text-headline-md tracking-wider text-primary sm:inline">
           {APP_NAME}
         </span>
       </div>
 
       {user ? (
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="flex items-center gap-3 pl-4 border-l border-outline-variant min-w-0">
-            <div className="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden border border-outline-variant flex items-center justify-center">
-              <span className="material-symbols-outlined text-primary text-xl">person</span>
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="font-label-md text-label-md text-primary leading-tight truncate">
+        <div className="flex min-w-0 items-center gap-3">
+          <NotificationBell />
+          <div className="flex min-w-0 items-center gap-3 border-l border-outline-variant pl-4">
+            <UserAvatar fullName={user.fullName} size="sm" />
+            <div className="flex min-w-0 flex-col">
+              <span className="truncate font-label-md text-label-md leading-tight text-primary">
                 {user.fullName}
               </span>
-              <span className="font-label-sm text-label-sm text-on-surface-variant leading-tight truncate">
+              <span className="truncate font-label-sm text-label-sm leading-tight text-on-surface-variant">
                 {getRoleLabel(user.role)}
               </span>
             </div>
@@ -35,13 +36,13 @@ export default function Header() {
           <button
             type="button"
             onClick={handleLogout}
-            className="inline-flex items-center justify-center gap-1.5 h-10 px-3 rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low hover:text-error transition-colors"
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-error"
             aria-label="Çıkış Yap"
           >
             <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
               logout
             </span>
-            <span className="font-label-sm text-label-sm hidden sm:inline">Çıkış Yap</span>
+            <span className="hidden font-label-sm text-label-sm sm:inline">Çıkış Yap</span>
           </button>
         </div>
       ) : null}

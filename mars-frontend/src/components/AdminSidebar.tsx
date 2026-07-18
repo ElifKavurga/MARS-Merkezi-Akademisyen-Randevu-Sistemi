@@ -9,10 +9,6 @@ const adminNavItems = [
   { label: 'Ceza Kuralları', path: ROUTES.ADMIN_PENALTY_RULES, icon: 'gavel', end: false },
 ] as const;
 
-const adminFooterItems = [
-  { label: 'Profilim', path: ROUTES.ADMIN_PROFILE, icon: 'person', end: false },
-] as const;
-
 export default function AdminSidebar({ mobileOpen, onClose }: ModuleSidebarProps) {
   return (
     <ModuleSidebar
@@ -21,7 +17,7 @@ export default function AdminSidebar({ mobileOpen, onClose }: ModuleSidebarProps
       ariaLabel="Admin menü"
       navAriaLabel="Admin sayfa menüsü"
       navItems={adminNavItems}
-      footerItems={adminFooterItems}
+      profilePath={ROUTES.ADMIN_PROFILE}
     />
   );
 }

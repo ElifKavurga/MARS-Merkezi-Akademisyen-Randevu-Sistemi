@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import DashboardDailySchedule from '../components/DashboardDailySchedule';
+import DashboardEntityListCard from '../components/DashboardEntityListCard';
 import DashboardPendingRequests from '../components/DashboardPendingRequests';
 import DashboardQuickActions from '../components/DashboardQuickActions';
 import DashboardWelcomeBanner from '../components/DashboardWelcomeBanner';
@@ -8,6 +9,8 @@ import { useAuth } from '../hooks/useAuth';
 import { useDashboardDailySchedule } from '../hooks/useDashboardDailySchedule';
 import { useToast } from '../hooks/useToast';
 import { getAcademicianDashboardSummary } from '../services/academicianDashboardService';
+import { getCourseAssistants, getMyCourses } from '../services/courseService';
+import type { CourseAssistant } from '../types/course';
 import type { AcademicianDashboardSummary } from '../types/dashboard';
 
 const QUICK_ACTIONS = [
@@ -34,6 +37,8 @@ const QUICK_ACTIONS = [
   },
 ] as const;
 
+const PREVIEW_LIMIT = 5;
+
 export default function AcademicianDashboard() {
   const { user } = useAuth();
   const toast = useToast();
@@ -41,6 +46,13 @@ export default function AcademicianDashboard() {
   const [summary, setSummary] = useState<AcademicianDashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [courseItems, setCourseItems] = useState<
+    Array<{ id: number; title: string; subtitle: string }>
+  >([]);
+  const [assistantItems, setAssistantItems] = useState<
+    Array<{ id: number; title: string; subtitle: string }>
+  >([]);
+  const [listsLoading, setListsLoading] = useState(true);
 
   const loadSummary = useCallback(async () => {
     setLoading(true);
@@ -56,9 +68,62 @@ export default function AcademicianDashboard() {
     }
   }, [toast]);
 
+  const loadCourseLists = useCallback(async () => {
+    setListsLoading(true);
+    try {
+      const courses = await getMyCourses();
+      const activeCourses = courses.filter((course) => course.isActive);
+      setCourseItems(
+        activeCourses.slice(0, PREVIEW_LIMIT).map((course) => ({
+          id: course.courseId,
+          title: course.courseName,
+          subtitle: `${course.courseCode} · ${course.academicTerm}`,
+        })),
+      );
+
+      const assistantLists = await Promise.all(
+        activeCourses.slice(0, PREVIEW_LIMIT).map(async (course) => {
+          try {
+            return await getCourseAssistants(course.courseId);
+          } catch {
+            return [] as CourseAssistant[];
+          }
+        }),
+      );
+
+      const uniqueAssistants = new Map<number, CourseAssistant>();
+      for (const list of assistantLists) {
+        for (const assistant of list) {
+          if (!uniqueAssistants.has(assistant.assistantId)) {
+            uniqueAssistants.set(assistant.assistantId, assistant);
+          }
+        }
+      }
+
+      setAssistantItems(
+        Array.from(uniqueAssistants.values())
+          .slice(0, PREVIEW_LIMIT)
+          .map((assistant) => ({
+            id: assistant.assistantId,
+            title: assistant.assistantName,
+            subtitle: assistant.departmentName || assistant.institutionalEmail,
+          })),
+      );
+    } catch {
+      setCourseItems([]);
+      setAssistantItems([]);
+    } finally {
+      setListsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     void loadSummary();
   }, [loadSummary]);
+
+  useEffect(() => {
+    void loadCourseLists();
+  }, [loadCourseLists]);
 
   if (!user) {
     return null;
@@ -128,6 +193,27 @@ export default function AcademicianDashboard() {
           loading={loading}
           errorMessage={error}
           appointmentsPath={ROUTES.ACADEMICIAN_APPOINTMENTS}
+        />
+      </div>
+
+      <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <DashboardEntityListCard
+          title="Derslerim"
+          items={courseItems}
+          loading={listsLoading}
+          emptyMessage="Aktif dersiniz bulunmuyor."
+          emptyIcon="menu_book"
+          actionLabel="Tüm Dersleri Gör"
+          actionPath={ROUTES.ACADEMICIAN_COURSES}
+        />
+        <DashboardEntityListCard
+          title="Asistanlarım"
+          items={assistantItems}
+          loading={listsLoading}
+          emptyMessage="Atanmış asistanınız bulunmuyor."
+          emptyIcon="group"
+          actionLabel="Tüm Asistanları Gör"
+          actionPath={ROUTES.ACADEMICIAN_COURSES}
         />
       </div>
 

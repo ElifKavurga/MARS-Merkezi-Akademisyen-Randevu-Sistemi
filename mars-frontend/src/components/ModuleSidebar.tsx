@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import MarsLogo from './MarsLogo';
+import SidebarUserMenu from './SidebarUserMenu';
 import type { ModuleSidebarProps } from './ModuleLayout';
 
 export type ModuleNavItem = {
@@ -14,6 +15,7 @@ type ModuleSidebarComponentProps = ModuleSidebarProps & {
   navAriaLabel: string;
   navItems: readonly ModuleNavItem[];
   footerItems?: readonly ModuleNavItem[];
+  profilePath: string;
 };
 
 function NavItem({ item, onClose }: { item: ModuleNavItem; onClose: () => void }) {
@@ -53,6 +55,7 @@ export default function ModuleSidebar({
   navAriaLabel,
   navItems,
   footerItems = [],
+  profilePath,
 }: ModuleSidebarComponentProps) {
   return (
     <>
@@ -78,12 +81,14 @@ export default function ModuleSidebar({
         </nav>
 
         {footerItems.length > 0 ? (
-          <div className="mt-auto border-t border-white/10 pt-3">
+          <div className="border-t border-white/10 pt-3">
             {footerItems.map((item) => (
               <NavItem key={item.path} item={item} onClose={onClose} />
             ))}
           </div>
         ) : null}
+
+        <SidebarUserMenu profilePath={profilePath} onNavigate={onClose} />
       </aside>
     </>
   );
