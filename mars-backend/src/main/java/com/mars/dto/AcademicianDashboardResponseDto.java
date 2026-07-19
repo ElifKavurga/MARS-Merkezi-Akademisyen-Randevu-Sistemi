@@ -18,6 +18,9 @@ public class AcademicianDashboardResponseDto {
     private long pendingAppointmentCount;
     private long upcomingAppointmentCount;
     private long activeCourseCount;
+    private long pendingDelegationCount;
+    private long acceptedDelegationCount;
+    private long rejectedDelegationCount;
     private List<StaffAppointmentResponseDto> pendingAppointments;
     private List<StaffAppointmentResponseDto> upcomingAppointments;
 }

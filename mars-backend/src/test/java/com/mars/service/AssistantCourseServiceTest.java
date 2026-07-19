@@ -35,11 +35,13 @@ import com.mars.entity.Role;
 import com.mars.entity.User;
 import com.mars.enums.RoleType;
 import com.mars.enums.AppointmentStatus;
+import com.mars.enums.DelegationStatus;
 import com.mars.enums.MeetingType;
 import com.mars.mapper.AppointmentMapper;
 import com.mars.mapper.AssistantCourseMapper;
 import com.mars.repository.AppointmentRepository;
 import com.mars.repository.CourseAssignmentRepository;
+import com.mars.repository.DelegationLogRepository;
 import com.mars.security.CustomUserDetails;
 
 @ExtendWith(MockitoExtension.class)
@@ -56,6 +58,9 @@ class AssistantCourseServiceTest {
 
     @Mock
     private AppointmentMapper appointmentMapper;
+
+    @Mock
+    private DelegationLogRepository delegationLogRepository;
 
     @InjectMocks
     private AssistantCourseService assistantCourseService;
@@ -218,15 +223,26 @@ class AssistantCourseServiceTest {
                 .thenReturn(List.of(upcoming));
         when(appointmentMapper.toStaffResponse(pending)).thenReturn(pendingDto);
         when(appointmentMapper.toStaffResponse(upcoming)).thenReturn(upcomingDto);
+        when(delegationLogRepository.countByDelegatedToUser_UserIdAndDelegationStatus(
+                20, DelegationStatus.PENDING.name())).thenReturn(3L);
+        when(delegationLogRepository.countByDelegatedToUser_UserIdAndDelegationStatus(
+                20, DelegationStatus.ACCEPTED.name())).thenReturn(4L);
+        when(delegationLogRepository.countByDelegatedToUser_UserIdAndDelegationStatus(
+                20, DelegationStatus.REJECTED.name())).thenReturn(2L);
 
         AssistantDashboardResponseDto result = assistantCourseService.getDashboardSummary();
 
         assertThat(result.getPendingAppointmentCount()).isEqualTo(2);
         assertThat(result.getUpcomingAppointmentCount()).isEqualTo(1);
+        assertThat(result.getPendingDelegationCount()).isEqualTo(3);
+        assertThat(result.getAcceptedDelegationCount()).isEqualTo(4);
+        assertThat(result.getRejectedDelegationCount()).isEqualTo(2);
         assertThat(result.getPendingAppointments()).containsExactly(pendingDto);
         assertThat(result.getUpcomingAppointments()).containsExactly(upcomingDto);
         verify(appointmentRepository).countByStaff_UserIdAndAppointmentStatus(
                 20, AppointmentStatus.PENDING.name());
+        verify(delegationLogRepository).countByDelegatedToUser_UserIdAndDelegationStatus(
+                20, DelegationStatus.PENDING.name());
     }
 
     private void setAuthenticatedUser(User user) {

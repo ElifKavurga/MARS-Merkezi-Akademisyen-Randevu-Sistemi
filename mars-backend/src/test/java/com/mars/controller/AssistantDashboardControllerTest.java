@@ -79,6 +79,9 @@ class AssistantDashboardControllerTest {
                                         .build()))
                         .pendingAppointmentCount(2)
                         .upcomingAppointmentCount(1)
+                        .pendingDelegationCount(3)
+                        .acceptedDelegationCount(4)
+                        .rejectedDelegationCount(1)
                         .pendingAppointments(List.of(
                                 StaffAppointmentResponseDto.builder()
                                         .appointmentId(11)
@@ -98,6 +101,9 @@ class AssistantDashboardControllerTest {
                 .andExpect(jsonPath("$.assignedCoursesPreview[0].courseCode").value("BLM101"))
                 .andExpect(jsonPath("$.pendingAppointmentCount").value(2))
                 .andExpect(jsonPath("$.upcomingAppointmentCount").value(1))
+                .andExpect(jsonPath("$.pendingDelegationCount").value(3))
+                .andExpect(jsonPath("$.acceptedDelegationCount").value(4))
+                .andExpect(jsonPath("$.rejectedDelegationCount").value(1))
                 .andExpect(jsonPath("$.pendingAppointments[0].appointmentId").value(11))
                 .andExpect(jsonPath("$.upcomingAppointments[0].appointmentId").value(12));
 

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { isAxiosError } from 'axios';
+import { useSearchParams } from 'react-router-dom';
 import DelegationStatusBadge from '../components/DelegationStatusBadge';
 import Loading from '../components/Loading';
 import { getMeetingTypeLabel } from '../constants/appointment';
@@ -9,6 +10,16 @@ import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 import { getDelegationHistory } from '../services/delegationService';
 import type { DelegationResponse } from '../types/delegation';
+
+const VALID_STATUS_FILTERS = new Set(['PENDING', 'ACCEPTED', 'REJECTED']);
+
+function resolveStatusFilter(raw: string | null): string {
+  if (!raw) {
+    return '';
+  }
+  const normalized = raw.trim().toUpperCase();
+  return VALID_STATUS_FILTERS.has(normalized) ? normalized : '';
+}
 
 function formatDate(date: string | null): string {
   if (!date) {
@@ -69,13 +80,20 @@ function getBackendErrorMessage(err: unknown, fallback: string): string {
 export default function DelegationHistoryPage() {
   const { user } = useAuth();
   const toast = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [delegations, setDelegations] = useState<DelegationResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState(() =>
+    resolveStatusFilter(searchParams.get('status')),
+  );
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+
+  useEffect(() => {
+    setStatusFilter(resolveStatusFilter(searchParams.get('status')));
+  }, [searchParams]);
 
   useEffect(() => {
     if (!user || (user.role !== 'ACADEMICIAN' && user.role !== 'ASSISTANT')) {
@@ -117,6 +135,17 @@ export default function DelegationHistoryPage() {
       cancelled = true;
     };
   }, [toast, user]);
+
+  const handleStatusFilterChange = (value: string) => {
+    setStatusFilter(value);
+    const nextParams = new URLSearchParams(searchParams);
+    if (value) {
+      nextParams.set('status', value);
+    } else {
+      nextParams.delete('status');
+    }
+    setSearchParams(nextParams, { replace: true });
+  };
 
   const filteredDelegations = useMemo(() => {
     const query = searchQuery.trim().toLocaleLowerCase('tr-TR');
@@ -182,7 +211,7 @@ export default function DelegationHistoryPage() {
             className={FORM_SELECT_CLASS}
             aria-label="Durum filtresi"
             value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
+            onChange={(event) => handleStatusFilterChange(event.target.value)}
           >
             <option value="">{DELEGATION_HISTORY_MESSAGES.STATUS_FILTER_ALL}</option>
             <option value="PENDING">Bekliyor</option>

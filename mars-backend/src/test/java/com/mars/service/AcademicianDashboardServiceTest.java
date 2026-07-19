@@ -31,11 +31,13 @@ import com.mars.entity.AvailabilitySlot;
 import com.mars.entity.Role;
 import com.mars.entity.User;
 import com.mars.enums.AppointmentStatus;
+import com.mars.enums.DelegationStatus;
 import com.mars.enums.MeetingType;
 import com.mars.enums.RoleType;
 import com.mars.mapper.AppointmentMapper;
 import com.mars.repository.AppointmentRepository;
 import com.mars.repository.CourseRepository;
+import com.mars.repository.DelegationLogRepository;
 import com.mars.security.CustomUserDetails;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,6 +47,8 @@ class AcademicianDashboardServiceTest {
     private AppointmentRepository appointmentRepository;
     @Mock
     private CourseRepository courseRepository;
+    @Mock
+    private DelegationLogRepository delegationLogRepository;
     @Mock
     private AppointmentMapper appointmentMapper;
 
@@ -75,6 +79,12 @@ class AcademicianDashboardServiceTest {
                 .thenReturn(2L);
         when(courseRepository.countByOwnerAcademician_UserIdAndIsActiveTrue(10))
                 .thenReturn(3L);
+        when(delegationLogRepository.countByDelegatedByUser_UserIdAndDelegationStatus(
+                10, DelegationStatus.PENDING.name())).thenReturn(5L);
+        when(delegationLogRepository.countByDelegatedByUser_UserIdAndDelegationStatus(
+                10, DelegationStatus.ACCEPTED.name())).thenReturn(7L);
+        when(delegationLogRepository.countByDelegatedByUser_UserIdAndDelegationStatus(
+                10, DelegationStatus.REJECTED.name())).thenReturn(1L);
         when(appointmentRepository.findPendingDashboardPreview(
                 eq(10), eq(AppointmentStatus.PENDING.name()), any(), any(), any(Pageable.class)))
                 .thenReturn(List.of(pending));
@@ -90,6 +100,9 @@ class AcademicianDashboardServiceTest {
         assertThat(result.getPendingAppointmentCount()).isEqualTo(4);
         assertThat(result.getUpcomingAppointmentCount()).isEqualTo(2);
         assertThat(result.getActiveCourseCount()).isEqualTo(3);
+        assertThat(result.getPendingDelegationCount()).isEqualTo(5);
+        assertThat(result.getAcceptedDelegationCount()).isEqualTo(7);
+        assertThat(result.getRejectedDelegationCount()).isEqualTo(1);
         assertThat(result.getPendingAppointments())
                 .extracting(StaffAppointmentResponseDto::getAppointmentId)
                 .containsExactly(1);
@@ -99,6 +112,8 @@ class AcademicianDashboardServiceTest {
         verify(appointmentRepository).countByStaff_UserIdAndAppointmentStatus(
                 10, AppointmentStatus.PENDING.name());
         verify(courseRepository).countByOwnerAcademician_UserIdAndIsActiveTrue(10);
+        verify(delegationLogRepository).countByDelegatedByUser_UserIdAndDelegationStatus(
+                10, DelegationStatus.PENDING.name());
     }
 
     @Test

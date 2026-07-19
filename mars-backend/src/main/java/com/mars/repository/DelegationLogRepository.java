@@ -78,4 +78,8 @@ public interface DelegationLogRepository extends JpaRepository<DelegationLog, In
             ORDER BY d.delegatedAt DESC
             """)
     List<DelegationLog> findHistoryByDelegatedToUserId(@Param("userId") Integer userId);
+
+    long countByDelegatedByUser_UserIdAndDelegationStatus(Integer userId, String delegationStatus);
+
+    long countByDelegatedToUser_UserIdAndDelegationStatus(Integer userId, String delegationStatus);
 }

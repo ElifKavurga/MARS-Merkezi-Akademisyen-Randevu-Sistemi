@@ -14,6 +14,9 @@ export type AssistantDashboardSummary = {
   assignedCoursesPreview: AssistantAssignedCourse[];
   pendingAppointmentCount: number;
   upcomingAppointmentCount: number;
+  pendingDelegationCount: number;
+  acceptedDelegationCount: number;
+  rejectedDelegationCount: number;
   pendingAppointments: StaffAppointment[];
   upcomingAppointments: StaffAppointment[];
 };

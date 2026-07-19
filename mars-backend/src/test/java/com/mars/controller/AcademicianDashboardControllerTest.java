@@ -67,6 +67,9 @@ class AcademicianDashboardControllerTest {
                         .pendingAppointmentCount(2)
                         .upcomingAppointmentCount(1)
                         .activeCourseCount(3)
+                        .pendingDelegationCount(4)
+                        .acceptedDelegationCount(5)
+                        .rejectedDelegationCount(1)
                         .pendingAppointments(List.of())
                         .upcomingAppointments(List.of())
                         .build());
@@ -76,6 +79,9 @@ class AcademicianDashboardControllerTest {
                 .andExpect(jsonPath("$.pendingAppointmentCount").value(2))
                 .andExpect(jsonPath("$.upcomingAppointmentCount").value(1))
                 .andExpect(jsonPath("$.activeCourseCount").value(3))
+                .andExpect(jsonPath("$.pendingDelegationCount").value(4))
+                .andExpect(jsonPath("$.acceptedDelegationCount").value(5))
+                .andExpect(jsonPath("$.rejectedDelegationCount").value(1))
                 .andExpect(jsonPath("$.pendingAppointments").isArray())
                 .andExpect(jsonPath("$.upcomingAppointments").isArray());
     }

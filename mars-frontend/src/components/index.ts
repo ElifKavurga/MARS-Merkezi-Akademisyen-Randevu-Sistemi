@@ -44,6 +44,7 @@ export { default as StaffAppointmentsView } from './StaffAppointmentsView';
 export { default as DelegationModal } from './DelegationModal';
 export { default as DelegationStatusBadge } from './DelegationStatusBadge';
 export { default as DashboardEmptyState } from './DashboardEmptyState';
+export { default as DashboardDelegationStats } from './DashboardDelegationStats';
 export {
   DashboardPendingAppointmentRow,
   DashboardUpcomingAppointmentRow,

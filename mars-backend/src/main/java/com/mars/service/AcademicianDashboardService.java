@@ -15,10 +15,12 @@ import com.mars.dto.AcademicianDashboardResponseDto;
 import com.mars.dto.StaffAppointmentResponseDto;
 import com.mars.entity.User;
 import com.mars.enums.AppointmentStatus;
+import com.mars.enums.DelegationStatus;
 import com.mars.enums.RoleType;
 import com.mars.mapper.AppointmentMapper;
 import com.mars.repository.AppointmentRepository;
 import com.mars.repository.CourseRepository;
+import com.mars.repository.DelegationLogRepository;
 import com.mars.security.CustomUserDetails;
 import com.mars.security.SecurityMessages;
 
@@ -32,6 +34,7 @@ public class AcademicianDashboardService {
 
     private final AppointmentRepository appointmentRepository;
     private final CourseRepository courseRepository;
+    private final DelegationLogRepository delegationLogRepository;
     private final AppointmentMapper appointmentMapper;
 
     @Transactional(readOnly = true)
@@ -49,6 +52,15 @@ public class AcademicianDashboardService {
                 academicianId, AppointmentStatus.APPROVED.name(), today, now);
         long activeCourseCount = courseRepository
                 .countByOwnerAcademician_UserIdAndIsActiveTrue(academicianId);
+        long pendingDelegationCount = delegationLogRepository
+                .countByDelegatedByUser_UserIdAndDelegationStatus(
+                        academicianId, DelegationStatus.PENDING.name());
+        long acceptedDelegationCount = delegationLogRepository
+                .countByDelegatedByUser_UserIdAndDelegationStatus(
+                        academicianId, DelegationStatus.ACCEPTED.name());
+        long rejectedDelegationCount = delegationLogRepository
+                .countByDelegatedByUser_UserIdAndDelegationStatus(
+                        academicianId, DelegationStatus.REJECTED.name());
 
         List<StaffAppointmentResponseDto> pendingAppointments =
                 appointmentRepository.findPendingDashboardPreview(
@@ -76,6 +88,9 @@ public class AcademicianDashboardService {
                 .pendingAppointmentCount(pendingCount)
                 .upcomingAppointmentCount(upcomingCount)
                 .activeCourseCount(activeCourseCount)
+                .pendingDelegationCount(pendingDelegationCount)
+                .acceptedDelegationCount(acceptedDelegationCount)
+                .rejectedDelegationCount(rejectedDelegationCount)
                 .pendingAppointments(pendingAppointments)
                 .upcomingAppointments(upcomingAppointments)
                 .build();

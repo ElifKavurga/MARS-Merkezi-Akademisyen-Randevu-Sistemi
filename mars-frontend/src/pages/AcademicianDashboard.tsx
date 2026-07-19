@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import DashboardDailySchedule from '../components/DashboardDailySchedule';
+import DashboardDelegationStats from '../components/DashboardDelegationStats';
 import DashboardEntityListCard from '../components/DashboardEntityListCard';
 import DashboardPendingRequests from '../components/DashboardPendingRequests';
 import DashboardWelcomeBanner from '../components/DashboardWelcomeBanner';
-import { ROUTES } from '../constants/routes';
+import {
+  ROUTES,
+  academicianDelegationHistoryPath,
+} from '../constants/routes';
 import { useAuth } from '../hooks/useAuth';
 import { useDashboardDailySchedule } from '../hooks/useDashboardDailySchedule';
 import { useToast } from '../hooks/useToast';
@@ -127,6 +131,34 @@ export default function AcademicianDashboard() {
                   label: 'Aktif Ders',
                   value: summary.activeCourseCount,
                   to: ROUTES.ACADEMICIAN_COURSES,
+                },
+              ]
+            : []
+        }
+      />
+
+      <DashboardDelegationStats
+        loading={loading}
+        cards={
+          summary
+            ? [
+                {
+                  label: 'Bekleyen Delegasyonlar',
+                  value: summary.pendingDelegationCount,
+                  to: academicianDelegationHistoryPath('PENDING'),
+                  icon: 'hourglass_top',
+                },
+                {
+                  label: 'Kabul Edilen Delegasyonlar',
+                  value: summary.acceptedDelegationCount,
+                  to: academicianDelegationHistoryPath('ACCEPTED'),
+                  icon: 'check_circle',
+                },
+                {
+                  label: 'Reddedilen Delegasyonlar',
+                  value: summary.rejectedDelegationCount,
+                  to: academicianDelegationHistoryPath('REJECTED'),
+                  icon: 'cancel',
                 },
               ]
             : []

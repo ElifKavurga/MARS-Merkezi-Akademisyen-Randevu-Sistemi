@@ -34,3 +34,17 @@ export const ROUTES = {
 export function academicianCourseDetailPath(courseId: number | string): string {
   return `/academician/courses/${courseId}`;
 }
+
+export function academicianDelegationHistoryPath(status?: string): string {
+  if (!status) {
+    return ROUTES.ACADEMICIAN_DELEGATION_HISTORY;
+  }
+  return `${ROUTES.ACADEMICIAN_DELEGATION_HISTORY}?status=${encodeURIComponent(status)}`;
+}
+
+export function assistantDelegationHistoryPath(status?: string): string {
+  if (!status) {
+    return ROUTES.ASSISTANT_DELEGATION_HISTORY;
+  }
+  return `${ROUTES.ASSISTANT_DELEGATION_HISTORY}?status=${encodeURIComponent(status)}`;
+}
