@@ -61,6 +61,7 @@ public class AppointmentMapper {
     public StaffAppointmentResponseDto toStaffResponse(Appointment appointment) {
         return StaffAppointmentResponseDto.builder()
                 .appointmentId(appointment.getAppointmentId())
+                .staffId(appointment.getStaff() != null ? appointment.getStaff().getUserId() : null)
                 .studentName(appointment.getStudent() != null
                         ? appointment.getStudent().getFullName()
                         : null)
@@ -75,6 +76,9 @@ public class AppointmentMapper {
                         : null)
                 .categoryName(appointment.getCategory() != null
                         ? appointment.getCategory().getCategoryName()
+                        : null)
+                .courseId(appointment.getCourse() != null
+                        ? appointment.getCourse().getCourseId()
                         : null)
                 .courseCode(appointment.getCourse() != null
                         ? appointment.getCourse().getCourseCode()

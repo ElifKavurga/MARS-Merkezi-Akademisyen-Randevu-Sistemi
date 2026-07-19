@@ -17,11 +17,13 @@ import lombok.Setter;
 public class StaffAppointmentResponseDto {
 
     private Integer appointmentId;
+    private Integer staffId;
     private String studentName;
     private LocalDate appointmentDate;
     private LocalTime startTime;
     private LocalTime endTime;
     private String categoryName;
+    private Integer courseId;
     private String courseCode;
     private String courseName;
     private String meetingType;

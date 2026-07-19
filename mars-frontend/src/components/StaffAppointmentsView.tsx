@@ -4,6 +4,8 @@ import {
   STAFF_APPOINTMENT_MESSAGES,
   getMeetingTypeLabel,
 } from '../constants/appointment';
+import { canDelegateAppointment } from '../constants/delegation';
+import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 import {
   approveStaffAppointment,
@@ -18,6 +20,7 @@ import type {
 import AdminActionButton from './AdminActionButton';
 import AppointmentStatusBadge from './AppointmentStatusBadge';
 import ConfirmModal from './ConfirmModal';
+import DelegationModal from './DelegationModal';
 import Loading from './Loading';
 import StaffAppointmentDetailModal from './StaffAppointmentDetailModal';
 
@@ -44,6 +47,7 @@ export default function StaffAppointmentsView({
 }: {
   scope: StaffAppointmentScope;
 }) {
+  const { user } = useAuth();
   const toast = useToast();
   const [activeView, setActiveView] = useState<AppointmentView>('PENDING');
   const [appointmentsByView, setAppointmentsByView] = useState<
@@ -57,6 +61,7 @@ export default function StaffAppointmentsView({
   const [pendingAction, setPendingAction] = useState<AppointmentAction | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [delegationTarget, setDelegationTarget] = useState<StaffAppointment | null>(null);
 
   const loadAppointments = useCallback(
     async (view: AppointmentView) => {
@@ -124,6 +129,14 @@ export default function StaffAppointmentsView({
     setPendingAction({ type, appointment });
   };
 
+  const openDelegation = (appointment: StaffAppointment) => {
+    if (actionLoading || !canDelegateAppointment(appointment, scope, user)) {
+      return;
+    }
+    setSelectedAppointment(null);
+    setDelegationTarget(appointment);
+  };
+
   const handleConfirmAction = async () => {
     if (!pendingAction || actionLoading) {
       return;
@@ -165,6 +178,13 @@ export default function StaffAppointmentsView({
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const handleDelegationSuccess = async (message: string) => {
+    toast.success(message);
+    setDelegationTarget(null);
+    setAppointmentsByView({});
+    await loadAppointments(activeView);
   };
 
   const appointments = appointmentsByView[activeView] ?? [];
@@ -249,76 +269,89 @@ export default function StaffAppointmentsView({
                 </tr>
               </thead>
               <tbody>
-                {appointments.map((appointment) => (
-                  <tr
-                    key={appointment.appointmentId}
-                    className="border-b border-outline-variant/40 transition-colors hover:bg-surface-container/30"
-                  >
-                    <td className="px-5 py-4 font-label-md text-label-md font-semibold text-on-background">
-                      {appointment.studentName}
-                    </td>
-                    <td className="px-5 py-4 font-body-md text-body-md text-on-background">
-                      {formatDate(appointment.appointmentDate)}
-                    </td>
-                    <td className="whitespace-nowrap px-5 py-4 font-body-md text-body-md text-on-background">
-                      {formatTime(appointment.startTime)} - {formatTime(appointment.endTime)}
-                    </td>
-                    <td className="px-5 py-4 font-body-md text-body-md text-on-background">
-                      {appointment.categoryName}
-                    </td>
-                    <td className="px-5 py-4 font-body-md text-body-md text-on-background">
-                      {appointment.courseName
-                        ? `${appointment.courseCode ?? ''} ${appointment.courseName}`.trim()
-                        : '-'}
-                    </td>
-                    <td className="px-5 py-4 font-body-md text-body-md text-on-background">
-                      {getMeetingTypeLabel(appointment.meetingType)}
-                    </td>
-                    <td className="px-5 py-4">
-                      <AppointmentStatusBadge status={appointment.appointmentStatus} />
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {appointment.appointmentStatus === 'PENDING' ? (
-                          <>
+                {appointments.map((appointment) => {
+                  const showDelegate = canDelegateAppointment(appointment, scope, user);
+                  return (
+                    <tr
+                      key={appointment.appointmentId}
+                      className="border-b border-outline-variant/40 transition-colors hover:bg-surface-container/30"
+                    >
+                      <td className="px-5 py-4 font-label-md text-label-md font-semibold text-on-background">
+                        {appointment.studentName}
+                      </td>
+                      <td className="px-5 py-4 font-body-md text-body-md text-on-background">
+                        {formatDate(appointment.appointmentDate)}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4 font-body-md text-body-md text-on-background">
+                        {formatTime(appointment.startTime)} - {formatTime(appointment.endTime)}
+                      </td>
+                      <td className="px-5 py-4 font-body-md text-body-md text-on-background">
+                        {appointment.categoryName}
+                      </td>
+                      <td className="px-5 py-4 font-body-md text-body-md text-on-background">
+                        {appointment.courseName
+                          ? `${appointment.courseCode ?? ''} ${appointment.courseName}`.trim()
+                          : '-'}
+                      </td>
+                      <td className="px-5 py-4 font-body-md text-body-md text-on-background">
+                        {getMeetingTypeLabel(appointment.meetingType)}
+                      </td>
+                      <td className="px-5 py-4">
+                        <AppointmentStatusBadge status={appointment.appointmentStatus} />
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <div className="flex flex-wrap items-center justify-end gap-2">
+                          {appointment.appointmentStatus === 'PENDING' ? (
+                            <>
+                              <AdminActionButton
+                                variant="primary"
+                                icon="check"
+                                disabled={actionLoading}
+                                onClick={() =>
+                                  openActionConfirmation('approve', appointment)
+                                }
+                              >
+                                Onayla
+                              </AdminActionButton>
+                              <AdminActionButton
+                                variant="danger"
+                                icon="close"
+                                disabled={actionLoading}
+                                onClick={() =>
+                                  openActionConfirmation('reject', appointment)
+                                }
+                              >
+                                Reddet
+                              </AdminActionButton>
+                            </>
+                          ) : null}
+                          {showDelegate ? (
                             <AdminActionButton
-                              variant="primary"
-                              icon="check"
+                              variant="neutral"
+                              icon="swap_horiz"
                               disabled={actionLoading}
-                              onClick={() =>
-                                openActionConfirmation('approve', appointment)
-                              }
+                              onClick={() => openDelegation(appointment)}
                             >
-                              Onayla
+                              Devret
                             </AdminActionButton>
-                            <AdminActionButton
-                              variant="danger"
-                              icon="close"
-                              disabled={actionLoading}
-                              onClick={() =>
-                                openActionConfirmation('reject', appointment)
-                              }
-                            >
-                              Reddet
-                            </AdminActionButton>
-                          </>
-                        ) : null}
-                        <AdminActionButton
-                          variant="neutral"
-                          icon="visibility"
-                          disabled={detailLoadingId !== null || actionLoading}
-                          onClick={() =>
-                            void handleShowDetail(appointment.appointmentId)
-                          }
-                        >
-                          {detailLoadingId === appointment.appointmentId
-                            ? 'Yükleniyor...'
-                            : 'Detay'}
-                        </AdminActionButton>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          ) : null}
+                          <AdminActionButton
+                            variant="neutral"
+                            icon="visibility"
+                            disabled={detailLoadingId !== null || actionLoading}
+                            onClick={() =>
+                              void handleShowDetail(appointment.appointmentId)
+                            }
+                          >
+                            {detailLoadingId === appointment.appointmentId
+                              ? 'Yükleniyor...'
+                              : 'Detay'}
+                          </AdminActionButton>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -328,13 +361,25 @@ export default function StaffAppointmentsView({
       <StaffAppointmentDetailModal
         appointment={selectedAppointment}
         actionDisabled={actionLoading}
+        canDelegate={
+          selectedAppointment
+            ? canDelegateAppointment(selectedAppointment, scope, user)
+            : false
+        }
         onApprove={(appointment) =>
           openActionConfirmation('approve', appointment)
         }
         onReject={(appointment) =>
           openActionConfirmation('reject', appointment)
         }
+        onDelegate={openDelegation}
         onClose={() => setSelectedAppointment(null)}
+      />
+
+      <DelegationModal
+        appointment={delegationTarget}
+        onClose={() => setDelegationTarget(null)}
+        onSuccess={(message) => void handleDelegationSuccess(message)}
       />
 
       <ConfirmModal

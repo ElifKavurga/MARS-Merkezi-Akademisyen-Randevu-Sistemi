@@ -35,15 +35,18 @@ export type AppointmentStatus =
   | 'APPROVED'
   | 'REJECTED'
   | 'COMPLETED'
-  | 'NO_SHOW';
+  | 'NO_SHOW'
+  | 'CANCELLED';
 
 export type StaffAppointment = {
   appointmentId: number;
+  staffId: number;
   studentName: string;
   appointmentDate: string;
   startTime: string;
   endTime: string;
   categoryName: string;
+  courseId: number | null;
   courseCode: string | null;
   courseName: string | null;
   meetingType: 'FACE_TO_FACE' | 'ONLINE';

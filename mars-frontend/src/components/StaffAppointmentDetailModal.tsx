@@ -2,6 +2,7 @@ import {
   STAFF_APPOINTMENT_MESSAGES,
   getMeetingTypeLabel,
 } from '../constants/appointment';
+import { DELEGATION_MESSAGES } from '../constants/delegation';
 import type { StaffAppointment } from '../types/appointment';
 import AdminActionButton from './AdminActionButton';
 import AppointmentStatusBadge from './AppointmentStatusBadge';
@@ -10,8 +11,10 @@ import ModalShell from './ModalShell';
 type StaffAppointmentDetailModalProps = {
   appointment: StaffAppointment | null;
   actionDisabled?: boolean;
+  canDelegate?: boolean;
   onApprove: (appointment: StaffAppointment) => void;
   onReject: (appointment: StaffAppointment) => void;
+  onDelegate?: (appointment: StaffAppointment) => void;
   onClose: () => void;
 };
 
@@ -30,8 +33,10 @@ function formatTime(time: string): string {
 export default function StaffAppointmentDetailModal({
   appointment,
   actionDisabled = false,
+  canDelegate = false,
   onApprove,
   onReject,
+  onDelegate,
   onClose,
 }: StaffAppointmentDetailModalProps) {
   return (
@@ -49,6 +54,16 @@ export default function StaffAppointmentDetailModal({
           >
             Kapat
           </button>
+          {canDelegate && appointment && onDelegate ? (
+            <AdminActionButton
+              variant="neutral"
+              icon="swap_horiz"
+              disabled={actionDisabled}
+              onClick={() => onDelegate(appointment)}
+            >
+              {DELEGATION_MESSAGES.ACTION_LABEL}
+            </AdminActionButton>
+          ) : null}
           {appointment?.appointmentStatus === 'PENDING' ? (
             <>
               <AdminActionButton

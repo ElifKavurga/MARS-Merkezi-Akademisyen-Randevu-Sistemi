@@ -40,6 +40,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
             JOIN FETCH a.student
             JOIN FETCH a.category
             JOIN FETCH a.slot
+            JOIN FETCH a.staff
             LEFT JOIN FETCH a.course
             WHERE a.staff.userId = :staffId
               AND (:status IS NULL OR a.appointmentStatus = :status)
@@ -54,6 +55,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
             JOIN FETCH a.student
             JOIN FETCH a.category
             JOIN FETCH a.slot
+            JOIN FETCH a.staff
             LEFT JOIN FETCH a.course
             WHERE a.appointmentId = :appointmentId
               AND a.staff.userId = :staffId
@@ -105,6 +107,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
             JOIN FETCH a.student
             JOIN FETCH a.category
             JOIN FETCH a.slot s
+            JOIN FETCH a.staff
             LEFT JOIN FETCH a.course
             WHERE a.staff.userId = :staffId
               AND a.appointmentStatus = :status
@@ -128,6 +131,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
             JOIN FETCH a.student
             JOIN FETCH a.category
             JOIN FETCH a.slot
+            JOIN FETCH a.staff
             LEFT JOIN FETCH a.course
             WHERE a.staff.userId = :staffId
               AND a.appointmentStatus = :status
@@ -144,6 +148,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
             JOIN FETCH a.student
             JOIN FETCH a.category
             JOIN FETCH a.slot s
+            JOIN FETCH a.staff
             LEFT JOIN FETCH a.course
             WHERE a.staff.userId = :staffId
               AND a.appointmentStatus = :status

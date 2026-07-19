@@ -50,6 +50,7 @@ export const APPOINTMENT_STATUS_LABELS: Record<string, string> = {
   REJECTED: 'Reddedildi',
   COMPLETED: 'Tamamlandı',
   NO_SHOW: 'Gelmedi',
+  CANCELLED: 'İptal',
 };
 
 export function getAppointmentStatusLabel(status: string): string {
