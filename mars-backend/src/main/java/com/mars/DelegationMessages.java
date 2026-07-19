@@ -8,6 +8,8 @@ public final class DelegationMessages {
             "Delegasyon yalnızca akademisyenler tarafından başlatılabilir.";
     public static final String ONLY_ASSISTANT =
             "Gelen delegasyonlar yalnızca asistanlar tarafından görüntülenebilir.";
+    public static final String HISTORY_ACCESS_DENIED =
+            "Delegasyon geçmişi yalnızca akademisyen veya asistan tarafından görüntülenebilir.";
     public static final String APPOINTMENT_NOT_FOUND = "Randevu bulunamadı.";
     public static final String DELEGATION_NOT_FOUND = "Delegasyon kaydı bulunamadı.";
     public static final String ACCESS_DENIED = "Bu delegasyon kaydına erişim yetkiniz yok.";

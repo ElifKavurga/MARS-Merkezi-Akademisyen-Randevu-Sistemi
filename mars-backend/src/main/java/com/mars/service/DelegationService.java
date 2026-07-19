@@ -118,6 +118,21 @@ public class DelegationService {
     }
 
     @Transactional(readOnly = true)
+    public List<DelegationResponse> getDelegationHistory() {
+        User currentUser = getCurrentHistoryUser();
+        String roleName = currentUser.getRole() != null ? currentUser.getRole().getRoleName() : null;
+
+        List<DelegationLog> history;
+        if (RoleType.ACADEMICIAN.name().equals(roleName)) {
+            history = delegationLogRepository.findHistoryByDelegatedByUserId(currentUser.getUserId());
+        } else {
+            history = delegationLogRepository.findHistoryByDelegatedToUserId(currentUser.getUserId());
+        }
+
+        return history.stream().map(delegationMapper::toResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
     public DelegationResponse getDelegation(Integer delegationId) {
         User academician = getCurrentAcademician();
         DelegationLog delegationLog = delegationLogRepository.findByIdWithDetails(delegationId)
@@ -144,10 +159,11 @@ public class DelegationService {
 
         LocalDateTime now = LocalDateTime.now();
         delegationLog.setDelegationStatus(DelegationStatus.ACCEPTED.name());
+        delegationLog.setUpdatedAt(now);
         appointment.setStaff(assistant);
         appointment.setUpdatedAt(now);
 
-        rejectOtherPendingDelegations(appointment.getAppointmentId(), delegationLog.getDelegationId());
+        rejectOtherPendingDelegations(appointment.getAppointmentId(), delegationLog.getDelegationId(), now);
 
         delegationLogRepository.save(delegationLog);
         appointmentRepository.save(appointment);
@@ -168,7 +184,9 @@ public class DelegationService {
         }
         validateAppointmentProcessable(appointment.getAppointmentStatus());
 
+        LocalDateTime now = LocalDateTime.now();
         delegationLog.setDelegationStatus(DelegationStatus.REJECTED.name());
+        delegationLog.setUpdatedAt(now);
         DelegationLog saved = delegationLogRepository.save(delegationLog);
 
         return delegationMapper.toResponse(
@@ -192,7 +210,10 @@ public class DelegationService {
         return delegationLog;
     }
 
-    private void rejectOtherPendingDelegations(Integer appointmentId, Integer acceptedDelegationId) {
+    private void rejectOtherPendingDelegations(
+            Integer appointmentId,
+            Integer acceptedDelegationId,
+            LocalDateTime updatedAt) {
         List<DelegationLog> otherPending =
                 delegationLogRepository.findByAppointment_AppointmentIdAndDelegationStatusAndDelegationIdNot(
                         appointmentId,
@@ -203,6 +224,7 @@ public class DelegationService {
         }
         for (DelegationLog other : otherPending) {
             other.setDelegationStatus(DelegationStatus.REJECTED.name());
+            other.setUpdatedAt(updatedAt);
         }
         delegationLogRepository.saveAll(otherPending);
     }
@@ -244,6 +266,20 @@ public class DelegationService {
         String roleName = user.getRole() != null ? user.getRole().getRoleName() : null;
         if (!RoleType.ASSISTANT.name().equals(roleName)) {
             throw new AccessDeniedException(DelegationMessages.ONLY_ASSISTANT);
+        }
+        return user;
+    }
+
+    private User getCurrentHistoryUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails userDetails)) {
+            throw new AccessDeniedException(SecurityMessages.ACCESS_DENIED);
+        }
+        User user = userDetails.getUser();
+        String roleName = user.getRole() != null ? user.getRole().getRoleName() : null;
+        if (!RoleType.ACADEMICIAN.name().equals(roleName)
+                && !RoleType.ASSISTANT.name().equals(roleName)) {
+            throw new AccessDeniedException(DelegationMessages.HISTORY_ACCESS_DENIED);
         }
         return user;
     }

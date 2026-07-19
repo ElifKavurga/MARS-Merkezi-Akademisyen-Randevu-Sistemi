@@ -22,7 +22,9 @@ public class DelegationResponse {
     private Integer delegatedByUserId;
     private String delegatedByUserName;
     private Integer delegatedToUserId;
+    private String delegatedToUserName;
     private LocalDateTime delegatedAt;
+    private LocalDateTime updatedAt;
     private String delegationStatus;
     private String categoryName;
     private String courseCode;

@@ -42,6 +42,7 @@ export { default as AppointmentStatusBadge } from './AppointmentStatusBadge';
 export { default as StaffAppointmentDetailModal } from './StaffAppointmentDetailModal';
 export { default as StaffAppointmentsView } from './StaffAppointmentsView';
 export { default as DelegationModal } from './DelegationModal';
+export { default as DelegationStatusBadge } from './DelegationStatusBadge';
 export { default as DashboardEmptyState } from './DashboardEmptyState';
 export {
   DashboardPendingAppointmentRow,

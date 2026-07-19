@@ -23,6 +23,7 @@ public class DelegationMapper {
         delegationLog.setDelegatedByUser(delegatedByUser);
         delegationLog.setDelegatedToUser(delegatedToUser);
         delegationLog.setDelegatedAt(delegatedAt);
+        delegationLog.setUpdatedAt(delegatedAt);
         delegationLog.setDelegationStatus(DelegationStatus.PENDING.name());
         return delegationLog;
     }
@@ -38,7 +39,9 @@ public class DelegationMapper {
                 .delegatedByUserId(delegatedByUser != null ? delegatedByUser.getUserId() : null)
                 .delegatedByUserName(delegatedByUser != null ? delegatedByUser.getFullName() : null)
                 .delegatedToUserId(delegatedToUser != null ? delegatedToUser.getUserId() : null)
+                .delegatedToUserName(delegatedToUser != null ? delegatedToUser.getFullName() : null)
                 .delegatedAt(delegationLog.getDelegatedAt())
+                .updatedAt(delegationLog.getUpdatedAt())
                 .delegationStatus(delegationLog.getDelegationStatus())
                 .categoryName(appointment != null && appointment.getCategory() != null
                         ? appointment.getCategory().getCategoryName()

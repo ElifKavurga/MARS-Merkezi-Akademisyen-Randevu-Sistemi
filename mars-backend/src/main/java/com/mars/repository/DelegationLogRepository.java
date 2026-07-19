@@ -50,4 +50,32 @@ public interface DelegationLogRepository extends JpaRepository<DelegationLog, In
             Integer appointmentId,
             String delegationStatus,
             Integer delegationId);
+
+    @Query("""
+            SELECT d
+            FROM DelegationLog d
+            JOIN FETCH d.appointment a
+            JOIN FETCH a.slot
+            JOIN FETCH a.category
+            LEFT JOIN FETCH a.course
+            JOIN FETCH d.delegatedByUser
+            JOIN FETCH d.delegatedToUser
+            WHERE d.delegatedByUser.userId = :userId
+            ORDER BY d.delegatedAt DESC
+            """)
+    List<DelegationLog> findHistoryByDelegatedByUserId(@Param("userId") Integer userId);
+
+    @Query("""
+            SELECT d
+            FROM DelegationLog d
+            JOIN FETCH d.appointment a
+            JOIN FETCH a.slot
+            JOIN FETCH a.category
+            LEFT JOIN FETCH a.course
+            JOIN FETCH d.delegatedByUser
+            JOIN FETCH d.delegatedToUser
+            WHERE d.delegatedToUser.userId = :userId
+            ORDER BY d.delegatedAt DESC
+            """)
+    List<DelegationLog> findHistoryByDelegatedToUserId(@Param("userId") Integer userId);
 }

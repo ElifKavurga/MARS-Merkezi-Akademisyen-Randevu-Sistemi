@@ -42,6 +42,31 @@ export const INCOMING_DELEGATION_MESSAGES = {
   STATUS_PENDING: 'Bekliyor',
 } as const;
 
+export const DELEGATION_HISTORY_MESSAGES = {
+  TITLE: 'Delegasyon Geçmişi',
+  SUBTITLE: 'Geçmişte gerçekleşen delegasyon işlemlerini görüntüleyin.',
+  LOADING: 'Delegasyon geçmişi yükleniyor...',
+  LOAD_ERROR: 'Delegasyon geçmişi yüklenirken bir hata oluştu.',
+  ACCESS_DENIED: 'Bu sayfayı görüntüleme yetkiniz bulunmuyor.',
+  EMPTY_TITLE: 'Delegasyon geçmişi boş',
+  EMPTY_DESCRIPTION: 'Henüz görüntülenecek bir delegasyon kaydı bulunmuyor.',
+  EMPTY_FILTER: 'Filtrelere uygun delegasyon kaydı bulunamadı.',
+  SEARCH_PLACEHOLDER: 'Akademisyen, asistan veya ders ara...',
+  STATUS_FILTER_ALL: 'Tüm durumlar',
+  DATE_FROM: 'Başlangıç tarihi',
+  DATE_TO: 'Bitiş tarihi',
+} as const;
+
+export const DELEGATION_STATUS_LABELS: Record<string, string> = {
+  PENDING: 'Bekliyor',
+  ACCEPTED: 'Kabul Edildi',
+  REJECTED: 'Reddedildi',
+};
+
+export function getDelegationStatusLabel(status: string): string {
+  return DELEGATION_STATUS_LABELS[status] ?? status;
+}
+
 const NON_DELEGATABLE_STATUSES: ReadonlySet<AppointmentStatus> = new Set([
   'APPROVED',
   'CANCELLED',

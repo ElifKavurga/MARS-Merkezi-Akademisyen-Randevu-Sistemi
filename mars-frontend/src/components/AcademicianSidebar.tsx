@@ -28,6 +28,12 @@ export default function AcademicianSidebar({ mobileOpen, onClose }: ModuleSideba
           icon: 'event_note',
           end: false,
         },
+        {
+          label: 'Delegasyon Geçmişi',
+          path: ROUTES.ACADEMICIAN_DELEGATION_HISTORY,
+          icon: 'history',
+          end: false,
+        },
         ...roleNavItems.slice(3),
       ]
     : roleNavItems;

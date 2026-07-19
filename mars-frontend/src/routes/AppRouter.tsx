@@ -24,6 +24,7 @@ import AssistantCoursesPage from '../pages/AssistantCoursesPage';
 import AssistantAvailabilityPage from '../pages/AssistantAvailabilityPage';
 import AssistantAppointmentsPage from '../pages/AssistantAppointmentsPage';
 import AssistantIncomingDelegationsPage from '../pages/AssistantIncomingDelegationsPage';
+import DelegationHistoryPage from '../pages/DelegationHistoryPage';
 import AssistantCalendarPage from '../pages/AssistantCalendarPage';
 import ProfilePage from '../pages/ProfilePage';
 import StudentDashboard from '../pages/StudentDashboard';
@@ -76,6 +77,10 @@ export default function AppRouter() {
               path={ROUTES.ASSISTANT_INCOMING_DELEGATIONS}
               element={<AssistantIncomingDelegationsPage />}
             />
+            <Route
+              path={ROUTES.ASSISTANT_DELEGATION_HISTORY}
+              element={<DelegationHistoryPage />}
+            />
             <Route path={ROUTES.ASSISTANT_CALENDAR} element={<AssistantCalendarPage />} />
             <Route path={ROUTES.ASSISTANT_PROFILE} element={<ProfilePage />} />
           </Route>
@@ -93,6 +98,10 @@ export default function AppRouter() {
               <Route
                 path={ROUTES.ACADEMICIAN_APPOINTMENTS}
                 element={<AcademicianAppointmentsPage />}
+              />
+              <Route
+                path={ROUTES.ACADEMICIAN_DELEGATION_HISTORY}
+                element={<DelegationHistoryPage />}
               />
             </Route>
             <Route path={ROUTES.ACADEMICIAN_CALENDAR} element={<AcademicianCalendarPage />} />

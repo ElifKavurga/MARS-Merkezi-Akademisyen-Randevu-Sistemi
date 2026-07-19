@@ -44,6 +44,9 @@ public class DelegationLog {
     @Column(name = "delegated_at", nullable = false)
     private LocalDateTime delegatedAt;
 
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
     @Column(name = "delegation_status", nullable = false)
     private String delegationStatus;
 }

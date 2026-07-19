@@ -80,6 +80,8 @@ public class SecurityConfig {
                                 .hasAnyRole("ACADEMICIAN", "HOD")
                         .requestMatchers(HttpMethod.GET, "/delegations/incoming")
                                 .hasRole("ASSISTANT")
+                        .requestMatchers(HttpMethod.GET, "/delegations/history")
+                                .hasAnyRole("ACADEMICIAN", "ASSISTANT")
                         .requestMatchers(HttpMethod.POST, "/delegations/*/accept")
                                 .hasRole("ASSISTANT")
                         .requestMatchers(HttpMethod.POST, "/delegations/*/reject")

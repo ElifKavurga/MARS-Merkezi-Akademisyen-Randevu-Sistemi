@@ -34,6 +34,12 @@ const assistantNavItems = [
     end: true,
   },
   {
+    label: 'Delegasyon Geçmişi',
+    path: ROUTES.ASSISTANT_DELEGATION_HISTORY,
+    icon: 'history',
+    end: true,
+  },
+  {
     label: 'Takvimim',
     path: ROUTES.ASSISTANT_CALENDAR,
     icon: 'calendar_month',
