@@ -134,6 +134,7 @@ public class DelegationService {
 
     @Transactional(readOnly = true)
     public DelegationResponse getDelegation(Integer delegationId) {
+        requireValidDelegationId(delegationId);
         User academician = getCurrentAcademician();
         DelegationLog delegationLog = delegationLogRepository.findByIdWithDetails(delegationId)
                 .orElseThrow(() -> new ResourceNotFoundException(DelegationMessages.DELEGATION_NOT_FOUND));
@@ -195,7 +196,10 @@ public class DelegationService {
     }
 
     private DelegationLog getOwnedPendingDelegationForDecision(Integer delegationId, User assistant) {
-        DelegationLog delegationLog = delegationLogRepository.findByIdWithDetails(delegationId)
+        requireValidDelegationId(delegationId);
+
+        // Pessimistic lock prevents concurrent accept/reject on the same PENDING row.
+        DelegationLog delegationLog = delegationLogRepository.findByIdForUpdate(delegationId)
                 .orElseThrow(() -> new ResourceNotFoundException(DelegationMessages.DELEGATION_NOT_FOUND));
 
         if (delegationLog.getDelegatedToUser() == null
@@ -208,6 +212,12 @@ public class DelegationService {
         }
 
         return delegationLog;
+    }
+
+    private void requireValidDelegationId(Integer delegationId) {
+        if (delegationId == null || delegationId <= 0) {
+            throw new BadRequestException(DelegationMessages.INVALID_DELEGATION_ID);
+        }
     }
 
     private void rejectOtherPendingDelegations(

@@ -4,16 +4,27 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.mars.entity.DelegationLog;
+
+import jakarta.persistence.LockModeType;
 
 public interface DelegationLogRepository extends JpaRepository<DelegationLog, Integer> {
 
     boolean existsByAppointment_AppointmentIdAndDelegationStatus(
             Integer appointmentId,
             String delegationStatus);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT d
+            FROM DelegationLog d
+            WHERE d.delegationId = :delegationId
+            """)
+    Optional<DelegationLog> findByIdForUpdate(@Param("delegationId") Integer delegationId);
 
     @Query("""
             SELECT d

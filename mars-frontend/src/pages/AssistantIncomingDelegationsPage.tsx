@@ -252,7 +252,9 @@ export default function AssistantIncomingDelegationsPage() {
                               void handleDecision(delegation.delegationId, 'reject')
                             }
                           >
-                            {INCOMING_DELEGATION_MESSAGES.REJECT_LABEL}
+                            {isActing
+                              ? 'İşleniyor...'
+                              : INCOMING_DELEGATION_MESSAGES.REJECT_LABEL}
                           </AdminActionButton>
                         </div>
                       </td>

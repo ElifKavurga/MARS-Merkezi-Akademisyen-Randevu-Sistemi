@@ -12,6 +12,7 @@ public final class DelegationMessages {
             "Delegasyon geçmişi yalnızca akademisyen veya asistan tarafından görüntülenebilir.";
     public static final String APPOINTMENT_NOT_FOUND = "Randevu bulunamadı.";
     public static final String DELEGATION_NOT_FOUND = "Delegasyon kaydı bulunamadı.";
+    public static final String INVALID_DELEGATION_ID = "Geçersiz delegasyon kimliği.";
     public static final String ACCESS_DENIED = "Bu delegasyon kaydına erişim yetkiniz yok.";
     public static final String OWNERSHIP_DENIED =
             "Yalnızca kendi randevularınız için delegasyon başlatabilirsiniz.";

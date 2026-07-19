@@ -140,6 +140,7 @@ export default function DelegationModal({
       footer={
         <ModalFormFooter
           submitting={submitting}
+          submitDisabled={loadingOptions || assistants.length === 0 || !assistantId}
           onCancel={handleClose}
           submitLabel={DELEGATION_MESSAGES.CONFIRM_LABEL}
         />

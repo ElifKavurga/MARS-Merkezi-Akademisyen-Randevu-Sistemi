@@ -3,6 +3,7 @@ import Loading from './Loading';
 
 type ModalFormFooterProps = {
   submitting?: boolean;
+  submitDisabled?: boolean;
   submitLabel?: string;
   cancelLabel?: string;
   onCancel: () => void;
@@ -10,6 +11,7 @@ type ModalFormFooterProps = {
 
 export default function ModalFormFooter({
   submitting = false,
+  submitDisabled = false,
   submitLabel = 'Kaydet',
   cancelLabel = 'İptal',
   onCancel,
@@ -19,7 +21,7 @@ export default function ModalFormFooter({
       <button
         type="submit"
         className="inline-flex w-full justify-center rounded-lg bg-primary-container px-5 py-2 font-label-md text-label-md text-on-primary hover:bg-black sm:w-auto shadow-sm transition-colors disabled:opacity-70"
-        disabled={submitting}
+        disabled={submitting || submitDisabled}
       >
         {submitting ? (
           <Loading variant="inline" label={UI_LABELS.submitting} className="text-on-primary" />
