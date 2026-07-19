@@ -4,7 +4,7 @@ import { formatTimeLabel } from './availability';
 
 export const CALENDAR_MESSAGES = {
   TITLE: 'Takvim',
-  SUBTITLE: 'Ofis saatlerinizi aylık, haftalık veya günlük görünümde inceleyin.',
+  SUBTITLE: 'Müsaitliklerinizi ve size ait randevuları aylık, haftalık veya günlük görünümde inceleyin.',
   LOAD_ERROR: 'Takvim verileri yüklenemedi. Lütfen tekrar deneyin.',
   ACCESS_DENIED: 'Bu sayfaya erişim yetkiniz yok.',
   EMPTY_RANGE: 'Bu tarih aralığında takvim kaydı bulunmuyor.',

@@ -2,7 +2,9 @@ package com.mars.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -179,6 +181,37 @@ class CalendarServiceTest {
         assertThat(events.get(0).getCourseName()).isNull();
         assertThat(events.get(0).getMeetingType()).isEqualTo("ONLINE");
         verify(appointmentRepository).findCalendarAppointmentsForStaffInRange(10, from, to);
+    }
+
+    @Test
+    void getEvents_withAppointments_usesAppointmentStaffOwnershipNotSlotOwner() {
+        // After ACCEPTED delegation, Appointment.staffId moves to the assistant while
+        // AvailabilitySlot.staff may remain the academician. Calendar must follow Appointment.staff.
+        LocalDate from = LocalDate.of(2026, 7, 13);
+        LocalDate to = LocalDate.of(2026, 7, 19);
+        User assistant = new User();
+        assistant.setUserId(20);
+        CustomUserDetails assistantDetails = new CustomUserDetails(assistant);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(assistantDetails, null, List.of()));
+
+        Appointment transferred = appointment(
+                33, LocalDate.of(2026, 7, 16), "PENDING", "FACE_TO_FACE");
+        CalendarEventResponseDto mapped = new CalendarMapper().toEvent(transferred);
+
+        when(availabilitySlotRepository.findCalendarSlotsForStaffInRange(20, from, to))
+                .thenReturn(List.of());
+        when(appointmentRepository.findCalendarAppointmentsForStaffInRange(20, from, to))
+                .thenReturn(List.of(transferred));
+        when(calendarMapper.toEvent(transferred)).thenReturn(mapped);
+
+        List<CalendarEventResponseDto> events =
+                calendarService.getEvents(from, to, true);
+
+        assertThat(events).containsExactly(mapped);
+        verify(appointmentRepository).findCalendarAppointmentsForStaffInRange(20, from, to);
+        verify(appointmentRepository, never())
+                .findCalendarAppointmentsForStaffInRange(eq(10), any(), any());
     }
 
     @Test

@@ -104,7 +104,15 @@ export default function AppRouter() {
                 element={<DelegationHistoryPage />}
               />
             </Route>
-            <Route path={ROUTES.ACADEMICIAN_CALENDAR} element={<AcademicianCalendarPage />} />
+            <Route
+              path={ROUTES.ACADEMICIAN_CALENDAR}
+              element={
+                <AcademicianCalendarPage
+                  includeAppointments
+                  subtitle="Müsaitliklerinizi ve size ait randevuları tek takvim üzerinden görüntüleyin."
+                />
+              }
+            />
             <Route path={ROUTES.ACADEMICIAN_OUT_OF_OFFICE} element={<AcademicianOutOfOfficePage />} />
             <Route path={ROUTES.ACADEMICIAN_PROFILE} element={<ProfilePage />} />
           </Route>

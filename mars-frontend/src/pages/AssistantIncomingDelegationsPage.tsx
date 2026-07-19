@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 import AdminActionButton from '../components/AdminActionButton';
 import Loading from '../components/Loading';
@@ -67,6 +68,7 @@ function getBackendErrorMessage(err: unknown, fallback: string): string {
 export default function AssistantIncomingDelegationsPage() {
   const { user } = useAuth();
   const toast = useToast();
+  const queryClient = useQueryClient();
   const [delegations, setDelegations] = useState<DelegationResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -116,6 +118,7 @@ export default function AssistantIncomingDelegationsPage() {
         await rejectDelegation(delegationId);
         toast.success(INCOMING_DELEGATION_MESSAGES.REJECT_SUCCESS);
       }
+      await queryClient.invalidateQueries({ queryKey: ['dashboard-daily-schedule'] });
       await loadDelegations();
     } catch (err) {
       toast.error(getBackendErrorMessage(err, INCOMING_DELEGATION_MESSAGES.ACTION_ERROR));
