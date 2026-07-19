@@ -22,6 +22,7 @@ export const ROUTES = {
   ASSISTANT_COURSES: '/assistant/courses',
   ASSISTANT_AVAILABILITY: '/assistant/availability',
   ASSISTANT_APPOINTMENTS: '/assistant/appointments',
+  ASSISTANT_INCOMING_DELEGATIONS: '/assistant/delegations/incoming',
   ASSISTANT_CALENDAR: '/assistant/calendar',
   ASSISTANT_PROFILE: '/assistant/profile',
   STUDENT: '/ogrenci',

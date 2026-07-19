@@ -1,5 +1,7 @@
 package com.mars.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,6 +30,21 @@ public class DelegationController {
             @Valid @RequestBody CreateDelegationRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(delegationService.createDelegation(request));
+    }
+
+    @GetMapping("/incoming")
+    public ResponseEntity<List<DelegationResponse>> getIncomingDelegations() {
+        return ResponseEntity.ok(delegationService.getIncomingDelegations());
+    }
+
+    @PostMapping("/{id}/accept")
+    public ResponseEntity<DelegationResponse> acceptDelegation(@PathVariable("id") Integer id) {
+        return ResponseEntity.ok(delegationService.acceptDelegation(id));
+    }
+
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<DelegationResponse> rejectDelegation(@PathVariable("id") Integer id) {
+        return ResponseEntity.ok(delegationService.rejectDelegation(id));
     }
 
     @GetMapping("/{id}")

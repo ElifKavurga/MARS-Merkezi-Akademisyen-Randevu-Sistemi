@@ -1,6 +1,7 @@
 package com.mars.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -99,7 +100,21 @@ public class DelegationService {
                 assistant,
                 LocalDateTime.now());
         DelegationLog saved = delegationLogRepository.save(delegationLog);
-        return delegationMapper.toResponse(saved);
+        return delegationMapper.toResponse(
+                delegationLogRepository.findByIdWithDetails(saved.getDelegationId())
+                        .orElse(saved));
+    }
+
+    @Transactional(readOnly = true)
+    public List<DelegationResponse> getIncomingDelegations() {
+        User assistant = getCurrentAssistant();
+        return delegationLogRepository
+                .findIncomingByAssistantIdAndStatus(
+                        assistant.getUserId(),
+                        DelegationStatus.PENDING.name())
+                .stream()
+                .map(delegationMapper::toResponse)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -114,6 +129,88 @@ public class DelegationService {
         }
 
         return delegationMapper.toResponse(delegationLog);
+    }
+
+    @Transactional
+    public DelegationResponse acceptDelegation(Integer delegationId) {
+        User assistant = getCurrentAssistant();
+        DelegationLog delegationLog = getOwnedPendingDelegationForDecision(delegationId, assistant);
+
+        Appointment appointment = delegationLog.getAppointment();
+        if (appointment == null) {
+            throw new ResourceNotFoundException(DelegationMessages.APPOINTMENT_NOT_FOUND);
+        }
+        validateAppointmentProcessable(appointment.getAppointmentStatus());
+
+        LocalDateTime now = LocalDateTime.now();
+        delegationLog.setDelegationStatus(DelegationStatus.ACCEPTED.name());
+        appointment.setStaff(assistant);
+        appointment.setUpdatedAt(now);
+
+        rejectOtherPendingDelegations(appointment.getAppointmentId(), delegationLog.getDelegationId());
+
+        delegationLogRepository.save(delegationLog);
+        appointmentRepository.save(appointment);
+
+        return delegationMapper.toResponse(
+                delegationLogRepository.findByIdWithDetails(delegationLog.getDelegationId())
+                        .orElse(delegationLog));
+    }
+
+    @Transactional
+    public DelegationResponse rejectDelegation(Integer delegationId) {
+        User assistant = getCurrentAssistant();
+        DelegationLog delegationLog = getOwnedPendingDelegationForDecision(delegationId, assistant);
+
+        Appointment appointment = delegationLog.getAppointment();
+        if (appointment == null) {
+            throw new ResourceNotFoundException(DelegationMessages.APPOINTMENT_NOT_FOUND);
+        }
+        validateAppointmentProcessable(appointment.getAppointmentStatus());
+
+        delegationLog.setDelegationStatus(DelegationStatus.REJECTED.name());
+        DelegationLog saved = delegationLogRepository.save(delegationLog);
+
+        return delegationMapper.toResponse(
+                delegationLogRepository.findByIdWithDetails(saved.getDelegationId())
+                        .orElse(saved));
+    }
+
+    private DelegationLog getOwnedPendingDelegationForDecision(Integer delegationId, User assistant) {
+        DelegationLog delegationLog = delegationLogRepository.findByIdWithDetails(delegationId)
+                .orElseThrow(() -> new ResourceNotFoundException(DelegationMessages.DELEGATION_NOT_FOUND));
+
+        if (delegationLog.getDelegatedToUser() == null
+                || !Objects.equals(delegationLog.getDelegatedToUser().getUserId(), assistant.getUserId())) {
+            throw new AccessDeniedException(DelegationMessages.DECISION_ACCESS_DENIED);
+        }
+
+        if (!DelegationStatus.PENDING.name().equals(delegationLog.getDelegationStatus())) {
+            throw new ConflictException(DelegationMessages.NOT_PENDING);
+        }
+
+        return delegationLog;
+    }
+
+    private void rejectOtherPendingDelegations(Integer appointmentId, Integer acceptedDelegationId) {
+        List<DelegationLog> otherPending =
+                delegationLogRepository.findByAppointment_AppointmentIdAndDelegationStatusAndDelegationIdNot(
+                        appointmentId,
+                        DelegationStatus.PENDING.name(),
+                        acceptedDelegationId);
+        if (otherPending.isEmpty()) {
+            return;
+        }
+        for (DelegationLog other : otherPending) {
+            other.setDelegationStatus(DelegationStatus.REJECTED.name());
+        }
+        delegationLogRepository.saveAll(otherPending);
+    }
+
+    private void validateAppointmentProcessable(String appointmentStatus) {
+        if (TERMINAL_APPOINTMENT_STATUSES.contains(appointmentStatus)) {
+            throw new ConflictException(DelegationMessages.APPOINTMENT_NOT_PROCESSABLE);
+        }
     }
 
     private void validateAppointmentStatus(String appointmentStatus) {
@@ -134,6 +231,19 @@ public class DelegationService {
         String roleName = user.getRole() != null ? user.getRole().getRoleName() : null;
         if (!RoleType.ACADEMICIAN.name().equals(roleName)) {
             throw new AccessDeniedException(DelegationMessages.ONLY_ACADEMICIAN);
+        }
+        return user;
+    }
+
+    private User getCurrentAssistant() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails userDetails)) {
+            throw new AccessDeniedException(SecurityMessages.ACCESS_DENIED);
+        }
+        User user = userDetails.getUser();
+        String roleName = user.getRole() != null ? user.getRole().getRoleName() : null;
+        if (!RoleType.ASSISTANT.name().equals(roleName)) {
+            throw new AccessDeniedException(DelegationMessages.ONLY_ASSISTANT);
         }
         return user;
     }

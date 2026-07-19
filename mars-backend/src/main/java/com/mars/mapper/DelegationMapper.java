@@ -28,19 +28,37 @@ public class DelegationMapper {
     }
 
     public DelegationResponse toResponse(DelegationLog delegationLog) {
+        Appointment appointment = delegationLog.getAppointment();
+        User delegatedByUser = delegationLog.getDelegatedByUser();
+        User delegatedToUser = delegationLog.getDelegatedToUser();
+
         return DelegationResponse.builder()
                 .delegationId(delegationLog.getDelegationId())
-                .appointmentId(delegationLog.getAppointment() != null
-                        ? delegationLog.getAppointment().getAppointmentId()
-                        : null)
-                .delegatedByUserId(delegationLog.getDelegatedByUser() != null
-                        ? delegationLog.getDelegatedByUser().getUserId()
-                        : null)
-                .delegatedToUserId(delegationLog.getDelegatedToUser() != null
-                        ? delegationLog.getDelegatedToUser().getUserId()
-                        : null)
+                .appointmentId(appointment != null ? appointment.getAppointmentId() : null)
+                .delegatedByUserId(delegatedByUser != null ? delegatedByUser.getUserId() : null)
+                .delegatedByUserName(delegatedByUser != null ? delegatedByUser.getFullName() : null)
+                .delegatedToUserId(delegatedToUser != null ? delegatedToUser.getUserId() : null)
                 .delegatedAt(delegationLog.getDelegatedAt())
                 .delegationStatus(delegationLog.getDelegationStatus())
+                .categoryName(appointment != null && appointment.getCategory() != null
+                        ? appointment.getCategory().getCategoryName()
+                        : null)
+                .courseCode(appointment != null && appointment.getCourse() != null
+                        ? appointment.getCourse().getCourseCode()
+                        : null)
+                .courseName(appointment != null && appointment.getCourse() != null
+                        ? appointment.getCourse().getCourseName()
+                        : null)
+                .appointmentDate(appointment != null && appointment.getSlot() != null
+                        ? appointment.getSlot().getSlotDate()
+                        : null)
+                .startTime(appointment != null && appointment.getSlot() != null
+                        ? appointment.getSlot().getStartTime()
+                        : null)
+                .endTime(appointment != null && appointment.getSlot() != null
+                        ? appointment.getSlot().getEndTime()
+                        : null)
+                .meetingType(appointment != null ? appointment.getMeetingType() : null)
                 .build();
     }
 }

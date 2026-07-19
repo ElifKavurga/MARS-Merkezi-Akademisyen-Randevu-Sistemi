@@ -47,7 +47,7 @@ export {
   approveStaffAppointment,
   rejectStaffAppointment,
 } from './appointmentService';
-export { createDelegation } from './delegationService';
+export { createDelegation, getIncomingDelegations, acceptDelegation, rejectDelegation } from './delegationService';
 export {
   createRecurrenceRule,
   getRecurrenceRule,

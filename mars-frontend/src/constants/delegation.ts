@@ -26,6 +26,22 @@ export const DELEGATION_MESSAGES = {
   LOADING_ASSISTANTS: 'Asistanlar yükleniyor...',
 } as const;
 
+export const INCOMING_DELEGATION_MESSAGES = {
+  TITLE: 'Gelen Delegasyonlar',
+  SUBTITLE: 'Size gönderilen bekleyen delegasyon taleplerini görüntüleyin.',
+  LOADING: 'Gelen delegasyonlar yükleniyor...',
+  LOAD_ERROR: 'Gelen delegasyonlar yüklenirken bir hata oluştu.',
+  ACCESS_DENIED: 'Bu sayfayı görüntüleme yetkiniz bulunmuyor.',
+  EMPTY_TITLE: 'Bekleyen delegasyon yok',
+  EMPTY_DESCRIPTION: 'Şu anda size gönderilmiş bekleyen bir delegasyon talebi bulunmuyor.',
+  ACCEPT_LABEL: 'Kabul Et',
+  REJECT_LABEL: 'Reddet',
+  ACCEPT_SUCCESS: 'Delegasyon kabul edildi. Randevu size aktarıldı.',
+  REJECT_SUCCESS: 'Delegasyon reddedildi.',
+  ACTION_ERROR: 'İşlem sırasında bir hata oluştu.',
+  STATUS_PENDING: 'Bekliyor',
+} as const;
+
 const NON_DELEGATABLE_STATUSES: ReadonlySet<AppointmentStatus> = new Set([
   'APPROVED',
   'CANCELLED',

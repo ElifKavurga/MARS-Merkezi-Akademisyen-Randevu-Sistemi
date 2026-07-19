@@ -28,6 +28,12 @@ const assistantNavItems = [
     end: true,
   },
   {
+    label: 'Gelen Delegasyonlar',
+    path: ROUTES.ASSISTANT_INCOMING_DELEGATIONS,
+    icon: 'swap_horiz',
+    end: true,
+  },
+  {
     label: 'Takvimim',
     path: ROUTES.ASSISTANT_CALENDAR,
     icon: 'calendar_month',

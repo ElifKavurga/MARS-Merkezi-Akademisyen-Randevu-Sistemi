@@ -23,6 +23,7 @@ import AssistantDashboardPage from '../pages/AssistantDashboardPage';
 import AssistantCoursesPage from '../pages/AssistantCoursesPage';
 import AssistantAvailabilityPage from '../pages/AssistantAvailabilityPage';
 import AssistantAppointmentsPage from '../pages/AssistantAppointmentsPage';
+import AssistantIncomingDelegationsPage from '../pages/AssistantIncomingDelegationsPage';
 import AssistantCalendarPage from '../pages/AssistantCalendarPage';
 import ProfilePage from '../pages/ProfilePage';
 import StudentDashboard from '../pages/StudentDashboard';
@@ -70,6 +71,10 @@ export default function AppRouter() {
             <Route
               path={ROUTES.ASSISTANT_APPOINTMENTS}
               element={<AssistantAppointmentsPage />}
+            />
+            <Route
+              path={ROUTES.ASSISTANT_INCOMING_DELEGATIONS}
+              element={<AssistantIncomingDelegationsPage />}
             />
             <Route path={ROUTES.ASSISTANT_CALENDAR} element={<AssistantCalendarPage />} />
             <Route path={ROUTES.ASSISTANT_PROFILE} element={<ProfilePage />} />
