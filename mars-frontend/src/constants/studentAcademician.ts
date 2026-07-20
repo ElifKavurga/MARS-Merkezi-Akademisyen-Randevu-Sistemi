@@ -45,6 +45,7 @@ export const STUDENT_ACADEMICIAN_MESSAGES = {
   BOOK_APPOINTMENT: 'Randevu Al',
   BOOK_APPOINTMENT_DISABLED: 'Bu akademisyen şu an yeni randevu kabul etmiyor.',
   AVAILABILITY_TITLE: 'Uygun Randevu Saatleri',
+  AVAILABILITY_EMPTY_TITLE: 'Uygun randevu bulunamadı',
   AVAILABILITY_EMPTY: 'Bu akademisyen için uygun randevu bulunamadı.',
   AVAILABILITY_LOADING: 'Uygun randevu saatleri yükleniyor...',
   AVAILABILITY_LOAD_ERROR: 'Uygun randevu saatleri yüklenirken bir hata oluştu.',

@@ -1,11 +1,16 @@
-import DashboardEmptyState from '../components/DashboardEmptyState';
 import DashboardWelcomeBanner from '../components/DashboardWelcomeBanner';
-import Loading from '../components/Loading';
+import StudentBreadcrumb from '../components/StudentBreadcrumb';
+import StudentEmptyState from '../components/StudentEmptyState';
+import StudentLoadingState from '../components/StudentLoadingState';
+import StudentPageHeader from '../components/StudentPageHeader';
+import { STUDENT_UI } from '../constants/studentUi';
+import { ROUTES } from '../constants/routes';
 import { useAuth } from '../hooks/useAuth';
 
 type PlaceholderCardProps = {
   title: string;
   icon: string;
+  emptyTitle: string;
   emptyMessage: string;
   loading: boolean;
   loadingLabel: string;
@@ -14,6 +19,7 @@ type PlaceholderCardProps = {
 function PlaceholderCard({
   title,
   icon,
+  emptyTitle,
   emptyMessage,
   loading,
   loadingLabel,
@@ -28,11 +34,14 @@ function PlaceholderCard({
       </div>
       <div className="px-4 pb-4 sm:px-6 sm:pb-6">
         {loading ? (
-          <div className="flex min-h-32 items-center justify-center">
-            <Loading label={loadingLabel} />
-          </div>
+          <StudentLoadingState label={loadingLabel} compact />
         ) : (
-          <DashboardEmptyState icon={icon} message={emptyMessage} />
+          <StudentEmptyState
+            icon={icon}
+            title={emptyTitle}
+            description={emptyMessage}
+            className="border-0 bg-surface px-4 py-8"
+          />
         )}
       </div>
     </section>
@@ -41,7 +50,6 @@ function PlaceholderCard({
 
 export default function StudentDashboard() {
   const { user } = useAuth();
-  // Sprint 21.1: API entegrasyonu yok; loading iskeleti sonraki sprintlerde kullanılacak.
   const loading = false;
 
   if (!user) {
@@ -50,9 +58,15 @@ export default function StudentDashboard() {
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
+      <StudentBreadcrumb items={[{ label: STUDENT_UI.BREADCRUMB_HOME, to: ROUTES.STUDENT }]} />
+      <StudentPageHeader
+        title={STUDENT_UI.DASHBOARD_TITLE}
+        description={STUDENT_UI.DASHBOARD_SUBTITLE}
+      />
+
       <DashboardWelcomeBanner
         fullName={user.fullName}
-        description="Randevu süreçlerinizi, bekleme listelerinizi ve ceza durumunuzu buradan takip edebilirsiniz."
+        description={STUDENT_UI.DASHBOARD_SUBTITLE}
         loading={loading}
         loadingLabel="Ana sayfa yükleniyor..."
         stats={[]}
@@ -79,6 +93,7 @@ export default function StudentDashboard() {
         <PlaceholderCard
           title="Yaklaşan Randevular"
           icon="event_upcoming"
+          emptyTitle="Yaklaşan randevu yok"
           emptyMessage="Yaklaşan randevularınız burada görüntülenecek."
           loading={loading}
           loadingLabel="Yaklaşan randevular yükleniyor..."
@@ -86,6 +101,7 @@ export default function StudentDashboard() {
         <PlaceholderCard
           title="Bekleme Listesi"
           icon="format_list_numbered"
+          emptyTitle="Bekleme listesi boş"
           emptyMessage="Bekleme listesi kayıtlarınız burada görüntülenecek."
           loading={loading}
           loadingLabel="Bekleme listesi yükleniyor..."
@@ -93,6 +109,7 @@ export default function StudentDashboard() {
         <PlaceholderCard
           title="Ceza Durumu"
           icon="gavel"
+          emptyTitle="Ceza kaydı yok"
           emptyMessage="Ceza durumunuz burada görüntülenecek."
           loading={loading}
           loadingLabel="Ceza durumu yükleniyor..."

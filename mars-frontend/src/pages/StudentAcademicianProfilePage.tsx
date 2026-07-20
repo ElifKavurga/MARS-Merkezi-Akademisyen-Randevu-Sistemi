@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { isAxiosError } from 'axios';
-import Loading from '../components/Loading';
+import { useParams } from 'react-router-dom';
+import StudentAcceptingBadge from '../components/StudentAcceptingBadge';
+import StudentBackLink from '../components/StudentBackLink';
+import StudentBreadcrumb from '../components/StudentBreadcrumb';
+import StudentEmptyState from '../components/StudentEmptyState';
+import StudentErrorState from '../components/StudentErrorState';
+import StudentLoadingState from '../components/StudentLoadingState';
+import StudentPageHeader from '../components/StudentPageHeader';
 import UserAvatar from '../components/UserAvatar';
 import { MEETING_TYPE_OPTIONS } from '../constants/availability';
 import {
@@ -9,6 +14,7 @@ import {
   STUDENT_ACADEMICIAN_MESSAGES,
 } from '../constants/studentAcademician';
 import { ROUTES } from '../constants/routes';
+import { STUDENT_UI } from '../constants/studentUi';
 import { useToast } from '../hooks/useToast';
 import {
   getStudentAcademicianAvailability,
@@ -16,22 +22,10 @@ import {
 } from '../services/studentAcademicianService';
 import type { AvailableSlot } from '../types/appointment';
 import type { StudentAcademicianDetail } from '../types/studentAcademician';
-
-function resolveErrorMessage(err: unknown, fallback: string): string {
-  if (isAxiosError(err)) {
-    if (err.response?.status === 403) {
-      return STUDENT_ACADEMICIAN_MESSAGES.ACCESS_DENIED;
-    }
-    if (err.response?.status === 404) {
-      return STUDENT_ACADEMICIAN_MESSAGES.PROFILE_NOT_FOUND;
-    }
-    const apiMessage = err.response?.data?.message;
-    if (typeof apiMessage === 'string' && apiMessage.trim() !== '') {
-      return apiMessage;
-    }
-  }
-  return fallback;
-}
+import {
+  isStudentApiNotFound,
+  resolveStudentApiError,
+} from '../utils/studentApiError';
 
 function formatSlotTime(value: string): string {
   return value.slice(0, 5);
@@ -92,9 +86,11 @@ export default function StudentAcademicianProfilePage() {
     try {
       setProfile(await getStudentAcademicianDetail(userId));
     } catch (err) {
-      const message = resolveErrorMessage(err, STUDENT_ACADEMICIAN_MESSAGES.PROFILE_LOAD_ERROR);
+      const message = resolveStudentApiError(err, STUDENT_ACADEMICIAN_MESSAGES.PROFILE_LOAD_ERROR, {
+        notFoundMessage: STUDENT_ACADEMICIAN_MESSAGES.PROFILE_NOT_FOUND,
+      });
       setProfile(null);
-      setNotFound(isAxiosError(err) && err.response?.status === 404);
+      setNotFound(isStudentApiNotFound(err));
       setError(message);
       toast.error(message);
     } finally {
@@ -114,7 +110,7 @@ export default function StudentAcademicianProfilePage() {
       const data = await getStudentAcademicianAvailability(userId);
       setSlots(data.filter((slot) => isSlotAfterBookingNotice(slot)));
     } catch (err) {
-      const message = resolveErrorMessage(
+      const message = resolveStudentApiError(
         err,
         STUDENT_ACADEMICIAN_MESSAGES.AVAILABILITY_LOAD_ERROR,
       );
@@ -151,10 +147,25 @@ export default function StudentAcademicianProfilePage() {
     [slots],
   );
 
+  const breadcrumb = (
+    <StudentBreadcrumb
+      items={[
+        { label: STUDENT_UI.BREADCRUMB_HOME, to: ROUTES.STUDENT },
+        { label: STUDENT_UI.BREADCRUMB_SEARCH, to: ROUTES.STUDENT_ACADEMICIAN_SEARCH },
+        { label: STUDENT_UI.BREADCRUMB_PROFILE },
+      ]}
+    />
+  );
+
   if (loading) {
     return (
-      <div className="flex min-h-48 items-center justify-center rounded-xl border border-outline-variant bg-surface-container-lowest">
-        <Loading label={STUDENT_ACADEMICIAN_MESSAGES.PROFILE_LOADING} />
+      <div className="w-full min-w-0 animate-fade-in">
+        {breadcrumb}
+        <StudentPageHeader
+          title={STUDENT_UI.PROFILE_TITLE}
+          description={STUDENT_UI.PROFILE_SUBTITLE}
+        />
+        <StudentLoadingState label={STUDENT_ACADEMICIAN_MESSAGES.PROFILE_LOADING} />
       </div>
     );
   }
@@ -162,40 +173,35 @@ export default function StudentAcademicianProfilePage() {
   if (error || !profile) {
     return (
       <div className="w-full min-w-0 animate-fade-in">
-        <div className="rounded-xl border border-outline-variant bg-surface-container-lowest px-6 py-12 text-center">
-          <span
-            className="material-symbols-outlined text-[42px] text-on-surface-variant/50"
-            aria-hidden="true"
-          >
-            person_off
-          </span>
-          <h1 className="mt-3 font-headline-md text-headline-md text-on-background">
-            {notFound
-              ? STUDENT_ACADEMICIAN_MESSAGES.PROFILE_NOT_FOUND
-              : STUDENT_ACADEMICIAN_MESSAGES.PROFILE_LOAD_ERROR}
-          </h1>
-          <p className="mt-2 font-body-md text-body-md text-on-surface-variant" role="alert">
-            {error ?? STUDENT_ACADEMICIAN_MESSAGES.PROFILE_NOT_FOUND_DESCRIPTION}
-          </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            {!notFound ? (
-              <button
-                type="button"
-                className="rounded-lg bg-primary-container px-4 py-2 font-label-md text-label-md text-on-primary"
-                onClick={() => void loadProfile()}
-              >
-                Tekrar Dene
-              </button>
-            ) : null}
-            <Link
-              to={ROUTES.STUDENT_ACADEMICIAN_SEARCH}
-              className="rounded-lg border border-outline-variant bg-surface px-4 py-2 font-label-md text-label-md text-primary no-underline hover:bg-surface-container hover:no-underline"
-              style={{ textDecoration: 'none' }}
-            >
-              {STUDENT_ACADEMICIAN_MESSAGES.BACK_TO_SEARCH}
-            </Link>
-          </div>
+        {breadcrumb}
+        <StudentPageHeader
+          title={STUDENT_UI.PROFILE_TITLE}
+          description={STUDENT_UI.PROFILE_SUBTITLE}
+        />
+        <div className="mb-4">
+          <StudentBackLink
+            to={ROUTES.STUDENT_ACADEMICIAN_SEARCH}
+            label={STUDENT_ACADEMICIAN_MESSAGES.BACK_TO_SEARCH}
+          />
         </div>
+        {notFound ? (
+          <StudentEmptyState
+            icon="person_off"
+            title={STUDENT_ACADEMICIAN_MESSAGES.PROFILE_NOT_FOUND}
+            description={
+              error ?? STUDENT_ACADEMICIAN_MESSAGES.PROFILE_NOT_FOUND_DESCRIPTION
+            }
+          />
+        ) : (
+          <StudentErrorState
+            message={error ?? STUDENT_UI.LOAD_ERROR_GENERIC}
+            onRetry={() => void loadProfile()}
+            secondaryAction={{
+              label: STUDENT_ACADEMICIAN_MESSAGES.BACK_TO_SEARCH,
+              to: ROUTES.STUDENT_ACADEMICIAN_SEARCH,
+            }}
+          />
+        )}
       </div>
     );
   }
@@ -206,17 +212,17 @@ export default function StudentAcademicianProfilePage() {
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
+      {breadcrumb}
+      <StudentPageHeader
+        title={STUDENT_UI.PROFILE_TITLE}
+        description={STUDENT_UI.PROFILE_SUBTITLE}
+      />
+
       <div className="mb-6">
-        <Link
+        <StudentBackLink
           to={ROUTES.STUDENT_ACADEMICIAN_SEARCH}
-          className="inline-flex items-center gap-1 font-label-md text-label-md text-primary no-underline hover:no-underline"
-          style={{ textDecoration: 'none' }}
-        >
-          <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
-            arrow_back
-          </span>
-          {STUDENT_ACADEMICIAN_MESSAGES.BACK_TO_SEARCH}
-        </Link>
+          label={STUDENT_ACADEMICIAN_MESSAGES.BACK_TO_SEARCH}
+        />
       </div>
 
       <section className="mb-6 rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-8">
@@ -234,9 +240,9 @@ export default function StudentAcademicianProfilePage() {
           )}
 
           <div className="min-w-0 flex-1 text-center md:text-left">
-            <h1 className="font-headline-lg text-headline-lg text-on-background">
+            <h2 className="font-headline-lg text-headline-lg text-on-background">
               {profile.fullName}
-            </h1>
+            </h2>
             <p className="mt-1 font-body-lg text-body-lg text-on-surface-variant">
               {profile.academicTitle?.trim()
                 ? profile.academicTitle
@@ -247,20 +253,13 @@ export default function StudentAcademicianProfilePage() {
             </p>
 
             <div className="mt-4 flex flex-wrap items-center justify-center gap-3 md:justify-start">
-              <span
-                className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 font-label-md text-label-md ${
-                  accepting
-                    ? 'bg-emerald-100 text-emerald-800'
-                    : 'bg-red-100 text-red-800'
-                }`}
-              >
-                <span aria-hidden="true">{accepting ? '🟢' : '🔴'}</span>
-                {accepting
-                  ? STUDENT_ACADEMICIAN_MESSAGES.STATUS_ACCEPTING
-                  : STUDENT_ACADEMICIAN_MESSAGES.STATUS_NOT_ACCEPTING}
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-surface-container px-3 py-1.5 font-label-md text-label-md text-on-surface">
-                <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+              <StudentAcceptingBadge
+                accepting={accepting}
+                activeLabel={STUDENT_ACADEMICIAN_MESSAGES.STATUS_ACCEPTING}
+                inactiveLabel={STUDENT_ACADEMICIAN_MESSAGES.STATUS_NOT_ACCEPTING}
+              />
+              <span className="inline-flex max-w-full items-center gap-1.5 rounded-lg bg-surface-container px-3 py-1.5 font-label-md text-label-md text-on-surface">
+                <span className="material-symbols-outlined shrink-0 text-[18px]" aria-hidden="true">
                   mail
                 </span>
                 <span className="truncate">{profile.institutionalEmail}</span>
@@ -276,7 +275,7 @@ export default function StudentAcademicianProfilePage() {
                     ? undefined
                     : STUDENT_ACADEMICIAN_MESSAGES.BOOK_APPOINTMENT_DISABLED
                 }
-                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary-container px-5 py-2.5 font-label-md text-label-md text-on-primary transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                className={`${STUDENT_UI.PRIMARY_BUTTON_CLASS} w-full sm:w-auto`}
                 // Sprint 22: randevu oluşturma ekranına yönlendirilecek.
               >
                 <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
@@ -300,26 +299,22 @@ export default function StudentAcademicianProfilePage() {
         </div>
 
         {slotsLoading ? (
-          <div className="flex min-h-32 items-center justify-center">
-            <Loading label={STUDENT_ACADEMICIAN_MESSAGES.AVAILABILITY_LOADING} />
-          </div>
+          <StudentLoadingState
+            label={STUDENT_ACADEMICIAN_MESSAGES.AVAILABILITY_LOADING}
+            compact
+          />
         ) : slotsError ? (
-          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-            <p className="font-body-md text-body-md text-error" role="alert">
-              {slotsError}
-            </p>
-            <button
-              type="button"
-              className="rounded-lg bg-primary-container px-4 py-2 font-label-md text-label-md text-on-primary"
-              onClick={() => void loadAvailability()}
-            >
-              Tekrar Dene
-            </button>
-          </div>
+          <StudentErrorState
+            message={slotsError}
+            onRetry={() => void loadAvailability()}
+          />
         ) : visibleSlots.length === 0 ? (
-          <p className="font-body-md text-body-md text-on-surface-variant">
-            {STUDENT_ACADEMICIAN_MESSAGES.AVAILABILITY_EMPTY}
-          </p>
+          <StudentEmptyState
+            icon="event_busy"
+            title={STUDENT_ACADEMICIAN_MESSAGES.AVAILABILITY_EMPTY_TITLE}
+            description={STUDENT_ACADEMICIAN_MESSAGES.AVAILABILITY_EMPTY}
+            className="border-0 bg-surface px-4 py-8"
+          />
         ) : (
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {visibleSlots.map((slot) => (

@@ -1,11 +1,12 @@
 import { ROUTES } from '../constants';
+import { STUDENT_UI } from '../constants/studentUi';
 import ModuleSidebar from './ModuleSidebar';
 import type { ModuleSidebarProps } from './ModuleLayout';
 
 const studentNavItems = [
-  { label: 'Ana Sayfa', path: ROUTES.STUDENT, icon: 'dashboard', end: true },
+  { label: STUDENT_UI.BREADCRUMB_HOME, path: ROUTES.STUDENT, icon: 'dashboard', end: true },
   {
-    label: 'Akademisyen Ara',
+    label: STUDENT_UI.BREADCRUMB_SEARCH,
     path: ROUTES.STUDENT_ACADEMICIAN_SEARCH,
     icon: 'person_search',
     end: true,
