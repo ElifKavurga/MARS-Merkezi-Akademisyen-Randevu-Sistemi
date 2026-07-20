@@ -29,6 +29,7 @@ export const ROUTES = {
   ASSISTANT_PROFILE: '/assistant/profile',
   STUDENT: '/ogrenci',
   STUDENT_APPOINTMENT_CREATE: '/ogrenci/randevu-olustur',
+  STUDENT_PROFILE: '/ogrenci/profil',
 } as const;
 
 export function academicianCourseDetailPath(courseId: number | string): string {

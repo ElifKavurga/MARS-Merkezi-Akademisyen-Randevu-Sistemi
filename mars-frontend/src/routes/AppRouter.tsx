@@ -3,6 +3,7 @@ import MainLayout from '../layouts/MainLayout';
 import AdminLayout from '../layouts/AdminLayout';
 import AcademicianLayout from '../layouts/AcademicianLayout';
 import AssistantLayout from '../layouts/AssistantLayout';
+import StudentLayout from '../layouts/StudentLayout';
 import ProtectedRoute from './ProtectedRoute';
 import LoginPage from '../pages/LoginPage';
 import ResetPasswordPage from '../pages/ResetPasswordPage';
@@ -47,10 +48,16 @@ export default function AppRouter() {
           <Route element={<ProtectedRoute allowedRoles={[ROLES.HOD]} />}>
             <Route path={ROUTES.HOD} element={<HodDashboard />} />
           </Route>
+        </Route>
 
-          <Route element={<ProtectedRoute allowedRoles={[ROLES.STUDENT]} />}>
+        <Route element={<ProtectedRoute allowedRoles={[ROLES.STUDENT]} />}>
+          <Route element={<StudentLayout />}>
             <Route path={ROUTES.STUDENT} element={<StudentDashboard />} />
-            <Route path={ROUTES.STUDENT_APPOINTMENT_CREATE} element={<StudentAppointmentCreatePage />} />
+            <Route
+              path={ROUTES.STUDENT_APPOINTMENT_CREATE}
+              element={<StudentAppointmentCreatePage />}
+            />
+            <Route path={ROUTES.STUDENT_PROFILE} element={<ProfilePage />} />
           </Route>
         </Route>
 
