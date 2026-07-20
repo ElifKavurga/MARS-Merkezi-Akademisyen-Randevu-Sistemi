@@ -11,6 +11,12 @@ const studentNavItems = [
     icon: 'person_search',
     end: true,
   },
+  {
+    label: STUDENT_UI.BREADCRUMB_APPOINTMENTS,
+    path: ROUTES.STUDENT_APPOINTMENTS,
+    icon: 'event_note',
+    end: true,
+  },
 ] as const;
 
 export default function StudentSidebar({ mobileOpen, onClose }: ModuleSidebarProps) {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import StudentAppointmentStepper from '../components/StudentAppointmentStepper';
 import StudentBackLink from '../components/StudentBackLink';
 import StudentBreadcrumb from '../components/StudentBreadcrumb';
@@ -10,9 +10,14 @@ import StudentPageHeader from '../components/StudentPageHeader';
 import UserAvatar from '../components/UserAvatar';
 import { getMeetingTypeLabel } from '../constants/appointment';
 import {
+  APPOINTMENT_MEETING_TYPE_OPTIONS,
+  MEETING_TYPE,
+} from '../constants/availability';
+import {
   STUDENT_APPOINTMENT_CATEGORY_GROUP_LABELS,
   STUDENT_APPOINTMENT_MESSAGES,
   STUDENT_APPOINTMENT_STEP_CATEGORY,
+  STUDENT_APPOINTMENT_STEP_CONFIRM,
   STUDENT_APPOINTMENT_STEP_COURSE,
   STUDENT_APPOINTMENT_STEP_MEETING_TYPE,
   STUDENT_APPOINTMENT_STEP_SLOT,
@@ -27,6 +32,7 @@ import {
   getStudentAcademicianCourses,
   getStudentAcademicianDetail,
 } from '../services/studentAcademicianService';
+import { createStudentAppointment } from '../services/studentAppointmentService';
 import type { StudentAcademicianCourse, StudentAcademicianDetail } from '../types/studentAcademician';
 import type {
   StudentAppointmentCategory,
@@ -34,6 +40,7 @@ import type {
   StudentAvailableSlot,
 } from '../types/studentAppointment';
 import {
+  clearStudentAppointmentDraft,
   loadStudentAppointmentDraft,
   saveStudentAppointmentDraft,
 } from '../utils/studentAppointmentDraft';
@@ -475,17 +482,37 @@ function SlotStepPanel({
   );
 }
 
-function MeetingTypeStepPlaceholder({
+function isSelectableMeetingType(meetingType: string | null | undefined): boolean {
+  return meetingType === MEETING_TYPE.FACE_TO_FACE || meetingType === MEETING_TYPE.ONLINE;
+}
+
+function isDraftReadyToSubmit(draft: StudentAppointmentDraft | null): boolean {
+  if (!draft?.categoryId || !draft.slotId || !isSelectableMeetingType(draft.meetingType)) {
+    return false;
+  }
+  if (draft.requiresCourseSelection && (draft.courseId == null || draft.courseId < 1)) {
+    return false;
+  }
+  return true;
+}
+
+function MeetingTypeStepPanel({
   draft,
+  onSelectMeetingType,
+  onContinue,
   onBack,
 }: {
   draft: StudentAppointmentDraft;
+  onSelectMeetingType: (meetingType: string) => void;
+  onContinue: () => void;
   onBack: () => void;
 }) {
-  const slotSummary =
-    draft.slotDate && draft.startTime && draft.endTime
-      ? `${formatSlotDateLabel(draft.slotDate)} · ${formatSlotTime(draft.startTime)} – ${formatSlotTime(draft.endTime)}`
-      : '—';
+  const canContinue = isSelectableMeetingType(draft.meetingType);
+  const [showChooser] = useState(
+    () =>
+      draft.meetingType === MEETING_TYPE.BOTH
+      || !isSelectableMeetingType(draft.meetingType),
+  );
 
   return (
     <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-6">
@@ -495,37 +522,175 @@ function MeetingTypeStepPlaceholder({
       <p className="mt-2 font-body-md text-body-md text-on-surface-variant">
         {STUDENT_APPOINTMENT_MESSAGES.STEP_MEETING_TYPE_DESCRIPTION}
       </p>
-      <dl className="mt-4 space-y-2 rounded-lg border border-outline-variant bg-surface p-4">
-        <div className="flex flex-wrap justify-between gap-2">
-          <dt className="font-label-sm text-label-sm text-on-surface-variant">Kategori</dt>
-          <dd className="font-body-md text-body-md text-on-surface">{draft.categoryName}</dd>
+
+      {showChooser ? (
+        <div
+          className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2"
+          role="radiogroup"
+          aria-label={STUDENT_APPOINTMENT_MESSAGES.STEP_MEETING_TYPE_TITLE}
+        >
+          {APPOINTMENT_MEETING_TYPE_OPTIONS.map((option) => {
+            const selected = draft.meetingType === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                onClick={() => onSelectMeetingType(option.value)}
+                className={`rounded-lg border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim focus-visible:ring-offset-1 ${
+                  selected
+                    ? 'border-2 border-primary bg-primary-fixed text-on-primary-fixed'
+                    : 'border-outline-variant bg-surface hover:border-primary hover:bg-surface-container'
+                }`}
+              >
+                <span className="font-body-md text-body-md font-semibold">{option.label}</span>
+              </button>
+            );
+          })}
         </div>
-        <div className="flex flex-wrap justify-between gap-2">
-          <dt className="font-label-sm text-label-sm text-on-surface-variant">Ders</dt>
-          <dd className="font-body-md text-body-md text-on-surface">
-            {draft.courseId != null && draft.courseCode
-              ? `${draft.courseCode} — ${draft.courseName ?? ''}`
-              : '—'}
-          </dd>
-        </div>
-        <div className="flex flex-wrap justify-between gap-2">
-          <dt className="font-label-sm text-label-sm text-on-surface-variant">Slot</dt>
-          <dd className="font-body-md text-body-md text-on-surface">{slotSummary}</dd>
-        </div>
-        <div className="flex flex-wrap justify-between gap-2">
-          <dt className="font-label-sm text-label-sm text-on-surface-variant">Görüşme türü</dt>
-          <dd className="font-body-md text-body-md text-on-surface">
-            {draft.meetingType ? getMeetingTypeLabel(draft.meetingType) : '—'}
-          </dd>
-        </div>
-      </dl>
-      <div className="mt-6 flex justify-stretch sm:justify-start">
+      ) : (
+        <p className="mt-5 rounded-lg border border-outline-variant bg-surface px-4 py-3 font-body-md text-body-md text-on-surface">
+          {getMeetingTypeLabel(draft.meetingType ?? '')}
+        </p>
+      )}
+
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
         <button
           type="button"
           className={`${STUDENT_UI.SECONDARY_BUTTON_CLASS} w-full sm:w-auto`}
           onClick={onBack}
         >
           {STUDENT_APPOINTMENT_MESSAGES.BACK_TO_SLOT}
+        </button>
+        <button
+          type="button"
+          className={`${STUDENT_UI.PRIMARY_BUTTON_CLASS} w-full sm:w-auto`}
+          disabled={!canContinue}
+          title={
+            canContinue
+              ? undefined
+              : STUDENT_APPOINTMENT_MESSAGES.CONTINUE_MEETING_TYPE_DISABLED
+          }
+          onClick={onContinue}
+        >
+          {STUDENT_APPOINTMENT_MESSAGES.CONTINUE}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function ConfirmStepPanel({
+  academician,
+  draft,
+  submitting,
+  onBack,
+  onConfirm,
+}: {
+  academician: StudentAcademicianDetail;
+  draft: StudentAppointmentDraft;
+  submitting: boolean;
+  onBack: () => void;
+  onConfirm: () => void;
+}) {
+  const canSubmit = isDraftReadyToSubmit(draft) && !submitting;
+  const timeLabel =
+    draft.startTime && draft.endTime
+      ? `${formatSlotTime(draft.startTime)} – ${formatSlotTime(draft.endTime)}`
+      : '—';
+
+  const rows: { label: string; value: string }[] = [
+    {
+      label: STUDENT_APPOINTMENT_MESSAGES.STEP_CONFIRM_ACADEMICIAN,
+      value: academician.fullName,
+    },
+    {
+      label: STUDENT_APPOINTMENT_MESSAGES.STEP_CONFIRM_TITLE_LABEL,
+      value: academician.academicTitle?.trim()
+        ? academician.academicTitle
+        : STUDENT_APPOINTMENT_MESSAGES.NO_TITLE,
+    },
+    {
+      label: STUDENT_APPOINTMENT_MESSAGES.STEP_CONFIRM_DEPARTMENT,
+      value: academician.departmentName,
+    },
+    {
+      label: STUDENT_APPOINTMENT_MESSAGES.STEP_CONFIRM_CATEGORY,
+      value: draft.categoryName,
+    },
+  ];
+
+  if (draft.requiresCourseSelection || draft.courseId != null) {
+    rows.push({
+      label: STUDENT_APPOINTMENT_MESSAGES.STEP_CONFIRM_COURSE,
+      value:
+        draft.courseId != null && draft.courseCode
+          ? `${draft.courseCode} — ${draft.courseName ?? ''}`
+          : '—',
+    });
+  }
+
+  rows.push(
+    {
+      label: STUDENT_APPOINTMENT_MESSAGES.STEP_CONFIRM_DATE,
+      value: draft.slotDate ? formatSlotDateLabel(draft.slotDate) : '—',
+    },
+    {
+      label: STUDENT_APPOINTMENT_MESSAGES.STEP_CONFIRM_TIME,
+      value: timeLabel,
+    },
+    {
+      label: STUDENT_APPOINTMENT_MESSAGES.STEP_CONFIRM_DURATION,
+      value: STUDENT_APPOINTMENT_MESSAGES.STEP_SLOT_DURATION(draft.durationMinutes),
+    },
+    {
+      label: STUDENT_APPOINTMENT_MESSAGES.STEP_CONFIRM_MEETING_TYPE,
+      value: draft.meetingType ? getMeetingTypeLabel(draft.meetingType) : '—',
+    },
+  );
+
+  return (
+    <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-6">
+      <h2 className="font-headline-md text-headline-md text-primary">
+        {STUDENT_APPOINTMENT_MESSAGES.STEP_CONFIRM_TITLE}
+      </h2>
+      <p className="mt-2 font-body-md text-body-md text-on-surface-variant">
+        {STUDENT_APPOINTMENT_MESSAGES.STEP_CONFIRM_DESCRIPTION}
+      </p>
+
+      <dl className="mt-5 space-y-3 rounded-lg border border-outline-variant bg-surface p-4">
+        {rows.map((row) => (
+          <div key={row.label} className="flex flex-wrap justify-between gap-2">
+            <dt className="font-label-sm text-label-sm text-on-surface-variant">{row.label}</dt>
+            <dd className="max-w-full text-right font-body-md text-body-md text-on-surface">
+              {row.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
+        <button
+          type="button"
+          className={`${STUDENT_UI.SECONDARY_BUTTON_CLASS} w-full sm:w-auto`}
+          disabled={submitting}
+          onClick={onBack}
+        >
+          {STUDENT_APPOINTMENT_MESSAGES.BACK_TO_MEETING_TYPE}
+        </button>
+        <button
+          type="button"
+          className={`${STUDENT_UI.PRIMARY_BUTTON_CLASS} w-full sm:w-auto`}
+          disabled={!canSubmit}
+          title={
+            canSubmit ? undefined : STUDENT_APPOINTMENT_MESSAGES.STEP_CONFIRM_DISABLED
+          }
+          onClick={onConfirm}
+        >
+          {submitting
+            ? STUDENT_APPOINTMENT_MESSAGES.STEP_CONFIRM_SUBMITTING
+            : STUDENT_APPOINTMENT_MESSAGES.STEP_CONFIRM_SUBMIT}
         </button>
       </div>
     </section>
@@ -534,6 +699,7 @@ function MeetingTypeStepPlaceholder({
 
 export default function StudentAppointmentCreatePage() {
   const { academicianId: academicianIdParam } = useParams<{ academicianId: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const toast = useToast();
   const [academician, setAcademician] = useState<StudentAcademicianDetail | null>(null);
@@ -552,6 +718,7 @@ export default function StudentAppointmentCreatePage() {
   const [slotsError, setSlotsError] = useState<string | null>(null);
   const [selectedDraft, setSelectedDraft] = useState<StudentAppointmentDraft | null>(null);
   const [activeStepIndex, setActiveStepIndex] = useState(STUDENT_APPOINTMENT_STEP_CATEGORY);
+  const [submitting, setSubmitting] = useState(false);
 
   const academicianId = Number(academicianIdParam);
   const profilePath =
@@ -830,8 +997,59 @@ export default function StudentAppointmentCreatePage() {
     setActiveStepIndex(STUDENT_APPOINTMENT_STEP_CATEGORY);
   };
 
+  const handleSelectMeetingType = (meetingType: string) => {
+    if (!selectedDraft) {
+      return;
+    }
+    persistDraft({
+      ...selectedDraft,
+      meetingType,
+    });
+  };
+
+  const handleContinueFromMeetingType = () => {
+    if (!isSelectableMeetingType(selectedDraft?.meetingType)) {
+      return;
+    }
+    setActiveStepIndex(STUDENT_APPOINTMENT_STEP_CONFIRM);
+  };
+
   const handleBackFromMeetingType = () => {
     setActiveStepIndex(STUDENT_APPOINTMENT_STEP_SLOT);
+  };
+
+  const handleBackFromConfirm = () => {
+    setActiveStepIndex(STUDENT_APPOINTMENT_STEP_MEETING_TYPE);
+  };
+
+  const handleConfirmAppointment = async () => {
+    if (!selectedDraft || submitting || !isDraftReadyToSubmit(selectedDraft)) {
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await createStudentAppointment({
+        slotId: selectedDraft.slotId!,
+        categoryId: selectedDraft.categoryId,
+        courseId: selectedDraft.requiresCourseSelection ? selectedDraft.courseId : undefined,
+        meetingType: selectedDraft.meetingType,
+      });
+      if (Number.isInteger(academicianId) && academicianId >= 1) {
+        clearStudentAppointmentDraft(academicianId);
+      }
+      setSelectedDraft(null);
+      toast.success(STUDENT_APPOINTMENT_MESSAGES.STEP_CONFIRM_SUCCESS);
+      navigate(ROUTES.STUDENT_APPOINTMENTS, { replace: true });
+    } catch (err) {
+      const message = resolveStudentApiError(
+        err,
+        STUDENT_APPOINTMENT_MESSAGES.STEP_CONFIRM_ERROR,
+      );
+      toast.error(message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (!user) {
@@ -953,9 +1171,19 @@ export default function StudentAppointmentCreatePage() {
         skippedStepIndices={skippedStepIndices}
       />
 
-      {activeStepIndex === STUDENT_APPOINTMENT_STEP_MEETING_TYPE && selectedDraft ? (
-        <MeetingTypeStepPlaceholder
+      {activeStepIndex === STUDENT_APPOINTMENT_STEP_CONFIRM && selectedDraft ? (
+        <ConfirmStepPanel
+          academician={academician}
           draft={selectedDraft}
+          submitting={submitting}
+          onBack={handleBackFromConfirm}
+          onConfirm={() => void handleConfirmAppointment()}
+        />
+      ) : activeStepIndex === STUDENT_APPOINTMENT_STEP_MEETING_TYPE && selectedDraft ? (
+        <MeetingTypeStepPanel
+          draft={selectedDraft}
+          onSelectMeetingType={handleSelectMeetingType}
+          onContinue={handleContinueFromMeetingType}
           onBack={handleBackFromMeetingType}
         />
       ) : activeStepIndex === STUDENT_APPOINTMENT_STEP_SLOT && selectedDraft ? (

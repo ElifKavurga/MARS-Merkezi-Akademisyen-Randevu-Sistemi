@@ -12,6 +12,7 @@ export const STUDENT_APPOINTMENT_STEP_CATEGORY = 0;
 export const STUDENT_APPOINTMENT_STEP_COURSE = 1;
 export const STUDENT_APPOINTMENT_STEP_SLOT = 2;
 export const STUDENT_APPOINTMENT_STEP_MEETING_TYPE = 3;
+export const STUDENT_APPOINTMENT_STEP_CONFIRM = 4;
 
 /** Sprint 22.1 uyumluluğu — kategori adımı indeksi. */
 export const STUDENT_APPOINTMENT_ACTIVE_STEP_INDEX = STUDENT_APPOINTMENT_STEP_CATEGORY;
@@ -65,10 +66,33 @@ export const STUDENT_APPOINTMENT_MESSAGES = {
   CONTINUE_SLOT_DISABLED: 'Devam etmek için bir randevu saati seçin.',
   BACK_TO_SLOT: 'Slota Dön',
   STEP_MEETING_TYPE_TITLE: 'Görüşme Türü',
-  STEP_MEETING_TYPE_DESCRIPTION:
-    'Görüşme türü seçimi bir sonraki adımda açılacaktır. Seçimleriniz korundu.',
+  STEP_MEETING_TYPE_DESCRIPTION: 'Randevu için görüşme türünü onaylayın veya seçin.',
+  CONTINUE_MEETING_TYPE_DISABLED: 'Devam etmek için bir görüşme türü seçin.',
+  BACK_TO_MEETING_TYPE: 'Görüşme Türüne Dön',
+  STEP_CONFIRM_TITLE: 'Onay',
+  STEP_CONFIRM_DESCRIPTION: 'Randevu talebinizi göndermeden önce bilgileri kontrol edin.',
+  STEP_CONFIRM_ACADEMICIAN: 'Akademisyen',
+  STEP_CONFIRM_TITLE_LABEL: 'Akademik Ünvan',
+  STEP_CONFIRM_DEPARTMENT: 'Bölüm',
+  STEP_CONFIRM_CATEGORY: 'Seçilen Kategori',
+  STEP_CONFIRM_COURSE: 'Seçilen Ders',
+  STEP_CONFIRM_DATE: 'Tarih',
+  STEP_CONFIRM_TIME: 'Saat',
+  STEP_CONFIRM_DURATION: 'Süre',
+  STEP_CONFIRM_MEETING_TYPE: 'Görüşme Türü',
+  STEP_CONFIRM_SUBMIT: 'Randevuyu Onayla',
+  STEP_CONFIRM_SUBMITTING: 'Randevu oluşturuluyor...',
+  STEP_CONFIRM_DISABLED:
+    'Randevuyu onaylamak için kategori, slot ve görüşme türü bilgileri tamamlanmalıdır.',
+  STEP_CONFIRM_SUCCESS: 'Randevu talebiniz başarıyla oluşturuldu.',
+  STEP_CONFIRM_ERROR: 'Randevu talebi oluşturulamadı. Lütfen tekrar deneyin.',
   BACK_TO_COURSE: 'Derse Dön',
   STEP_LOCKED: 'Bu adım henüz aktif değil.',
   NO_TITLE: 'Ünvan belirtilmemiş',
   BREADCRUMB_CREATE: 'Randevu Oluştur',
+  MY_APPOINTMENTS_TITLE: 'Randevularım',
+  MY_APPOINTMENTS_SUBTITLE: 'Oluşturduğunuz randevu taleplerini buradan takip edebilirsiniz.',
+  MY_APPOINTMENTS_EMPTY_TITLE: 'Henüz randevu yok',
+  MY_APPOINTMENTS_EMPTY_DESCRIPTION:
+    'Oluşturduğunuz randevu talepleri burada listelenecek.',
 } as const;

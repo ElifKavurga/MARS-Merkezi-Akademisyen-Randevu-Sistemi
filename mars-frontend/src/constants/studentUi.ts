@@ -2,6 +2,7 @@ export const STUDENT_UI = {
   RETRY: 'Tekrar Dene',
   BREADCRUMB_HOME: 'Ana Sayfa',
   BREADCRUMB_SEARCH: 'Akademisyen Ara',
+  BREADCRUMB_APPOINTMENTS: 'Randevularım',
   BREADCRUMB_PROFILE: 'Akademisyen Profili',
   DASHBOARD_TITLE: 'Ana Sayfa',
   DASHBOARD_SUBTITLE:

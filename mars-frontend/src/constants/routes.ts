@@ -28,6 +28,7 @@ export const ROUTES = {
   ASSISTANT_CALENDAR: '/assistant/calendar',
   ASSISTANT_PROFILE: '/assistant/profile',
   STUDENT: '/ogrenci',
+  STUDENT_APPOINTMENTS: '/ogrenci/randevularim',
   STUDENT_APPOINTMENT_CREATE: '/ogrenci/randevu-olustur/:academicianId',
   STUDENT_ACADEMICIAN_SEARCH: '/ogrenci/akademisyen-ara',
   STUDENT_ACADEMICIAN_PROFILE: '/ogrenci/akademisyen/:userId',

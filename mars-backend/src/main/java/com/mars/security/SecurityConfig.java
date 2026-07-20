@@ -65,6 +65,7 @@ public class SecurityConfig {
                                 "/assistant/dashboard")
                                 .hasRole("ASSISTANT")
                         .requestMatchers(HttpMethod.POST, "/appointments").hasRole("STUDENT")
+                        .requestMatchers(HttpMethod.POST, "/students/appointments").hasRole("STUDENT")
                         .requestMatchers(HttpMethod.GET, "/categories").hasRole("STUDENT")
                         .requestMatchers(HttpMethod.GET, "/availability-slots/available").hasRole("STUDENT")
                         .requestMatchers(HttpMethod.GET, "/students/academicians", "/students/academicians/**")
