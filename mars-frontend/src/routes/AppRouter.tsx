@@ -29,6 +29,7 @@ import DelegationHistoryPage from '../pages/DelegationHistoryPage';
 import AssistantCalendarPage from '../pages/AssistantCalendarPage';
 import ProfilePage from '../pages/ProfilePage';
 import StudentDashboard from '../pages/StudentDashboard';
+import StudentAcademicianSearchPage from '../pages/StudentAcademicianSearchPage';
 import StudentAppointmentCreatePage from '../pages/StudentAppointmentCreatePage';
 import NotFoundPage from '../pages/NotFoundPage';
 import { ROUTES } from '../constants/routes';
@@ -53,6 +54,10 @@ export default function AppRouter() {
         <Route element={<ProtectedRoute allowedRoles={[ROLES.STUDENT]} />}>
           <Route element={<StudentLayout />}>
             <Route path={ROUTES.STUDENT} element={<StudentDashboard />} />
+            <Route
+              path={ROUTES.STUDENT_ACADEMICIAN_SEARCH}
+              element={<StudentAcademicianSearchPage />}
+            />
             <Route
               path={ROUTES.STUDENT_APPOINTMENT_CREATE}
               element={<StudentAppointmentCreatePage />}

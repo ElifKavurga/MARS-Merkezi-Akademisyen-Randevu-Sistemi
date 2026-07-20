@@ -49,6 +49,12 @@ public class User {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
 
+    @Column(name = "academic_title")
+    private String academicTitle;
+
+    @Column(name = "is_accepting_appointments", nullable = false)
+    private Boolean isAcceptingAppointments;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 }

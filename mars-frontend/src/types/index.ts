@@ -17,6 +17,11 @@ export type { PenaltyRule, UpdatePenaltyRulePayload } from './penaltyRule';
 export type { RoleOption } from './role';
 export type { DepartmentOption } from './department';
 export type {
+  StudentAcademician,
+  StudentAcademicianPage,
+  StudentAcademicianSearchParams,
+} from './studentAcademician';
+export type {
   LoginRequest,
   LoginResponse,
   ResetPasswordRequest,

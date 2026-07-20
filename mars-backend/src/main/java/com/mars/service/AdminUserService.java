@@ -59,6 +59,7 @@ public class AdminUserService {
         user.setRole(role);
         user.setDepartment(department);
         user.setIsActive(true);
+        user.setIsAcceptingAppointments(true);
         user.setCreatedAt(LocalDateTime.now());
 
         User saved = userRepository.save(user);
