@@ -56,6 +56,12 @@ public class AppointmentService {
             AppointmentStatus.PENDING.name(),
             AppointmentStatus.APPROVED.name());
 
+    private static final Set<String> PAST_APPOINTMENT_STATUSES = Set.of(
+            AppointmentStatus.COMPLETED.name(),
+            AppointmentStatus.CANCELLED.name(),
+            AppointmentStatus.REJECTED.name(),
+            AppointmentStatus.NO_SHOW.name());
+
     private static final Set<String> BOOKABLE_STAFF_ROLES = Set.of(
             RoleType.ACADEMICIAN.name(),
             RoleType.HOD.name());
@@ -119,6 +125,16 @@ public class AppointmentService {
         User student = getCurrentStudent();
         return appointmentRepository.findActiveByStudentIdWithDetails(
                         student.getUserId(), ACTIVE_APPOINTMENT_STATUSES)
+                .stream()
+                .map(appointmentMapper::toStudentResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudentAppointmentResponseDto> getStudentPastAppointments() {
+        User student = getCurrentStudent();
+        return appointmentRepository.findPastByStudentIdWithDetails(
+                        student.getUserId(), PAST_APPOINTMENT_STATUSES)
                 .stream()
                 .map(appointmentMapper::toStudentResponse)
                 .toList();

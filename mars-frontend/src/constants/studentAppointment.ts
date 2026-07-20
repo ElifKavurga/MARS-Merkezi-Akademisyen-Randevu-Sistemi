@@ -104,6 +104,13 @@ export const STUDENT_APPOINTMENT_MESSAGES = {
   MY_APPOINTMENTS_EMPTY_TITLE: 'Aktif randevunuz yok',
   MY_APPOINTMENTS_EMPTY_DESCRIPTION:
     'Henüz bekleyen veya onaylanmış bir randevunuz bulunmuyor.',
+  TAB_ACTIVE: 'Aktif Randevular',
+  TAB_PAST: 'Geçmiş Randevular',
+  PAST_LOADING: 'Geçmiş randevular yükleniyor...',
+  PAST_LOAD_ERROR: 'Geçmiş randevular yüklenirken bir hata oluştu.',
+  PAST_EMPTY_TITLE: 'Geçmiş randevu yok',
+  PAST_EMPTY_DESCRIPTION:
+    'Tamamlanan, iptal edilen veya reddedilen randevularınız burada listelenir.',
   MY_APPOINTMENTS_ACADEMICIAN: 'Akademisyen',
   MY_APPOINTMENTS_TITLE_LABEL: 'Akademik Ünvan',
   MY_APPOINTMENTS_DEPARTMENT: 'Bölüm',

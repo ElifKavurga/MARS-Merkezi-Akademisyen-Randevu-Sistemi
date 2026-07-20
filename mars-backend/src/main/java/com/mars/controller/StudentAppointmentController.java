@@ -36,6 +36,11 @@ public class StudentAppointmentController {
         return ResponseEntity.ok(appointmentService.getStudentActiveAppointments());
     }
 
+    @GetMapping("/past")
+    public ResponseEntity<List<StudentAppointmentResponseDto>> getPastAppointments() {
+        return ResponseEntity.ok(appointmentService.getStudentPastAppointments());
+    }
+
     @GetMapping("/{appointmentId}")
     public ResponseEntity<StudentAppointmentResponseDto> getAppointment(
             @PathVariable Integer appointmentId) {

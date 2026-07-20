@@ -105,6 +105,37 @@ class StudentAppointmentControllerTest {
 
     @Test
     @WithMockUser(roles = "STUDENT")
+    void getPastAppointments_asStudent_returnsOk() throws Exception {
+        StudentAppointmentResponseDto item = StudentAppointmentResponseDto.builder()
+                .appointmentId(55)
+                .staffId(5)
+                .staffName("Dr. Ayşe Yılmaz")
+                .appointmentDate(LocalDate.of(2026, 6, 10))
+                .startTime(LocalTime.of(9, 0))
+                .endTime(LocalTime.of(9, 30))
+                .categoryName("Danışmanlık")
+                .meetingType(MeetingType.FACE_TO_FACE.name())
+                .appointmentStatus(AppointmentStatus.COMPLETED.name())
+                .build();
+        when(appointmentService.getStudentPastAppointments()).thenReturn(List.of(item));
+
+        mockMvc.perform(get("/students/appointments/past"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].appointmentId").value(55))
+                .andExpect(jsonPath("$[0].appointmentStatus").value("COMPLETED"));
+
+        verify(appointmentService).getStudentPastAppointments();
+    }
+
+    @Test
+    @WithMockUser(roles = "ACADEMICIAN")
+    void getPastAppointments_asAcademician_returnsForbidden() throws Exception {
+        mockMvc.perform(get("/students/appointments/past"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
     void getAppointment_asStudent_returnsOk() throws Exception {
         StudentAppointmentResponseDto item = StudentAppointmentResponseDto.builder()
                 .appointmentId(42)

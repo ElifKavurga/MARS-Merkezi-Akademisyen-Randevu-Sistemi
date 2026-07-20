@@ -22,9 +22,8 @@ import { isStudentAppointmentCancellable } from '../utils/studentAppointmentCanc
 
 function formatDate(date: string): string {
   return new Intl.DateTimeFormat('tr-TR', {
-    weekday: 'long',
     day: '2-digit',
-    month: 'long',
+    month: 'short',
     year: 'numeric',
   }).format(new Date(`${date}T00:00:00`));
 }
@@ -43,14 +42,47 @@ function formatCourseLabel(appointment: StudentAppointmentListItem): string | nu
   return appointment.courseCode ?? appointment.courseName;
 }
 
-function DetailField({ label, value }: { label: string; value: ReactNode }) {
+function MetaRow({
+  icon,
+  label,
+  value,
+}: {
+  icon: string;
+  label: string;
+  value: ReactNode;
+}) {
   return (
-    <div className="min-w-0">
-      <dt className="font-label-sm text-label-sm text-on-surface-variant">{label}</dt>
-      <dd className="mt-0.5 break-words font-body-md text-[15px] leading-6 text-on-surface">
-        {value}
-      </dd>
+    <div className="flex min-w-0 items-start gap-1.5">
+      <span
+        className="material-symbols-outlined mt-0.5 text-[16px] text-on-surface-variant"
+        aria-hidden
+      >
+        {icon}
+      </span>
+      <div className="min-w-0">
+        <p className="font-label-sm text-label-sm text-on-surface-variant">{label}</p>
+        <div className="mt-0.5 break-words font-body-md text-[13px] leading-5 text-on-surface">
+          {value}
+        </div>
+      </div>
     </div>
+  );
+}
+
+function InfoCard({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="rounded-lg border border-outline-variant bg-surface-container-lowest p-3.5 sm:p-4">
+      <h2 className="mb-3 font-headline-md text-[16px] leading-5 font-semibold text-on-background">
+        {title}
+      </h2>
+      {children}
+    </section>
   );
 }
 
@@ -183,79 +215,109 @@ export default function StudentAppointmentDetailPage() {
           }}
         />
       ) : appointment ? (
-        <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 sm:p-5">
-          <div className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-outline-variant pb-3">
-            <div className="min-w-0">
-              <p className="font-label-sm text-label-sm text-on-surface-variant">
-                {STUDENT_APPOINTMENT_MESSAGES.DETAIL_SECTION_ACADEMICIAN}
-              </p>
-              <h2 className="mt-1 font-headline-md text-[20px] leading-6 font-semibold text-on-background">
-                {appointment.staffName}
-              </h2>
-              <p className="mt-1 font-body-md text-[14px] text-on-surface-variant">
-                {academicTitle}
-                {appointment.departmentName ? ` · ${appointment.departmentName}` : ''}
-              </p>
+        <div className="flex flex-col gap-3 md:gap-4">
+          <InfoCard title={STUDENT_APPOINTMENT_MESSAGES.DETAIL_SECTION_ACADEMICIAN}>
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="min-w-0">
+                <h3 className="truncate font-headline-md text-[16px] leading-5 font-semibold text-on-background">
+                  {appointment.staffName}
+                </h3>
+                <p className="mt-0.5 truncate font-label-sm text-label-sm text-on-surface-variant">
+                  {academicTitle}
+                  {appointment.departmentName ? ` · ${appointment.departmentName}` : ''}
+                </p>
+              </div>
+              <AppointmentStatusBadge status={appointment.appointmentStatus} />
             </div>
-            <AppointmentStatusBadge status={appointment.appointmentStatus} />
-          </div>
-
-          <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
-            <DetailField
-              label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_DATE}
-              value={formatDate(appointment.appointmentDate)}
-            />
-            <DetailField
-              label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_MEETING_TYPE}
-              value={getMeetingTypeLabel(appointment.meetingType)}
-            />
-            <DetailField
-              label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_START_TIME}
-              value={formatTime(appointment.startTime)}
-            />
-            <DetailField
-              label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_END_TIME}
-              value={formatTime(appointment.endTime)}
-            />
-            <DetailField
-              label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_CATEGORY}
-              value={appointment.categoryName}
-            />
-            {courseLabel ? (
-              <DetailField
-                label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_COURSE}
-                value={courseLabel}
+            <div className="mt-3 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+              <MetaRow
+                icon="badge"
+                label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_FULL_NAME}
+                value={appointment.staffName}
               />
-            ) : null}
-          </dl>
+              <MetaRow
+                icon="school"
+                label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_ACADEMIC_TITLE}
+                value={academicTitle}
+              />
+              <MetaRow
+                icon="apartment"
+                label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_DEPARTMENT}
+                value={appointment.departmentName}
+              />
+            </div>
+          </InfoCard>
 
-          <div className="mt-4 border-t border-outline-variant pt-3">
-            <h3 className="mb-2 font-label-md text-label-md font-semibold text-on-surface">
-              {STUDENT_APPOINTMENT_MESSAGES.DETAIL_SECTION_LOCATION}
-            </h3>
+          <InfoCard title={STUDENT_APPOINTMENT_MESSAGES.DETAIL_SECTION_APPOINTMENT}>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-surface-container/60 px-2.5 py-2">
+              <div className="flex items-center gap-1.5 font-label-md text-label-md font-semibold text-on-surface">
+                <span className="material-symbols-outlined text-[18px] text-primary" aria-hidden>
+                  event
+                </span>
+                {formatDate(appointment.appointmentDate)}
+              </div>
+              <div className="flex items-center gap-1.5 font-label-md text-label-md font-semibold text-on-surface">
+                <span className="material-symbols-outlined text-[18px] text-primary" aria-hidden>
+                  schedule
+                </span>
+                {formatTime(appointment.startTime)} – {formatTime(appointment.endTime)}
+              </div>
+            </div>
+
+            <div className="mt-2.5 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+              <MetaRow
+                icon="flag"
+                label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_STATUS}
+                value={<AppointmentStatusBadge status={appointment.appointmentStatus} />}
+              />
+              <MetaRow
+                icon="category"
+                label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_CATEGORY}
+                value={appointment.categoryName}
+              />
+              <MetaRow
+                icon="videocam"
+                label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_MEETING_TYPE}
+                value={getMeetingTypeLabel(appointment.meetingType)}
+              />
+              {courseLabel ? (
+                <MetaRow
+                  icon="menu_book"
+                  label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_COURSE}
+                  value={courseLabel}
+                />
+              ) : null}
+            </div>
+          </InfoCard>
+
+          <InfoCard title={STUDENT_APPOINTMENT_MESSAGES.DETAIL_SECTION_LOCATION}>
             {isOnline ? (
-              <p className="font-body-md text-[14px] leading-6 text-on-surface">
-                {STUDENT_APPOINTMENT_MESSAGES.DETAIL_ONLINE_INFO}
-              </p>
+              <MetaRow
+                icon="language"
+                label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_MEETING_TYPE}
+                value={STUDENT_APPOINTMENT_MESSAGES.DETAIL_ONLINE_INFO}
+              />
             ) : office || building ? (
-              <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <DetailField
+              <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                <MetaRow
+                  icon="meeting_room"
                   label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_OFFICE}
                   value={office ?? STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_NO_COURSE}
                 />
                 {building ? (
-                  <DetailField
+                  <MetaRow
+                    icon="location_on"
                     label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_BUILDING}
                     value={building}
                   />
                 ) : null}
-              </dl>
+              </div>
             ) : (
-              <p className="font-body-md text-[14px] text-on-surface-variant">
+              <p className="font-body-md text-[13px] text-on-surface-variant">
                 {STUDENT_APPOINTMENT_MESSAGES.DETAIL_LOCATION_EMPTY}
               </p>
             )}
-          </div>
+          </InfoCard>
         </div>
       ) : null}
 
