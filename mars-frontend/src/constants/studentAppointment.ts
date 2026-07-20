@@ -10,6 +10,7 @@ export type StudentAppointmentStepId = (typeof STUDENT_APPOINTMENT_STEPS)[number
 
 export const STUDENT_APPOINTMENT_STEP_CATEGORY = 0;
 export const STUDENT_APPOINTMENT_STEP_COURSE = 1;
+export const STUDENT_APPOINTMENT_STEP_SLOT = 2;
 
 /** Sprint 22.1 uyumluluğu — kategori adımı indeksi. */
 export const STUDENT_APPOINTMENT_ACTIVE_STEP_INDEX = STUDENT_APPOINTMENT_STEP_CATEGORY;
@@ -43,10 +44,20 @@ export const STUDENT_APPOINTMENT_MESSAGES = {
   STEP_CATEGORY_DURATION: (minutes: number) => `Tahmini süre: ${minutes} dk`,
   CONTINUE: 'Devam Et',
   CONTINUE_DISABLED: 'Devam etmek için bir kategori seçin.',
+  CONTINUE_COURSE_DISABLED: 'Devam etmek için bir ders seçin.',
   BACK_TO_CATEGORY: 'Kategoriye Dön',
-  STEP_COURSE_TITLE: 'Ders',
-  STEP_COURSE_DESCRIPTION:
-    'Ders seçimi bir sonraki adımda açılacaktır. Seçilen kategori bilgisi korundu.',
+  STEP_COURSE_TITLE: 'Ders Seçimi',
+  STEP_COURSE_DESCRIPTION: 'Randevunuzla ilişkili dersi seçin.',
+  STEP_COURSE_LOADING: 'Dersler yükleniyor...',
+  STEP_COURSE_LOAD_ERROR: 'Ders listesi yüklenirken bir hata oluştu.',
+  STEP_COURSE_EMPTY_TITLE: 'Aktif ders bulunamadı',
+  STEP_COURSE_EMPTY_DESCRIPTION:
+    'Bu akademisyene ait seçilebilir aktif ders bulunmuyor.',
+  STEP_COURSE_SKIPPED: 'Atlandı',
+  STEP_SLOT_TITLE: 'Slot',
+  STEP_SLOT_DESCRIPTION:
+    'Uygun randevu saati seçimi bir sonraki adımda açılacaktır. Seçimleriniz korundu.',
+  BACK_TO_COURSE: 'Derse Dön',
   STEP_LOCKED: 'Bu adım henüz aktif değil.',
   NO_TITLE: 'Ünvan belirtilmemiş',
   BREADCRUMB_CREATE: 'Randevu Oluştur',

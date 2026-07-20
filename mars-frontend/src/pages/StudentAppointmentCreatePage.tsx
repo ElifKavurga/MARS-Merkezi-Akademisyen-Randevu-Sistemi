@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import StudentAppointmentStepper from '../components/StudentAppointmentStepper';
 import StudentBackLink from '../components/StudentBackLink';
@@ -13,14 +13,18 @@ import {
   STUDENT_APPOINTMENT_MESSAGES,
   STUDENT_APPOINTMENT_STEP_CATEGORY,
   STUDENT_APPOINTMENT_STEP_COURSE,
+  STUDENT_APPOINTMENT_STEP_SLOT,
 } from '../constants/studentAppointment';
 import { studentAcademicianProfilePath, ROUTES } from '../constants/routes';
 import { STUDENT_UI } from '../constants/studentUi';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 import { getStudentAppointmentCategories } from '../services/studentAppointmentCategoryService';
-import { getStudentAcademicianDetail } from '../services/studentAcademicianService';
-import type { StudentAcademicianDetail } from '../types/studentAcademician';
+import {
+  getStudentAcademicianCourses,
+  getStudentAcademicianDetail,
+} from '../services/studentAcademicianService';
+import type { StudentAcademicianCourse, StudentAcademicianDetail } from '../types/studentAcademician';
 import type {
   StudentAppointmentCategory,
   StudentAppointmentDraft,
@@ -70,7 +74,7 @@ function AcademicianSummary({ academician }: { academician: StudentAcademicianDe
   );
 }
 
-function toDraft(category: StudentAppointmentCategory): StudentAppointmentDraft {
+function categoryToDraft(category: StudentAppointmentCategory): StudentAppointmentDraft {
   return {
     categoryId: category.categoryId,
     categoryName: category.categoryName,
@@ -78,6 +82,9 @@ function toDraft(category: StudentAppointmentCategory): StudentAppointmentDraft 
     categoryGroup: category.categoryGroup,
     requiresCourseSelection: category.requiresCourseSelection,
     description: category.description,
+    courseId: null,
+    courseCode: null,
+    courseName: null,
   };
 }
 
@@ -189,7 +196,110 @@ function CategoryStepPanel({
   );
 }
 
-function CourseStepPlaceholder({
+function CourseStepPanel({
+  courses,
+  selectedCourseId,
+  loading,
+  error,
+  onRetry,
+  onSelect,
+  onContinue,
+  onBack,
+}: {
+  courses: StudentAcademicianCourse[];
+  selectedCourseId: number | null;
+  loading: boolean;
+  error: string | null;
+  onRetry: () => void;
+  onSelect: (course: StudentAcademicianCourse) => void;
+  onContinue: () => void;
+  onBack: () => void;
+}) {
+  const canContinue = selectedCourseId != null;
+
+  return (
+    <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-6">
+      <h2 className="font-headline-md text-headline-md text-primary">
+        {STUDENT_APPOINTMENT_MESSAGES.STEP_COURSE_TITLE}
+      </h2>
+      <p className="mt-2 font-body-md text-body-md text-on-surface-variant">
+        {STUDENT_APPOINTMENT_MESSAGES.STEP_COURSE_DESCRIPTION}
+      </p>
+
+      <div className="mt-6">
+        {loading ? (
+          <StudentLoadingState
+            label={STUDENT_APPOINTMENT_MESSAGES.STEP_COURSE_LOADING}
+            compact
+          />
+        ) : error ? (
+          <StudentErrorState message={error} onRetry={onRetry} />
+        ) : courses.length === 0 ? (
+          <StudentEmptyState
+            icon="menu_book"
+            title={STUDENT_APPOINTMENT_MESSAGES.STEP_COURSE_EMPTY_TITLE}
+            description={STUDENT_APPOINTMENT_MESSAGES.STEP_COURSE_EMPTY_DESCRIPTION}
+            className="border-0 bg-surface px-4 py-8"
+          />
+        ) : (
+          <div
+            className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+            role="radiogroup"
+            aria-label={STUDENT_APPOINTMENT_MESSAGES.STEP_COURSE_TITLE}
+          >
+            {courses.map((course) => {
+              const selected = selectedCourseId === course.courseId;
+              return (
+                <button
+                  key={course.courseId}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => onSelect(course)}
+                  className={`flex min-w-0 flex-col items-start gap-1 rounded-xl border-2 p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim focus-visible:ring-offset-2 ${
+                    selected
+                      ? 'border-primary bg-surface-container'
+                      : 'border-outline-variant bg-surface hover:border-primary/60'
+                  }`}
+                >
+                  <span className="font-body-md text-body-md font-semibold text-primary">
+                    {course.courseCode}
+                  </span>
+                  <span className="font-body-md text-body-md text-on-surface">
+                    {course.courseName}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
+        <button
+          type="button"
+          className={`${STUDENT_UI.SECONDARY_BUTTON_CLASS} w-full sm:w-auto`}
+          onClick={onBack}
+        >
+          {STUDENT_APPOINTMENT_MESSAGES.BACK_TO_CATEGORY}
+        </button>
+        <button
+          type="button"
+          className={`${STUDENT_UI.PRIMARY_BUTTON_CLASS} w-full sm:w-auto`}
+          disabled={!canContinue}
+          title={
+            canContinue ? undefined : STUDENT_APPOINTMENT_MESSAGES.CONTINUE_COURSE_DISABLED
+          }
+          onClick={onContinue}
+        >
+          {STUDENT_APPOINTMENT_MESSAGES.CONTINUE}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function SlotStepPlaceholder({
   draft,
   onBack,
 }: {
@@ -199,10 +309,10 @@ function CourseStepPlaceholder({
   return (
     <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-6">
       <h2 className="font-headline-md text-headline-md text-primary">
-        {STUDENT_APPOINTMENT_MESSAGES.STEP_COURSE_TITLE}
+        {STUDENT_APPOINTMENT_MESSAGES.STEP_SLOT_TITLE}
       </h2>
       <p className="mt-2 font-body-md text-body-md text-on-surface-variant">
-        {STUDENT_APPOINTMENT_MESSAGES.STEP_COURSE_DESCRIPTION}
+        {STUDENT_APPOINTMENT_MESSAGES.STEP_SLOT_DESCRIPTION}
       </p>
       <dl className="mt-4 space-y-2 rounded-lg border border-outline-variant bg-surface p-4">
         <div className="flex flex-wrap justify-between gap-2">
@@ -210,9 +320,11 @@ function CourseStepPlaceholder({
           <dd className="font-body-md text-body-md text-on-surface">{draft.categoryName}</dd>
         </div>
         <div className="flex flex-wrap justify-between gap-2">
-          <dt className="font-label-sm text-label-sm text-on-surface-variant">Süre</dt>
+          <dt className="font-label-sm text-label-sm text-on-surface-variant">Ders</dt>
           <dd className="font-body-md text-body-md text-on-surface">
-            {STUDENT_APPOINTMENT_MESSAGES.STEP_CATEGORY_DURATION(draft.durationMinutes)}
+            {draft.courseId != null && draft.courseCode
+              ? `${draft.courseCode} — ${draft.courseName ?? ''}`
+              : '—'}
           </dd>
         </div>
       </dl>
@@ -222,7 +334,9 @@ function CourseStepPlaceholder({
           className={`${STUDENT_UI.SECONDARY_BUTTON_CLASS} w-full sm:w-auto`}
           onClick={onBack}
         >
-          {STUDENT_APPOINTMENT_MESSAGES.BACK_TO_CATEGORY}
+          {draft.requiresCourseSelection
+            ? STUDENT_APPOINTMENT_MESSAGES.BACK_TO_COURSE
+            : STUDENT_APPOINTMENT_MESSAGES.BACK_TO_CATEGORY}
         </button>
       </div>
     </section>
@@ -241,6 +355,9 @@ export default function StudentAppointmentCreatePage() {
   const [categories, setCategories] = useState<StudentAppointmentCategory[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
+  const [courses, setCourses] = useState<StudentAcademicianCourse[]>([]);
+  const [coursesLoading, setCoursesLoading] = useState(false);
+  const [coursesError, setCoursesError] = useState<string | null>(null);
   const [selectedDraft, setSelectedDraft] = useState<StudentAppointmentDraft | null>(null);
   const [activeStepIndex, setActiveStepIndex] = useState(STUDENT_APPOINTMENT_STEP_CATEGORY);
 
@@ -249,6 +366,16 @@ export default function StudentAppointmentCreatePage() {
     Number.isInteger(academicianId) && academicianId >= 1
       ? studentAcademicianProfilePath(academicianId)
       : ROUTES.STUDENT_ACADEMICIAN_SEARCH;
+
+  const persistDraft = useCallback(
+    (draft: StudentAppointmentDraft) => {
+      setSelectedDraft(draft);
+      if (Number.isInteger(academicianId) && academicianId >= 1) {
+        saveStudentAppointmentDraft(academicianId, draft);
+      }
+    },
+    [academicianId],
+  );
 
   const loadAcademician = useCallback(async () => {
     if (!Number.isInteger(academicianId) || academicianId < 1) {
@@ -264,8 +391,7 @@ export default function StudentAppointmentCreatePage() {
     setNotFound(false);
     try {
       setAcademician(await getStudentAcademicianDetail(academicianId));
-      const draft = loadStudentAppointmentDraft(academicianId);
-      setSelectedDraft(draft);
+      setSelectedDraft(loadStudentAppointmentDraft(academicianId));
     } catch (err) {
       const message = resolveStudentApiError(err, STUDENT_APPOINTMENT_MESSAGES.LOAD_ERROR, {
         notFoundMessage: STUDENT_APPOINTMENT_MESSAGES.NOT_FOUND,
@@ -305,6 +431,45 @@ export default function StudentAppointmentCreatePage() {
     }
   }, [toast]);
 
+  const loadCourses = useCallback(async () => {
+    if (!Number.isInteger(academicianId) || academicianId < 1) {
+      return;
+    }
+    setCoursesLoading(true);
+    setCoursesError(null);
+    try {
+      const data = await getStudentAcademicianCourses(academicianId);
+      setCourses(data);
+      setSelectedDraft((current) => {
+        if (!current?.courseId) {
+          return current;
+        }
+        const stillExists = data.some((item) => item.courseId === current.courseId);
+        if (stillExists) {
+          return current;
+        }
+        const cleared = {
+          ...current,
+          courseId: null,
+          courseCode: null,
+          courseName: null,
+        };
+        saveStudentAppointmentDraft(academicianId, cleared);
+        return cleared;
+      });
+    } catch (err) {
+      const message = resolveStudentApiError(
+        err,
+        STUDENT_APPOINTMENT_MESSAGES.STEP_COURSE_LOAD_ERROR,
+      );
+      setCourses([]);
+      setCoursesError(message);
+      toast.error(message);
+    } finally {
+      setCoursesLoading(false);
+    }
+  }, [academicianId, toast]);
+
   useEffect(() => {
     void loadAcademician();
   }, [loadAcademician]);
@@ -315,19 +480,81 @@ export default function StudentAppointmentCreatePage() {
     }
   }, [academician, loadCategories]);
 
-  const handleSelectCategory = (category: StudentAppointmentCategory) => {
-    const draft = toDraft(category);
-    setSelectedDraft(draft);
-    if (Number.isInteger(academicianId) && academicianId >= 1) {
-      saveStudentAppointmentDraft(academicianId, draft);
+  useEffect(() => {
+    if (
+      academician?.isAcceptingAppointments &&
+      activeStepIndex === STUDENT_APPOINTMENT_STEP_COURSE &&
+      selectedDraft?.requiresCourseSelection
+    ) {
+      void loadCourses();
     }
+  }, [academician, activeStepIndex, selectedDraft?.requiresCourseSelection, loadCourses]);
+
+  const skippedStepIndices = useMemo(() => {
+    if (
+      selectedDraft &&
+      !selectedDraft.requiresCourseSelection &&
+      activeStepIndex > STUDENT_APPOINTMENT_STEP_COURSE
+    ) {
+      return [STUDENT_APPOINTMENT_STEP_COURSE];
+    }
+    return [];
+  }, [selectedDraft, activeStepIndex]);
+
+  const handleSelectCategory = (category: StudentAppointmentCategory) => {
+    persistDraft(categoryToDraft(category));
   };
 
-  const handleContinue = () => {
+  const handleContinueFromCategory = () => {
     if (!selectedDraft) {
       return;
     }
-    setActiveStepIndex(STUDENT_APPOINTMENT_STEP_COURSE);
+    if (selectedDraft.requiresCourseSelection) {
+      const withClearedCourse: StudentAppointmentDraft = {
+        ...selectedDraft,
+        courseId: null,
+        courseCode: null,
+        courseName: null,
+      };
+      persistDraft(withClearedCourse);
+      setActiveStepIndex(STUDENT_APPOINTMENT_STEP_COURSE);
+      return;
+    }
+    const withoutCourse: StudentAppointmentDraft = {
+      ...selectedDraft,
+      courseId: null,
+      courseCode: null,
+      courseName: null,
+    };
+    persistDraft(withoutCourse);
+    setActiveStepIndex(STUDENT_APPOINTMENT_STEP_SLOT);
+  };
+
+  const handleSelectCourse = (course: StudentAcademicianCourse) => {
+    if (!selectedDraft) {
+      return;
+    }
+    persistDraft({
+      ...selectedDraft,
+      courseId: course.courseId,
+      courseCode: course.courseCode,
+      courseName: course.courseName,
+    });
+  };
+
+  const handleContinueFromCourse = () => {
+    if (!selectedDraft?.courseId) {
+      return;
+    }
+    setActiveStepIndex(STUDENT_APPOINTMENT_STEP_SLOT);
+  };
+
+  const handleBackFromSlot = () => {
+    if (selectedDraft?.requiresCourseSelection) {
+      setActiveStepIndex(STUDENT_APPOINTMENT_STEP_COURSE);
+      return;
+    }
+    setActiveStepIndex(STUDENT_APPOINTMENT_STEP_CATEGORY);
   };
 
   if (!user) {
@@ -435,11 +662,22 @@ export default function StudentAppointmentCreatePage() {
       </div>
 
       <AcademicianSummary academician={academician} />
-      <StudentAppointmentStepper activeStepIndex={activeStepIndex} />
+      <StudentAppointmentStepper
+        activeStepIndex={activeStepIndex}
+        skippedStepIndices={skippedStepIndices}
+      />
 
-      {activeStepIndex === STUDENT_APPOINTMENT_STEP_COURSE && selectedDraft ? (
-        <CourseStepPlaceholder
-          draft={selectedDraft}
+      {activeStepIndex === STUDENT_APPOINTMENT_STEP_SLOT && selectedDraft ? (
+        <SlotStepPlaceholder draft={selectedDraft} onBack={handleBackFromSlot} />
+      ) : activeStepIndex === STUDENT_APPOINTMENT_STEP_COURSE && selectedDraft ? (
+        <CourseStepPanel
+          courses={courses}
+          selectedCourseId={selectedDraft.courseId}
+          loading={coursesLoading}
+          error={coursesError}
+          onRetry={() => void loadCourses()}
+          onSelect={handleSelectCourse}
+          onContinue={handleContinueFromCourse}
           onBack={() => setActiveStepIndex(STUDENT_APPOINTMENT_STEP_CATEGORY)}
         />
       ) : (
@@ -450,7 +688,7 @@ export default function StudentAppointmentCreatePage() {
           error={categoriesError}
           onRetry={() => void loadCategories()}
           onSelect={handleSelectCategory}
-          onContinue={handleContinue}
+          onContinue={handleContinueFromCategory}
         />
       )}
     </div>

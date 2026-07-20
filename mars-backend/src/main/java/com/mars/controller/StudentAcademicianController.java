@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.PageResponseDto;
+import com.mars.dto.StudentAcademicianCourseDto;
 import com.mars.dto.StudentAcademicianDetailResponseDto;
 import com.mars.dto.StudentAcademicianResponseDto;
 import com.mars.service.StudentAcademicianService;
@@ -59,5 +60,11 @@ public class StudentAcademicianController {
     public ResponseEntity<List<AvailableSlotResponseDto>> getAcademicianAvailability(
             @PathVariable("id") Integer id) {
         return ResponseEntity.ok(studentAcademicianService.getAcademicianAvailability(id));
+    }
+
+    @GetMapping("/{id}/courses")
+    public ResponseEntity<List<StudentAcademicianCourseDto>> listAcademicianCourses(
+            @PathVariable("id") Integer id) {
+        return ResponseEntity.ok(studentAcademicianService.listAcademicianCourses(id));
     }
 }

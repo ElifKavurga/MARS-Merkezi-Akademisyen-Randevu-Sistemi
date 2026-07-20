@@ -21,7 +21,12 @@ export function loadStudentAppointmentDraft(
     ) {
       return null;
     }
-    return parsed;
+    return {
+      ...parsed,
+      courseId: typeof parsed.courseId === 'number' ? parsed.courseId : null,
+      courseCode: typeof parsed.courseCode === 'string' ? parsed.courseCode : null,
+      courseName: typeof parsed.courseName === 'string' ? parsed.courseName : null,
+    };
   } catch {
     return null;
   }

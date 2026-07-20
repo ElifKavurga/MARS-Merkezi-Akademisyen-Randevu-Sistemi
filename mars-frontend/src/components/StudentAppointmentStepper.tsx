@@ -6,11 +6,15 @@ import {
 
 type StudentAppointmentStepperProps = {
   activeStepIndex?: number;
+  /** Tamamlanmış / atlanmış adımlar (ör. ders gerektirmeyen kategoride Ders). */
+  skippedStepIndices?: readonly number[];
 };
 
 export default function StudentAppointmentStepper({
   activeStepIndex = STUDENT_APPOINTMENT_ACTIVE_STEP_INDEX,
+  skippedStepIndices = [],
 }: StudentAppointmentStepperProps) {
+  const skipped = new Set(skippedStepIndices);
   const progressPercent =
     STUDENT_APPOINTMENT_STEPS.length <= 1
       ? 0
@@ -31,7 +35,8 @@ export default function StudentAppointmentStepper({
         <ol className="relative flex items-start justify-between gap-1">
           {STUDENT_APPOINTMENT_STEPS.map((step, index) => {
             const isActive = index === activeStepIndex;
-            const isCompleted = index < activeStepIndex;
+            const isSkipped = skipped.has(index) && index < activeStepIndex;
+            const isCompleted = index < activeStepIndex || isSkipped;
             const isLocked = index > activeStepIndex;
 
             return (
@@ -46,9 +51,21 @@ export default function StudentAppointmentStepper({
                       ? 'bg-primary text-on-primary ring-4 ring-primary-fixed-dim/40'
                       : 'border border-outline-variant bg-surface-container-lowest text-on-surface-variant'
                   }`}
-                  title={isLocked ? STUDENT_APPOINTMENT_MESSAGES.STEP_LOCKED : undefined}
+                  title={
+                    isSkipped
+                      ? STUDENT_APPOINTMENT_MESSAGES.STEP_COURSE_SKIPPED
+                      : isLocked
+                        ? STUDENT_APPOINTMENT_MESSAGES.STEP_LOCKED
+                        : undefined
+                  }
                 >
-                  {index + 1}
+                  {isCompleted && !isActive ? (
+                    <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                      {isSkipped ? 'remove' : 'check'}
+                    </span>
+                  ) : (
+                    index + 1
+                  )}
                 </span>
                 <span
                   className={`max-w-full truncate px-1 font-label-sm text-label-sm ${
@@ -61,6 +78,11 @@ export default function StudentAppointmentStepper({
                 >
                   {step.label}
                 </span>
+                {isSkipped ? (
+                  <span className="font-label-sm text-[11px] text-on-surface-variant/70">
+                    {STUDENT_APPOINTMENT_MESSAGES.STEP_COURSE_SKIPPED}
+                  </span>
+                ) : null}
               </li>
             );
           })}

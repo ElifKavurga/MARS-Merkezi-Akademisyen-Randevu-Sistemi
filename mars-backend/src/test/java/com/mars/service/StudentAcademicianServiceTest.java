@@ -204,6 +204,41 @@ class StudentAcademicianServiceTest {
         verify(availabilitySlotService).getAvailableSlotsForStaff(7);
     }
 
+    @Test
+    void listAcademicianCourses_activeAcademician_returnsMappedCourses() {
+        User academician = activeAcademician(7, true);
+        Course course = new Course();
+        course.setCourseId(1);
+        course.setCourseCode("CENG101");
+        course.setCourseName("Programlamaya Giriş");
+        course.setAcademicTerm("2025-2026 Güz");
+
+        StudentAcademicianCourseDto courseDto = StudentAcademicianCourseDto.builder()
+                .courseId(1)
+                .courseCode("CENG101")
+                .courseName("Programlamaya Giriş")
+                .academicTerm("2025-2026 Güz")
+                .build();
+
+        when(userRepository.findActiveAcademicianById(eq(7), anyList())).thenReturn(Optional.of(academician));
+        when(courseRepository.findByOwnerAcademician_UserIdAndIsActiveTrueOrderByCourseNameAsc(7))
+                .thenReturn(List.of(course));
+        when(userMapper.toStudentAcademicianCourse(course)).thenReturn(courseDto);
+
+        List<StudentAcademicianCourseDto> result = studentAcademicianService.listAcademicianCourses(7);
+
+        assertThat(result).containsExactly(courseDto);
+    }
+
+    @Test
+    void listAcademicianCourses_notFound_throwsResourceNotFound() {
+        when(userRepository.findActiveAcademicianById(eq(99), anyList())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> studentAcademicianService.listAcademicianCourses(99))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(StudentAcademicianMessages.ACADEMICIAN_NOT_FOUND);
+    }
+
     private static User activeAcademician(int userId, boolean accepting) {
         Role role = new Role();
         role.setRoleId(1);

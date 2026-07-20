@@ -111,6 +111,16 @@ public class StudentAcademicianService {
         return availabilitySlotService.getAvailableSlotsForStaff(userId);
     }
 
+    @Transactional(readOnly = true)
+    public List<StudentAcademicianCourseDto> listAcademicianCourses(Integer userId) {
+        requireActiveAcademician(userId);
+        return courseRepository
+                .findByOwnerAcademician_UserIdAndIsActiveTrueOrderByCourseNameAsc(userId)
+                .stream()
+                .map(userMapper::toStudentAcademicianCourse)
+                .toList();
+    }
+
     private User requireActiveAcademician(Integer userId) {
         if (userId == null || userId < 1) {
             throw new BadRequestException(StudentAcademicianMessages.INVALID_ACADEMICIAN_ID);

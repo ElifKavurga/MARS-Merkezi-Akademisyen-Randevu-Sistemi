@@ -213,6 +213,32 @@ class StudentAcademicianControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "STUDENT")
+    void listAcademicianCourses_asStudent_returnsCourses() throws Exception {
+        when(studentAcademicianService.listAcademicianCourses(7))
+                .thenReturn(List.of(
+                        StudentAcademicianCourseDto.builder()
+                                .courseId(1)
+                                .courseCode("CENG101")
+                                .courseName("Programlamaya Giriş")
+                                .academicTerm("2025-2026 Güz")
+                                .build()));
+
+        mockMvc.perform(get("/students/academicians/7/courses"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].courseId").value(1))
+                .andExpect(jsonPath("$[0].courseCode").value("CENG101"))
+                .andExpect(jsonPath("$[0].courseName").value("Programlamaya Giriş"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ACADEMICIAN")
+    void listAcademicianCourses_asAcademician_returnsForbidden() throws Exception {
+        mockMvc.perform(get("/students/academicians/7/courses"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     @WithMockUser(roles = "ACADEMICIAN")
     void getAcademicianAvailability_asAcademician_returnsForbidden() throws Exception {
         mockMvc.perform(get("/students/academicians/7/availability"))

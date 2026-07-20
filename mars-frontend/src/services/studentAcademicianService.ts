@@ -1,6 +1,7 @@
 import { apiClient } from './apiClient';
 import type { AvailableSlot } from '../types/appointment';
 import type {
+  StudentAcademicianCourse,
   StudentAcademicianDetail,
   StudentAcademicianPage,
   StudentAcademicianSearchParams,
@@ -42,6 +43,15 @@ export async function getStudentAcademicianAvailability(
 ): Promise<AvailableSlot[]> {
   const { data } = await apiClient.get<AvailableSlot[]>(
     `/students/academicians/${userId}/availability`,
+  );
+  return data;
+}
+
+export async function getStudentAcademicianCourses(
+  userId: number,
+): Promise<StudentAcademicianCourse[]> {
+  const { data } = await apiClient.get<StudentAcademicianCourse[]>(
+    `/students/academicians/${userId}/courses`,
   );
   return data;
 }
