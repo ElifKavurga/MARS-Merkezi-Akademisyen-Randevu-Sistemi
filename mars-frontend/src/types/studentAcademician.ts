@@ -8,6 +8,27 @@ export type StudentAcademician = {
   profilePhotoUrl: string | null;
 };
 
+export type StudentAcademicianCourse = {
+  courseId: number;
+  courseCode: string;
+  courseName: string;
+  academicTerm: string;
+};
+
+export type StudentAcademicianDetail = {
+  userId: number;
+  fullName: string;
+  academicTitle: string | null;
+  departmentName: string;
+  institutionalEmail: string;
+  isAcceptingAppointments: boolean;
+  profilePhotoUrl: string | null;
+  officeName: string | null;
+  officeLocation: string | null;
+  about: string | null;
+  courses: StudentAcademicianCourse[];
+};
+
 export type StudentAcademicianPage = {
   content: StudentAcademician[];
   page: number;

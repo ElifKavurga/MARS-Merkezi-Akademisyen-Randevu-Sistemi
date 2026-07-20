@@ -18,6 +18,8 @@ export type { RoleOption } from './role';
 export type { DepartmentOption } from './department';
 export type {
   StudentAcademician,
+  StudentAcademicianCourse,
+  StudentAcademicianDetail,
   StudentAcademicianPage,
   StudentAcademicianSearchParams,
 } from './studentAcademician';

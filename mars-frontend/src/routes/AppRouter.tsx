@@ -30,6 +30,7 @@ import AssistantCalendarPage from '../pages/AssistantCalendarPage';
 import ProfilePage from '../pages/ProfilePage';
 import StudentDashboard from '../pages/StudentDashboard';
 import StudentAcademicianSearchPage from '../pages/StudentAcademicianSearchPage';
+import StudentAcademicianProfilePage from '../pages/StudentAcademicianProfilePage';
 import StudentAppointmentCreatePage from '../pages/StudentAppointmentCreatePage';
 import NotFoundPage from '../pages/NotFoundPage';
 import { ROUTES } from '../constants/routes';
@@ -57,6 +58,10 @@ export default function AppRouter() {
             <Route
               path={ROUTES.STUDENT_ACADEMICIAN_SEARCH}
               element={<StudentAcademicianSearchPage />}
+            />
+            <Route
+              path={ROUTES.STUDENT_ACADEMICIAN_PROFILE}
+              element={<StudentAcademicianProfilePage />}
             />
             <Route
               path={ROUTES.STUDENT_APPOINTMENT_CREATE}

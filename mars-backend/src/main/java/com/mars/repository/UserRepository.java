@@ -90,4 +90,16 @@ public interface UserRepository extends JpaRepository<User, Integer> {
             ORDER BY u.academicTitle ASC
             """)
     List<String> findDistinctAcademicTitles(@Param("roleNames") Collection<String> roleNames);
+
+    @Query("""
+            SELECT u FROM User u
+            JOIN FETCH u.role r
+            JOIN FETCH u.department
+            WHERE u.userId = :userId
+              AND u.isActive = true
+              AND r.roleName IN :roleNames
+            """)
+    Optional<User> findActiveAcademicianById(
+            @Param("userId") Integer userId,
+            @Param("roleNames") Collection<String> roleNames);
 }

@@ -4,11 +4,13 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mars.dto.PageResponseDto;
+import com.mars.dto.StudentAcademicianDetailResponseDto;
 import com.mars.dto.StudentAcademicianResponseDto;
 import com.mars.service.StudentAcademicianService;
 
@@ -44,5 +46,11 @@ public class StudentAcademicianController {
     @GetMapping("/titles")
     public ResponseEntity<List<String>> listAcademicTitles() {
         return ResponseEntity.ok(studentAcademicianService.listAcademicTitles());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<StudentAcademicianDetailResponseDto> getAcademicianDetail(
+            @PathVariable("id") Integer id) {
+        return ResponseEntity.ok(studentAcademicianService.getAcademicianDetail(id));
     }
 }

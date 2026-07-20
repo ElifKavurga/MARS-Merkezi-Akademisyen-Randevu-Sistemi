@@ -1,5 +1,6 @@
 import { apiClient } from './apiClient';
 import type {
+  StudentAcademicianDetail,
   StudentAcademicianPage,
   StudentAcademicianSearchParams,
 } from '../types/studentAcademician';
@@ -23,5 +24,14 @@ export async function searchStudentAcademicians(
 
 export async function getStudentAcademicianTitles(): Promise<string[]> {
   const { data } = await apiClient.get<string[]>('/students/academicians/titles');
+  return data;
+}
+
+export async function getStudentAcademicianDetail(
+  userId: number,
+): Promise<StudentAcademicianDetail> {
+  const { data } = await apiClient.get<StudentAcademicianDetail>(
+    `/students/academicians/${userId}`,
+  );
   return data;
 }

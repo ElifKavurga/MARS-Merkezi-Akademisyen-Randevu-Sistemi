@@ -19,4 +19,5 @@ export { default as AssistantAppointmentsPage } from './AssistantAppointmentsPag
 export { default as AssistantCalendarPage } from './AssistantCalendarPage';
 export { default as StudentDashboard } from './StudentDashboard';
 export { default as StudentAcademicianSearchPage } from './StudentAcademicianSearchPage';
+export { default as StudentAcademicianProfilePage } from './StudentAcademicianProfilePage';
 export { default as NotFoundPage } from './NotFoundPage';

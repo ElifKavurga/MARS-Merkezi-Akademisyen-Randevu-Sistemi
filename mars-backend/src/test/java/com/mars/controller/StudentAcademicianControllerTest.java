@@ -23,7 +23,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.mars.config.CorsConfig;
 import com.mars.dto.PageResponseDto;
+import com.mars.dto.StudentAcademicianCourseDto;
+import com.mars.dto.StudentAcademicianDetailResponseDto;
 import com.mars.dto.StudentAcademicianResponseDto;
+import com.mars.exception.ResourceNotFoundException;
 import com.mars.exception.handler.GlobalExceptionHandler;
 import com.mars.security.JwtAuthenticationFilter;
 import com.mars.security.SecurityConfig;
@@ -144,6 +147,55 @@ class StudentAcademicianControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0]").value("Doç. Dr."))
                 .andExpect(jsonPath("$[1]").value("Prof. Dr."));
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    void getAcademicianDetail_asStudent_returnsDetail() throws Exception {
+        when(studentAcademicianService.getAcademicianDetail(7))
+                .thenReturn(StudentAcademicianDetailResponseDto.builder()
+                        .userId(7)
+                        .fullName("Ayşe Yılmaz")
+                        .academicTitle("Doç. Dr.")
+                        .departmentName("Bilgisayar Mühendisliği")
+                        .institutionalEmail("ayse.yilmaz@mars.edu.tr")
+                        .isAcceptingAppointments(true)
+                        .profilePhotoUrl(null)
+                        .officeName(null)
+                        .officeLocation(null)
+                        .about(null)
+                        .courses(List.of(
+                                StudentAcademicianCourseDto.builder()
+                                        .courseId(1)
+                                        .courseCode("CENG101")
+                                        .courseName("Programlamaya Giriş")
+                                        .academicTerm("2025-2026 Güz")
+                                        .build()))
+                        .build());
+
+        mockMvc.perform(get("/students/academicians/7"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.userId").value(7))
+                .andExpect(jsonPath("$.fullName").value("Ayşe Yılmaz"))
+                .andExpect(jsonPath("$.isAcceptingAppointments").value(true))
+                .andExpect(jsonPath("$.courses[0].courseCode").value("CENG101"));
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    void getAcademicianDetail_notFound_returnsNotFound() throws Exception {
+        when(studentAcademicianService.getAcademicianDetail(99))
+                .thenThrow(new ResourceNotFoundException("Akademisyen bulunamadı."));
+
+        mockMvc.perform(get("/students/academicians/99"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(roles = "ACADEMICIAN")
+    void getAcademicianDetail_asAcademician_returnsForbidden() throws Exception {
+        mockMvc.perform(get("/students/academicians/7"))
+                .andExpect(status().isForbidden());
     }
 
     @Test

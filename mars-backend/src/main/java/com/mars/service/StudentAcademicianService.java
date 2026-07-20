@@ -11,11 +11,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mars.dto.PageResponseDto;
+import com.mars.dto.StudentAcademicianCourseDto;
+import com.mars.dto.StudentAcademicianDetailResponseDto;
 import com.mars.dto.StudentAcademicianResponseDto;
 import com.mars.entity.User;
 import com.mars.enums.RoleType;
 import com.mars.exception.BadRequestException;
+import com.mars.exception.ResourceNotFoundException;
 import com.mars.mapper.UserMapper;
+import com.mars.repository.CourseRepository;
 import com.mars.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -33,6 +37,7 @@ public class StudentAcademicianService {
             RoleType.HOD.name());
 
     private final UserRepository userRepository;
+    private final CourseRepository courseRepository;
     private final UserMapper userMapper;
 
     @Transactional(readOnly = true)
@@ -82,6 +87,25 @@ public class StudentAcademicianService {
     @Transactional(readOnly = true)
     public List<String> listAcademicTitles() {
         return userRepository.findDistinctAcademicTitles(ACADEMICIAN_ROLE_NAMES);
+    }
+
+    @Transactional(readOnly = true)
+    public StudentAcademicianDetailResponseDto getAcademicianDetail(Integer userId) {
+        if (userId == null || userId < 1) {
+            throw new BadRequestException("Geçerli bir akademisyen kimliği gereklidir.");
+        }
+
+        User academician = userRepository
+                .findActiveAcademicianById(userId, ACADEMICIAN_ROLE_NAMES)
+                .orElseThrow(() -> new ResourceNotFoundException("Akademisyen bulunamadı."));
+
+        List<StudentAcademicianCourseDto> courses = courseRepository
+                .findByOwnerAcademician_UserIdAndIsActiveTrueOrderByCourseNameAsc(userId)
+                .stream()
+                .map(userMapper::toStudentAcademicianCourse)
+                .toList();
+
+        return userMapper.toStudentAcademicianDetail(academician, courses);
     }
 
     private static Sort resolveSort(String sort) {

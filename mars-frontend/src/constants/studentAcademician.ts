@@ -10,6 +10,8 @@ export const STUDENT_ACADEMICIAN_MESSAGES = {
   ACCEPTING_INACTIVE: 'Randevu kabul etmiyor',
   STATUS_ACTIVE: 'Aktif',
   STATUS_INACTIVE: 'Pasif',
+  STATUS_ACCEPTING: 'Randevu Kabul Ediyor',
+  STATUS_NOT_ACCEPTING: 'Yeni Randevu Kabul Etmiyor',
   SORT_LABEL: 'Sırala',
   SORT_NAME_ASC: "Ada göre (A-Z)",
   SORT_NAME_DESC: "Ada göre (Z-A)",
@@ -26,6 +28,22 @@ export const STUDENT_ACADEMICIAN_MESSAGES = {
   NEXT_PAGE: 'Sonraki',
   PAGE_OF: (page: number, totalPages: number) =>
     `Sayfa ${page} / ${Math.max(totalPages, 1)}`,
+  PROFILE_LOADING: 'Akademisyen profili yükleniyor...',
+  PROFILE_NOT_FOUND: 'Akademisyen bulunamadı',
+  PROFILE_NOT_FOUND_DESCRIPTION:
+    'Aradığınız akademisyen bulunamadı veya artık listede yer almıyor.',
+  PROFILE_LOAD_ERROR: 'Akademisyen profili yüklenirken bir hata oluştu.',
+  BACK_TO_SEARCH: 'Aramaya Dön',
+  COURSES_TITLE: 'Verilen Dersler',
+  COURSES_EMPTY: 'Bu akademisyene ait aktif ders bulunmuyor.',
+  OFFICE_TITLE: 'Ofis Bilgileri',
+  OFFICE_NAME: 'Ofis Adı',
+  OFFICE_LOCATION: 'Ofis Konumu',
+  OFFICE_EMPTY: 'Ofis bilgisi henüz tanımlanmamış.',
+  ABOUT_TITLE: 'Hakkında',
+  ABOUT_EMPTY: 'Hakkında bilgisi henüz eklenmemiş.',
+  BOOK_APPOINTMENT: 'Randevu Al',
+  BOOK_APPOINTMENT_DISABLED: 'Bu akademisyen şu an yeni randevu kabul etmiyor.',
 } as const;
 
 /** Sprint 22 randevu oluşturma: minimum rezervasyon süresi (dakika). */
