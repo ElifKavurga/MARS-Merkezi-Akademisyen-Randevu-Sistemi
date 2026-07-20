@@ -44,7 +44,6 @@ export const STUDENT_ACADEMICIAN_MESSAGES = {
   ABOUT_EMPTY: 'Hakkında bilgisi henüz eklenmemiş.',
   BOOK_APPOINTMENT: 'Randevu Al',
   BOOK_APPOINTMENT_DISABLED: 'Bu akademisyen şu an yeni randevu kabul etmiyor.',
-  BOOK_APPOINTMENT_UNAVAILABLE: 'Randevu oluşturma henüz kullanıma açılmadı.',
   TITLES_LOAD_ERROR: 'Akademik ünvan listesi yüklenemedi. Diğer filtrelerle aramaya devam edebilirsiniz.',
   SEARCH_LABEL: 'Ad, soyad veya bölüm ara',
   DEPARTMENT_FILTER_LABEL: 'Bölüm filtresi',

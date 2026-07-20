@@ -28,7 +28,7 @@ export const ROUTES = {
   ASSISTANT_CALENDAR: '/assistant/calendar',
   ASSISTANT_PROFILE: '/assistant/profile',
   STUDENT: '/ogrenci',
-  STUDENT_APPOINTMENT_CREATE: '/ogrenci/randevu-olustur',
+  STUDENT_APPOINTMENT_CREATE: '/ogrenci/randevu-olustur/:academicianId',
   STUDENT_ACADEMICIAN_SEARCH: '/ogrenci/akademisyen-ara',
   STUDENT_ACADEMICIAN_PROFILE: '/ogrenci/akademisyen/:userId',
   STUDENT_PROFILE: '/ogrenci/profil',
@@ -40,6 +40,10 @@ export function academicianCourseDetailPath(courseId: number | string): string {
 
 export function studentAcademicianProfilePath(userId: number | string): string {
   return `/ogrenci/akademisyen/${userId}`;
+}
+
+export function studentAppointmentCreatePath(academicianId: number | string): string {
+  return `/ogrenci/randevu-olustur/${academicianId}`;
 }
 
 export function academicianDelegationHistoryPath(status?: string): string {

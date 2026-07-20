@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import StudentAcceptingBadge from '../components/StudentAcceptingBadge';
 import StudentBackLink from '../components/StudentBackLink';
 import StudentBreadcrumb from '../components/StudentBreadcrumb';
@@ -13,7 +13,7 @@ import {
   MINIMUM_BOOKING_NOTICE_MINUTES,
   STUDENT_ACADEMICIAN_MESSAGES,
 } from '../constants/studentAcademician';
-import { ROUTES } from '../constants/routes';
+import { studentAppointmentCreatePath, ROUTES } from '../constants/routes';
 import { STUDENT_UI } from '../constants/studentUi';
 import { useToast } from '../hooks/useToast';
 import {
@@ -267,22 +267,31 @@ export default function StudentAcademicianProfilePage() {
             </div>
 
             <div className="mt-6">
-              <button
-                type="button"
-                disabled
-                aria-disabled="true"
-                title={
-                  accepting
-                    ? STUDENT_ACADEMICIAN_MESSAGES.BOOK_APPOINTMENT_UNAVAILABLE
-                    : STUDENT_ACADEMICIAN_MESSAGES.BOOK_APPOINTMENT_DISABLED
-                }
-                className={`${STUDENT_UI.PRIMARY_BUTTON_CLASS} w-full sm:w-auto`}
-              >
-                <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
-                  event_available
-                </span>
-                {STUDENT_ACADEMICIAN_MESSAGES.BOOK_APPOINTMENT}
-              </button>
+              {accepting ? (
+                <Link
+                  to={studentAppointmentCreatePath(profile.userId)}
+                  className={`${STUDENT_UI.PRIMARY_BUTTON_CLASS} w-full sm:w-auto`}
+                  style={{ textDecoration: 'none' }}
+                >
+                  <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                    event_available
+                  </span>
+                  {STUDENT_ACADEMICIAN_MESSAGES.BOOK_APPOINTMENT}
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  aria-disabled="true"
+                  title={STUDENT_ACADEMICIAN_MESSAGES.BOOK_APPOINTMENT_DISABLED}
+                  className={`${STUDENT_UI.PRIMARY_BUTTON_CLASS} w-full sm:w-auto`}
+                >
+                  <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                    event_available
+                  </span>
+                  {STUDENT_ACADEMICIAN_MESSAGES.BOOK_APPOINTMENT}
+                </button>
+              )}
             </div>
           </div>
         </div>

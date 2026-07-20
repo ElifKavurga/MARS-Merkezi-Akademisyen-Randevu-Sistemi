@@ -1,204 +1,224 @@
 import { useCallback, useEffect, useState } from 'react';
-import { isAxiosError } from 'axios';
-import AdminActionButton from '../components/AdminActionButton';
-import AppointmentCreateModal from '../components/AppointmentCreateModal';
-import Loading from '../components/Loading';
-import { APPOINTMENT_MESSAGES, getMeetingTypeLabel } from '../constants/appointment';
-import { FORM_SELECT_CLASS } from '../constants/ui';
-import { useToast } from '../hooks/useToast';
+import { useParams } from 'react-router-dom';
+import StudentAppointmentStepper from '../components/StudentAppointmentStepper';
+import StudentBackLink from '../components/StudentBackLink';
+import StudentBreadcrumb from '../components/StudentBreadcrumb';
+import StudentEmptyState from '../components/StudentEmptyState';
+import StudentErrorState from '../components/StudentErrorState';
+import StudentLoadingState from '../components/StudentLoadingState';
+import StudentPageHeader from '../components/StudentPageHeader';
+import UserAvatar from '../components/UserAvatar';
 import {
-  getAppointmentCategories,
-  getAvailableSlots,
-} from '../services/appointmentService';
-import { getUsersByRole } from '../services/userService';
-import type { AvailableSlot } from '../types/appointment';
-import type { AppointmentCategory } from '../types/category';
-import type { AssistantUserOption } from '../types/course';
+  STUDENT_APPOINTMENT_ACTIVE_STEP_INDEX,
+  STUDENT_APPOINTMENT_MESSAGES,
+} from '../constants/studentAppointment';
+import { studentAcademicianProfilePath, ROUTES } from '../constants/routes';
+import { STUDENT_UI } from '../constants/studentUi';
+import { useAuth } from '../hooks/useAuth';
+import { useToast } from '../hooks/useToast';
+import { getStudentAcademicianDetail } from '../services/studentAcademicianService';
+import type { StudentAcademicianDetail } from '../types/studentAcademician';
+import {
+  isStudentApiNotFound,
+  resolveStudentApiError,
+} from '../utils/studentApiError';
 
-export default function StudentAppointmentCreatePage() {
-  const toast = useToast();
-  const [staffList, setStaffList] = useState<AssistantUserOption[]>([]);
-  const [staffId, setStaffId] = useState('');
-  const [slots, setSlots] = useState<AvailableSlot[]>([]);
-  const [categories, setCategories] = useState<AppointmentCategory[]>([]);
-  const [loadingStaff, setLoadingStaff] = useState(true);
-  const [loadingSlots, setLoadingSlots] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedSlot, setSelectedSlot] = useState<AvailableSlot | null>(null);
-
-  useEffect(() => {
-    const load = async () => {
-      setLoadingStaff(true);
-      setError(null);
-      try {
-        const [academicians, hods, assistants, cats] = await Promise.all([
-          getUsersByRole('ACADEMICIAN'),
-          getUsersByRole('HOD'),
-          getUsersByRole('ASSISTANT'),
-          getAppointmentCategories(),
-        ]);
-        const merged = [...academicians, ...hods, ...assistants].sort((a, b) =>
-          a.fullName.localeCompare(b.fullName, 'tr'),
-        );
-        setStaffList(merged);
-        setCategories(cats);
-      } catch (err) {
-        if (isAxiosError(err) && (err.response?.status === 401 || err.response?.status === 403)) {
-          setError(APPOINTMENT_MESSAGES.ACCESS_DENIED);
-          toast.error(APPOINTMENT_MESSAGES.ACCESS_DENIED);
-        } else {
-          setError(APPOINTMENT_MESSAGES.LOAD_ERROR);
-          toast.error(APPOINTMENT_MESSAGES.LOAD_ERROR);
-        }
-      } finally {
-        setLoadingStaff(false);
-      }
-    };
-    void load();
-  }, [toast]);
-
-  const loadSlots = useCallback(
-    async (selectedStaffId: string) => {
-      if (!selectedStaffId) {
-        setSlots([]);
-        return;
-      }
-      setLoadingSlots(true);
-      setError(null);
-      try {
-        const data = await getAvailableSlots(Number(selectedStaffId));
-        setSlots(data);
-      } catch {
-        setSlots([]);
-        setError(APPOINTMENT_MESSAGES.LOAD_ERROR);
-        toast.error(APPOINTMENT_MESSAGES.LOAD_ERROR);
-      } finally {
-        setLoadingSlots(false);
-      }
-    },
-    [toast],
-  );
-
-  useEffect(() => {
-    void loadSlots(staffId);
-  }, [staffId, loadSlots]);
-
+function AcademicianSummary({ academician }: { academician: StudentAcademicianDetail }) {
   return (
-    <div className="flex flex-col gap-6 p-4 sm:p-6 lg:p-8 max-w-[1100px] mx-auto w-full">
-      <div>
-        <h1 className="font-headline-lg text-headline-lg text-on-background">
-          {APPOINTMENT_MESSAGES.TITLE}
-        </h1>
-        <p className="font-body-md text-body-md text-on-surface-variant mt-1">
-          {APPOINTMENT_MESSAGES.SUBTITLE}
-        </p>
-      </div>
-
-      <div className="space-y-1.5 max-w-md">
-        <label htmlFor="staff-select" className="block font-label-md text-label-md text-on-surface-variant">
-          Akademisyen
-        </label>
-        <select
-          id="staff-select"
-          className={FORM_SELECT_CLASS}
-          value={staffId}
-          disabled={loadingStaff}
-          onChange={(event) => setStaffId(event.target.value)}
-        >
-          <option value="">{APPOINTMENT_MESSAGES.SELECT_STAFF}</option>
-          {staffList.map((staff) => (
-            <option key={staff.userId} value={staff.userId}>
-              {staff.fullName}
-              {staff.departmentName ? ` — ${staff.departmentName}` : ''}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="rounded-xl border border-outline-variant bg-surface overflow-hidden">
-        {loadingStaff || loadingSlots ? (
-          <div className="flex justify-center py-16">
-            <Loading label="Uygun ofis saatleri yükleniyor..." />
-          </div>
-        ) : error ? (
-          <div className="px-6 py-12 text-center">
-            <p className="font-body-md text-body-md text-error" role="alert">
-              {error}
-            </p>
-          </div>
-        ) : !staffId ? (
-          <div className="px-6 py-16 text-center">
-            <p className="font-body-md text-body-md text-on-surface-variant">
-              {APPOINTMENT_MESSAGES.SELECT_STAFF}
-            </p>
-          </div>
-        ) : slots.length === 0 ? (
-          <div className="px-6 py-16 text-center">
-            <p className="font-body-md text-body-md text-on-surface-variant">
-              {APPOINTMENT_MESSAGES.EMPTY_SLOTS}
-            </p>
-          </div>
+    <section
+      className="mb-6 rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-6"
+      aria-label="Seçilen akademisyen"
+    >
+      <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+        {academician.profilePhotoUrl ? (
+          <img
+            src={academician.profilePhotoUrl}
+            alt=""
+            className="h-20 w-20 shrink-0 rounded-full border-2 border-primary-container object-cover"
+          />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] border-collapse">
-              <thead>
-                <tr className="border-b border-outline-variant bg-surface-container/40">
-                  <th className="font-label-md text-label-md text-on-surface-variant py-4 px-6 text-left">
-                    Tarih
-                  </th>
-                  <th className="font-label-md text-label-md text-on-surface-variant py-4 px-6 text-left">
-                    Saat
-                  </th>
-                  <th className="font-label-md text-label-md text-on-surface-variant py-4 px-6 text-left">
-                    Görüşme Tipi
-                  </th>
-                  <th className="font-label-md text-label-md text-on-surface-variant py-4 px-6 text-right">
-                    İşlem
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {slots.map((slot) => (
-                  <tr
-                    key={slot.slotId}
-                    className="border-b border-outline-variant/40 hover:bg-surface-container/30 transition-colors"
-                  >
-                    <td className="py-4 px-6 font-body-md text-body-md text-on-background">
-                      {slot.slotDate}
-                    </td>
-                    <td className="py-4 px-6 font-body-md text-body-md text-on-background">
-                      {slot.startTime.slice(0, 5)} – {slot.endTime.slice(0, 5)}
-                    </td>
-                    <td className="py-4 px-6 font-body-md text-body-md text-on-background">
-                      {getMeetingTypeLabel(slot.meetingType)}
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <AdminActionButton
-                        variant="primary"
-                        icon="event_available"
-                        onClick={() => setSelectedSlot(slot)}
-                      >
-                        {APPOINTMENT_MESSAGES.REQUEST_BUTTON}
-                      </AdminActionButton>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-2 border-primary-container bg-surface-container">
+            <UserAvatar fullName={academician.fullName} size="lg" />
           </div>
         )}
+        <div className="min-w-0 flex-1 text-center sm:text-left">
+          <h2 className="font-headline-md text-headline-md text-on-background">
+            {academician.fullName}
+          </h2>
+          <p className="mt-1 font-body-md text-body-md text-on-surface-variant">
+            {academician.academicTitle?.trim()
+              ? academician.academicTitle
+              : STUDENT_APPOINTMENT_MESSAGES.NO_TITLE}
+          </p>
+          <p className="mt-1 font-body-md text-body-md text-on-surface-variant">
+            {academician.departmentName}
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export default function StudentAppointmentCreatePage() {
+  const { academicianId: academicianIdParam } = useParams<{ academicianId: string }>();
+  const { user } = useAuth();
+  const toast = useToast();
+  const [academician, setAcademician] = useState<StudentAcademicianDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
+
+  const academicianId = Number(academicianIdParam);
+  const profilePath = Number.isInteger(academicianId) && academicianId >= 1
+    ? studentAcademicianProfilePath(academicianId)
+    : ROUTES.STUDENT_ACADEMICIAN_SEARCH;
+
+  const loadAcademician = useCallback(async () => {
+    if (!Number.isInteger(academicianId) || academicianId < 1) {
+      setAcademician(null);
+      setNotFound(true);
+      setError(STUDENT_APPOINTMENT_MESSAGES.INVALID_ID);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setNotFound(false);
+    try {
+      setAcademician(await getStudentAcademicianDetail(academicianId));
+    } catch (err) {
+      const message = resolveStudentApiError(err, STUDENT_APPOINTMENT_MESSAGES.LOAD_ERROR, {
+        notFoundMessage: STUDENT_APPOINTMENT_MESSAGES.NOT_FOUND,
+      });
+      setAcademician(null);
+      setNotFound(isStudentApiNotFound(err));
+      setError(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  }, [academicianId, toast]);
+
+  useEffect(() => {
+    void loadAcademician();
+  }, [loadAcademician]);
+
+  if (!user) {
+    return null;
+  }
+
+  const breadcrumb = (
+    <StudentBreadcrumb
+      items={[
+        { label: STUDENT_UI.BREADCRUMB_HOME, to: ROUTES.STUDENT },
+        { label: STUDENT_UI.BREADCRUMB_SEARCH, to: ROUTES.STUDENT_ACADEMICIAN_SEARCH },
+        {
+          label: academician?.fullName ?? STUDENT_UI.BREADCRUMB_PROFILE,
+          to: profilePath,
+        },
+        { label: STUDENT_APPOINTMENT_MESSAGES.BREADCRUMB_CREATE },
+      ]}
+    />
+  );
+
+  if (loading) {
+    return (
+      <div className="w-full min-w-0 animate-fade-in">
+        {breadcrumb}
+        <StudentPageHeader
+          title={STUDENT_APPOINTMENT_MESSAGES.TITLE}
+          description={STUDENT_APPOINTMENT_MESSAGES.SUBTITLE}
+        />
+        <StudentLoadingState label={STUDENT_APPOINTMENT_MESSAGES.LOADING} />
+      </div>
+    );
+  }
+
+  if (error || !academician) {
+    return (
+      <div className="w-full min-w-0 animate-fade-in">
+        {breadcrumb}
+        <StudentPageHeader
+          title={STUDENT_APPOINTMENT_MESSAGES.TITLE}
+          description={STUDENT_APPOINTMENT_MESSAGES.SUBTITLE}
+        />
+        <div className="mb-4">
+          <StudentBackLink
+            to={profilePath}
+            label={STUDENT_APPOINTMENT_MESSAGES.BACK_TO_PROFILE}
+          />
+        </div>
+        {notFound ? (
+          <StudentEmptyState
+            icon="person_off"
+            title={STUDENT_APPOINTMENT_MESSAGES.NOT_FOUND}
+            description={error ?? STUDENT_APPOINTMENT_MESSAGES.NOT_FOUND_DESCRIPTION}
+          />
+        ) : (
+          <StudentErrorState
+            message={error ?? STUDENT_UI.LOAD_ERROR_GENERIC}
+            onRetry={() => void loadAcademician()}
+            secondaryAction={{
+              label: STUDENT_APPOINTMENT_MESSAGES.BACK_TO_PROFILE,
+              to: profilePath,
+            }}
+          />
+        )}
+      </div>
+    );
+  }
+
+  if (!academician.isAcceptingAppointments) {
+    return (
+      <div className="w-full min-w-0 animate-fade-in">
+        {breadcrumb}
+        <StudentPageHeader
+          title={STUDENT_APPOINTMENT_MESSAGES.TITLE}
+          description={STUDENT_APPOINTMENT_MESSAGES.SUBTITLE}
+        />
+        <div className="mb-4">
+          <StudentBackLink
+            to={profilePath}
+            label={STUDENT_APPOINTMENT_MESSAGES.BACK_TO_PROFILE}
+          />
+        </div>
+        <AcademicianSummary academician={academician} />
+        <StudentEmptyState
+          icon="event_busy"
+          title={STUDENT_APPOINTMENT_MESSAGES.NOT_ACCEPTING_TITLE}
+          description={STUDENT_APPOINTMENT_MESSAGES.NOT_ACCEPTING_DESCRIPTION}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full min-w-0 animate-fade-in">
+      {breadcrumb}
+      <StudentPageHeader
+        title={STUDENT_APPOINTMENT_MESSAGES.TITLE}
+        description={STUDENT_APPOINTMENT_MESSAGES.SUBTITLE}
+      />
+
+      <div className="mb-6">
+        <StudentBackLink
+          to={profilePath}
+          label={STUDENT_APPOINTMENT_MESSAGES.BACK_TO_PROFILE}
+        />
       </div>
 
-      <AppointmentCreateModal
-        open={selectedSlot !== null}
-        slot={selectedSlot}
-        categories={categories}
-        onClose={() => setSelectedSlot(null)}
-        onCreated={(message) => {
-          toast.success(message);
-          void loadSlots(staffId);
-        }}
-      />
+      <AcademicianSummary academician={academician} />
+      <StudentAppointmentStepper activeStepIndex={STUDENT_APPOINTMENT_ACTIVE_STEP_INDEX} />
+
+      <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-6">
+        <h2 className="font-headline-md text-headline-md text-primary">
+          {STUDENT_APPOINTMENT_MESSAGES.STEP_CATEGORY_TITLE}
+        </h2>
+        <p className="mt-2 font-body-md text-body-md text-on-surface-variant">
+          {STUDENT_APPOINTMENT_MESSAGES.STEP_CATEGORY_DESCRIPTION}
+        </p>
+      </section>
     </div>
   );
 }
