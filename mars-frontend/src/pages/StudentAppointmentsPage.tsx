@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ConfirmModal from '../components/ConfirmModal';
 import StudentAppointmentCard from '../components/StudentAppointmentCard';
+import StudentAppointmentsCalendar from '../components/StudentAppointmentsCalendar';
 import StudentBreadcrumb from '../components/StudentBreadcrumb';
 import StudentEmptyState from '../components/StudentEmptyState';
 import StudentErrorState from '../components/StudentErrorState';
@@ -9,7 +11,7 @@ import StudentPageHeader from '../components/StudentPageHeader';
 import StudentSegmentedTabs from '../components/StudentSegmentedTabs';
 import { APPOINTMENT_STATUS_LABELS, getMeetingTypeLabel } from '../constants/appointment';
 import { MEETING_TYPE } from '../constants/availability';
-import { ROUTES } from '../constants/routes';
+import { ROUTES, studentAppointmentDetailPath } from '../constants/routes';
 import { STUDENT_APPOINTMENT_MESSAGES } from '../constants/studentAppointment';
 import { STUDENT_UI } from '../constants/studentUi';
 import { useToast } from '../hooks/useToast';
@@ -29,10 +31,16 @@ import {
 } from '../utils/studentAppointmentListFilters';
 
 type AppointmentTab = 'active' | 'past';
+type AppointmentViewMode = 'list' | 'calendar';
 
 const TAB_OPTIONS = [
   { value: 'active' as const, label: STUDENT_APPOINTMENT_MESSAGES.TAB_ACTIVE },
   { value: 'past' as const, label: STUDENT_APPOINTMENT_MESSAGES.TAB_PAST },
+];
+
+const VIEW_OPTIONS = [
+  { value: 'list' as const, label: STUDENT_APPOINTMENT_MESSAGES.VIEW_LIST },
+  { value: 'calendar' as const, label: STUDENT_APPOINTMENT_MESSAGES.VIEW_CALENDAR },
 ];
 
 const ACTIVE_STATUS_OPTIONS = ['PENDING', 'APPROVED'] as const;
@@ -55,8 +63,10 @@ function defaultFiltersForTab(tab: AppointmentTab): StudentAppointmentListFilter
 }
 
 export default function StudentAppointmentsPage() {
+  const navigate = useNavigate();
   const toast = useToast();
   const [activeTab, setActiveTab] = useState<AppointmentTab>('active');
+  const [viewMode, setViewMode] = useState<AppointmentViewMode>('list');
   const [appointmentsByTab, setAppointmentsByTab] = useState<
     Partial<Record<AppointmentTab, StudentAppointmentListItem[]>>
   >({});
@@ -178,12 +188,18 @@ export default function StudentAppointmentsPage() {
         description={STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_SUBTITLE}
       />
 
-      <div className="mb-7 sm:mb-8">
+      <div className="mb-7 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <StudentSegmentedTabs
           value={activeTab}
           options={TAB_OPTIONS}
           ariaLabel={STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_TITLE}
           onChange={handleTabChange}
+        />
+        <StudentSegmentedTabs
+          value={viewMode}
+          options={VIEW_OPTIONS}
+          ariaLabel={STUDENT_APPOINTMENT_MESSAGES.VIEW_MODE_LABEL}
+          onChange={setViewMode}
         />
       </div>
 
@@ -296,9 +312,24 @@ export default function StudentAppointmentsPage() {
 
           {filteredAppointments.length === 0 ? (
             <StudentEmptyState
-              icon="filter_alt_off"
-              title={STUDENT_APPOINTMENT_MESSAGES.FILTER_EMPTY_TITLE}
-              description={STUDENT_APPOINTMENT_MESSAGES.FILTER_EMPTY}
+              icon={viewMode === 'calendar' ? 'event_busy' : 'filter_alt_off'}
+              title={
+                viewMode === 'calendar'
+                  ? STUDENT_APPOINTMENT_MESSAGES.CALENDAR_EMPTY_TITLE
+                  : STUDENT_APPOINTMENT_MESSAGES.FILTER_EMPTY_TITLE
+              }
+              description={
+                viewMode === 'calendar'
+                  ? STUDENT_APPOINTMENT_MESSAGES.CALENDAR_EMPTY_DESCRIPTION
+                  : STUDENT_APPOINTMENT_MESSAGES.FILTER_EMPTY
+              }
+            />
+          ) : viewMode === 'calendar' ? (
+            <StudentAppointmentsCalendar
+              appointments={filteredAppointments}
+              onAppointmentClick={(appointment) => {
+                navigate(studentAppointmentDetailPath(appointment.appointmentId));
+              }}
             />
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">

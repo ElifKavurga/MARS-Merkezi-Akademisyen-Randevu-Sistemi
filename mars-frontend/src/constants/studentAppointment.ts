@@ -128,6 +128,12 @@ export const STUDENT_APPOINTMENT_MESSAGES = {
   SORT_DATE_DESC: 'En Uzak Tarih',
   SORT_CREATED_DESC: 'En Yeni Oluşturulan',
   SORT_CREATED_ASC: 'En Eski Oluşturulan',
+  VIEW_LIST: 'Liste',
+  VIEW_CALENDAR: 'Takvim',
+  VIEW_MODE_LABEL: 'Görünüm',
+  CALENDAR_EMPTY_TITLE: 'Takvimde gösterilecek randevu yok',
+  CALENDAR_EMPTY_DESCRIPTION:
+    'Seçili sekme ve filtrelere uygun randevu bulunamadı.',
   MY_APPOINTMENTS_ACADEMICIAN: 'Akademisyen',
   MY_APPOINTMENTS_TITLE_LABEL: 'Akademik Ünvan',
   MY_APPOINTMENTS_DEPARTMENT: 'Bölüm',
@@ -174,6 +180,17 @@ export const STUDENT_APPOINTMENT_MESSAGES = {
   CANCEL_SUCCESS: 'Randevu başarıyla iptal edildi.',
   CANCEL_ERROR: 'Randevu iptal edilemedi. Lütfen tekrar deneyin.',
 } as const;
+
+/** Takvim etkinlik renkleri — AppointmentStatusBadge paletiyle uyumlu. */
+export const STUDENT_APPOINTMENT_STATUS_EVENT_COLORS: Record<string, string> = {
+  PENDING: '#F59E0B',
+  APPROVED: '#10B981',
+  REJECTED: '#EF4444',
+  COMPLETED: '#3B82F6',
+  NO_SHOW: '#64748B',
+  CANCELLED: '#78716C',
+  DEFAULT: '#0b1641',
+};
 
 /**
  * Randevu oluşturma sonrası yönlendirme.
