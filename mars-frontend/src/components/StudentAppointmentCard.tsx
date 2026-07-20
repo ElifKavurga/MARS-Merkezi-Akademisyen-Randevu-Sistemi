@@ -69,7 +69,7 @@ export default function StudentAppointmentCard({
       : appointment.courseCode ?? appointment.courseName;
 
   return (
-    <article className="flex min-w-0 flex-col rounded-lg border border-outline-variant bg-surface-container-lowest p-3.5 sm:p-4">
+    <article className="flex h-full min-w-0 flex-col rounded-xl border border-outline-variant bg-surface-container-lowest p-3.5 transition-colors hover:border-primary-container/40 sm:p-4">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <h3 className="truncate font-headline-md text-[16px] leading-5 font-semibold text-on-background">
@@ -80,10 +80,12 @@ export default function StudentAppointmentCard({
             {appointment.departmentName ? ` · ${appointment.departmentName}` : ''}
           </p>
         </div>
-        <AppointmentStatusBadge status={appointment.appointmentStatus} />
+        <div className="shrink-0">
+          <AppointmentStatusBadge status={appointment.appointmentStatus} />
+        </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-surface-container/60 px-2.5 py-2">
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-surface-container/70 px-2.5 py-2">
         <div className="flex items-center gap-1.5 font-label-md text-label-md font-semibold text-on-surface">
           <span className="material-symbols-outlined text-[18px] text-primary" aria-hidden>
             event
@@ -98,7 +100,7 @@ export default function StudentAppointmentCard({
         </div>
       </div>
 
-      <div className="mt-2.5 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+      <div className="mt-2.5 grid flex-1 grid-cols-1 content-start gap-1.5 sm:grid-cols-2">
         <MetaRow
           icon="category"
           label={STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_CATEGORY}

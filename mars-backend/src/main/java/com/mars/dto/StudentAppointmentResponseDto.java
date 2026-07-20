@@ -1,6 +1,7 @@
 package com.mars.dto;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import lombok.AllArgsConstructor;
@@ -30,6 +31,7 @@ public class StudentAppointmentResponseDto {
     private String courseName;
     private String meetingType;
     private String appointmentStatus;
+    private LocalDateTime createdAt;
     /** Yüz yüze görüşmede ofis bilgisi (henüz User’da yoksa null). */
     private String officeName;
     /** Yüz yüze görüşmede bina/konum bilgisi (henüz User’da yoksa null). */

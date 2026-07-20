@@ -59,6 +59,7 @@ export type StudentAppointmentListItem = {
   courseName: string | null;
   meetingType: string;
   appointmentStatus: string;
+  createdAt?: string | null;
   officeName?: string | null;
   officeLocation?: string | null;
 };
