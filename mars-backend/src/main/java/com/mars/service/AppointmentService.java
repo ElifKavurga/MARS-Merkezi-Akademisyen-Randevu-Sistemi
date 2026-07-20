@@ -139,6 +139,29 @@ public class AppointmentService {
                 });
     }
 
+    @Transactional
+    public StudentAppointmentResponseDto cancelStudentAppointment(Integer appointmentId) {
+        User student = getCurrentStudent();
+        Appointment appointment = appointmentRepository.findByIdAndStudentIdForUpdate(
+                        appointmentId, student.getUserId())
+                .orElseGet(() -> {
+                    if (appointmentRepository.existsByAppointmentId(appointmentId)) {
+                        throw new AccessDeniedException(AppointmentMessages.CANCEL_ACCESS_DENIED);
+                    }
+                    throw new ResourceNotFoundException(AppointmentMessages.APPOINTMENT_NOT_FOUND);
+                });
+
+        validateStudentCancellable(appointment);
+        appointment.setAppointmentStatus(AppointmentStatus.CANCELLED.name());
+        appointment.setUpdatedAt(LocalDateTime.now(APP_ZONE));
+
+        Appointment saved = appointmentRepository.save(appointment);
+        return appointmentRepository.findByIdAndStudentIdWithDetails(
+                        saved.getAppointmentId(), student.getUserId())
+                .map(appointmentMapper::toStudentResponse)
+                .orElseGet(() -> appointmentMapper.toStudentResponse(saved));
+    }
+
     @Transactional(readOnly = true)
     public List<StaffAppointmentResponseDto> getStaffAppointments(
             String status,
@@ -211,6 +234,19 @@ public class AppointmentService {
             throw new ConflictException(AppointmentMessages.ALREADY_REJECTED);
         }
         throw new ConflictException(AppointmentMessages.NOT_PENDING);
+    }
+
+    private void validateStudentCancellable(Appointment appointment) {
+        String status = appointment.getAppointmentStatus();
+        if (AppointmentStatus.CANCELLED.name().equals(status)) {
+            throw new ConflictException(AppointmentMessages.CANCEL_ALREADY_CANCELLED);
+        }
+        if (!ACTIVE_APPOINTMENT_STATUSES.contains(status)) {
+            throw new ConflictException(AppointmentMessages.CANCEL_NOT_ACTIVE);
+        }
+        if (isAppointmentInPast(appointment)) {
+            throw new BadRequestException(AppointmentMessages.CANCEL_PAST);
+        }
     }
 
     private void ensureStaffIsBookable(User staff) {

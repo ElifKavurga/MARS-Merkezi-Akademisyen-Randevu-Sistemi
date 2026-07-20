@@ -43,6 +43,13 @@ public final class AppointmentMessages {
     public static final String APPOINTMENT_NOT_FOUND = "Randevu bulunamadı.";
     public static final String STUDENT_APPOINTMENT_ACCESS_DENIED =
             "Bu randevuyu görüntüleme yetkiniz yok.";
+    public static final String CANCEL_ACCESS_DENIED =
+            "Bu randevuyu iptal etme yetkiniz yok.";
+    public static final String CANCEL_NOT_ACTIVE =
+            "Yalnızca bekleyen veya onaylanmış randevular iptal edilebilir.";
+    public static final String CANCEL_ALREADY_CANCELLED = "Randevu zaten iptal edilmiş.";
+    public static final String CANCEL_PAST =
+            "Geçmiş tarihli randevular iptal edilemez.";
     public static final String INVALID_STATUS = "Geçersiz randevu durumu.";
     public static final String ALREADY_APPROVED = "Randevu zaten onaylanmış.";
     public static final String ALREADY_REJECTED = "Randevu zaten reddedilmiş.";

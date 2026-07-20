@@ -5,6 +5,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -129,6 +130,43 @@ class StudentAppointmentControllerTest {
                 .andExpect(jsonPath("$.appointmentStatus").value("APPROVED"));
 
         verify(appointmentService).getStudentAppointment(42);
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    void cancelAppointment_asStudent_returnsOk() throws Exception {
+        StudentAppointmentResponseDto item = StudentAppointmentResponseDto.builder()
+                .appointmentId(42)
+                .staffId(5)
+                .staffName("Dr. Ayşe Yılmaz")
+                .appointmentDate(LocalDate.of(2026, 7, 22))
+                .startTime(LocalTime.of(10, 0))
+                .endTime(LocalTime.of(10, 30))
+                .categoryName("Danışmanlık")
+                .meetingType(MeetingType.FACE_TO_FACE.name())
+                .appointmentStatus(AppointmentStatus.CANCELLED.name())
+                .build();
+        when(appointmentService.cancelStudentAppointment(42)).thenReturn(item);
+
+        mockMvc.perform(patch("/students/appointments/42/cancel"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.appointmentId").value(42))
+                .andExpect(jsonPath("$.appointmentStatus").value("CANCELLED"));
+
+        verify(appointmentService).cancelStudentAppointment(42);
+    }
+
+    @Test
+    @WithMockUser(roles = "ACADEMICIAN")
+    void cancelAppointment_asAcademician_returnsForbidden() throws Exception {
+        mockMvc.perform(patch("/students/appointments/42/cancel"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void cancelAppointment_unauthenticated_returnsUnauthorized() throws Exception {
+        mockMvc.perform(patch("/students/appointments/42/cancel"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

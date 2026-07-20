@@ -82,6 +82,18 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
 
     boolean existsByAppointmentId(Integer appointmentId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT a
+            FROM Appointment a
+            JOIN FETCH a.slot
+            WHERE a.appointmentId = :appointmentId
+              AND a.student.userId = :studentId
+            """)
+    Optional<Appointment> findByIdAndStudentIdForUpdate(
+            @Param("appointmentId") Integer appointmentId,
+            @Param("studentId") Integer studentId);
+
     @Query("""
             SELECT a
             FROM Appointment a

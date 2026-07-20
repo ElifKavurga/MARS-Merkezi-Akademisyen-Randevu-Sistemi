@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import AppointmentStatusBadge from '../components/AppointmentStatusBadge';
+import ConfirmModal from '../components/ConfirmModal';
 import StudentBreadcrumb from '../components/StudentBreadcrumb';
 import StudentErrorState from '../components/StudentErrorState';
 import StudentLoadingState from '../components/StudentLoadingState';
@@ -11,9 +12,13 @@ import { ROUTES } from '../constants/routes';
 import { STUDENT_APPOINTMENT_MESSAGES } from '../constants/studentAppointment';
 import { STUDENT_UI } from '../constants/studentUi';
 import { useToast } from '../hooks/useToast';
-import { getStudentAppointment } from '../services/studentAppointmentService';
+import {
+  cancelStudentAppointment,
+  getStudentAppointment,
+} from '../services/studentAppointmentService';
 import type { StudentAppointmentListItem } from '../types/studentAppointment';
 import { resolveStudentApiError } from '../utils/studentApiError';
+import { isStudentAppointmentCancellable } from '../utils/studentAppointmentCancel';
 
 function formatDate(date: string): string {
   return new Intl.DateTimeFormat('tr-TR', {
@@ -42,78 +47,23 @@ function DetailField({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="min-w-0">
       <dt className="font-label-sm text-label-sm text-on-surface-variant">{label}</dt>
-      <dd className="mt-1 break-words font-body-md text-body-md text-on-surface">{value}</dd>
+      <dd className="mt-0.5 break-words font-body-md text-[15px] leading-6 text-on-surface">
+        {value}
+      </dd>
     </div>
-  );
-}
-
-function DetailSection({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-6">
-      <h2 className="mb-4 font-headline-md text-[18px] leading-6 font-semibold text-primary">
-        {title}
-      </h2>
-      <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">{children}</dl>
-    </section>
-  );
-}
-
-function LocationSection({ appointment }: { appointment: StudentAppointmentListItem }) {
-  const isOnline = appointment.meetingType === MEETING_TYPE.ONLINE;
-
-  if (isOnline) {
-    return (
-      <DetailSection title={STUDENT_APPOINTMENT_MESSAGES.DETAIL_SECTION_LOCATION}>
-        <div className="sm:col-span-2">
-          <p className="font-body-md text-body-md text-on-surface">
-            {STUDENT_APPOINTMENT_MESSAGES.DETAIL_ONLINE_INFO}
-          </p>
-        </div>
-      </DetailSection>
-    );
-  }
-
-  const office = appointment.officeName?.trim() || null;
-  const building = appointment.officeLocation?.trim() || null;
-
-  return (
-    <DetailSection title={STUDENT_APPOINTMENT_MESSAGES.DETAIL_SECTION_LOCATION}>
-      {office || building ? (
-        <>
-          <DetailField
-            label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_OFFICE}
-            value={office ?? STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_NO_COURSE}
-          />
-          {building ? (
-            <DetailField
-              label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_BUILDING}
-              value={building}
-            />
-          ) : null}
-        </>
-      ) : (
-        <div className="sm:col-span-2">
-          <p className="font-body-md text-body-md text-on-surface-variant">
-            {STUDENT_APPOINTMENT_MESSAGES.DETAIL_LOCATION_EMPTY}
-          </p>
-        </div>
-      )}
-    </DetailSection>
   );
 }
 
 export default function StudentAppointmentDetailPage() {
   const { appointmentId: appointmentIdParam } = useParams<{ appointmentId: string }>();
+  const navigate = useNavigate();
   const toast = useToast();
   const [appointment, setAppointment] = useState<StudentAppointmentListItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   const appointmentId = Number(appointmentIdParam);
   const isValidId = Number.isInteger(appointmentId) && appointmentId > 0;
@@ -153,10 +103,34 @@ export default function StudentAppointmentDetailPage() {
     void loadAppointment();
   }, [loadAppointment]);
 
+  const handleConfirmCancel = async () => {
+    if (!appointment || cancelLoading) {
+      return;
+    }
+    setCancelLoading(true);
+    setCancelError(null);
+    try {
+      await cancelStudentAppointment(appointment.appointmentId);
+      setCancelOpen(false);
+      toast.success(STUDENT_APPOINTMENT_MESSAGES.CANCEL_SUCCESS);
+      navigate(ROUTES.STUDENT_APPOINTMENTS, { replace: true });
+    } catch (err) {
+      const message = resolveStudentApiError(err, STUDENT_APPOINTMENT_MESSAGES.CANCEL_ERROR);
+      setCancelError(message);
+      toast.error(message);
+    } finally {
+      setCancelLoading(false);
+    }
+  };
+
   const courseLabel = appointment ? formatCourseLabel(appointment) : null;
   const academicTitle =
     appointment?.academicTitle?.trim()
     || STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_NO_TITLE;
+  const canCancel = appointment ? isStudentAppointmentCancellable(appointment) : false;
+  const isOnline = appointment?.meetingType === MEETING_TYPE.ONLINE;
+  const office = appointment?.officeName?.trim() || null;
+  const building = appointment?.officeLocation?.trim() || null;
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
@@ -171,13 +145,25 @@ export default function StudentAppointmentDetailPage() {
         ]}
       />
 
-      <div className="mb-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <Link to={ROUTES.STUDENT_APPOINTMENTS} className={STUDENT_UI.BACK_LINK_CLASS}>
           <span className="material-symbols-outlined text-[18px]" aria-hidden>
             arrow_back
           </span>
           {STUDENT_APPOINTMENT_MESSAGES.DETAIL_BACK}
         </Link>
+        {appointment && canCancel ? (
+          <button
+            type="button"
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-error/30 bg-error-container/40 px-3.5 py-2 font-label-md text-label-md text-error transition-colors hover:bg-error-container/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/40"
+            onClick={() => {
+              setCancelError(null);
+              setCancelOpen(true);
+            }}
+          >
+            {STUDENT_APPOINTMENT_MESSAGES.CANCEL_ACTION}
+          </button>
+        ) : null}
       </div>
 
       <StudentPageHeader
@@ -197,26 +183,31 @@ export default function StudentAppointmentDetailPage() {
           }}
         />
       ) : appointment ? (
-        <div className="flex flex-col gap-4 md:gap-5">
-          <DetailSection title={STUDENT_APPOINTMENT_MESSAGES.DETAIL_SECTION_ACADEMICIAN}>
-            <DetailField
-              label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_FULL_NAME}
-              value={appointment.staffName}
-            />
-            <DetailField
-              label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_ACADEMIC_TITLE}
-              value={academicTitle}
-            />
-            <DetailField
-              label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_DEPARTMENT}
-              value={appointment.departmentName}
-            />
-          </DetailSection>
+        <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 sm:p-5">
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-outline-variant pb-3">
+            <div className="min-w-0">
+              <p className="font-label-sm text-label-sm text-on-surface-variant">
+                {STUDENT_APPOINTMENT_MESSAGES.DETAIL_SECTION_ACADEMICIAN}
+              </p>
+              <h2 className="mt-1 font-headline-md text-[20px] leading-6 font-semibold text-on-background">
+                {appointment.staffName}
+              </h2>
+              <p className="mt-1 font-body-md text-[14px] text-on-surface-variant">
+                {academicTitle}
+                {appointment.departmentName ? ` · ${appointment.departmentName}` : ''}
+              </p>
+            </div>
+            <AppointmentStatusBadge status={appointment.appointmentStatus} />
+          </div>
 
-          <DetailSection title={STUDENT_APPOINTMENT_MESSAGES.DETAIL_SECTION_APPOINTMENT}>
+          <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
             <DetailField
               label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_DATE}
               value={formatDate(appointment.appointmentDate)}
+            />
+            <DetailField
+              label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_MEETING_TYPE}
+              value={getMeetingTypeLabel(appointment.meetingType)}
             />
             <DetailField
               label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_START_TIME}
@@ -225,10 +216,6 @@ export default function StudentAppointmentDetailPage() {
             <DetailField
               label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_END_TIME}
               value={formatTime(appointment.endTime)}
-            />
-            <DetailField
-              label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_STATUS}
-              value={<AppointmentStatusBadge status={appointment.appointmentStatus} />}
             />
             <DetailField
               label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_CATEGORY}
@@ -240,15 +227,55 @@ export default function StudentAppointmentDetailPage() {
                 value={courseLabel}
               />
             ) : null}
-            <DetailField
-              label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_MEETING_TYPE}
-              value={getMeetingTypeLabel(appointment.meetingType)}
-            />
-          </DetailSection>
+          </dl>
 
-          <LocationSection appointment={appointment} />
+          <div className="mt-4 border-t border-outline-variant pt-3">
+            <h3 className="mb-2 font-label-md text-label-md font-semibold text-on-surface">
+              {STUDENT_APPOINTMENT_MESSAGES.DETAIL_SECTION_LOCATION}
+            </h3>
+            {isOnline ? (
+              <p className="font-body-md text-[14px] leading-6 text-on-surface">
+                {STUDENT_APPOINTMENT_MESSAGES.DETAIL_ONLINE_INFO}
+              </p>
+            ) : office || building ? (
+              <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <DetailField
+                  label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_OFFICE}
+                  value={office ?? STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_NO_COURSE}
+                />
+                {building ? (
+                  <DetailField
+                    label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_BUILDING}
+                    value={building}
+                  />
+                ) : null}
+              </dl>
+            ) : (
+              <p className="font-body-md text-[14px] text-on-surface-variant">
+                {STUDENT_APPOINTMENT_MESSAGES.DETAIL_LOCATION_EMPTY}
+              </p>
+            )}
+          </div>
         </div>
       ) : null}
+
+      <ConfirmModal
+        open={cancelOpen}
+        title={STUDENT_APPOINTMENT_MESSAGES.CANCEL_TITLE}
+        description={STUDENT_APPOINTMENT_MESSAGES.CANCEL_DESCRIPTION}
+        confirmLabel={STUDENT_APPOINTMENT_MESSAGES.CANCEL_CONFIRM}
+        cancelLabel={STUDENT_APPOINTMENT_MESSAGES.CANCEL_DISMISS}
+        variant="danger"
+        loading={cancelLoading}
+        error={cancelError}
+        onConfirm={() => void handleConfirmCancel()}
+        onClose={() => {
+          if (!cancelLoading) {
+            setCancelOpen(false);
+            setCancelError(null);
+          }
+        }}
+      />
     </div>
   );
 }

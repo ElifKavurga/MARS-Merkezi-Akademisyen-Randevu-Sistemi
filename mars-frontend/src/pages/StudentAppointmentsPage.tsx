@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AppointmentStatusBadge from '../components/AppointmentStatusBadge';
+import ConfirmModal from '../components/ConfirmModal';
 import StudentBreadcrumb from '../components/StudentBreadcrumb';
 import StudentEmptyState from '../components/StudentEmptyState';
 import StudentErrorState from '../components/StudentErrorState';
@@ -11,14 +12,18 @@ import { ROUTES, studentAppointmentDetailPath } from '../constants/routes';
 import { STUDENT_APPOINTMENT_MESSAGES } from '../constants/studentAppointment';
 import { STUDENT_UI } from '../constants/studentUi';
 import { useToast } from '../hooks/useToast';
-import { getStudentActiveAppointments } from '../services/studentAppointmentService';
+import {
+  cancelStudentAppointment,
+  getStudentActiveAppointments,
+} from '../services/studentAppointmentService';
 import type { StudentAppointmentListItem } from '../types/studentAppointment';
 import { resolveStudentApiError } from '../utils/studentApiError';
+import { isStudentAppointmentCancellable } from '../utils/studentAppointmentCancel';
 
 function formatDate(date: string): string {
   return new Intl.DateTimeFormat('tr-TR', {
     day: '2-digit',
-    month: '2-digit',
+    month: 'short',
     year: 'numeric',
   }).format(new Date(`${date}T00:00:00`));
 }
@@ -27,85 +32,121 @@ function formatTime(time: string): string {
   return time.slice(0, 5);
 }
 
-function formatCourseLabel(appointment: StudentAppointmentListItem): string {
-  if (!appointment.courseCode && !appointment.courseName) {
-    return STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_NO_COURSE;
-  }
-  if (appointment.courseCode && appointment.courseName) {
-    return `${appointment.courseCode} — ${appointment.courseName}`;
-  }
+function MetaRow({
+  icon,
+  label,
+  value,
+}: {
+  icon: string;
+  label: string;
+  value: string;
+}) {
   return (
-    appointment.courseCode
-    ?? appointment.courseName
-    ?? STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_NO_COURSE
+    <div className="flex min-w-0 items-start gap-1.5">
+      <span
+        className="material-symbols-outlined mt-0.5 text-[16px] text-on-surface-variant"
+        aria-hidden
+      >
+        {icon}
+      </span>
+      <div className="min-w-0">
+        <span className="sr-only">{label}: </span>
+        <span className="break-words font-body-md text-[13px] leading-5 text-on-surface">
+          {value}
+        </span>
+      </div>
+    </div>
   );
 }
 
-function AppointmentCard({ appointment }: { appointment: StudentAppointmentListItem }) {
+function AppointmentCard({
+  appointment,
+  cancelLoading,
+  onCancelRequest,
+}: {
+  appointment: StudentAppointmentListItem;
+  cancelLoading: boolean;
+  onCancelRequest: (appointment: StudentAppointmentListItem) => void;
+}) {
+  const canCancel = isStudentAppointmentCancellable(appointment);
   const title =
     appointment.academicTitle?.trim()
     || STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_NO_TITLE;
-
-  const fields = [
-    {
-      label: STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_TITLE_LABEL,
-      value: title,
-    },
-    {
-      label: STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_DEPARTMENT,
-      value: appointment.departmentName,
-    },
-    {
-      label: STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_DATE,
-      value: formatDate(appointment.appointmentDate),
-    },
-    {
-      label: STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_TIME,
-      value: `${formatTime(appointment.startTime)} – ${formatTime(appointment.endTime)}`,
-    },
-    {
-      label: STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_CATEGORY,
-      value: appointment.categoryName,
-    },
-    {
-      label: STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_COURSE,
-      value: formatCourseLabel(appointment),
-    },
-    {
-      label: STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_MEETING_TYPE,
-      value: getMeetingTypeLabel(appointment.meetingType),
-    },
-  ];
+  const courseLabel =
+    appointment.courseCode && appointment.courseName
+      ? `${appointment.courseCode} — ${appointment.courseName}`
+      : appointment.courseCode ?? appointment.courseName;
 
   return (
-    <Link
-      to={studentAppointmentDetailPath(appointment.appointmentId)}
-      className="flex min-w-0 flex-col rounded-xl border border-outline-variant bg-surface-container-lowest p-5 no-underline transition-colors hover:border-primary-container hover:no-underline focus:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim focus-visible:ring-offset-2 sm:p-6"
-      aria-label={`${appointment.staffName} randevu detayı`}
-    >
-      <div className="mb-4 flex items-start justify-between gap-3">
+    <article className="flex min-w-0 flex-col rounded-lg border border-outline-variant bg-surface-container-lowest p-3.5 sm:p-4">
+      <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="font-label-sm text-label-sm text-on-surface-variant">
-            {STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_ACADEMICIAN}
-          </p>
-          <h3 className="mt-1 truncate font-headline-md text-[18px] leading-6 font-semibold text-on-background">
+          <h3 className="truncate font-headline-md text-[16px] leading-5 font-semibold text-on-background">
             {appointment.staffName}
           </h3>
+          <p className="mt-0.5 truncate font-label-sm text-label-sm text-on-surface-variant">
+            {title}
+            {appointment.departmentName ? ` · ${appointment.departmentName}` : ''}
+          </p>
         </div>
         <AppointmentStatusBadge status={appointment.appointmentStatus} />
       </div>
 
-      <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {fields.map((field) => (
-          <div key={field.label} className="min-w-0">
-            <dt className="font-label-sm text-label-sm text-on-surface-variant">{field.label}</dt>
-            <dd className="mt-0.5 break-words font-body-md text-body-md text-on-surface">
-              {field.value}
-            </dd>
-          </div>
-        ))}
-      </dl>
-    </Link>
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-surface-container/60 px-2.5 py-2">
+        <div className="flex items-center gap-1.5 font-label-md text-label-md font-semibold text-on-surface">
+          <span className="material-symbols-outlined text-[18px] text-primary" aria-hidden>
+            event
+          </span>
+          {formatDate(appointment.appointmentDate)}
+        </div>
+        <div className="flex items-center gap-1.5 font-label-md text-label-md font-semibold text-on-surface">
+          <span className="material-symbols-outlined text-[18px] text-primary" aria-hidden>
+            schedule
+          </span>
+          {formatTime(appointment.startTime)} – {formatTime(appointment.endTime)}
+        </div>
+      </div>
+
+      <div className="mt-2.5 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+        <MetaRow
+          icon="category"
+          label={STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_CATEGORY}
+          value={appointment.categoryName}
+        />
+        <MetaRow
+          icon="videocam"
+          label={STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_MEETING_TYPE}
+          value={getMeetingTypeLabel(appointment.meetingType)}
+        />
+        {courseLabel ? (
+          <MetaRow
+            icon="menu_book"
+            label={STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_COURSE}
+            value={courseLabel}
+          />
+        ) : null}
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2 border-t border-outline-variant/70 pt-3">
+        <Link
+          to={studentAppointmentDetailPath(appointment.appointmentId)}
+          className={STUDENT_UI.SECONDARY_BUTTON_CLASS}
+          style={{ textDecoration: 'none', padding: '0.5rem 0.875rem' }}
+        >
+          {STUDENT_APPOINTMENT_MESSAGES.VIEW_DETAIL}
+        </Link>
+        {canCancel ? (
+          <button
+            type="button"
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-error/30 bg-error-container/40 px-3.5 py-2 font-label-md text-label-md text-error transition-colors hover:bg-error-container/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/40 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={cancelLoading}
+            onClick={() => onCancelRequest(appointment)}
+          >
+            {STUDENT_APPOINTMENT_MESSAGES.CANCEL_ACTION}
+          </button>
+        ) : null}
+      </div>
+    </article>
   );
 }
 
@@ -114,6 +155,9 @@ export default function StudentAppointmentsPage() {
   const [appointments, setAppointments] = useState<StudentAppointmentListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<StudentAppointmentListItem | null>(null);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   const loadAppointments = useCallback(async () => {
     setLoading(true);
@@ -137,6 +181,28 @@ export default function StudentAppointmentsPage() {
   useEffect(() => {
     void loadAppointments();
   }, [loadAppointments]);
+
+  const handleConfirmCancel = async () => {
+    if (!cancelTarget || cancelLoading) {
+      return;
+    }
+    setCancelLoading(true);
+    setCancelError(null);
+    try {
+      await cancelStudentAppointment(cancelTarget.appointmentId);
+      setAppointments((current) =>
+        current.filter((item) => item.appointmentId !== cancelTarget.appointmentId),
+      );
+      setCancelTarget(null);
+      toast.success(STUDENT_APPOINTMENT_MESSAGES.CANCEL_SUCCESS);
+    } catch (err) {
+      const message = resolveStudentApiError(err, STUDENT_APPOINTMENT_MESSAGES.CANCEL_ERROR);
+      setCancelError(message);
+      toast.error(message);
+    } finally {
+      setCancelLoading(false);
+    }
+  };
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
@@ -162,12 +228,38 @@ export default function StudentAppointmentsPage() {
           description={STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_EMPTY_DESCRIPTION}
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3">
           {appointments.map((appointment) => (
-            <AppointmentCard key={appointment.appointmentId} appointment={appointment} />
+            <AppointmentCard
+              key={appointment.appointmentId}
+              appointment={appointment}
+              cancelLoading={cancelLoading}
+              onCancelRequest={(item) => {
+                setCancelError(null);
+                setCancelTarget(item);
+              }}
+            />
           ))}
         </div>
       )}
+
+      <ConfirmModal
+        open={cancelTarget !== null}
+        title={STUDENT_APPOINTMENT_MESSAGES.CANCEL_TITLE}
+        description={STUDENT_APPOINTMENT_MESSAGES.CANCEL_DESCRIPTION}
+        confirmLabel={STUDENT_APPOINTMENT_MESSAGES.CANCEL_CONFIRM}
+        cancelLabel={STUDENT_APPOINTMENT_MESSAGES.CANCEL_DISMISS}
+        variant="danger"
+        loading={cancelLoading}
+        error={cancelError}
+        onConfirm={() => void handleConfirmCancel()}
+        onClose={() => {
+          if (!cancelLoading) {
+            setCancelTarget(null);
+            setCancelError(null);
+          }
+        }}
+      />
     </div>
   );
 }

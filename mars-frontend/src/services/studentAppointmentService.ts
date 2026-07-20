@@ -16,6 +16,15 @@ export async function getStudentAppointment(
   return data;
 }
 
+export async function cancelStudentAppointment(
+  appointmentId: number,
+): Promise<StudentAppointmentListItem> {
+  const { data } = await apiClient.patch<StudentAppointmentListItem>(
+    `/students/appointments/${appointmentId}/cancel`,
+  );
+  return data;
+}
+
 export async function createStudentAppointment(
   payload: AppointmentCreatePayload,
 ): Promise<Appointment> {

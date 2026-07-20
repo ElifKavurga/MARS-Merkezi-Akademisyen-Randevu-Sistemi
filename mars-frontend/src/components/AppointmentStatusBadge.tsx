@@ -6,6 +6,7 @@ const STATUS_CLASSES: Record<string, string> = {
   REJECTED: 'bg-red-100 text-red-800',
   COMPLETED: 'bg-blue-100 text-blue-800',
   NO_SHOW: 'bg-slate-200 text-slate-700',
+  CANCELLED: 'bg-slate-200 text-slate-700',
 };
 
 const STATUS_DOT_CLASSES: Record<string, string> = {
@@ -14,6 +15,7 @@ const STATUS_DOT_CLASSES: Record<string, string> = {
   REJECTED: 'bg-red-500',
   COMPLETED: 'bg-blue-500',
   NO_SHOW: 'bg-slate-500',
+  CANCELLED: 'bg-slate-500',
 };
 
 type AppointmentStatusBadgeProps = {

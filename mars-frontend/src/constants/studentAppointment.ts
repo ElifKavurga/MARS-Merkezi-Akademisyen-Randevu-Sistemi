@@ -140,6 +140,15 @@ export const STUDENT_APPOINTMENT_MESSAGES = {
   DETAIL_ONLINE_INFO:
     'Bu randevu online olarak planlanmıştır. Görüşme bağlantısı henüz paylaşılmamıştır.',
   DETAIL_LOCATION_EMPTY: 'Konum bilgisi henüz tanımlanmamış.',
+  VIEW_DETAIL: 'Detay',
+  CANCEL_ACTION: 'İptal Et',
+  CANCEL_TITLE: 'Randevuyu İptal Et',
+  CANCEL_DESCRIPTION:
+    'Bu randevuyu iptal etmek istediğinize emin misiniz? İptal edilen randevu aktif listeden kaldırılır.',
+  CANCEL_CONFIRM: 'Randevuyu İptal Et',
+  CANCEL_DISMISS: 'Vazgeç',
+  CANCEL_SUCCESS: 'Randevu başarıyla iptal edildi.',
+  CANCEL_ERROR: 'Randevu iptal edilemedi. Lütfen tekrar deneyin.',
 } as const;
 
 /**
