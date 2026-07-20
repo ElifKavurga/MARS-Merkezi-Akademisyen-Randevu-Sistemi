@@ -10,7 +10,6 @@ import StudentPageHeader from '../components/StudentPageHeader';
 import UserAvatar from '../components/UserAvatar';
 import { MEETING_TYPE_OPTIONS } from '../constants/availability';
 import {
-  MINIMUM_BOOKING_NOTICE_MINUTES,
   STUDENT_ACADEMICIAN_MESSAGES,
 } from '../constants/studentAcademician';
 import { studentAppointmentCreatePath, ROUTES } from '../constants/routes';
@@ -38,15 +37,6 @@ function formatSlotDate(isoDate: string): string {
 
 function getAvailabilityMeetingTypeLabel(meetingType: string): string {
   return MEETING_TYPE_OPTIONS.find((item) => item.value === meetingType)?.label ?? meetingType;
-}
-
-/** BR-017: slot başlangıcı şu andan + notice süresinden önce olmamalı. */
-function isSlotAfterBookingNotice(slot: AvailableSlot, now = new Date()): boolean {
-  const [year, month, day] = slot.slotDate.split('-').map(Number);
-  const [hour, minute] = formatSlotTime(slot.startTime).split(':').map(Number);
-  const slotStart = new Date(year, month - 1, day, hour, minute, 0, 0);
-  const earliest = new Date(now.getTime() + MINIMUM_BOOKING_NOTICE_MINUTES * 60_000);
-  return slotStart.getTime() >= earliest.getTime();
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
@@ -108,7 +98,7 @@ export default function StudentAcademicianProfilePage() {
     setSlotsError(null);
     try {
       const data = await getStudentAcademicianAvailability(userId);
-      setSlots(data.filter((slot) => isSlotAfterBookingNotice(slot)));
+      setSlots(Array.isArray(data) ? data : []);
     } catch (err) {
       const message = resolveStudentApiError(
         err,

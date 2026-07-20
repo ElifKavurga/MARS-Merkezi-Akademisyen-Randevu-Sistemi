@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import StudentAppointmentStepper from '../components/StudentAppointmentStepper';
 import StudentBackLink from '../components/StudentBackLink';
@@ -21,6 +21,8 @@ import {
   STUDENT_APPOINTMENT_STEP_COURSE,
   STUDENT_APPOINTMENT_STEP_MEETING_TYPE,
   STUDENT_APPOINTMENT_STEP_SLOT,
+  STUDENT_APPOINTMENT_STEPS,
+  STUDENT_POST_APPOINTMENT_REDIRECT,
 } from '../constants/studentAppointment';
 import { studentAcademicianProfilePath, ROUTES } from '../constants/routes';
 import { STUDENT_UI } from '../constants/studentUi';
@@ -44,6 +46,7 @@ import {
   loadStudentAppointmentDraft,
   saveStudentAppointmentDraft,
 } from '../utils/studentAppointmentDraft';
+import { handleRadiogroupKeyDown } from '../utils/studentRadiogroupKeyboard';
 import {
   isStudentApiNotFound,
   resolveStudentApiError,
@@ -54,6 +57,7 @@ const CLEARED_SLOT_FIELDS = {
   slotDate: null,
   startTime: null,
   endTime: null,
+  slotMeetingType: null,
   meetingType: null,
 } as const;
 
@@ -496,6 +500,20 @@ function isDraftReadyToSubmit(draft: StudentAppointmentDraft | null): boolean {
   return true;
 }
 
+/** Yenileme sonrası draft’tan adım geri yükleme. */
+function resolveStepFromDraft(draft: StudentAppointmentDraft): number {
+  if (draft.requiresCourseSelection && (draft.courseId == null || draft.courseId < 1)) {
+    return STUDENT_APPOINTMENT_STEP_COURSE;
+  }
+  if (!draft.slotId || !draft.slotDate || !draft.startTime) {
+    return STUDENT_APPOINTMENT_STEP_SLOT;
+  }
+  if (!isSelectableMeetingType(draft.meetingType)) {
+    return STUDENT_APPOINTMENT_STEP_MEETING_TYPE;
+  }
+  return STUDENT_APPOINTMENT_STEP_CONFIRM;
+}
+
 function MeetingTypeStepPanel({
   draft,
   onSelectMeetingType,
@@ -508,15 +526,21 @@ function MeetingTypeStepPanel({
   onBack: () => void;
 }) {
   const canContinue = isSelectableMeetingType(draft.meetingType);
-  const [showChooser] = useState(
-    () =>
-      draft.meetingType === MEETING_TYPE.BOTH
-      || !isSelectableMeetingType(draft.meetingType),
+  const showChooser =
+    draft.slotMeetingType === MEETING_TYPE.BOTH
+    || draft.meetingType === MEETING_TYPE.BOTH
+    || !isSelectableMeetingType(draft.meetingType);
+
+  const selectedOptionIndex = APPOINTMENT_MEETING_TYPE_OPTIONS.findIndex(
+    (option) => option.value === draft.meetingType,
   );
 
   return (
     <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-6">
-      <h2 className="font-headline-md text-headline-md text-primary">
+      <h2
+        tabIndex={-1}
+        className="font-headline-md text-headline-md text-primary outline-none"
+      >
         {STUDENT_APPOINTMENT_MESSAGES.STEP_MEETING_TYPE_TITLE}
       </h2>
       <p className="mt-2 font-body-md text-body-md text-on-surface-variant">
@@ -528,8 +552,16 @@ function MeetingTypeStepPanel({
           className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2"
           role="radiogroup"
           aria-label={STUDENT_APPOINTMENT_MESSAGES.STEP_MEETING_TYPE_TITLE}
+          onKeyDown={(event) =>
+            handleRadiogroupKeyDown(
+              event,
+              APPOINTMENT_MEETING_TYPE_OPTIONS.length,
+              selectedOptionIndex,
+              (index) => onSelectMeetingType(APPOINTMENT_MEETING_TYPE_OPTIONS[index].value),
+            )
+          }
         >
-          {APPOINTMENT_MEETING_TYPE_OPTIONS.map((option) => {
+          {APPOINTMENT_MEETING_TYPE_OPTIONS.map((option, index) => {
             const selected = draft.meetingType === option.value;
             return (
               <button
@@ -537,6 +569,7 @@ function MeetingTypeStepPanel({
                 type="button"
                 role="radio"
                 aria-checked={selected}
+                tabIndex={selected || (selectedOptionIndex < 0 && index === 0) ? 0 : -1}
                 onClick={() => onSelectMeetingType(option.value)}
                 className={`rounded-lg border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim focus-visible:ring-offset-1 ${
                   selected
@@ -567,6 +600,7 @@ function MeetingTypeStepPanel({
           type="button"
           className={`${STUDENT_UI.PRIMARY_BUTTON_CLASS} w-full sm:w-auto`}
           disabled={!canContinue}
+          aria-disabled={!canContinue}
           title={
             canContinue
               ? undefined
@@ -719,6 +753,7 @@ export default function StudentAppointmentCreatePage() {
   const [selectedDraft, setSelectedDraft] = useState<StudentAppointmentDraft | null>(null);
   const [activeStepIndex, setActiveStepIndex] = useState(STUDENT_APPOINTMENT_STEP_CATEGORY);
   const [submitting, setSubmitting] = useState(false);
+  const stepHeadingRef = useRef<HTMLHeadingElement | null>(null);
 
   const academicianId = Number(academicianIdParam);
   const profilePath =
@@ -750,7 +785,13 @@ export default function StudentAppointmentCreatePage() {
     setNotFound(false);
     try {
       setAcademician(await getStudentAcademicianDetail(academicianId));
-      setSelectedDraft(loadStudentAppointmentDraft(academicianId));
+      const restoredDraft = loadStudentAppointmentDraft(academicianId);
+      setSelectedDraft(restoredDraft);
+      if (restoredDraft) {
+        setActiveStepIndex(resolveStepFromDraft(restoredDraft));
+      } else {
+        setActiveStepIndex(STUDENT_APPOINTMENT_STEP_CATEGORY);
+      }
     } catch (err) {
       const message = resolveStudentApiError(err, STUDENT_APPOINTMENT_MESSAGES.LOAD_ERROR, {
         notFoundMessage: STUDENT_APPOINTMENT_MESSAGES.NOT_FOUND,
@@ -775,7 +816,13 @@ export default function StudentAppointmentCreatePage() {
           return current;
         }
         const stillExists = data.some((item) => item.categoryId === current.categoryId);
-        return stillExists ? current : null;
+        if (stillExists) {
+          return current;
+        }
+        if (Number.isInteger(academicianId) && academicianId >= 1) {
+          clearStudentAppointmentDraft(academicianId);
+        }
+        return null;
       });
     } catch (err) {
       const message = resolveStudentApiError(
@@ -788,7 +835,7 @@ export default function StudentAppointmentCreatePage() {
     } finally {
       setCategoriesLoading(false);
     }
-  }, [toast]);
+  }, [toast, academicianId]);
 
   const loadCourses = useCallback(async () => {
     if (!Number.isInteger(academicianId) || academicianId < 1) {
@@ -902,6 +949,10 @@ export default function StudentAppointmentCreatePage() {
     }
   }, [academician, activeStepIndex, selectedDraft?.categoryId, loadSlots]);
 
+  useEffect(() => {
+    stepHeadingRef.current?.focus();
+  }, [activeStepIndex]);
+
   const skippedStepIndices = useMemo(() => {
     if (
       selectedDraft &&
@@ -922,25 +973,9 @@ export default function StudentAppointmentCreatePage() {
       return;
     }
     if (selectedDraft.requiresCourseSelection) {
-      const withClearedCourse: StudentAppointmentDraft = {
-        ...selectedDraft,
-        courseId: null,
-        courseCode: null,
-        courseName: null,
-        ...CLEARED_SLOT_FIELDS,
-      };
-      persistDraft(withClearedCourse);
       setActiveStepIndex(STUDENT_APPOINTMENT_STEP_COURSE);
       return;
     }
-    const withoutCourse: StudentAppointmentDraft = {
-      ...selectedDraft,
-      courseId: null,
-      courseCode: null,
-      courseName: null,
-      ...CLEARED_SLOT_FIELDS,
-    };
-    persistDraft(withoutCourse);
     setActiveStepIndex(STUDENT_APPOINTMENT_STEP_SLOT);
   };
 
@@ -948,12 +983,13 @@ export default function StudentAppointmentCreatePage() {
     if (!selectedDraft) {
       return;
     }
+    const courseChanged = selectedDraft.courseId !== course.courseId;
     persistDraft({
       ...selectedDraft,
       courseId: course.courseId,
       courseCode: course.courseCode,
       courseName: course.courseName,
-      ...CLEARED_SLOT_FIELDS,
+      ...(courseChanged ? CLEARED_SLOT_FIELDS : {}),
     });
   };
 
@@ -961,10 +997,6 @@ export default function StudentAppointmentCreatePage() {
     if (!selectedDraft?.courseId) {
       return;
     }
-    persistDraft({
-      ...selectedDraft,
-      ...CLEARED_SLOT_FIELDS,
-    });
     setActiveStepIndex(STUDENT_APPOINTMENT_STEP_SLOT);
   };
 
@@ -978,6 +1010,7 @@ export default function StudentAppointmentCreatePage() {
       slotDate: slot.slotDate,
       startTime: slot.startTime,
       endTime: slot.endTime,
+      slotMeetingType: slot.meetingType,
       meetingType: slot.meetingType,
     });
   };
@@ -1040,7 +1073,7 @@ export default function StudentAppointmentCreatePage() {
       }
       setSelectedDraft(null);
       toast.success(STUDENT_APPOINTMENT_MESSAGES.STEP_CONFIRM_SUCCESS);
-      navigate(ROUTES.STUDENT_APPOINTMENTS, { replace: true });
+      navigate(STUDENT_POST_APPOINTMENT_REDIRECT, { replace: true });
     } catch (err) {
       const message = resolveStudentApiError(
         err,
@@ -1170,6 +1203,14 @@ export default function StudentAppointmentCreatePage() {
         activeStepIndex={activeStepIndex}
         skippedStepIndices={skippedStepIndices}
       />
+
+      <p
+        ref={stepHeadingRef}
+        tabIndex={-1}
+        className="sr-only outline-none"
+      >
+        {STUDENT_APPOINTMENT_STEPS[activeStepIndex]?.label ?? ''} adımı
+      </p>
 
       {activeStepIndex === STUDENT_APPOINTMENT_STEP_CONFIRM && selectedDraft ? (
         <ConfirmStepPanel

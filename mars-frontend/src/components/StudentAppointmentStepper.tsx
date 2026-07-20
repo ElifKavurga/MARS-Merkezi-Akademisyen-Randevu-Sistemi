@@ -10,6 +10,27 @@ type StudentAppointmentStepperProps = {
   skippedStepIndices?: readonly number[];
 };
 
+function stepStatusLabel(options: {
+  isActive: boolean;
+  isSkipped: boolean;
+  isCompleted: boolean;
+  isLocked: boolean;
+}): string {
+  if (options.isActive) {
+    return STUDENT_APPOINTMENT_MESSAGES.STEP_STATUS_CURRENT;
+  }
+  if (options.isSkipped) {
+    return STUDENT_APPOINTMENT_MESSAGES.STEP_STATUS_SKIPPED;
+  }
+  if (options.isCompleted) {
+    return STUDENT_APPOINTMENT_MESSAGES.STEP_STATUS_COMPLETED;
+  }
+  if (options.isLocked) {
+    return STUDENT_APPOINTMENT_MESSAGES.STEP_STATUS_LOCKED;
+  }
+  return STUDENT_APPOINTMENT_MESSAGES.STEP_STATUS_LOCKED;
+}
+
 export default function StudentAppointmentStepper({
   activeStepIndex = STUDENT_APPOINTMENT_ACTIVE_STEP_INDEX,
   skippedStepIndices = [],
@@ -38,6 +59,12 @@ export default function StudentAppointmentStepper({
             const isSkipped = skipped.has(index) && index < activeStepIndex;
             const isCompleted = index < activeStepIndex || isSkipped;
             const isLocked = index > activeStepIndex;
+            const status = stepStatusLabel({
+              isActive,
+              isSkipped,
+              isCompleted,
+              isLocked,
+            });
 
             return (
               <li
@@ -51,6 +78,7 @@ export default function StudentAppointmentStepper({
                       ? 'bg-primary text-on-primary ring-4 ring-primary-fixed-dim/40'
                       : 'border border-outline-variant bg-surface-container-lowest text-on-surface-variant'
                   }`}
+                  aria-label={`${step.label}, ${status}`}
                   title={
                     isSkipped
                       ? STUDENT_APPOINTMENT_MESSAGES.STEP_COURSE_SKIPPED
@@ -64,7 +92,7 @@ export default function StudentAppointmentStepper({
                       {isSkipped ? 'remove' : 'check'}
                     </span>
                   ) : (
-                    index + 1
+                    <span aria-hidden="true">{index + 1}</span>
                   )}
                 </span>
                 <span
@@ -75,11 +103,15 @@ export default function StudentAppointmentStepper({
                         ? 'text-on-surface-variant/60'
                         : 'text-on-surface-variant'
                   }`}
+                  aria-hidden="true"
                 >
                   {step.label}
                 </span>
                 {isSkipped ? (
-                  <span className="font-label-sm text-[11px] text-on-surface-variant/70">
+                  <span
+                    className="font-label-sm text-[11px] text-on-surface-variant/70"
+                    aria-hidden="true"
+                  >
                     {STUDENT_APPOINTMENT_MESSAGES.STEP_COURSE_SKIPPED}
                   </span>
                 ) : null}

@@ -1,3 +1,5 @@
+import { ROUTES } from './routes';
+
 export const STUDENT_APPOINTMENT_STEPS = [
   { id: 'category', label: 'Kategori' },
   { id: 'course', label: 'Ders' },
@@ -84,10 +86,15 @@ export const STUDENT_APPOINTMENT_MESSAGES = {
   STEP_CONFIRM_SUBMITTING: 'Randevu oluşturuluyor...',
   STEP_CONFIRM_DISABLED:
     'Randevuyu onaylamak için kategori, slot ve görüşme türü bilgileri tamamlanmalıdır.',
-  STEP_CONFIRM_SUCCESS: 'Randevu talebiniz başarıyla oluşturuldu.',
+  STEP_CONFIRM_SUCCESS:
+    'Randevu talebiniz başarıyla oluşturuldu. Randevularım sayfasına yönlendiriliyorsunuz.',
   STEP_CONFIRM_ERROR: 'Randevu talebi oluşturulamadı. Lütfen tekrar deneyin.',
   BACK_TO_COURSE: 'Derse Dön',
   STEP_LOCKED: 'Bu adım henüz aktif değil.',
+  STEP_STATUS_CURRENT: 'mevcut adım',
+  STEP_STATUS_COMPLETED: 'tamamlandı',
+  STEP_STATUS_SKIPPED: 'atlandı',
+  STEP_STATUS_LOCKED: 'kilitli',
   NO_TITLE: 'Ünvan belirtilmemiş',
   BREADCRUMB_CREATE: 'Randevu Oluştur',
   MY_APPOINTMENTS_TITLE: 'Randevularım',
@@ -96,3 +103,9 @@ export const STUDENT_APPOINTMENT_MESSAGES = {
   MY_APPOINTMENTS_EMPTY_DESCRIPTION:
     'Oluşturduğunuz randevu talepleri burada listelenecek.',
 } as const;
+
+/**
+ * Randevu oluşturma sonrası yönlendirme.
+ * Sprint 23’te Randevularım içeriği doldurulduğunda bu sabit aynı kalır.
+ */
+export const STUDENT_POST_APPOINTMENT_REDIRECT = ROUTES.STUDENT_APPOINTMENTS;

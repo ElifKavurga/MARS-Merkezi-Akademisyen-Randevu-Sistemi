@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -48,6 +49,7 @@ import com.mars.repository.AppointmentCategoryRepository;
 import com.mars.repository.AppointmentRepository;
 import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.repository.CourseRepository;
+import com.mars.repository.OutOfOfficePeriodRepository;
 import com.mars.repository.StudentPenaltyStatusRepository;
 import com.mars.security.CustomUserDetails;
 
@@ -68,6 +70,8 @@ class AppointmentServiceTest {
     private CourseRepository courseRepository;
     @Mock
     private StudentPenaltyStatusRepository studentPenaltyStatusRepository;
+    @Mock
+    private OutOfOfficePeriodRepository outOfOfficePeriodRepository;
     @Mock
     private AppointmentMapper appointmentMapper;
 
@@ -93,6 +97,11 @@ class AppointmentServiceTest {
         staff = new User();
         staff.setUserId(10);
         staff.setFullName("Dr. Test");
+        Role staffRole = new Role();
+        staffRole.setRoleName(RoleType.ACADEMICIAN.name());
+        staff.setRole(staffRole);
+        staff.setIsActive(true);
+        staff.setIsAcceptingAppointments(true);
 
         slot = new AvailabilitySlot();
         slot.setSlotId(5);
@@ -113,6 +122,9 @@ class AppointmentServiceTest {
         CustomUserDetails userDetails = new CustomUserDetails(student);
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(userDetails, null, List.of()));
+
+        lenient().when(outOfOfficePeriodRepository.existsOverlappingPeriod(any(), any(), any()))
+                .thenReturn(false);
     }
 
     @AfterEach
@@ -131,7 +143,7 @@ class AppointmentServiceTest {
                 .build();
 
         when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
-        when(availabilitySlotRepository.findByIdWithStaff(5)).thenReturn(Optional.of(slot));
+        when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
         when(appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(5, ACTIVE_STATUSES))
                 .thenReturn(false);
         when(appointmentRepository.existsOverlappingActiveAppointmentForStudent(
@@ -154,7 +166,7 @@ class AppointmentServiceTest {
     void createAppointment_blockedSlot_throwsConflict() {
         slot.setIsBlocked(true);
         when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
-        when(availabilitySlotRepository.findByIdWithStaff(5)).thenReturn(Optional.of(slot));
+        when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
 
         assertThatThrownBy(() -> appointmentService.createAppointment(baseRequest))
                 .isInstanceOf(ConflictException.class)
@@ -165,7 +177,7 @@ class AppointmentServiceTest {
     @Test
     void createAppointment_takenSlot_throwsConflict() {
         when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
-        when(availabilitySlotRepository.findByIdWithStaff(5)).thenReturn(Optional.of(slot));
+        when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
         when(appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(5, ACTIVE_STATUSES))
                 .thenReturn(true);
 
@@ -178,7 +190,7 @@ class AppointmentServiceTest {
     void createAppointment_pastSlot_throwsBadRequest() {
         slot.setSlotDate(LocalDate.now().minusDays(1));
         when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
-        when(availabilitySlotRepository.findByIdWithStaff(5)).thenReturn(Optional.of(slot));
+        when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
 
         assertThatThrownBy(() -> appointmentService.createAppointment(baseRequest))
                 .isInstanceOf(BadRequestException.class)
@@ -195,13 +207,94 @@ class AppointmentServiceTest {
         assertThatThrownBy(() -> appointmentService.createAppointment(baseRequest))
                 .isInstanceOf(ConflictException.class)
                 .hasMessage(AppointmentMessages.STUDENT_RESTRICTED);
-        verify(availabilitySlotRepository, never()).findByIdWithStaff(any());
+        verify(availabilitySlotRepository, never()).findByIdWithStaffForUpdate(any());
+    }
+
+    @Test
+    void createAppointment_slotTooSoon_throwsBadRequest() {
+        java.time.ZoneId zone = java.time.ZoneId.of("Europe/Istanbul");
+        java.time.LocalDateTime now = java.time.LocalDateTime.now(zone);
+        slot.setSlotDate(now.toLocalDate());
+        slot.setStartTime(now.toLocalTime().plusMinutes(10).withSecond(0).withNano(0));
+        slot.setEndTime(slot.getStartTime().plusMinutes(10));
+        when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
+        when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
+
+        assertThatThrownBy(() -> appointmentService.createAppointment(baseRequest))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage(AppointmentMessages.SLOT_TOO_SOON);
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
+    void createAppointment_slotBeyondHorizon_throwsBadRequest() {
+        java.time.ZoneId zone = java.time.ZoneId.of("Europe/Istanbul");
+        slot.setSlotDate(java.time.LocalDate.now(zone).plusDays(15));
+        when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
+        when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
+
+        assertThatThrownBy(() -> appointmentService.createAppointment(baseRequest))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage(AppointmentMessages.SLOT_TOO_FAR);
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
+    void createAppointment_outOfOffice_throwsConflict() {
+        when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
+        when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
+        when(outOfOfficePeriodRepository.existsOverlappingPeriod(
+                        10, slot.getSlotDate(), slot.getSlotDate()))
+                .thenReturn(true);
+
+        assertThatThrownBy(() -> appointmentService.createAppointment(baseRequest))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage(AppointmentMessages.SLOT_OUT_OF_OFFICE);
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
+    void createAppointment_inactiveStaff_throwsConflict() {
+        staff.setIsActive(false);
+        when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
+        when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
+
+        assertThatThrownBy(() -> appointmentService.createAppointment(baseRequest))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage(AppointmentMessages.STAFF_INACTIVE);
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
+    void createAppointment_staffNotAccepting_throwsConflict() {
+        staff.setIsAcceptingAppointments(false);
+        when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
+        when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
+
+        assertThatThrownBy(() -> appointmentService.createAppointment(baseRequest))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage(AppointmentMessages.STAFF_NOT_ACCEPTING);
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
+    void createAppointment_nonBookableStaffRole_throwsBadRequest() {
+        Role assistantRole = new Role();
+        assistantRole.setRoleName(RoleType.ASSISTANT.name());
+        staff.setRole(assistantRole);
+        when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
+        when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
+
+        assertThatThrownBy(() -> appointmentService.createAppointment(baseRequest))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage(AppointmentMessages.STAFF_NOT_BOOKABLE);
+        verify(appointmentRepository, never()).save(any());
     }
 
     @Test
     void createAppointment_overlappingTime_throwsConflict() {
         when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
-        when(availabilitySlotRepository.findByIdWithStaff(5)).thenReturn(Optional.of(slot));
+        when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
         when(appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(5, ACTIVE_STATUSES))
                 .thenReturn(false);
         when(appointmentRepository.existsOverlappingActiveAppointmentForStudent(
@@ -218,7 +311,7 @@ class AppointmentServiceTest {
         slot.setMeetingType(MeetingType.FACE_TO_FACE.name());
         Appointment appointment = new Appointment();
         when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
-        when(availabilitySlotRepository.findByIdWithStaff(5)).thenReturn(Optional.of(slot));
+        when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
         when(appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(5, ACTIVE_STATUSES))
                 .thenReturn(false);
         when(appointmentRepository.existsOverlappingActiveAppointmentForStudent(
@@ -240,7 +333,7 @@ class AppointmentServiceTest {
         slot.setMeetingType(MeetingType.ONLINE.name());
         Appointment appointment = new Appointment();
         when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
-        when(availabilitySlotRepository.findByIdWithStaff(5)).thenReturn(Optional.of(slot));
+        when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
         when(appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(5, ACTIVE_STATUSES))
                 .thenReturn(false);
         when(appointmentRepository.existsOverlappingActiveAppointmentForStudent(
@@ -260,7 +353,7 @@ class AppointmentServiceTest {
     void createAppointment_bothSlot_requiresStudentChoice() {
         slot.setMeetingType(MeetingType.BOTH.name());
         when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
-        when(availabilitySlotRepository.findByIdWithStaff(5)).thenReturn(Optional.of(slot));
+        when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
         when(appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(5, ACTIVE_STATUSES))
                 .thenReturn(false);
         when(appointmentRepository.existsOverlappingActiveAppointmentForStudent(
@@ -278,7 +371,7 @@ class AppointmentServiceTest {
         baseRequest.setMeetingType(MeetingType.ONLINE.name());
         Appointment appointment = new Appointment();
         when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
-        when(availabilitySlotRepository.findByIdWithStaff(5)).thenReturn(Optional.of(slot));
+        when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
         when(appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(5, ACTIVE_STATUSES))
                 .thenReturn(false);
         when(appointmentRepository.existsOverlappingActiveAppointmentForStudent(

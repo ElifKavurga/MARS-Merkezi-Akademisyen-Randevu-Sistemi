@@ -14,6 +14,10 @@ import com.mars.service.AppointmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Öğrenci randevu talebi oluşturma.
+ * Başarı gövdesi FE uyumu için ham DTO döner; hatalar GlobalExceptionHandler ApiResponse ile.
+ */
 @RestController
 @RequestMapping("/students/appointments")
 @RequiredArgsConstructor

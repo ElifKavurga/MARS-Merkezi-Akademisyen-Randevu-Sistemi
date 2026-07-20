@@ -30,6 +30,8 @@ export function loadStudentAppointmentDraft(
       slotDate: typeof parsed.slotDate === 'string' ? parsed.slotDate : null,
       startTime: typeof parsed.startTime === 'string' ? parsed.startTime : null,
       endTime: typeof parsed.endTime === 'string' ? parsed.endTime : null,
+      slotMeetingType:
+        typeof parsed.slotMeetingType === 'string' ? parsed.slotMeetingType : null,
       meetingType: typeof parsed.meetingType === 'string' ? parsed.meetingType : null,
     };
   } catch {

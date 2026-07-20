@@ -7,10 +7,13 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.mars.entity.AvailabilitySlot;
+
+import jakarta.persistence.LockModeType;
 
 public interface AvailabilitySlotRepository extends JpaRepository<AvailabilitySlot, Integer> {
 
@@ -28,6 +31,15 @@ public interface AvailabilitySlotRepository extends JpaRepository<AvailabilitySl
             WHERE s.slotId = :slotId
             """)
     Optional<AvailabilitySlot> findByIdWithStaff(@Param("slotId") Integer slotId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT s FROM AvailabilitySlot s
+            JOIN FETCH s.staff st
+            JOIN FETCH st.role
+            WHERE s.slotId = :slotId
+            """)
+    Optional<AvailabilitySlot> findByIdWithStaffForUpdate(@Param("slotId") Integer slotId);
 
     @Query("""
             SELECT s FROM AvailabilitySlot s

@@ -5,6 +5,10 @@ import { STUDENT_APPOINTMENT_MESSAGES } from '../constants/studentAppointment';
 import { ROUTES } from '../constants/routes';
 import { STUDENT_UI } from '../constants/studentUi';
 
+/**
+ * Öğrenci randevu listesi (Sprint 23’te doldurulacak).
+ * Oluşturma sonrası yönlendirme: STUDENT_POST_APPOINTMENT_REDIRECT → ROUTES.STUDENT_APPOINTMENTS.
+ */
 export default function StudentAppointmentsPage() {
   return (
     <div className="w-full min-w-0 animate-fade-in">

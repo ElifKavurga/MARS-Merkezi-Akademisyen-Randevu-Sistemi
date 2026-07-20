@@ -28,6 +28,8 @@ export type StudentAppointmentDraft = {
   slotDate: string | null;
   startTime: string | null;
   endTime: string | null;
+  /** Slot şablonunun görüşme türü (BOTH dahil); seçim `meetingType` alanında tutulur. */
+  slotMeetingType: string | null;
   meetingType: string | null;
 };
 

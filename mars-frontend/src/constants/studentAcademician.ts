@@ -65,6 +65,9 @@ export const STUDENT_ACADEMICIAN_MESSAGES = {
 /** Sprint 21.5+ BR-017: minimum rezervasyon süresi (dakika). */
 export const MINIMUM_BOOKING_NOTICE_MINUTES = 30;
 
+/** Sprint 22.7 BR-018: maksimum rezervasyon penceresi (gün). */
+export const MAXIMUM_BOOKING_HORIZON_DAYS = 14;
+
 /** Sprint 29 bildirim sistemi için hazır metin. */
 export const NOTIFICATION_EVENT_MESSAGES = {
   NEW_APPOINTMENT_REQUEST: 'Yeni randevu talebi oluşturuldu.',

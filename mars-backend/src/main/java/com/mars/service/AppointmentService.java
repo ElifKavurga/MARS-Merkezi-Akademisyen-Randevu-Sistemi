@@ -3,6 +3,7 @@ package com.mars.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -15,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mars.AppointmentConstraints;
 import com.mars.AppointmentMessages;
 import com.mars.dto.AppointmentCreateRequest;
 import com.mars.dto.AppointmentResponseDto;
@@ -36,6 +38,7 @@ import com.mars.repository.AppointmentCategoryRepository;
 import com.mars.repository.AppointmentRepository;
 import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.repository.CourseRepository;
+import com.mars.repository.OutOfOfficePeriodRepository;
 import com.mars.repository.StudentPenaltyStatusRepository;
 import com.mars.security.CustomUserDetails;
 import com.mars.security.SecurityMessages;
@@ -46,15 +49,22 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AppointmentService {
 
+    private static final ZoneId APP_ZONE = ZoneId.of("Europe/Istanbul");
+
     private static final Set<String> ACTIVE_APPOINTMENT_STATUSES = Set.of(
             AppointmentStatus.PENDING.name(),
             AppointmentStatus.APPROVED.name());
+
+    private static final Set<String> BOOKABLE_STAFF_ROLES = Set.of(
+            RoleType.ACADEMICIAN.name(),
+            RoleType.HOD.name());
 
     private final AppointmentRepository appointmentRepository;
     private final AvailabilitySlotRepository availabilitySlotRepository;
     private final AppointmentCategoryRepository appointmentCategoryRepository;
     private final CourseRepository courseRepository;
     private final StudentPenaltyStatusRepository studentPenaltyStatusRepository;
+    private final OutOfOfficePeriodRepository outOfOfficePeriodRepository;
     private final AppointmentMapper appointmentMapper;
 
     @Transactional
@@ -70,15 +80,14 @@ public class AppointmentService {
 
         ensureStudentNotRestricted(student.getUserId());
 
-        AvailabilitySlot slot = availabilitySlotRepository.findByIdWithStaff(request.getSlotId())
+        // Race condition: slot satırını kilitle, ardından müsaitlik son kez doğrulanır.
+        AvailabilitySlot slot = availabilitySlotRepository.findByIdWithStaffForUpdate(request.getSlotId())
                 .orElseThrow(() -> new ResourceNotFoundException(AppointmentMessages.SLOT_NOT_FOUND));
 
-        if (Boolean.TRUE.equals(slot.getIsBlocked())) {
-            throw new ConflictException(AppointmentMessages.SLOT_BLOCKED);
-        }
-        if (isSlotInPast(slot)) {
-            throw new BadRequestException(AppointmentMessages.SLOT_PAST);
-        }
+        User staff = slot.getStaff();
+        ensureStaffIsBookable(staff);
+        ensureSlotBookable(slot, staff.getUserId());
+
         if (appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(
                 slot.getSlotId(), ACTIVE_APPOINTMENT_STATUSES)) {
             throw new ConflictException(AppointmentMessages.SLOT_TAKEN);
@@ -95,7 +104,7 @@ public class AppointmentService {
         AppointmentCategory category = appointmentCategoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException(AppointmentMessages.CATEGORY_NOT_FOUND));
 
-        Course course = resolveCourse(request.getCourseId(), category, slot.getStaff());
+        Course course = resolveCourse(request.getCourseId(), category, staff);
         String meetingType = resolveAppointmentMeetingType(slot.getMeetingType(), request.getMeetingType());
 
         Appointment appointment = appointmentMapper.toEntity(
@@ -159,7 +168,7 @@ public class AppointmentService {
 
         validatePendingStatus(appointment.getAppointmentStatus());
         appointment.setAppointmentStatus(targetStatus.name());
-        appointment.setUpdatedAt(LocalDateTime.now());
+        appointment.setUpdatedAt(LocalDateTime.now(APP_ZONE));
 
         Appointment saved = appointmentRepository.save(appointment);
         return appointmentMapper.toStaffResponse(saved);
@@ -178,6 +187,50 @@ public class AppointmentService {
         throw new ConflictException(AppointmentMessages.NOT_PENDING);
     }
 
+    private void ensureStaffIsBookable(User staff) {
+        if (staff == null) {
+            throw new BadRequestException(AppointmentMessages.STAFF_NOT_BOOKABLE);
+        }
+        String roleName = staff.getRole() != null ? staff.getRole().getRoleName() : null;
+        if (roleName == null || !BOOKABLE_STAFF_ROLES.contains(roleName)) {
+            throw new BadRequestException(AppointmentMessages.STAFF_NOT_BOOKABLE);
+        }
+        if (!Boolean.TRUE.equals(staff.getIsActive())) {
+            throw new ConflictException(AppointmentMessages.STAFF_INACTIVE);
+        }
+        if (!Boolean.TRUE.equals(staff.getIsAcceptingAppointments())) {
+            throw new ConflictException(AppointmentMessages.STAFF_NOT_ACCEPTING);
+        }
+    }
+
+    private void ensureSlotBookable(AvailabilitySlot slot, Integer staffId) {
+        if (Boolean.TRUE.equals(slot.getIsBlocked())) {
+            throw new ConflictException(AppointmentMessages.SLOT_BLOCKED);
+        }
+        if (isSlotInPast(slot)) {
+            throw new BadRequestException(AppointmentMessages.SLOT_PAST);
+        }
+
+        LocalDateTime now = LocalDateTime.now(APP_ZONE);
+        LocalDate today = now.toLocalDate();
+        LocalDateTime earliestBookable = now.plusMinutes(AppointmentConstraints.MINIMUM_BOOKING_NOTICE_MINUTES);
+        LocalDate latestBookableDate = today.plusDays(AppointmentConstraints.MAXIMUM_BOOKING_HORIZON_DAYS);
+        LocalDateTime slotStart = LocalDateTime.of(slot.getSlotDate(), slot.getStartTime());
+
+        // BR-017
+        if (slotStart.isBefore(earliestBookable)) {
+            throw new BadRequestException(AppointmentMessages.SLOT_TOO_SOON);
+        }
+        // BR-018
+        if (slot.getSlotDate().isAfter(latestBookableDate)) {
+            throw new BadRequestException(AppointmentMessages.SLOT_TOO_FAR);
+        }
+        if (outOfOfficePeriodRepository.existsOverlappingPeriod(
+                staffId, slot.getSlotDate(), slot.getSlotDate())) {
+            throw new ConflictException(AppointmentMessages.SLOT_OUT_OF_OFFICE);
+        }
+    }
+
     private Course resolveCourse(Integer courseId, AppointmentCategory category, User staff) {
         boolean requiresCourse = Boolean.TRUE.equals(category.getRequiresCourseSelection());
         if (requiresCourse) {
@@ -189,6 +242,9 @@ public class AppointmentService {
             if (course.getOwnerAcademician() == null
                     || !Objects.equals(course.getOwnerAcademician().getUserId(), staff.getUserId())) {
                 throw new BadRequestException(AppointmentMessages.COURSE_STAFF_MISMATCH);
+            }
+            if (!Boolean.TRUE.equals(course.getIsActive())) {
+                throw new BadRequestException(AppointmentMessages.COURSE_INACTIVE);
             }
             return course;
         }
@@ -255,17 +311,18 @@ public class AppointmentService {
             return;
         }
         LocalDate endDate = status.getRestrictionEndDate();
-        if (endDate == null || !endDate.isBefore(LocalDate.now())) {
+        if (endDate == null || !endDate.isBefore(LocalDate.now(APP_ZONE))) {
             throw new ConflictException(AppointmentMessages.STUDENT_RESTRICTED);
         }
     }
 
     private boolean isSlotInPast(AvailabilitySlot slot) {
-        LocalDate today = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now(APP_ZONE);
+        LocalDate today = now.toLocalDate();
         if (slot.getSlotDate().isBefore(today)) {
             return true;
         }
-        return slot.getSlotDate().isEqual(today) && slot.getEndTime().isBefore(LocalTime.now());
+        return slot.getSlotDate().isEqual(today) && slot.getEndTime().isBefore(now.toLocalTime());
     }
 
     private User getCurrentStudent() {
@@ -332,11 +389,12 @@ public class AppointmentService {
 
     private boolean isAppointmentInPast(Appointment appointment) {
         AvailabilitySlot slot = appointment.getSlot();
-        LocalDate today = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now(APP_ZONE);
+        LocalDate today = now.toLocalDate();
         if (slot.getSlotDate().isBefore(today)) {
             return true;
         }
         return slot.getSlotDate().isEqual(today)
-                && slot.getEndTime().isBefore(LocalTime.now());
+                && slot.getEndTime().isBefore(now.toLocalTime());
     }
 }
