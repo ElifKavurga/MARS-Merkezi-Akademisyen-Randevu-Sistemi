@@ -44,9 +44,17 @@ export const STUDENT_ACADEMICIAN_MESSAGES = {
   ABOUT_EMPTY: 'Hakkında bilgisi henüz eklenmemiş.',
   BOOK_APPOINTMENT: 'Randevu Al',
   BOOK_APPOINTMENT_DISABLED: 'Bu akademisyen şu an yeni randevu kabul etmiyor.',
+  AVAILABILITY_TITLE: 'Uygun Randevu Saatleri',
+  AVAILABILITY_EMPTY: 'Bu akademisyen için uygun randevu bulunamadı.',
+  AVAILABILITY_LOADING: 'Uygun randevu saatleri yükleniyor...',
+  AVAILABILITY_LOAD_ERROR: 'Uygun randevu saatleri yüklenirken bir hata oluştu.',
+  AVAILABILITY_DATE: 'Tarih',
+  AVAILABILITY_START: 'Başlangıç',
+  AVAILABILITY_END: 'Bitiş',
+  AVAILABILITY_MEETING_TYPE: 'Görüşme Türü',
 } as const;
 
-/** Sprint 22 randevu oluşturma: minimum rezervasyon süresi (dakika). */
+/** Sprint 21.5+ BR-017: minimum rezervasyon süresi (dakika). */
 export const MINIMUM_BOOKING_NOTICE_MINUTES = 30;
 
 /** Sprint 29 bildirim sistemi için hazır metin. */

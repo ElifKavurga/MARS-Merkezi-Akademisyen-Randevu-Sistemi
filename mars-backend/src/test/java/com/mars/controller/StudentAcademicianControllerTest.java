@@ -10,6 +10,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +24,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.mars.config.CorsConfig;
+import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.PageResponseDto;
 import com.mars.dto.StudentAcademicianCourseDto;
 import com.mars.dto.StudentAcademicianDetailResponseDto;
@@ -179,6 +182,35 @@ class StudentAcademicianControllerTest {
                 .andExpect(jsonPath("$.fullName").value("Ayşe Yılmaz"))
                 .andExpect(jsonPath("$.isAcceptingAppointments").value(true))
                 .andExpect(jsonPath("$.courses[0].courseCode").value("CENG101"));
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    void getAcademicianAvailability_asStudent_returnsSlots() throws Exception {
+        when(studentAcademicianService.getAcademicianAvailability(7))
+                .thenReturn(List.of(
+                        AvailableSlotResponseDto.builder()
+                                .slotId(11)
+                                .staffId(7)
+                                .staffName("Ayşe Yılmaz")
+                                .slotDate(LocalDate.of(2026, 7, 21))
+                                .startTime(LocalTime.of(14, 0))
+                                .endTime(LocalTime.of(14, 30))
+                                .meetingType("FACE_TO_FACE")
+                                .build()));
+
+        mockMvc.perform(get("/students/academicians/7/availability"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].slotId").value(11))
+                .andExpect(jsonPath("$[0].meetingType").value("FACE_TO_FACE"))
+                .andExpect(jsonPath("$[0].startTime").value("14:00:00"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ACADEMICIAN")
+    void getAcademicianAvailability_asAcademician_returnsForbidden() throws Exception {
+        mockMvc.perform(get("/students/academicians/7/availability"))
+                .andExpect(status().isForbidden());
     }
 
     @Test

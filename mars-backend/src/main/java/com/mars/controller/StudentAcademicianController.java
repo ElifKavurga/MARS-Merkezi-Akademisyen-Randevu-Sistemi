@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.PageResponseDto;
 import com.mars.dto.StudentAcademicianDetailResponseDto;
 import com.mars.dto.StudentAcademicianResponseDto;
@@ -52,5 +53,11 @@ public class StudentAcademicianController {
     public ResponseEntity<StudentAcademicianDetailResponseDto> getAcademicianDetail(
             @PathVariable("id") Integer id) {
         return ResponseEntity.ok(studentAcademicianService.getAcademicianDetail(id));
+    }
+
+    @GetMapping("/{id}/availability")
+    public ResponseEntity<List<AvailableSlotResponseDto>> getAcademicianAvailability(
+            @PathVariable("id") Integer id) {
+        return ResponseEntity.ok(studentAcademicianService.getAcademicianAvailability(id));
     }
 }

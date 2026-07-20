@@ -1,15 +1,23 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import Loading from '../components/Loading';
 import UserAvatar from '../components/UserAvatar';
-import { STUDENT_ACADEMICIAN_MESSAGES } from '../constants/studentAcademician';
+import { MEETING_TYPE_OPTIONS } from '../constants/availability';
+import {
+  MINIMUM_BOOKING_NOTICE_MINUTES,
+  STUDENT_ACADEMICIAN_MESSAGES,
+} from '../constants/studentAcademician';
 import { ROUTES } from '../constants/routes';
 import { useToast } from '../hooks/useToast';
-import { getStudentAcademicianDetail } from '../services/studentAcademicianService';
+import {
+  getStudentAcademicianAvailability,
+  getStudentAcademicianDetail,
+} from '../services/studentAcademicianService';
+import type { AvailableSlot } from '../types/appointment';
 import type { StudentAcademicianDetail } from '../types/studentAcademician';
 
-function resolveErrorMessage(err: unknown): string {
+function resolveErrorMessage(err: unknown, fallback: string): string {
   if (isAxiosError(err)) {
     if (err.response?.status === 403) {
       return STUDENT_ACADEMICIAN_MESSAGES.ACCESS_DENIED;
@@ -22,7 +30,29 @@ function resolveErrorMessage(err: unknown): string {
       return apiMessage;
     }
   }
-  return STUDENT_ACADEMICIAN_MESSAGES.PROFILE_LOAD_ERROR;
+  return fallback;
+}
+
+function formatSlotTime(value: string): string {
+  return value.slice(0, 5);
+}
+
+function formatSlotDate(isoDate: string): string {
+  const [year, month, day] = isoDate.split('-').map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString('tr-TR');
+}
+
+function getAvailabilityMeetingTypeLabel(meetingType: string): string {
+  return MEETING_TYPE_OPTIONS.find((item) => item.value === meetingType)?.label ?? meetingType;
+}
+
+/** BR-017: slot başlangıcı şu andan + notice süresinden önce olmamalı. */
+function isSlotAfterBookingNotice(slot: AvailableSlot, now = new Date()): boolean {
+  const [year, month, day] = slot.slotDate.split('-').map(Number);
+  const [hour, minute] = formatSlotTime(slot.startTime).split(':').map(Number);
+  const slotStart = new Date(year, month - 1, day, hour, minute, 0, 0);
+  const earliest = new Date(now.getTime() + MINIMUM_BOOKING_NOTICE_MINUTES * 60_000);
+  return slotStart.getTime() >= earliest.getTime();
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
@@ -41,6 +71,9 @@ export default function StudentAcademicianProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [slots, setSlots] = useState<AvailableSlot[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [slotsError, setSlotsError] = useState<string | null>(null);
 
   const userId = Number(userIdParam);
 
@@ -59,7 +92,7 @@ export default function StudentAcademicianProfilePage() {
     try {
       setProfile(await getStudentAcademicianDetail(userId));
     } catch (err) {
-      const message = resolveErrorMessage(err);
+      const message = resolveErrorMessage(err, STUDENT_ACADEMICIAN_MESSAGES.PROFILE_LOAD_ERROR);
       setProfile(null);
       setNotFound(isAxiosError(err) && err.response?.status === 404);
       setError(message);
@@ -69,9 +102,54 @@ export default function StudentAcademicianProfilePage() {
     }
   }, [toast, userId]);
 
+  const loadAvailability = useCallback(async () => {
+    if (!Number.isInteger(userId) || userId < 1) {
+      setSlots([]);
+      return;
+    }
+
+    setSlotsLoading(true);
+    setSlotsError(null);
+    try {
+      const data = await getStudentAcademicianAvailability(userId);
+      setSlots(data.filter((slot) => isSlotAfterBookingNotice(slot)));
+    } catch (err) {
+      const message = resolveErrorMessage(
+        err,
+        STUDENT_ACADEMICIAN_MESSAGES.AVAILABILITY_LOAD_ERROR,
+      );
+      setSlots([]);
+      setSlotsError(message);
+      toast.error(message);
+    } finally {
+      setSlotsLoading(false);
+    }
+  }, [toast, userId]);
+
   useEffect(() => {
     void loadProfile();
   }, [loadProfile]);
+
+  useEffect(() => {
+    if (profile) {
+      void loadAvailability();
+    } else {
+      setSlots([]);
+      setSlotsError(null);
+    }
+  }, [profile, loadAvailability]);
+
+  const visibleSlots = useMemo(
+    () =>
+      [...slots].sort((left, right) => {
+        const byDate = left.slotDate.localeCompare(right.slotDate);
+        if (byDate !== 0) {
+          return byDate;
+        }
+        return left.startTime.localeCompare(right.startTime);
+      }),
+    [slots],
+  );
 
   if (loading) {
     return (
@@ -209,6 +287,81 @@ export default function StudentAcademicianProfilePage() {
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="mb-6 rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-6">
+        <div className="mb-4 flex items-center gap-2">
+          <span className="material-symbols-outlined text-primary" aria-hidden="true">
+            schedule
+          </span>
+          <h2 className="font-headline-md text-headline-md text-primary">
+            {STUDENT_ACADEMICIAN_MESSAGES.AVAILABILITY_TITLE}
+          </h2>
+        </div>
+
+        {slotsLoading ? (
+          <div className="flex min-h-32 items-center justify-center">
+            <Loading label={STUDENT_ACADEMICIAN_MESSAGES.AVAILABILITY_LOADING} />
+          </div>
+        ) : slotsError ? (
+          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            <p className="font-body-md text-body-md text-error" role="alert">
+              {slotsError}
+            </p>
+            <button
+              type="button"
+              className="rounded-lg bg-primary-container px-4 py-2 font-label-md text-label-md text-on-primary"
+              onClick={() => void loadAvailability()}
+            >
+              Tekrar Dene
+            </button>
+          </div>
+        ) : visibleSlots.length === 0 ? (
+          <p className="font-body-md text-body-md text-on-surface-variant">
+            {STUDENT_ACADEMICIAN_MESSAGES.AVAILABILITY_EMPTY}
+          </p>
+        ) : (
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {visibleSlots.map((slot) => (
+              <li
+                key={slot.slotId}
+                className="pointer-events-none select-none rounded-xl border border-outline-variant bg-surface p-4"
+                aria-disabled="true"
+              >
+                <p className="font-label-sm text-label-sm uppercase tracking-wider text-outline">
+                  {STUDENT_ACADEMICIAN_MESSAGES.AVAILABILITY_DATE}
+                </p>
+                <p className="mt-1 font-body-md text-body-md font-semibold text-primary">
+                  {formatSlotDate(slot.slotDate)}
+                </p>
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="font-label-sm text-label-sm text-on-surface-variant">
+                      {STUDENT_ACADEMICIAN_MESSAGES.AVAILABILITY_START}
+                    </p>
+                    <p className="font-body-md text-body-md text-on-surface">
+                      {formatSlotTime(slot.startTime)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-label-sm text-label-sm text-on-surface-variant">
+                      {STUDENT_ACADEMICIAN_MESSAGES.AVAILABILITY_END}
+                    </p>
+                    <p className="font-body-md text-body-md text-on-surface">
+                      {formatSlotTime(slot.endTime)}
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-3 font-label-sm text-label-sm text-on-surface-variant">
+                  {STUDENT_ACADEMICIAN_MESSAGES.AVAILABILITY_MEETING_TYPE}
+                </p>
+                <p className="mt-1 font-body-md text-body-md text-on-surface">
+                  {getAvailabilityMeetingTypeLabel(slot.meetingType)}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">

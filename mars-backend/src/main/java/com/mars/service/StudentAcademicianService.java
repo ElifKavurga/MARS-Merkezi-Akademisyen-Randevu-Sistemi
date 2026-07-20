@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.PageResponseDto;
 import com.mars.dto.StudentAcademicianCourseDto;
 import com.mars.dto.StudentAcademicianDetailResponseDto;
@@ -39,6 +40,7 @@ public class StudentAcademicianService {
     private final UserRepository userRepository;
     private final CourseRepository courseRepository;
     private final UserMapper userMapper;
+    private final AvailabilitySlotService availabilitySlotService;
 
     @Transactional(readOnly = true)
     public PageResponseDto<StudentAcademicianResponseDto> searchAcademicians(
@@ -91,13 +93,7 @@ public class StudentAcademicianService {
 
     @Transactional(readOnly = true)
     public StudentAcademicianDetailResponseDto getAcademicianDetail(Integer userId) {
-        if (userId == null || userId < 1) {
-            throw new BadRequestException("Geçerli bir akademisyen kimliği gereklidir.");
-        }
-
-        User academician = userRepository
-                .findActiveAcademicianById(userId, ACADEMICIAN_ROLE_NAMES)
-                .orElseThrow(() -> new ResourceNotFoundException("Akademisyen bulunamadı."));
+        User academician = requireActiveAcademician(userId);
 
         List<StudentAcademicianCourseDto> courses = courseRepository
                 .findByOwnerAcademician_UserIdAndIsActiveTrueOrderByCourseNameAsc(userId)
@@ -106,6 +102,21 @@ public class StudentAcademicianService {
                 .toList();
 
         return userMapper.toStudentAcademicianDetail(academician, courses);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AvailableSlotResponseDto> getAcademicianAvailability(Integer userId) {
+        requireActiveAcademician(userId);
+        return availabilitySlotService.getAvailableSlotsForStaff(userId);
+    }
+
+    private User requireActiveAcademician(Integer userId) {
+        if (userId == null || userId < 1) {
+            throw new BadRequestException("Geçerli bir akademisyen kimliği gereklidir.");
+        }
+        return userRepository
+                .findActiveAcademicianById(userId, ACADEMICIAN_ROLE_NAMES)
+                .orElseThrow(() -> new ResourceNotFoundException("Akademisyen bulunamadı."));
     }
 
     private static Sort resolveSort(String sort) {

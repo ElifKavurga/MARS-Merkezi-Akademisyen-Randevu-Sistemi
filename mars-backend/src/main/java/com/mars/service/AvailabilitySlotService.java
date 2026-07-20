@@ -2,6 +2,7 @@ package com.mars.service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mars.AppointmentConstraints;
 import com.mars.AvailabilitySlotMessages;
 import com.mars.dto.AvailabilitySlotBlockRequest;
 import com.mars.dto.AvailabilitySlotCreateRequest;
@@ -89,12 +91,14 @@ public class AvailabilitySlotService {
         if (staffId == null) {
             throw new BadRequestException("Akademisyen seçimi zorunludur.");
         }
-        LocalDate today = LocalDate.now();
-        LocalTime now = LocalTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = now.toLocalDate();
+        LocalDateTime earliestBookable = now.plusMinutes(AppointmentConstraints.MINIMUM_BOOKING_NOTICE_MINUTES);
         return availabilitySlotRepository
                 .findAvailableSlotsForStaff(staffId, today, ACTIVE_APPOINTMENT_STATUSES)
                 .stream()
-                .filter(slot -> !isSlotInPast(slot, today, now))
+                .filter(slot -> !isSlotInPast(slot, today, now.toLocalTime()))
+                .filter(slot -> isSlotAfterBookingNotice(slot, earliestBookable))
                 .map(availabilitySlotMapper::toAvailableResponse)
                 .toList();
     }
@@ -310,6 +314,14 @@ public class AvailabilitySlotService {
             return true;
         }
         return slot.getSlotDate().isEqual(today) && slot.getEndTime().isBefore(now);
+    }
+
+    /**
+     * BR-017: Slot başlangıcı, şu andan itibaren minimum rezervasyon süresinden önce olmamalıdır.
+     */
+    private boolean isSlotAfterBookingNotice(AvailabilitySlot slot, LocalDateTime earliestBookable) {
+        LocalDateTime slotStart = LocalDateTime.of(slot.getSlotDate(), slot.getStartTime());
+        return !slotStart.isBefore(earliestBookable);
     }
 
     private void validateNotPastDate(LocalDate slotDate, String message) {
