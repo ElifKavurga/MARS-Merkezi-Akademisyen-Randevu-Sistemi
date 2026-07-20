@@ -49,11 +49,14 @@ function matchesDateRange(
   dateFrom: string,
   dateTo: string,
 ): boolean {
+  // Soft-correct inverted ranges so users still get results.
+  const from = dateFrom && dateTo && dateFrom > dateTo ? dateTo : dateFrom;
+  const to = dateFrom && dateTo && dateFrom > dateTo ? dateFrom : dateTo;
   const date = appointment.appointmentDate;
-  if (dateFrom && date < dateFrom) {
+  if (from && date < from) {
     return false;
   }
-  if (dateTo && date > dateTo) {
+  if (to && date > to) {
     return false;
   }
   return true;

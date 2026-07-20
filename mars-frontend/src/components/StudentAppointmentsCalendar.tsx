@@ -68,6 +68,7 @@ export default function StudentAppointmentsCalendar({
   };
 
   return (
+    // Same filtered dataset as list view — no extra API fetch.
     <div className="academician-calendar student-appointments-calendar overflow-x-auto rounded-xl border border-outline-variant bg-surface-container-lowest p-2 sm:p-4">
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin]}

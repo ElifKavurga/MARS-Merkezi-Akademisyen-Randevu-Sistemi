@@ -98,7 +98,8 @@ export const STUDENT_APPOINTMENT_MESSAGES = {
   NO_TITLE: 'Ünvan belirtilmemiş',
   BREADCRUMB_CREATE: 'Randevu Oluştur',
   MY_APPOINTMENTS_TITLE: 'Randevularım',
-  MY_APPOINTMENTS_SUBTITLE: 'Aktif randevu taleplerinizi buradan takip edebilirsiniz.',
+  MY_APPOINTMENTS_SUBTITLE:
+    'Aktif ve geçmiş randevularınızı buradan takip edebilirsiniz.',
   MY_APPOINTMENTS_LOADING: 'Randevular yükleniyor...',
   MY_APPOINTMENTS_LOAD_ERROR: 'Randevular yüklenirken bir hata oluştu.',
   MY_APPOINTMENTS_EMPTY_TITLE: 'Aktif randevunuz yok',
@@ -110,7 +111,7 @@ export const STUDENT_APPOINTMENT_MESSAGES = {
   PAST_LOAD_ERROR: 'Geçmiş randevular yüklenirken bir hata oluştu.',
   PAST_EMPTY_TITLE: 'Geçmiş randevu yok',
   PAST_EMPTY_DESCRIPTION:
-    'Tamamlanan, iptal edilen veya reddedilen randevularınız burada listelenir.',
+    'Tamamlanan, iptal edilen, reddedilen veya gelinmedi (No-Show) randevularınız burada listelenir.',
   SEARCH_PLACEHOLDER: 'Akademisyen, ünvan, ders veya kategori ara...',
   SEARCH_LABEL: 'Randevu ara',
   FILTER_STATUS: 'Durum',
@@ -134,9 +135,6 @@ export const STUDENT_APPOINTMENT_MESSAGES = {
   CALENDAR_EMPTY_TITLE: 'Takvimde gösterilecek randevu yok',
   CALENDAR_EMPTY_DESCRIPTION:
     'Seçili sekme ve filtrelere uygun randevu bulunamadı.',
-  MY_APPOINTMENTS_ACADEMICIAN: 'Akademisyen',
-  MY_APPOINTMENTS_TITLE_LABEL: 'Akademik Ünvan',
-  MY_APPOINTMENTS_DEPARTMENT: 'Bölüm',
   MY_APPOINTMENTS_DATE: 'Tarih',
   MY_APPOINTMENTS_TIME: 'Saat',
   MY_APPOINTMENTS_CATEGORY: 'Kategori',
@@ -159,8 +157,7 @@ export const STUDENT_APPOINTMENT_MESSAGES = {
   DETAIL_ACADEMIC_TITLE: 'Akademik Ünvan',
   DETAIL_DEPARTMENT: 'Bölüm',
   DETAIL_DATE: 'Tarih',
-  DETAIL_START_TIME: 'Başlangıç Saati',
-  DETAIL_END_TIME: 'Bitiş Saati',
+  DETAIL_TIME: 'Saat',
   DETAIL_STATUS: 'Durum',
   DETAIL_CATEGORY: 'Kategori',
   DETAIL_COURSE: 'Ders',
@@ -181,14 +178,14 @@ export const STUDENT_APPOINTMENT_MESSAGES = {
   CANCEL_ERROR: 'Randevu iptal edilemedi. Lütfen tekrar deneyin.',
 } as const;
 
-/** Takvim etkinlik renkleri — AppointmentStatusBadge paletiyle uyumlu. */
+/** Takvim etkinlik renkleri — badge nokta renkleriyle uyumlu; beyaz metin için yeterli kontrast. */
 export const STUDENT_APPOINTMENT_STATUS_EVENT_COLORS: Record<string, string> = {
-  PENDING: '#F59E0B',
-  APPROVED: '#10B981',
-  REJECTED: '#EF4444',
-  COMPLETED: '#3B82F6',
+  PENDING: '#D97706',
+  APPROVED: '#059669',
+  REJECTED: '#DC2626',
+  COMPLETED: '#2563EB',
   NO_SHOW: '#64748B',
-  CANCELLED: '#78716C',
+  CANCELLED: '#64748B',
   DEFAULT: '#0b1641',
 };
 

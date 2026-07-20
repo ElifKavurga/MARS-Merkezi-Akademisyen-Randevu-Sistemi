@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ConfirmModal from '../components/ConfirmModal';
 import StudentAppointmentCard from '../components/StudentAppointmentCard';
@@ -70,39 +70,51 @@ export default function StudentAppointmentsPage() {
   const [appointmentsByTab, setAppointmentsByTab] = useState<
     Partial<Record<AppointmentTab, StudentAppointmentListItem[]>>
   >({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loadingByTab, setLoadingByTab] = useState<Partial<Record<AppointmentTab, boolean>>>({
+    active: true,
+  });
+  const [errorByTab, setErrorByTab] = useState<Partial<Record<AppointmentTab, string | null>>>(
+    {},
+  );
   const [filters, setFilters] = useState<StudentAppointmentListFilters>(
     defaultFiltersForTab('active'),
   );
   const [cancelTarget, setCancelTarget] = useState<StudentAppointmentListItem | null>(null);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
+  const requestIdByTab = useRef<Record<AppointmentTab, number>>({ active: 0, past: 0 });
 
-  const loadTab = useCallback(
-    async (tab: AppointmentTab) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data =
-          tab === 'active'
-            ? await getStudentActiveAppointments()
-            : await getStudentPastAppointments();
-        setAppointmentsByTab((current) => ({ ...current, [tab]: data }));
-      } catch (err) {
-        const fallback =
-          tab === 'active'
-            ? STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_LOAD_ERROR
-            : STUDENT_APPOINTMENT_MESSAGES.PAST_LOAD_ERROR;
-        const message = resolveStudentApiError(err, fallback);
-        setError(message);
-        toast.error(message);
-      } finally {
-        setLoading(false);
+  const loadTab = useCallback(async (tab: AppointmentTab) => {
+    const requestId = requestIdByTab.current[tab] + 1;
+    requestIdByTab.current[tab] = requestId;
+    setLoadingByTab((current) => ({ ...current, [tab]: true }));
+    setErrorByTab((current) => ({ ...current, [tab]: null }));
+
+    try {
+      const data =
+        tab === 'active'
+          ? await getStudentActiveAppointments()
+          : await getStudentPastAppointments();
+      if (requestIdByTab.current[tab] !== requestId) {
+        return;
       }
-    },
-    [toast],
-  );
+      setAppointmentsByTab((current) => ({ ...current, [tab]: data }));
+    } catch (err) {
+      if (requestIdByTab.current[tab] !== requestId) {
+        return;
+      }
+      const fallback =
+        tab === 'active'
+          ? STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_LOAD_ERROR
+          : STUDENT_APPOINTMENT_MESSAGES.PAST_LOAD_ERROR;
+      const message = resolveStudentApiError(err, fallback);
+      setErrorByTab((current) => ({ ...current, [tab]: message }));
+    } finally {
+      if (requestIdByTab.current[tab] === requestId) {
+        setLoadingByTab((current) => ({ ...current, [tab]: false }));
+      }
+    }
+  }, []);
 
   useEffect(() => {
     void loadTab('active');
@@ -114,8 +126,12 @@ export default function StudentAppointmentsPage() {
     }
     setActiveTab(tab);
     setFilters(defaultFiltersForTab(tab));
-    setError(null);
-    if (appointmentsByTab[tab] === undefined) {
+    // Load once per tab; keep error state until user retries.
+    if (
+      appointmentsByTab[tab] === undefined
+      && !loadingByTab[tab]
+      && !errorByTab[tab]
+    ) {
       void loadTab(tab);
     }
   };
@@ -133,8 +149,10 @@ export default function StudentAppointmentsPage() {
         active: (current.active ?? []).filter(
           (item) => item.appointmentId !== cancelTarget.appointmentId,
         ),
+        // Invalidate past cache so cancelled items appear after refetch.
         past: undefined,
       }));
+      setErrorByTab((current) => ({ ...current, past: null }));
       setCancelTarget(null);
       toast.success(STUDENT_APPOINTMENT_MESSAGES.CANCEL_SUCCESS);
     } catch (err) {
@@ -153,6 +171,9 @@ export default function StudentAppointmentsPage() {
   );
   const filtersActive = hasActiveStudentAppointmentFilters(filters);
   const statusOptions = activeTab === 'active' ? ACTIVE_STATUS_OPTIONS : PAST_STATUS_OPTIONS;
+  const loading = Boolean(loadingByTab[activeTab]);
+  const error = errorByTab[activeTab] ?? null;
+  const tabLoaded = appointmentsByTab[activeTab] !== undefined;
 
   const emptyTitle =
     activeTab === 'active'
@@ -166,7 +187,6 @@ export default function StudentAppointmentsPage() {
     activeTab === 'active'
       ? STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_LOADING
       : STUDENT_APPOINTMENT_MESSAGES.PAST_LOADING;
-  const tabLoaded = appointmentsByTab[activeTab] !== undefined;
 
   const updateFilter = <K extends keyof StudentAppointmentListFilters>(
     key: K,
@@ -174,6 +194,160 @@ export default function StudentAppointmentsPage() {
   ) => {
     setFilters((current) => ({ ...current, [key]: value }));
   };
+
+  let content;
+  if (loading) {
+    content = <StudentLoadingState label={loadingLabel} />;
+  } else if (error) {
+    content = <StudentErrorState message={error} onRetry={() => void loadTab(activeTab)} />;
+  } else if (!tabLoaded) {
+    content = <StudentLoadingState label={loadingLabel} />;
+  } else if (appointments.length === 0) {
+    content = (
+      <StudentEmptyState
+        icon={activeTab === 'active' ? 'event_note' : 'history'}
+        title={emptyTitle}
+        description={emptyDescription}
+      />
+    );
+  } else {
+    content = (
+      <>
+        <section className="mb-6 rounded-xl border border-outline-variant/80 bg-surface-container-lowest p-3 sm:p-4">
+          <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:gap-2.5">
+            <div className={`${STUDENT_UI.SEARCH_FIELD_WRAP_CLASS} lg:min-w-[14rem] lg:flex-[1.35]`}>
+              <span
+                className="material-symbols-outlined shrink-0 text-[20px] leading-none text-on-surface-variant"
+                aria-hidden
+              >
+                search
+              </span>
+              <input
+                type="search"
+                className={STUDENT_UI.SEARCH_INPUT_CLASS}
+                placeholder={STUDENT_APPOINTMENT_MESSAGES.SEARCH_PLACEHOLDER}
+                value={filters.search}
+                onChange={(event) => updateFilter('search', event.target.value)}
+                aria-label={STUDENT_APPOINTMENT_MESSAGES.SEARCH_LABEL}
+              />
+            </div>
+
+            <select
+              className={`${STUDENT_UI.FILTER_CONTROL_CLASS} lg:flex-1`}
+              aria-label={STUDENT_APPOINTMENT_MESSAGES.FILTER_STATUS}
+              value={filters.status}
+              onChange={(event) => updateFilter('status', event.target.value)}
+            >
+              <option value="">{STUDENT_APPOINTMENT_MESSAGES.FILTER_STATUS_ALL}</option>
+              {statusOptions.map((status) => (
+                <option key={status} value={status}>
+                  {APPOINTMENT_STATUS_LABELS[status] ?? status}
+                </option>
+              ))}
+            </select>
+
+            <select
+              className={`${STUDENT_UI.FILTER_CONTROL_CLASS} lg:flex-1`}
+              aria-label={STUDENT_APPOINTMENT_MESSAGES.FILTER_MEETING_TYPE}
+              value={filters.meetingType}
+              onChange={(event) => updateFilter('meetingType', event.target.value)}
+            >
+              <option value="">
+                {STUDENT_APPOINTMENT_MESSAGES.FILTER_MEETING_TYPE_ALL}
+              </option>
+              <option value={MEETING_TYPE.FACE_TO_FACE}>
+                {getMeetingTypeLabel(MEETING_TYPE.FACE_TO_FACE)}
+              </option>
+              <option value={MEETING_TYPE.ONLINE}>
+                {getMeetingTypeLabel(MEETING_TYPE.ONLINE)}
+              </option>
+            </select>
+
+            <input
+              type="date"
+              className={`${STUDENT_UI.FILTER_CONTROL_CLASS} lg:w-[9.75rem] lg:flex-none`}
+              aria-label={STUDENT_APPOINTMENT_MESSAGES.FILTER_DATE_FROM}
+              value={filters.dateFrom}
+              onChange={(event) => updateFilter('dateFrom', event.target.value)}
+            />
+
+            <input
+              type="date"
+              className={`${STUDENT_UI.FILTER_CONTROL_CLASS} lg:w-[9.75rem] lg:flex-none`}
+              aria-label={STUDENT_APPOINTMENT_MESSAGES.FILTER_DATE_TO}
+              value={filters.dateTo}
+              onChange={(event) => updateFilter('dateTo', event.target.value)}
+            />
+
+            <select
+              className={`${STUDENT_UI.FILTER_CONTROL_CLASS} lg:flex-1`}
+              aria-label={STUDENT_APPOINTMENT_MESSAGES.FILTER_SORT}
+              value={filters.sort}
+              onChange={(event) =>
+                updateFilter('sort', event.target.value as StudentAppointmentSort)
+              }
+            >
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {filtersActive ? (
+            <div className="mt-3 flex justify-end">
+              <button
+                type="button"
+                className={STUDENT_UI.SECONDARY_BUTTON_CLASS}
+                onClick={() => setFilters(defaultFiltersForTab(activeTab))}
+              >
+                {STUDENT_APPOINTMENT_MESSAGES.FILTER_CLEAR}
+              </button>
+            </div>
+          ) : null}
+        </section>
+
+        {filteredAppointments.length === 0 ? (
+          <StudentEmptyState
+            icon={viewMode === 'calendar' ? 'event_busy' : 'filter_alt_off'}
+            title={
+              viewMode === 'calendar'
+                ? STUDENT_APPOINTMENT_MESSAGES.CALENDAR_EMPTY_TITLE
+                : STUDENT_APPOINTMENT_MESSAGES.FILTER_EMPTY_TITLE
+            }
+            description={
+              viewMode === 'calendar'
+                ? STUDENT_APPOINTMENT_MESSAGES.CALENDAR_EMPTY_DESCRIPTION
+                : STUDENT_APPOINTMENT_MESSAGES.FILTER_EMPTY
+            }
+          />
+        ) : viewMode === 'calendar' ? (
+          <StudentAppointmentsCalendar
+            appointments={filteredAppointments}
+            onAppointmentClick={(appointment) => {
+              navigate(studentAppointmentDetailPath(appointment.appointmentId));
+            }}
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {filteredAppointments.map((appointment) => (
+              <StudentAppointmentCard
+                key={appointment.appointmentId}
+                appointment={appointment}
+                showCancel={activeTab === 'active'}
+                cancelLoading={cancelLoading}
+                onCancelRequest={(item) => {
+                  setCancelError(null);
+                  setCancelTarget(item);
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </>
+    );
+  }
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
@@ -203,152 +377,7 @@ export default function StudentAppointmentsPage() {
         />
       </div>
 
-      {loading || !tabLoaded ? (
-        <StudentLoadingState label={loadingLabel} />
-      ) : error ? (
-        <StudentErrorState message={error} onRetry={() => void loadTab(activeTab)} />
-      ) : appointments.length === 0 ? (
-        <StudentEmptyState
-          icon={activeTab === 'active' ? 'event_note' : 'history'}
-          title={emptyTitle}
-          description={emptyDescription}
-        />
-      ) : (
-        <>
-          <section className="mb-6 rounded-xl border border-outline-variant/80 bg-surface-container-lowest p-3 sm:p-4">
-            <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:gap-2.5">
-              <div className={`${STUDENT_UI.SEARCH_FIELD_WRAP_CLASS} lg:min-w-[14rem] lg:flex-[1.35]`}>
-                <span
-                  className="material-symbols-outlined shrink-0 text-[20px] leading-none text-on-surface-variant"
-                  aria-hidden
-                >
-                  search
-                </span>
-                <input
-                  type="search"
-                  className={STUDENT_UI.SEARCH_INPUT_CLASS}
-                  placeholder={STUDENT_APPOINTMENT_MESSAGES.SEARCH_PLACEHOLDER}
-                  value={filters.search}
-                  onChange={(event) => updateFilter('search', event.target.value)}
-                  aria-label={STUDENT_APPOINTMENT_MESSAGES.SEARCH_LABEL}
-                />
-              </div>
-
-              <select
-                className={`${STUDENT_UI.FILTER_CONTROL_CLASS} lg:flex-1`}
-                aria-label={STUDENT_APPOINTMENT_MESSAGES.FILTER_STATUS}
-                value={filters.status}
-                onChange={(event) => updateFilter('status', event.target.value)}
-              >
-                <option value="">{STUDENT_APPOINTMENT_MESSAGES.FILTER_STATUS_ALL}</option>
-                {statusOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {APPOINTMENT_STATUS_LABELS[status] ?? status}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                className={`${STUDENT_UI.FILTER_CONTROL_CLASS} lg:flex-1`}
-                aria-label={STUDENT_APPOINTMENT_MESSAGES.FILTER_MEETING_TYPE}
-                value={filters.meetingType}
-                onChange={(event) => updateFilter('meetingType', event.target.value)}
-              >
-                <option value="">
-                  {STUDENT_APPOINTMENT_MESSAGES.FILTER_MEETING_TYPE_ALL}
-                </option>
-                <option value={MEETING_TYPE.FACE_TO_FACE}>
-                  {getMeetingTypeLabel(MEETING_TYPE.FACE_TO_FACE)}
-                </option>
-                <option value={MEETING_TYPE.ONLINE}>
-                  {getMeetingTypeLabel(MEETING_TYPE.ONLINE)}
-                </option>
-              </select>
-
-              <input
-                type="date"
-                className={`${STUDENT_UI.FILTER_CONTROL_CLASS} lg:w-[9.75rem] lg:flex-none`}
-                aria-label={STUDENT_APPOINTMENT_MESSAGES.FILTER_DATE_FROM}
-                value={filters.dateFrom}
-                onChange={(event) => updateFilter('dateFrom', event.target.value)}
-              />
-
-              <input
-                type="date"
-                className={`${STUDENT_UI.FILTER_CONTROL_CLASS} lg:w-[9.75rem] lg:flex-none`}
-                aria-label={STUDENT_APPOINTMENT_MESSAGES.FILTER_DATE_TO}
-                value={filters.dateTo}
-                onChange={(event) => updateFilter('dateTo', event.target.value)}
-              />
-
-              <select
-                className={`${STUDENT_UI.FILTER_CONTROL_CLASS} lg:flex-1`}
-                aria-label={STUDENT_APPOINTMENT_MESSAGES.FILTER_SORT}
-                value={filters.sort}
-                onChange={(event) =>
-                  updateFilter('sort', event.target.value as StudentAppointmentSort)
-                }
-              >
-                {SORT_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {filtersActive ? (
-              <div className="mt-3 flex justify-end">
-                <button
-                  type="button"
-                  className={STUDENT_UI.SECONDARY_BUTTON_CLASS}
-                  onClick={() => setFilters(defaultFiltersForTab(activeTab))}
-                >
-                  {STUDENT_APPOINTMENT_MESSAGES.FILTER_CLEAR}
-                </button>
-              </div>
-            ) : null}
-          </section>
-
-          {filteredAppointments.length === 0 ? (
-            <StudentEmptyState
-              icon={viewMode === 'calendar' ? 'event_busy' : 'filter_alt_off'}
-              title={
-                viewMode === 'calendar'
-                  ? STUDENT_APPOINTMENT_MESSAGES.CALENDAR_EMPTY_TITLE
-                  : STUDENT_APPOINTMENT_MESSAGES.FILTER_EMPTY_TITLE
-              }
-              description={
-                viewMode === 'calendar'
-                  ? STUDENT_APPOINTMENT_MESSAGES.CALENDAR_EMPTY_DESCRIPTION
-                  : STUDENT_APPOINTMENT_MESSAGES.FILTER_EMPTY
-              }
-            />
-          ) : viewMode === 'calendar' ? (
-            <StudentAppointmentsCalendar
-              appointments={filteredAppointments}
-              onAppointmentClick={(appointment) => {
-                navigate(studentAppointmentDetailPath(appointment.appointmentId));
-              }}
-            />
-          ) : (
-            <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {filteredAppointments.map((appointment) => (
-                <StudentAppointmentCard
-                  key={appointment.appointmentId}
-                  appointment={appointment}
-                  showCancel={activeTab === 'active'}
-                  cancelLoading={cancelLoading}
-                  onCancelRequest={(item) => {
-                    setCancelError(null);
-                    setCancelTarget(item);
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </>
-      )}
+      {content}
 
       <ConfirmModal
         open={cancelTarget !== null}

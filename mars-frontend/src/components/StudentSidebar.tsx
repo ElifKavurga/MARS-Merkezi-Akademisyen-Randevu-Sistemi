@@ -15,7 +15,8 @@ const studentNavItems = [
     label: STUDENT_UI.BREADCRUMB_APPOINTMENTS,
     path: ROUTES.STUDENT_APPOINTMENTS,
     icon: 'event_note',
-    end: true,
+    // Detail route (/randevularim/:id) should keep this nav item active.
+    end: false,
   },
 ] as const;
 

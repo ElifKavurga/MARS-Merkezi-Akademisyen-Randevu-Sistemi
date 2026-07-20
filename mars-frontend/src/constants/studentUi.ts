@@ -33,6 +33,8 @@ export const STUDENT_UI = {
     'inline-flex items-center justify-center gap-2 rounded-lg bg-primary-container px-5 py-2.5 font-label-md text-label-md text-on-primary transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
   SECONDARY_BUTTON_CLASS:
     'inline-flex items-center justify-center gap-2 rounded-lg border border-outline-variant bg-surface px-4 py-2.5 font-label-md text-label-md text-primary no-underline transition-colors hover:bg-surface-container hover:no-underline focus:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim focus-visible:ring-offset-2',
+  DANGER_BUTTON_CLASS:
+    'inline-flex items-center justify-center gap-1.5 rounded-lg border border-error/30 bg-error-container/40 px-3.5 py-2 font-label-md text-label-md text-error transition-colors hover:bg-error-container/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/40 disabled:cursor-not-allowed disabled:opacity-50',
   BACK_LINK_CLASS:
     'inline-flex items-center gap-1 rounded font-label-md text-label-md text-primary no-underline transition-colors hover:text-on-background hover:no-underline focus:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim',
   SEARCH_INPUT_CLASS:

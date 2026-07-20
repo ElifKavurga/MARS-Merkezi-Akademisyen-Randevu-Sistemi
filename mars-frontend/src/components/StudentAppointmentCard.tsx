@@ -6,18 +6,11 @@ import { STUDENT_APPOINTMENT_MESSAGES } from '../constants/studentAppointment';
 import { STUDENT_UI } from '../constants/studentUi';
 import type { StudentAppointmentListItem } from '../types/studentAppointment';
 import { isStudentAppointmentCancellable } from '../utils/studentAppointmentCancel';
-
-function formatDate(date: string): string {
-  return new Intl.DateTimeFormat('tr-TR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(`${date}T00:00:00`));
-}
-
-function formatTime(time: string): string {
-  return time.slice(0, 5);
-}
+import {
+  formatStudentAppointmentCourseLabel,
+  formatStudentAppointmentDate,
+  formatStudentAppointmentTime,
+} from '../utils/studentAppointmentFormat';
 
 function MetaRow({
   icon,
@@ -63,10 +56,9 @@ export default function StudentAppointmentCard({
   const title =
     appointment.academicTitle?.trim()
     || STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_NO_TITLE;
-  const courseLabel =
-    appointment.courseCode && appointment.courseName
-      ? `${appointment.courseCode} — ${appointment.courseName}`
-      : appointment.courseCode ?? appointment.courseName;
+  const courseLabel = formatStudentAppointmentCourseLabel(appointment);
+  const dateLabel = formatStudentAppointmentDate(appointment.appointmentDate);
+  const timeLabel = `${formatStudentAppointmentTime(appointment.startTime)} – ${formatStudentAppointmentTime(appointment.endTime)}`;
 
   return (
     <article className="flex h-full min-w-0 flex-col rounded-xl border border-outline-variant bg-surface-container-lowest p-3.5 transition-colors hover:border-primary-container/40 sm:p-4">
@@ -85,18 +77,21 @@ export default function StudentAppointmentCard({
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-surface-container/70 px-2.5 py-2">
+      <div
+        className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-surface-container/70 px-2.5 py-2"
+        aria-label={`${STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_DATE}: ${dateLabel}, ${STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_TIME}: ${timeLabel}`}
+      >
         <div className="flex items-center gap-1.5 font-label-md text-label-md font-semibold text-on-surface">
           <span className="material-symbols-outlined text-[18px] text-primary" aria-hidden>
             event
           </span>
-          {formatDate(appointment.appointmentDate)}
+          {dateLabel}
         </div>
         <div className="flex items-center gap-1.5 font-label-md text-label-md font-semibold text-on-surface">
           <span className="material-symbols-outlined text-[18px] text-primary" aria-hidden>
             schedule
           </span>
-          {formatTime(appointment.startTime)} – {formatTime(appointment.endTime)}
+          {timeLabel}
         </div>
       </div>
 
@@ -124,14 +119,13 @@ export default function StudentAppointmentCard({
         <Link
           to={studentAppointmentDetailPath(appointment.appointmentId)}
           className={STUDENT_UI.SECONDARY_BUTTON_CLASS}
-          style={{ textDecoration: 'none', padding: '0.5rem 0.875rem' }}
         >
           {STUDENT_APPOINTMENT_MESSAGES.VIEW_DETAIL}
         </Link>
         {canCancel && onCancelRequest ? (
           <button
             type="button"
-            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-error/30 bg-error-container/40 px-3.5 py-2 font-label-md text-label-md text-error transition-colors hover:bg-error-container/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/40 disabled:cursor-not-allowed disabled:opacity-50"
+            className={STUDENT_UI.DANGER_BUTTON_CLASS}
             disabled={cancelLoading}
             onClick={() => onCancelRequest(appointment)}
           >

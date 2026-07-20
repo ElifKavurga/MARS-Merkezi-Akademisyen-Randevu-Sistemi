@@ -401,6 +401,10 @@ public class AppointmentService {
         return slot.getSlotDate().isEqual(today) && slot.getEndTime().isBefore(now.toLocalTime());
     }
 
+    private boolean isAppointmentInPast(Appointment appointment) {
+        return isSlotInPast(appointment.getSlot());
+    }
+
     private User getCurrentStudent() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails userDetails)) {
@@ -461,16 +465,5 @@ public class AppointmentService {
             }
             return leftPast ? -dateComparison : dateComparison;
         };
-    }
-
-    private boolean isAppointmentInPast(Appointment appointment) {
-        AvailabilitySlot slot = appointment.getSlot();
-        LocalDateTime now = LocalDateTime.now(APP_ZONE);
-        LocalDate today = now.toLocalDate();
-        if (slot.getSlotDate().isBefore(today)) {
-            return true;
-        }
-        return slot.getSlotDate().isEqual(today)
-                && slot.getEndTime().isBefore(now.toLocalTime());
     }
 }

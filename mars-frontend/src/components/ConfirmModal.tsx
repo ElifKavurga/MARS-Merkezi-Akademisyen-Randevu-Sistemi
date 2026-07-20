@@ -51,7 +51,11 @@ export default function ConfirmModal({
         <div className="bg-surface-bright px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 border-t border-outline-variant gap-2">
           <button
             type="button"
-            className={`inline-flex w-full justify-center rounded-lg px-5 py-2 font-label-md text-label-md sm:w-auto shadow-sm transition-colors disabled:opacity-70 ${confirmBtnClass}`}
+            className={`inline-flex w-full justify-center rounded-lg px-5 py-2 font-label-md text-label-md shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-70 sm:w-auto ${
+              variant === 'danger'
+                ? 'focus-visible:ring-error/40'
+                : 'focus-visible:ring-primary-fixed-dim'
+            } ${confirmBtnClass}`}
             onClick={onConfirm}
             disabled={loading}
           >
@@ -63,7 +67,7 @@ export default function ConfirmModal({
           </button>
           <button
             type="button"
-            className="mt-3 inline-flex w-full justify-center rounded-lg bg-surface px-5 py-2 font-label-md text-label-md text-primary border border-outline-variant hover:bg-surface-container sm:mt-0 sm:w-auto transition-colors"
+            className="mt-3 inline-flex w-full justify-center rounded-lg border border-outline-variant bg-surface px-5 py-2 font-label-md text-label-md text-primary transition-colors hover:bg-surface-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim focus-visible:ring-offset-2 disabled:opacity-70 sm:mt-0 sm:w-auto"
             onClick={onClose}
             disabled={loading}
           >
@@ -77,7 +81,7 @@ export default function ConfirmModal({
           <div
             className={`mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border sm:mx-0 sm:h-10 sm:w-10 ${iconWrapClass}`}
           >
-            <span className="material-symbols-outlined">
+            <span className="material-symbols-outlined" aria-hidden>
               {variant === 'danger' ? 'warning' : 'help'}
             </span>
           </div>
