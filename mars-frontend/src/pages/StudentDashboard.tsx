@@ -68,7 +68,7 @@ export default function StudentDashboard() {
         fullName={user.fullName}
         description={STUDENT_UI.DASHBOARD_SUBTITLE}
         loading={loading}
-        loadingLabel="Ana sayfa yükleniyor..."
+        loadingLabel={STUDENT_UI.DASHBOARD_LOADING}
         stats={[]}
       />
 
@@ -81,9 +81,11 @@ export default function StudentDashboard() {
             info
           </span>
           <div className="min-w-0">
-            <h2 className="font-headline-md text-headline-md text-primary">Bilgilendirme</h2>
+            <h2 className="font-headline-md text-headline-md text-primary">
+              {STUDENT_UI.INFO_TITLE}
+            </h2>
             <p className="mt-2 font-body-md text-body-md text-on-surface-variant">
-              Akademisyenlerden randevu almak için Akademisyen Ara menüsünü kullanabilirsiniz.
+              {STUDENT_UI.INFO_DESCRIPTION}
             </p>
           </div>
         </div>
@@ -91,28 +93,28 @@ export default function StudentDashboard() {
 
       <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
         <PlaceholderCard
-          title="Yaklaşan Randevular"
+          title={STUDENT_UI.UPCOMING_TITLE}
           icon="event_upcoming"
-          emptyTitle="Yaklaşan randevu yok"
-          emptyMessage="Yaklaşan randevularınız burada görüntülenecek."
+          emptyTitle={STUDENT_UI.UPCOMING_EMPTY_TITLE}
+          emptyMessage={STUDENT_UI.UPCOMING_EMPTY_DESCRIPTION}
           loading={loading}
-          loadingLabel="Yaklaşan randevular yükleniyor..."
+          loadingLabel={STUDENT_UI.UPCOMING_LOADING}
         />
         <PlaceholderCard
-          title="Bekleme Listesi"
+          title={STUDENT_UI.WAITLIST_TITLE}
           icon="format_list_numbered"
-          emptyTitle="Bekleme listesi boş"
-          emptyMessage="Bekleme listesi kayıtlarınız burada görüntülenecek."
+          emptyTitle={STUDENT_UI.WAITLIST_EMPTY_TITLE}
+          emptyMessage={STUDENT_UI.WAITLIST_EMPTY_DESCRIPTION}
           loading={loading}
-          loadingLabel="Bekleme listesi yükleniyor..."
+          loadingLabel={STUDENT_UI.WAITLIST_LOADING}
         />
         <PlaceholderCard
-          title="Ceza Durumu"
+          title={STUDENT_UI.PENALTY_TITLE}
           icon="gavel"
-          emptyTitle="Ceza kaydı yok"
-          emptyMessage="Ceza durumunuz burada görüntülenecek."
+          emptyTitle={STUDENT_UI.PENALTY_EMPTY_TITLE}
+          emptyMessage={STUDENT_UI.PENALTY_EMPTY_DESCRIPTION}
           loading={loading}
-          loadingLabel="Ceza durumu yükleniyor..."
+          loadingLabel={STUDENT_UI.PENALTY_LOADING}
         />
       </div>
     </div>

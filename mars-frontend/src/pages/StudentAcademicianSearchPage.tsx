@@ -58,8 +58,8 @@ function AcademicianCard({ academician }: { academician: StudentAcademician }) {
             </h2>
             <StudentAcceptingBadge
               accepting={academician.isAcceptingAppointments}
-              activeLabel={STUDENT_ACADEMICIAN_MESSAGES.STATUS_ACTIVE}
-              inactiveLabel={STUDENT_ACADEMICIAN_MESSAGES.STATUS_INACTIVE}
+              activeLabel={STUDENT_ACADEMICIAN_MESSAGES.STATUS_ACCEPTING}
+              inactiveLabel={STUDENT_ACADEMICIAN_MESSAGES.STATUS_NOT_ACCEPTING}
             />
           </div>
           <p className="mt-0.5 truncate font-label-sm text-label-sm text-on-surface-variant">
@@ -72,7 +72,7 @@ function AcademicianCard({ academician }: { academician: StudentAcademician }) {
 
       <dl className="space-y-2 border-t border-outline-variant pt-4">
         <div className="flex items-start gap-2">
-          <dt className="sr-only">Bölüm</dt>
+          <dt className="sr-only">{STUDENT_ACADEMICIAN_MESSAGES.DEPARTMENT_FIELD}</dt>
           <dd className="flex min-w-0 items-center gap-1.5 font-body-md text-body-md text-on-surface-variant">
             <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
               apartment
@@ -81,7 +81,7 @@ function AcademicianCard({ academician }: { academician: StudentAcademician }) {
           </dd>
         </div>
         <div className="flex items-start gap-2">
-          <dt className="sr-only">E-posta</dt>
+          <dt className="sr-only">{STUDENT_ACADEMICIAN_MESSAGES.EMAIL_FIELD}</dt>
           <dd className="flex min-w-0 items-center gap-1.5 font-body-md text-body-md text-on-surface-variant">
             <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
               mail
@@ -132,9 +132,12 @@ export default function StudentAcademicianSearchPage() {
         if (!cancelled) {
           setTitleOptions(titles);
         }
-      } catch {
+      } catch (err) {
         if (!cancelled) {
           setTitleOptions([]);
+          toast.error(
+            resolveStudentApiError(err, STUDENT_ACADEMICIAN_MESSAGES.TITLES_LOAD_ERROR),
+          );
         }
       }
     };
@@ -142,7 +145,7 @@ export default function StudentAcademicianSearchPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [toast]);
 
   const loadAcademicians = useCallback(
     async (filters: AppliedFilters, pageIndex: number) => {
@@ -218,7 +221,7 @@ export default function StudentAcademicianSearchPage() {
         >
           <div className="relative min-w-0">
             <label htmlFor="student-academician-search" className="sr-only">
-              Ad, soyad veya bölüm ara
+              {STUDENT_ACADEMICIAN_MESSAGES.SEARCH_LABEL}
             </label>
             <span
               className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant"
@@ -239,7 +242,7 @@ export default function StudentAcademicianSearchPage() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div className="min-w-0">
               <label htmlFor="student-academician-department" className="sr-only">
-                Bölüm filtresi
+                {STUDENT_ACADEMICIAN_MESSAGES.DEPARTMENT_FILTER_LABEL}
               </label>
               <DepartmentSelect
                 id="student-academician-department"
@@ -253,7 +256,7 @@ export default function StudentAcademicianSearchPage() {
 
             <div className="min-w-0">
               <label htmlFor="student-academician-title" className="sr-only">
-                Akademik ünvan filtresi
+                {STUDENT_ACADEMICIAN_MESSAGES.TITLE_FILTER_LABEL}
               </label>
               <select
                 id="student-academician-title"
@@ -272,7 +275,7 @@ export default function StudentAcademicianSearchPage() {
 
             <div className="min-w-0">
               <label htmlFor="student-academician-accepting" className="sr-only">
-                Randevu kabul durumu filtresi
+                {STUDENT_ACADEMICIAN_MESSAGES.ACCEPTING_FILTER_LABEL}
               </label>
               <select
                 id="student-academician-accepting"

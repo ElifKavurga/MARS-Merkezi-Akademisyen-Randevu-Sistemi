@@ -269,14 +269,14 @@ export default function StudentAcademicianProfilePage() {
             <div className="mt-6">
               <button
                 type="button"
-                disabled={!accepting}
+                disabled
+                aria-disabled="true"
                 title={
                   accepting
-                    ? undefined
+                    ? STUDENT_ACADEMICIAN_MESSAGES.BOOK_APPOINTMENT_UNAVAILABLE
                     : STUDENT_ACADEMICIAN_MESSAGES.BOOK_APPOINTMENT_DISABLED
                 }
                 className={`${STUDENT_UI.PRIMARY_BUTTON_CLASS} w-full sm:w-auto`}
-                // Sprint 22: randevu oluşturma ekranına yönlendirilecek.
               >
                 <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
                   event_available

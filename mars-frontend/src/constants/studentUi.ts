@@ -6,6 +6,22 @@ export const STUDENT_UI = {
   DASHBOARD_TITLE: 'Ana Sayfa',
   DASHBOARD_SUBTITLE:
     'Randevu süreçlerinizi, bekleme listelerinizi ve ceza durumunuzu buradan takip edebilirsiniz.',
+  DASHBOARD_LOADING: 'Ana sayfa yükleniyor...',
+  INFO_TITLE: 'Bilgilendirme',
+  INFO_DESCRIPTION:
+    'Akademisyenlerden randevu almak için Akademisyen Ara menüsünü kullanabilirsiniz.',
+  UPCOMING_TITLE: 'Yaklaşan Randevular',
+  UPCOMING_EMPTY_TITLE: 'Yaklaşan randevu yok',
+  UPCOMING_EMPTY_DESCRIPTION: 'Yaklaşan randevularınız burada görüntülenecek.',
+  UPCOMING_LOADING: 'Yaklaşan randevular yükleniyor...',
+  WAITLIST_TITLE: 'Bekleme Listesi',
+  WAITLIST_EMPTY_TITLE: 'Bekleme listesi boş',
+  WAITLIST_EMPTY_DESCRIPTION: 'Bekleme listesi kayıtlarınız burada görüntülenecek.',
+  WAITLIST_LOADING: 'Bekleme listesi yükleniyor...',
+  PENALTY_TITLE: 'Ceza Durumu',
+  PENALTY_EMPTY_TITLE: 'Ceza kaydı yok',
+  PENALTY_EMPTY_DESCRIPTION: 'Ceza durumunuz burada görüntülenecek.',
+  PENALTY_LOADING: 'Ceza durumu yükleniyor...',
   PROFILE_TITLE: 'Akademisyen Profili',
   PROFILE_SUBTITLE:
     'Akademisyen bilgilerini, derslerini ve uygun randevu saatlerini inceleyin.',
