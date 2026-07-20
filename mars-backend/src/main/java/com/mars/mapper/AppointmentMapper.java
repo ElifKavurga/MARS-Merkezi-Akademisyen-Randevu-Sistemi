@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import com.mars.dto.AppointmentCreateRequest;
 import com.mars.dto.AppointmentResponseDto;
 import com.mars.dto.StaffAppointmentResponseDto;
+import com.mars.dto.StudentAppointmentResponseDto;
 import com.mars.entity.Appointment;
 import com.mars.entity.AppointmentCategory;
 import com.mars.entity.AvailabilitySlot;
@@ -64,6 +65,42 @@ public class AppointmentMapper {
                 .staffId(appointment.getStaff() != null ? appointment.getStaff().getUserId() : null)
                 .studentName(appointment.getStudent() != null
                         ? appointment.getStudent().getFullName()
+                        : null)
+                .appointmentDate(appointment.getSlot() != null
+                        ? appointment.getSlot().getSlotDate()
+                        : null)
+                .startTime(appointment.getSlot() != null
+                        ? appointment.getSlot().getStartTime()
+                        : null)
+                .endTime(appointment.getSlot() != null
+                        ? appointment.getSlot().getEndTime()
+                        : null)
+                .categoryName(appointment.getCategory() != null
+                        ? appointment.getCategory().getCategoryName()
+                        : null)
+                .courseId(appointment.getCourse() != null
+                        ? appointment.getCourse().getCourseId()
+                        : null)
+                .courseCode(appointment.getCourse() != null
+                        ? appointment.getCourse().getCourseCode()
+                        : null)
+                .courseName(appointment.getCourse() != null
+                        ? appointment.getCourse().getCourseName()
+                        : null)
+                .meetingType(appointment.getMeetingType())
+                .appointmentStatus(appointment.getAppointmentStatus())
+                .build();
+    }
+
+    public StudentAppointmentResponseDto toStudentResponse(Appointment appointment) {
+        User staff = appointment.getStaff();
+        return StudentAppointmentResponseDto.builder()
+                .appointmentId(appointment.getAppointmentId())
+                .staffId(staff != null ? staff.getUserId() : null)
+                .staffName(staff != null ? staff.getFullName() : null)
+                .academicTitle(staff != null ? staff.getAcademicTitle() : null)
+                .departmentName(staff != null && staff.getDepartment() != null
+                        ? staff.getDepartment().getDepartmentName()
                         : null)
                 .appointmentDate(appointment.getSlot() != null
                         ? appointment.getSlot().getSlotDate()

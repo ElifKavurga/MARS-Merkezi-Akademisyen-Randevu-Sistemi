@@ -42,3 +42,21 @@ export type StudentAvailableSlot = {
   endTime: string;
   meetingType: string;
 };
+
+/** Öğrencinin aktif randevu listesi öğesi (PENDING / APPROVED). */
+export type StudentAppointmentListItem = {
+  appointmentId: number;
+  staffId: number;
+  staffName: string;
+  academicTitle: string | null;
+  departmentName: string;
+  appointmentDate: string;
+  startTime: string;
+  endTime: string;
+  categoryName: string;
+  courseId: number | null;
+  courseCode: string | null;
+  courseName: string | null;
+  meetingType: string;
+  appointmentStatus: 'PENDING' | 'APPROVED';
+};

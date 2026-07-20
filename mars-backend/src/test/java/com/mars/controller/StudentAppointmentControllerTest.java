@@ -4,9 +4,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mars.config.CorsConfig;
 import com.mars.dto.AppointmentCreateRequest;
 import com.mars.dto.AppointmentResponseDto;
+import com.mars.dto.StudentAppointmentResponseDto;
 import com.mars.enums.AppointmentStatus;
 import com.mars.enums.MeetingType;
 import com.mars.exception.handler.GlobalExceptionHandler;
@@ -64,6 +70,49 @@ class StudentAppointmentControllerTest {
             chain.doFilter(request, response);
             return null;
         }).when(jwtAuthenticationFilter).doFilter(any(), any(), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    void getActiveAppointments_asStudent_returnsOk() throws Exception {
+        StudentAppointmentResponseDto item = StudentAppointmentResponseDto.builder()
+                .appointmentId(42)
+                .staffId(5)
+                .staffName("Dr. Ayşe Yılmaz")
+                .academicTitle("Doç. Dr.")
+                .departmentName("Bilgisayar Mühendisliği")
+                .appointmentDate(LocalDate.of(2026, 7, 22))
+                .startTime(LocalTime.of(10, 0))
+                .endTime(LocalTime.of(10, 30))
+                .categoryName("Danışmanlık")
+                .courseId(null)
+                .courseCode(null)
+                .courseName(null)
+                .meetingType(MeetingType.FACE_TO_FACE.name())
+                .appointmentStatus(AppointmentStatus.PENDING.name())
+                .build();
+        when(appointmentService.getStudentActiveAppointments()).thenReturn(List.of(item));
+
+        mockMvc.perform(get("/students/appointments"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].appointmentId").value(42))
+                .andExpect(jsonPath("$[0].staffName").value("Dr. Ayşe Yılmaz"))
+                .andExpect(jsonPath("$[0].appointmentStatus").value("PENDING"));
+
+        verify(appointmentService).getStudentActiveAppointments();
+    }
+
+    @Test
+    @WithMockUser(roles = "ACADEMICIAN")
+    void getActiveAppointments_asAcademician_returnsForbidden() throws Exception {
+        mockMvc.perform(get("/students/appointments"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void getActiveAppointments_unauthenticated_returnsUnauthorized() throws Exception {
+        mockMvc.perform(get("/students/appointments"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

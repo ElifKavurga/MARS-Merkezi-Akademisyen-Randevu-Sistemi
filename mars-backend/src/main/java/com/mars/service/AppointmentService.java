@@ -21,6 +21,7 @@ import com.mars.AppointmentMessages;
 import com.mars.dto.AppointmentCreateRequest;
 import com.mars.dto.AppointmentResponseDto;
 import com.mars.dto.StaffAppointmentResponseDto;
+import com.mars.dto.StudentAppointmentResponseDto;
 import com.mars.entity.Appointment;
 import com.mars.entity.AppointmentCategory;
 import com.mars.entity.AvailabilitySlot;
@@ -111,6 +112,16 @@ public class AppointmentService {
                 request, student, slot, category, course, meetingType);
         Appointment saved = appointmentRepository.save(appointment);
         return appointmentMapper.toResponse(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudentAppointmentResponseDto> getStudentActiveAppointments() {
+        User student = getCurrentStudent();
+        return appointmentRepository.findActiveByStudentIdWithDetails(
+                        student.getUserId(), ACTIVE_APPOINTMENT_STATUSES)
+                .stream()
+                .map(appointmentMapper::toStudentResponse)
+                .toList();
     }
 
     @Transactional(readOnly = true)

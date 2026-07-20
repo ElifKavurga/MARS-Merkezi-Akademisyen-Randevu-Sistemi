@@ -98,10 +98,22 @@ export const STUDENT_APPOINTMENT_MESSAGES = {
   NO_TITLE: 'Ünvan belirtilmemiş',
   BREADCRUMB_CREATE: 'Randevu Oluştur',
   MY_APPOINTMENTS_TITLE: 'Randevularım',
-  MY_APPOINTMENTS_SUBTITLE: 'Oluşturduğunuz randevu taleplerini buradan takip edebilirsiniz.',
-  MY_APPOINTMENTS_EMPTY_TITLE: 'Henüz randevu yok',
+  MY_APPOINTMENTS_SUBTITLE: 'Aktif randevu taleplerinizi buradan takip edebilirsiniz.',
+  MY_APPOINTMENTS_LOADING: 'Randevular yükleniyor...',
+  MY_APPOINTMENTS_LOAD_ERROR: 'Randevular yüklenirken bir hata oluştu.',
+  MY_APPOINTMENTS_EMPTY_TITLE: 'Aktif randevunuz yok',
   MY_APPOINTMENTS_EMPTY_DESCRIPTION:
-    'Oluşturduğunuz randevu talepleri burada listelenecek.',
+    'Henüz bekleyen veya onaylanmış bir randevunuz bulunmuyor.',
+  MY_APPOINTMENTS_ACADEMICIAN: 'Akademisyen',
+  MY_APPOINTMENTS_TITLE_LABEL: 'Akademik Ünvan',
+  MY_APPOINTMENTS_DEPARTMENT: 'Bölüm',
+  MY_APPOINTMENTS_DATE: 'Tarih',
+  MY_APPOINTMENTS_TIME: 'Saat',
+  MY_APPOINTMENTS_CATEGORY: 'Kategori',
+  MY_APPOINTMENTS_COURSE: 'Ders',
+  MY_APPOINTMENTS_MEETING_TYPE: 'Görüşme Türü',
+  MY_APPOINTMENTS_NO_TITLE: 'Ünvan belirtilmemiş',
+  MY_APPOINTMENTS_NO_COURSE: '—',
 } as const;
 
 /**
