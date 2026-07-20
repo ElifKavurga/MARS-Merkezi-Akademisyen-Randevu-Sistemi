@@ -2,13 +2,16 @@ import type { StudentAppointmentListItem } from '../types/studentAppointment';
 
 const ACTIVE_STATUSES = new Set(['PENDING', 'APPROVED']);
 
+/** Europe/Istanbul is UTC+3 year-round (no DST). Matches backend APP_ZONE. */
+const ISTANBUL_OFFSET = '+03:00';
+
 function parseAppointmentEnd(appointmentDate: string, endTime: string): Date | null {
-  const [year, month, day] = appointmentDate.split('-').map(Number);
-  const [hour, minute] = endTime.slice(0, 5).split(':').map(Number);
-  if ([year, month, day, hour, minute].some((value) => Number.isNaN(value))) {
+  const time = endTime.slice(0, 5);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(appointmentDate) || !/^\d{2}:\d{2}$/.test(time)) {
     return null;
   }
-  return new Date(year, month - 1, day, hour, minute, 0, 0);
+  const end = new Date(`${appointmentDate}T${time}:00${ISTANBUL_OFFSET}`);
+  return Number.isNaN(end.getTime()) ? null : end;
 }
 
 /** SRS: aktif (PENDING/APPROVED) ve geçmiş olmayan randevular iptal edilebilir. */

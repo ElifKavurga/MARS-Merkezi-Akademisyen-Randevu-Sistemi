@@ -14,7 +14,14 @@ export function resolveStudentApiError(
 ): string {
   if (isAxiosError(err)) {
     if (err.response?.status === 403) {
-      return options?.accessDeniedMessage ?? STUDENT_UI.ACCESS_DENIED;
+      if (options?.accessDeniedMessage) {
+        return options.accessDeniedMessage;
+      }
+      const apiMessage = err.response?.data?.message;
+      if (typeof apiMessage === 'string' && apiMessage.trim() !== '') {
+        return apiMessage;
+      }
+      return STUDENT_UI.ACCESS_DENIED;
     }
     if (err.response?.status === 404) {
       if (options?.notFoundMessage) {

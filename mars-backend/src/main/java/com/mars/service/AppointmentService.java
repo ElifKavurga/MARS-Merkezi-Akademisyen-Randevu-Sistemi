@@ -143,16 +143,11 @@ public class AppointmentService {
     @Transactional(readOnly = true)
     public StudentAppointmentResponseDto getStudentAppointment(Integer appointmentId) {
         User student = getCurrentStudent();
-        return appointmentRepository.findByIdAndStudentIdWithDetails(
+        Appointment appointment = appointmentRepository.findByIdAndStudentIdWithDetails(
                         appointmentId, student.getUserId())
-                .map(appointmentMapper::toStudentResponse)
-                .orElseGet(() -> {
-                    if (appointmentRepository.existsByAppointmentId(appointmentId)) {
-                        throw new AccessDeniedException(
-                                AppointmentMessages.STUDENT_APPOINTMENT_ACCESS_DENIED);
-                    }
-                    throw new ResourceNotFoundException(AppointmentMessages.APPOINTMENT_NOT_FOUND);
-                });
+                .orElseThrow(() -> ownershipException(
+                        appointmentId, AppointmentMessages.STUDENT_APPOINTMENT_ACCESS_DENIED));
+        return appointmentMapper.toStudentResponse(appointment);
     }
 
     @Transactional
@@ -160,12 +155,8 @@ public class AppointmentService {
         User student = getCurrentStudent();
         Appointment appointment = appointmentRepository.findByIdAndStudentIdForUpdate(
                         appointmentId, student.getUserId())
-                .orElseGet(() -> {
-                    if (appointmentRepository.existsByAppointmentId(appointmentId)) {
-                        throw new AccessDeniedException(AppointmentMessages.CANCEL_ACCESS_DENIED);
-                    }
-                    throw new ResourceNotFoundException(AppointmentMessages.APPOINTMENT_NOT_FOUND);
-                });
+                .orElseThrow(() -> ownershipException(
+                        appointmentId, AppointmentMessages.CANCEL_ACCESS_DENIED));
 
         validateStudentCancellable(appointment);
         appointment.setAppointmentStatus(AppointmentStatus.CANCELLED.name());
@@ -263,6 +254,13 @@ public class AppointmentService {
         if (isAppointmentInPast(appointment)) {
             throw new BadRequestException(AppointmentMessages.CANCEL_PAST);
         }
+    }
+
+    private RuntimeException ownershipException(Integer appointmentId, String accessDeniedMessage) {
+        if (appointmentRepository.existsByAppointmentId(appointmentId)) {
+            return new AccessDeniedException(accessDeniedMessage);
+        }
+        return new ResourceNotFoundException(AppointmentMessages.APPOINTMENT_NOT_FOUND);
     }
 
     private void ensureStaffIsBookable(User staff) {

@@ -85,7 +85,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex, WebRequest request) {
-        return build(HttpStatus.FORBIDDEN, SecurityMessages.ACCESS_DENIED, request);
+        String raw = ex.getMessage();
+        String message = raw == null || raw.isBlank() || "Access Denied".equalsIgnoreCase(raw.trim())
+                ? SecurityMessages.ACCESS_DENIED
+                : raw;
+        return build(HttpStatus.FORBIDDEN, message, request);
     }
 
     @ExceptionHandler(UsernameNotFoundException.class)

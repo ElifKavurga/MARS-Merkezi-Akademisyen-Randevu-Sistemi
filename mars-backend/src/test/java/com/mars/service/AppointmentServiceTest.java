@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -32,6 +33,7 @@ import com.mars.AppointmentMessages;
 import com.mars.dto.AppointmentCreateRequest;
 import com.mars.dto.AppointmentResponseDto;
 import com.mars.dto.StaffAppointmentResponseDto;
+import com.mars.dto.StudentAppointmentResponseDto;
 import com.mars.entity.Appointment;
 import com.mars.entity.AppointmentCategory;
 import com.mars.entity.AvailabilitySlot;
@@ -728,6 +730,108 @@ class AppointmentServiceTest {
         verify(appointmentRepository, never()).findAllByStaffIdWithDetails(any(), any());
     }
 
+    @Test
+    void getStudentAppointment_otherStudentsAppointment_throwsAccessDenied() {
+        when(appointmentRepository.findByIdAndStudentIdWithDetails(999, 20))
+                .thenReturn(Optional.empty());
+        when(appointmentRepository.existsByAppointmentId(999)).thenReturn(true);
+
+        assertThatThrownBy(() -> appointmentService.getStudentAppointment(999))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage(AppointmentMessages.STUDENT_APPOINTMENT_ACCESS_DENIED);
+    }
+
+    @Test
+    void getStudentAppointment_missing_throwsNotFound() {
+        when(appointmentRepository.findByIdAndStudentIdWithDetails(404, 20))
+                .thenReturn(Optional.empty());
+        when(appointmentRepository.existsByAppointmentId(404)).thenReturn(false);
+
+        assertThatThrownBy(() -> appointmentService.getStudentAppointment(404))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(AppointmentMessages.APPOINTMENT_NOT_FOUND);
+    }
+
+    @Test
+    void cancelStudentAppointment_pendingFuture_setsCancelled() {
+        Appointment appointment = studentOwnedAppointment(100, AppointmentStatus.PENDING.name());
+        when(appointmentRepository.findByIdAndStudentIdForUpdate(100, 20))
+                .thenReturn(Optional.of(appointment));
+        when(appointmentRepository.save(appointment)).thenReturn(appointment);
+        when(appointmentRepository.findByIdAndStudentIdWithDetails(100, 20))
+                .thenReturn(Optional.of(appointment));
+        when(appointmentMapper.toStudentResponse(appointment))
+                .thenAnswer(invocation -> new AppointmentMapper().toStudentResponse(appointment));
+
+        StudentAppointmentResponseDto result = appointmentService.cancelStudentAppointment(100);
+
+        assertThat(result.getAppointmentStatus()).isEqualTo(AppointmentStatus.CANCELLED.name());
+        assertThat(appointment.getAppointmentStatus()).isEqualTo(AppointmentStatus.CANCELLED.name());
+        verify(appointmentRepository).save(appointment);
+    }
+
+    @Test
+    void cancelStudentAppointment_alreadyCancelled_throwsConflict() {
+        Appointment appointment = studentOwnedAppointment(100, AppointmentStatus.CANCELLED.name());
+        when(appointmentRepository.findByIdAndStudentIdForUpdate(100, 20))
+                .thenReturn(Optional.of(appointment));
+
+        assertThatThrownBy(() -> appointmentService.cancelStudentAppointment(100))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage(AppointmentMessages.CANCEL_ALREADY_CANCELLED);
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
+    void cancelStudentAppointment_completed_throwsConflict() {
+        Appointment appointment = studentOwnedAppointment(100, AppointmentStatus.COMPLETED.name());
+        when(appointmentRepository.findByIdAndStudentIdForUpdate(100, 20))
+                .thenReturn(Optional.of(appointment));
+
+        assertThatThrownBy(() -> appointmentService.cancelStudentAppointment(100))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage(AppointmentMessages.CANCEL_NOT_ACTIVE);
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
+    void cancelStudentAppointment_noShow_throwsConflict() {
+        Appointment appointment = studentOwnedAppointment(100, AppointmentStatus.NO_SHOW.name());
+        when(appointmentRepository.findByIdAndStudentIdForUpdate(100, 20))
+                .thenReturn(Optional.of(appointment));
+
+        assertThatThrownBy(() -> appointmentService.cancelStudentAppointment(100))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage(AppointmentMessages.CANCEL_NOT_ACTIVE);
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
+    void cancelStudentAppointment_pastSlot_throwsBadRequest() {
+        Appointment appointment = studentOwnedAppointment(100, AppointmentStatus.APPROVED.name());
+        appointment.getSlot().setSlotDate(
+                LocalDate.now(ZoneId.of("Europe/Istanbul")).minusDays(1));
+        when(appointmentRepository.findByIdAndStudentIdForUpdate(100, 20))
+                .thenReturn(Optional.of(appointment));
+
+        assertThatThrownBy(() -> appointmentService.cancelStudentAppointment(100))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage(AppointmentMessages.CANCEL_PAST);
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
+    void cancelStudentAppointment_otherStudentsAppointment_throwsAccessDenied() {
+        when(appointmentRepository.findByIdAndStudentIdForUpdate(999, 20))
+                .thenReturn(Optional.empty());
+        when(appointmentRepository.existsByAppointmentId(999)).thenReturn(true);
+
+        assertThatThrownBy(() -> appointmentService.cancelStudentAppointment(999))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage(AppointmentMessages.CANCEL_ACCESS_DENIED);
+        verify(appointmentRepository, never()).save(any());
+    }
+
     private void authenticateAsAssistant() {
         Role assistantRole = new Role();
         assistantRole.setRoleName(RoleType.ASSISTANT.name());
@@ -751,6 +855,25 @@ class AppointmentServiceTest {
         appointmentSlot.setSlotId(appointmentId);
         appointmentSlot.setStaff(staff);
         appointmentSlot.setSlotDate(LocalDate.now().plusDays(2));
+        appointmentSlot.setStartTime(LocalTime.of(10, 0));
+        appointmentSlot.setEndTime(LocalTime.of(10, 10));
+
+        Appointment appointment = new Appointment();
+        appointment.setAppointmentId(appointmentId);
+        appointment.setStaff(staff);
+        appointment.setStudent(student);
+        appointment.setCategory(category);
+        appointment.setSlot(appointmentSlot);
+        appointment.setAppointmentStatus(status);
+        appointment.setMeetingType(MeetingType.FACE_TO_FACE.name());
+        return appointment;
+    }
+
+    private Appointment studentOwnedAppointment(Integer appointmentId, String status) {
+        AvailabilitySlot appointmentSlot = new AvailabilitySlot();
+        appointmentSlot.setSlotId(appointmentId);
+        appointmentSlot.setStaff(staff);
+        appointmentSlot.setSlotDate(LocalDate.now(ZoneId.of("Europe/Istanbul")).plusDays(2));
         appointmentSlot.setStartTime(LocalTime.of(10, 0));
         appointmentSlot.setEndTime(LocalTime.of(10, 10));
 
