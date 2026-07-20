@@ -1,10 +1,8 @@
 import DashboardWelcomeBanner from '../components/DashboardWelcomeBanner';
-import StudentBreadcrumb from '../components/StudentBreadcrumb';
 import StudentEmptyState from '../components/StudentEmptyState';
 import StudentLoadingState from '../components/StudentLoadingState';
 import StudentPageHeader from '../components/StudentPageHeader';
 import { STUDENT_UI } from '../constants/studentUi';
-import { ROUTES } from '../constants/routes';
 import { useAuth } from '../hooks/useAuth';
 
 type PlaceholderCardProps = {
@@ -58,7 +56,6 @@ export default function StudentDashboard() {
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
-      <StudentBreadcrumb items={[{ label: STUDENT_UI.BREADCRUMB_HOME, to: ROUTES.STUDENT }]} />
       <StudentPageHeader
         title={STUDENT_UI.DASHBOARD_TITLE}
         description={STUDENT_UI.DASHBOARD_SUBTITLE}

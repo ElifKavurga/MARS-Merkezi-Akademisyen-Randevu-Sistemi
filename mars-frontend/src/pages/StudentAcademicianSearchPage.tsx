@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import DepartmentSelect from '../components/DepartmentSelect';
 import StudentAcceptingBadge from '../components/StudentAcceptingBadge';
-import StudentBreadcrumb from '../components/StudentBreadcrumb';
 import StudentEmptyState from '../components/StudentEmptyState';
 import StudentErrorState from '../components/StudentErrorState';
 import StudentLoadingState from '../components/StudentLoadingState';
@@ -12,7 +11,7 @@ import {
   STUDENT_ACADEMICIAN_MESSAGES,
   STUDENT_ACADEMICIAN_PAGE_SIZE,
 } from '../constants/studentAcademician';
-import { studentAcademicianProfilePath, ROUTES } from '../constants/routes';
+import { studentAcademicianProfilePath } from '../constants/routes';
 import { STUDENT_UI } from '../constants/studentUi';
 import { FORM_FIELD_CLASS, FORM_SELECT_CLASS } from '../constants/ui';
 import { useToast } from '../hooks/useToast';
@@ -200,12 +199,6 @@ export default function StudentAcademicianSearchPage() {
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
-      <StudentBreadcrumb
-        items={[
-          { label: STUDENT_UI.BREADCRUMB_HOME, to: ROUTES.STUDENT },
-          { label: STUDENT_UI.BREADCRUMB_SEARCH },
-        ]}
-      />
       <StudentPageHeader
         title={STUDENT_ACADEMICIAN_MESSAGES.TITLE}
         description={STUDENT_ACADEMICIAN_MESSAGES.SUBTITLE}

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import StudentAppointmentStepper from '../components/StudentAppointmentStepper';
 import StudentBackLink from '../components/StudentBackLink';
-import StudentBreadcrumb from '../components/StudentBreadcrumb';
 import StudentEmptyState from '../components/StudentEmptyState';
 import StudentErrorState from '../components/StudentErrorState';
 import StudentLoadingState from '../components/StudentLoadingState';
@@ -1089,24 +1088,10 @@ export default function StudentAppointmentCreatePage() {
     return null;
   }
 
-  const breadcrumb = (
-    <StudentBreadcrumb
-      items={[
-        { label: STUDENT_UI.BREADCRUMB_HOME, to: ROUTES.STUDENT },
-        { label: STUDENT_UI.BREADCRUMB_SEARCH, to: ROUTES.STUDENT_ACADEMICIAN_SEARCH },
-        {
-          label: academician?.fullName ?? STUDENT_UI.BREADCRUMB_PROFILE,
-          to: profilePath,
-        },
-        { label: STUDENT_APPOINTMENT_MESSAGES.BREADCRUMB_CREATE },
-      ]}
-    />
-  );
 
   if (loading) {
     return (
       <div className="w-full min-w-0 animate-fade-in">
-        {breadcrumb}
         <StudentPageHeader
           title={STUDENT_APPOINTMENT_MESSAGES.TITLE}
           description={STUDENT_APPOINTMENT_MESSAGES.SUBTITLE}
@@ -1119,7 +1104,6 @@ export default function StudentAppointmentCreatePage() {
   if (error || !academician) {
     return (
       <div className="w-full min-w-0 animate-fade-in">
-        {breadcrumb}
         <StudentPageHeader
           title={STUDENT_APPOINTMENT_MESSAGES.TITLE}
           description={STUDENT_APPOINTMENT_MESSAGES.SUBTITLE}
@@ -1153,7 +1137,6 @@ export default function StudentAppointmentCreatePage() {
   if (!academician.isAcceptingAppointments) {
     return (
       <div className="w-full min-w-0 animate-fade-in">
-        {breadcrumb}
         <StudentPageHeader
           title={STUDENT_APPOINTMENT_MESSAGES.TITLE}
           description={STUDENT_APPOINTMENT_MESSAGES.SUBTITLE}
@@ -1185,7 +1168,6 @@ export default function StudentAppointmentCreatePage() {
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
-      {breadcrumb}
       <StudentPageHeader
         title={STUDENT_APPOINTMENT_MESSAGES.TITLE}
         description={STUDENT_APPOINTMENT_MESSAGES.SUBTITLE}

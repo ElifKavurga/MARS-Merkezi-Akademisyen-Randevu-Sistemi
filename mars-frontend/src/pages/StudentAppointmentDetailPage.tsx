@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import AppointmentStatusBadge from '../components/AppointmentStatusBadge';
 import ConfirmModal from '../components/ConfirmModal';
-import StudentBreadcrumb from '../components/StudentBreadcrumb';
 import StudentErrorState from '../components/StudentErrorState';
 import StudentLoadingState from '../components/StudentLoadingState';
 import StudentPageHeader from '../components/StudentPageHeader';
@@ -155,17 +154,6 @@ export default function StudentAppointmentDetailPage() {
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
-      <StudentBreadcrumb
-        items={[
-          { label: STUDENT_UI.BREADCRUMB_HOME, to: ROUTES.STUDENT },
-          {
-            label: STUDENT_UI.BREADCRUMB_APPOINTMENTS,
-            to: ROUTES.STUDENT_APPOINTMENTS,
-          },
-          { label: STUDENT_APPOINTMENT_MESSAGES.DETAIL_TITLE },
-        ]}
-      />
-
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <Link to={ROUTES.STUDENT_APPOINTMENTS} className={STUDENT_UI.BACK_LINK_CLASS}>
           <span className="material-symbols-outlined text-[18px]" aria-hidden>

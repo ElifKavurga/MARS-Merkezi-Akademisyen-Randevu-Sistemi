@@ -667,6 +667,46 @@
   border-width: 0;
   font-size: 0.75rem;
   padding: 1px 4px;
+  overflow: hidden;
+}
+
+/* Keep time-grid event height tied to start/end — do not grow with content. */
+.academician-calendar .fc .fc-timegrid-event {
+  border-width: 1px;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.academician-calendar .fc .fc-timegrid-event .fc-event-main,
+.academician-calendar .fc .fc-timegrid-event .fc-event-main-frame {
+  height: 100%;
+  overflow: hidden;
+}
+
+.academician-calendar .fc .fc-timegrid-slot {
+  height: 2.5rem !important;
+}
+
+.academician-calendar .fc .mars-cal-event--availability {
+  border-style: dashed;
+  border-width: 1px;
+}
+
+.academician-calendar .fc .mars-cal-event--appointment {
+  border-style: solid;
+  border-width: 0;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(11, 22, 65, 0.12);
+  z-index: 3;
+}
+
+.academician-calendar .fc .mars-cal-busy-lane {
+  opacity: 1;
+  border-radius: 0.25rem;
+}
+
+.academician-calendar .fc .fc-timegrid-event.mars-cal-event--appointment {
+  border-radius: 0.5rem;
 }
 
 .academician-calendar .fc .fc-col-header-cell-cushion,

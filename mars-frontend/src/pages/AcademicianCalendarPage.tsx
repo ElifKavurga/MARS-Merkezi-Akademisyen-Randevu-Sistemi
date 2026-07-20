@@ -3,15 +3,20 @@ import { isAxiosError } from 'axios';
 import AcademicianCalendar from '../components/AcademicianCalendar';
 import CalendarEventDetailModal from '../components/CalendarEventDetailModal';
 import Loading from '../components/Loading';
-import { FORM_SELECT_CLASS } from '../constants';
+import StaffCalendarEventList from '../components/StaffCalendarEventList';
+import StudentSegmentedTabs from '../components/StudentSegmentedTabs';
 import {
   CALENDAR_FILTER_OPTIONS,
   CALENDAR_EVENT_COLORS,
   CALENDAR_MESSAGES,
   STAFF_CALENDAR_FILTER_OPTIONS,
+  formatCalendarRangeLabel,
+  isCalendarAppointment,
   matchesCalendarFilter,
+  shiftCalendarRange,
   toLocalIsoDate,
 } from '../constants/calendar';
+import { STUDENT_UI } from '../constants/studentUi';
 import { useToast } from '../hooks/useToast';
 import { getCalendarEvents } from '../services/calendarService';
 import {
@@ -20,6 +25,13 @@ import {
   type CalendarEvent,
   type CalendarFilter,
 } from '../types/calendar';
+
+type CalendarViewMode = 'list' | 'calendar';
+
+const VIEW_OPTIONS = [
+  { value: 'list' as const, label: CALENDAR_MESSAGES.VIEW_LIST },
+  { value: 'calendar' as const, label: CALENDAR_MESSAGES.VIEW_CALENDAR },
+];
 
 function initialWeekRange(): CalendarDateRange {
   const now = new Date();
@@ -51,6 +63,7 @@ export default function AcademicianCalendarPage({
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [range, setRange] = useState<CalendarDateRange>(initialWeekRange);
   const [filter, setFilter] = useState<CalendarFilter>(CALENDAR_FILTER.ALL);
+  const [viewMode, setViewMode] = useState<CalendarViewMode>('calendar');
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
@@ -87,24 +100,42 @@ export default function AcademicianCalendarPage({
     });
   }, []);
 
+  const rangeSpanDays = useMemo(() => {
+    const from = new Date(`${range.from}T00:00:00`);
+    const to = new Date(`${range.to}T00:00:00`);
+    const diff = Math.round((to.getTime() - from.getTime()) / 86_400_000) + 1;
+    return Math.max(diff, 1);
+  }, [range]);
+
   const filteredEvents = useMemo(
     () => events.filter((event) => matchesCalendarFilter(event, filter)),
     [events, filter],
   );
 
+  /** Liste: yalnızca Appointment — müsaitlik slotları asla listelenmez. */
+  const listAppointments = useMemo(
+    () => filteredEvents.filter(isCalendarAppointment),
+    [filteredEvents],
+  );
+
+  const openEvent = (event: CalendarEvent) => {
+    setSelectedEvent(event);
+    setDetailOpen(true);
+  };
+
   return (
-    <div className="flex flex-col gap-6 p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto w-full">
+    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-headline-lg text-headline-lg text-on-background">{title}</h1>
-          <p className="font-body-md text-body-md text-on-surface-variant mt-1">
+          <p className="mt-1 font-body-md text-body-md text-on-surface-variant">
             {subtitle}
           </p>
         </div>
         <label className="flex flex-col gap-1.5 sm:min-w-[200px]">
           <span className="font-label-md text-label-md text-on-surface-variant">Filtre</span>
           <select
-            className={FORM_SELECT_CLASS}
+            className={STUDENT_UI.FILTER_CONTROL_CLASS}
             value={filter}
             onChange={(e) => setFilter(e.target.value as CalendarFilter)}
             aria-label="Takvim filtresi"
@@ -121,12 +152,74 @@ export default function AcademicianCalendarPage({
         </label>
       </div>
 
-      {includeAppointments ? (
-        <div className="flex flex-wrap items-center gap-4 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-3 font-label-sm text-label-sm text-on-surface-variant">
-          <LegendItem color={CALENDAR_EVENT_COLORS.NORMAL} label="Müsaitlik" />
-          <LegendItem color={CALENDAR_EVENT_COLORS.RECURRING} label="Tekrarlayan müsaitlik" />
-          <LegendItem color={CALENDAR_EVENT_COLORS.BLOCKED} label="Engellenmiş müsaitlik" />
-          <LegendItem color={CALENDAR_EVENT_COLORS.APPOINTMENT} label="Randevu" />
+      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <StudentSegmentedTabs
+          value={viewMode}
+          options={VIEW_OPTIONS}
+          ariaLabel={CALENDAR_MESSAGES.VIEW_MODE_LABEL}
+          onChange={setViewMode}
+        />
+
+        {viewMode === 'list' ? (
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className={STUDENT_UI.SECONDARY_BUTTON_CLASS}
+              aria-label={CALENDAR_MESSAGES.RANGE_PREV}
+              onClick={() => handleRangeChange(shiftCalendarRange(range, -rangeSpanDays))}
+            >
+              <span className="material-symbols-outlined text-[18px]" aria-hidden>
+                chevron_left
+              </span>
+            </button>
+            <p className="min-w-0 flex-1 text-center font-label-md text-label-md text-on-surface sm:px-2">
+              <span className="sr-only">{CALENDAR_MESSAGES.RANGE_LABEL}: </span>
+              {formatCalendarRangeLabel(range)}
+            </p>
+            <button
+              type="button"
+              className={STUDENT_UI.SECONDARY_BUTTON_CLASS}
+              aria-label={CALENDAR_MESSAGES.RANGE_NEXT}
+              onClick={() => handleRangeChange(shiftCalendarRange(range, rangeSpanDays))}
+            >
+              <span className="material-symbols-outlined text-[18px]" aria-hidden>
+                chevron_right
+              </span>
+            </button>
+          </div>
+        ) : null}
+      </div>
+
+      {includeAppointments && viewMode === 'calendar' ? (
+        <div className="flex flex-wrap items-center gap-4 rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 font-label-sm text-label-sm text-on-surface-variant">
+          <LegendItem
+            color={CALENDAR_EVENT_COLORS.NORMAL_SOFT}
+            borderColor={CALENDAR_EVENT_COLORS.NORMAL}
+            label={CALENDAR_MESSAGES.LEGEND_AVAILABILITY}
+            dashed
+          />
+          <LegendItem
+            color={CALENDAR_EVENT_COLORS.RECURRING_SOFT}
+            borderColor={CALENDAR_EVENT_COLORS.RECURRING}
+            label={CALENDAR_MESSAGES.LEGEND_RECURRING}
+            dashed
+          />
+          <LegendItem
+            color={CALENDAR_EVENT_COLORS.BLOCKED_SOFT}
+            borderColor={CALENDAR_EVENT_COLORS.BLOCKED}
+            label={CALENDAR_MESSAGES.LEGEND_BLOCKED}
+            dashed
+          />
+          <LegendItem
+            color={CALENDAR_EVENT_COLORS.APPOINTMENT}
+            borderColor={CALENDAR_EVENT_COLORS.APPOINTMENT}
+            label={CALENDAR_MESSAGES.LEGEND_APPOINTMENT}
+          />
+          <LegendItem
+            color="rgba(217, 119, 6, 0.22)"
+            borderColor={CALENDAR_EVENT_COLORS.APPOINTMENT}
+            label={CALENDAR_MESSAGES.LEGEND_BUSY}
+          />
         </div>
       ) : null}
 
@@ -137,17 +230,22 @@ export default function AcademicianCalendarPage({
           </div>
         ) : null}
 
-        <AcademicianCalendar
-          events={filteredEvents}
-          onRangeChange={handleRangeChange}
-          onEventClick={(event) => {
-            setSelectedEvent(event);
-            setDetailOpen(true);
-          }}
-        />
+        {viewMode === 'calendar' ? (
+          <AcademicianCalendar
+            initialDate={range.from}
+            events={filteredEvents}
+            onRangeChange={handleRangeChange}
+            onEventClick={openEvent}
+          />
+        ) : (
+          <StaffCalendarEventList
+            events={listAppointments}
+            onEventClick={openEvent}
+          />
+        )}
 
-        {!loading && filteredEvents.length === 0 ? (
-          <p className="mt-4 font-body-md text-body-md text-on-surface-variant text-center">
+        {!loading && viewMode === 'calendar' && filteredEvents.length === 0 ? (
+          <p className="mt-4 text-center font-body-md text-body-md text-on-surface-variant">
             {CALENDAR_MESSAGES.EMPTY_RANGE}
           </p>
         ) : null}
@@ -165,10 +263,27 @@ export default function AcademicianCalendarPage({
   );
 }
 
-function LegendItem({ color, label }: { color: string; label: string }) {
+function LegendItem({
+  color,
+  borderColor,
+  label,
+  dashed = false,
+}: {
+  color: string;
+  borderColor: string;
+  label: string;
+  dashed?: boolean;
+}) {
   return (
     <span className="inline-flex items-center gap-2">
-      <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: color }} aria-hidden="true" />
+      <span
+        className="h-3 w-3 rounded-sm"
+        style={{
+          backgroundColor: color,
+          border: `1px ${dashed ? 'dashed' : 'solid'} ${borderColor}`,
+        }}
+        aria-hidden="true"
+      />
       {label}
     </span>
   );

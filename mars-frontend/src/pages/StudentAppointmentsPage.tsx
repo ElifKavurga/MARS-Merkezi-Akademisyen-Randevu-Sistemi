@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import ConfirmModal from '../components/ConfirmModal';
 import StudentAppointmentCard from '../components/StudentAppointmentCard';
 import StudentAppointmentsCalendar from '../components/StudentAppointmentsCalendar';
-import StudentBreadcrumb from '../components/StudentBreadcrumb';
 import StudentEmptyState from '../components/StudentEmptyState';
 import StudentErrorState from '../components/StudentErrorState';
 import StudentLoadingState from '../components/StudentLoadingState';
@@ -11,7 +10,7 @@ import StudentPageHeader from '../components/StudentPageHeader';
 import StudentSegmentedTabs from '../components/StudentSegmentedTabs';
 import { APPOINTMENT_STATUS_LABELS, getMeetingTypeLabel } from '../constants/appointment';
 import { MEETING_TYPE } from '../constants/availability';
-import { ROUTES, studentAppointmentDetailPath } from '../constants/routes';
+import { studentAppointmentDetailPath } from '../constants/routes';
 import { STUDENT_APPOINTMENT_MESSAGES } from '../constants/studentAppointment';
 import { STUDENT_UI } from '../constants/studentUi';
 import { useToast } from '../hooks/useToast';
@@ -351,12 +350,6 @@ export default function StudentAppointmentsPage() {
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
-      <StudentBreadcrumb
-        items={[
-          { label: STUDENT_UI.BREADCRUMB_HOME, to: ROUTES.STUDENT },
-          { label: STUDENT_UI.BREADCRUMB_APPOINTMENTS },
-        ]}
-      />
       <StudentPageHeader
         title={STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_TITLE}
         description={STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_SUBTITLE}

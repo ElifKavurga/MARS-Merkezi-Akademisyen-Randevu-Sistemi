@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import StudentAcceptingBadge from '../components/StudentAcceptingBadge';
 import StudentBackLink from '../components/StudentBackLink';
-import StudentBreadcrumb from '../components/StudentBreadcrumb';
 import StudentEmptyState from '../components/StudentEmptyState';
 import StudentErrorState from '../components/StudentErrorState';
 import StudentLoadingState from '../components/StudentLoadingState';
@@ -137,20 +136,10 @@ export default function StudentAcademicianProfilePage() {
     [slots],
   );
 
-  const breadcrumb = (
-    <StudentBreadcrumb
-      items={[
-        { label: STUDENT_UI.BREADCRUMB_HOME, to: ROUTES.STUDENT },
-        { label: STUDENT_UI.BREADCRUMB_SEARCH, to: ROUTES.STUDENT_ACADEMICIAN_SEARCH },
-        { label: STUDENT_UI.BREADCRUMB_PROFILE },
-      ]}
-    />
-  );
 
   if (loading) {
     return (
       <div className="w-full min-w-0 animate-fade-in">
-        {breadcrumb}
         <StudentPageHeader
           title={STUDENT_UI.PROFILE_TITLE}
           description={STUDENT_UI.PROFILE_SUBTITLE}
@@ -163,7 +152,6 @@ export default function StudentAcademicianProfilePage() {
   if (error || !profile) {
     return (
       <div className="w-full min-w-0 animate-fade-in">
-        {breadcrumb}
         <StudentPageHeader
           title={STUDENT_UI.PROFILE_TITLE}
           description={STUDENT_UI.PROFILE_SUBTITLE}
@@ -202,7 +190,6 @@ export default function StudentAcademicianProfilePage() {
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
-      {breadcrumb}
       <StudentPageHeader
         title={STUDENT_UI.PROFILE_TITLE}
         description={STUDENT_UI.PROFILE_SUBTITLE}
