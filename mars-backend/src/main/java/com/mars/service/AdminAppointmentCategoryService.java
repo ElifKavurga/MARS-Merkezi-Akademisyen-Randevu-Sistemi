@@ -29,7 +29,7 @@ public class AdminAppointmentCategoryService {
 
     @Transactional(readOnly = true)
     public List<AppointmentCategoryResponse> getAllCategories() {
-        return appointmentCategoryRepository.findAll().stream()
+        return appointmentCategoryRepository.findAllByOrderByCategoryIdAsc().stream()
                 .map(appointmentCategoryMapper::toResponse)
                 .toList();
     }

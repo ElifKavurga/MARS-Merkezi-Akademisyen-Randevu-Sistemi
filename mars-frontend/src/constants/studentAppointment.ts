@@ -8,8 +8,17 @@ export const STUDENT_APPOINTMENT_STEPS = [
 
 export type StudentAppointmentStepId = (typeof STUDENT_APPOINTMENT_STEPS)[number]['id'];
 
-/** Sprint 22.1: yalnızca kategori adımı aktif; seçim henüz yok. */
-export const STUDENT_APPOINTMENT_ACTIVE_STEP_INDEX = 0;
+export const STUDENT_APPOINTMENT_STEP_CATEGORY = 0;
+export const STUDENT_APPOINTMENT_STEP_COURSE = 1;
+
+/** Sprint 22.1 uyumluluğu — kategori adımı indeksi. */
+export const STUDENT_APPOINTMENT_ACTIVE_STEP_INDEX = STUDENT_APPOINTMENT_STEP_CATEGORY;
+
+export const STUDENT_APPOINTMENT_CATEGORY_GROUP_LABELS: Record<string, string> = {
+  ACADEMIC: 'Akademik',
+  COURSE_EXAM: 'Ders / Sınav',
+  ADMINISTRATIVE: 'İdari',
+};
 
 export const STUDENT_APPOINTMENT_MESSAGES = {
   TITLE: 'Randevu Oluştur',
@@ -24,9 +33,20 @@ export const STUDENT_APPOINTMENT_MESSAGES = {
   NOT_ACCEPTING_DESCRIPTION:
     'Bu akademisyen şu an yeni randevu kabul etmiyor. Lütfen daha sonra tekrar deneyin.',
   BACK_TO_PROFILE: 'Profile Dön',
-  STEP_CATEGORY_TITLE: 'Kategori',
-  STEP_CATEGORY_DESCRIPTION:
-    'Randevu kategorisi seçimi bir sonraki adımda açılacaktır. Bu ekranda yalnızca akış iskeleti hazırlanmıştır.',
+  STEP_CATEGORY_TITLE: 'Randevu Kategorisi',
+  STEP_CATEGORY_DESCRIPTION: 'Görüşme nedeninize uygun kategoriyi seçin.',
+  STEP_CATEGORY_LOADING: 'Kategoriler yükleniyor...',
+  STEP_CATEGORY_LOAD_ERROR: 'Kategori listesi yüklenirken bir hata oluştu.',
+  STEP_CATEGORY_EMPTY_TITLE: 'Aktif kategori bulunamadı',
+  STEP_CATEGORY_EMPTY_DESCRIPTION:
+    'Şu an seçilebilir randevu kategorisi bulunmuyor. Lütfen daha sonra tekrar deneyin.',
+  STEP_CATEGORY_DURATION: (minutes: number) => `Tahmini süre: ${minutes} dk`,
+  CONTINUE: 'Devam Et',
+  CONTINUE_DISABLED: 'Devam etmek için bir kategori seçin.',
+  BACK_TO_CATEGORY: 'Kategoriye Dön',
+  STEP_COURSE_TITLE: 'Ders',
+  STEP_COURSE_DESCRIPTION:
+    'Ders seçimi bir sonraki adımda açılacaktır. Seçilen kategori bilgisi korundu.',
   STEP_LOCKED: 'Bu adım henüz aktif değil.',
   NO_TITLE: 'Ünvan belirtilmemiş',
   BREADCRUMB_CREATE: 'Randevu Oluştur',
