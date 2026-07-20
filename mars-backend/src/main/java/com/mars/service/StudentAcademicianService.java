@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mars.StudentAcademicianMessages;
 import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.PageResponseDto;
 import com.mars.dto.StudentAcademicianCourseDto;
@@ -52,10 +53,10 @@ public class StudentAcademicianService {
             int page,
             int size) {
         if (page < 0) {
-            throw new BadRequestException("Sayfa numarası 0 veya daha büyük olmalıdır.");
+            throw new BadRequestException(StudentAcademicianMessages.INVALID_PAGE);
         }
         if (size < 1 || size > MAX_PAGE_SIZE) {
-            throw new BadRequestException("Sayfa boyutu 1 ile " + MAX_PAGE_SIZE + " arasında olmalıdır.");
+            throw new BadRequestException(StudentAcademicianMessages.INVALID_PAGE_SIZE);
         }
 
         String normalizedSearch = blankToNull(search);
@@ -112,11 +113,11 @@ public class StudentAcademicianService {
 
     private User requireActiveAcademician(Integer userId) {
         if (userId == null || userId < 1) {
-            throw new BadRequestException("Geçerli bir akademisyen kimliği gereklidir.");
+            throw new BadRequestException(StudentAcademicianMessages.INVALID_ACADEMICIAN_ID);
         }
         return userRepository
                 .findActiveAcademicianById(userId, ACADEMICIAN_ROLE_NAMES)
-                .orElseThrow(() -> new ResourceNotFoundException("Akademisyen bulunamadı."));
+                .orElseThrow(() -> new ResourceNotFoundException(StudentAcademicianMessages.ACADEMICIAN_NOT_FOUND));
     }
 
     private static Sort resolveSort(String sort) {
@@ -129,7 +130,7 @@ public class StudentAcademicianService {
         if (SORT_NAME_ASC.equals(normalized)) {
             return Sort.by(Sort.Direction.ASC, "fullName");
         }
-        throw new BadRequestException("Geçersiz sıralama değeri. NAME_ASC veya NAME_DESC kullanın.");
+        throw new BadRequestException(StudentAcademicianMessages.INVALID_SORT);
     }
 
     private static String blankToNull(String value) {

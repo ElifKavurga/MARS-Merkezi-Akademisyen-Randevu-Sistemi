@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
@@ -30,12 +31,14 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.mars.AppointmentConstraints;
 import com.mars.AvailabilitySlotMessages;
 import com.mars.dto.AvailabilitySlotBlockRequest;
 import com.mars.dto.AvailabilitySlotCreateRequest;
 import com.mars.dto.AvailabilitySlotResponseDto;
 import com.mars.dto.AvailabilitySlotStatsResponseDto;
 import com.mars.dto.AvailabilitySlotUpdateRequest;
+import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.RecurrenceRuleCreateRequest;
 import com.mars.dto.RecurrenceRuleResponseDto;
 import com.mars.entity.AvailabilitySlot;
@@ -704,5 +707,122 @@ class AvailabilitySlotServiceTest {
                 .hasMessageContaining("bulunamadı");
 
         verify(availabilitySlotRepository, never()).save(any());
+    }
+
+    @Test
+    void getAvailableSlotsForStaff_nullStaffId_throwsBadRequest() {
+        assertThatThrownBy(() -> availabilitySlotService.getAvailableSlotsForStaff(null))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Akademisyen seçimi zorunludur.");
+    }
+
+    @Test
+    void getAvailableSlotsForStaff_excludesSlotsWithinBookingNotice_br017() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = now.toLocalDate();
+
+        LocalDateTime withinStart = now.plusMinutes(10);
+        AvailabilitySlot withinNotice = new AvailabilitySlot();
+        withinNotice.setSlotId(21);
+        withinNotice.setStaff(academician);
+        withinNotice.setSlotDate(withinStart.toLocalDate());
+        withinNotice.setStartTime(withinStart.toLocalTime().withSecond(0).withNano(0));
+        withinNotice.setEndTime(withinStart.plusMinutes(30).toLocalTime().withSecond(0).withNano(0));
+        withinNotice.setIsBlocked(false);
+        withinNotice.setMeetingType(MeetingType.FACE_TO_FACE.name());
+
+        LocalDateTime afterNoticeStart =
+                now.plusMinutes(AppointmentConstraints.MINIMUM_BOOKING_NOTICE_MINUTES + 15);
+        AvailabilitySlot afterNotice = new AvailabilitySlot();
+        afterNotice.setSlotId(22);
+        afterNotice.setStaff(academician);
+        afterNotice.setSlotDate(afterNoticeStart.toLocalDate());
+        afterNotice.setStartTime(afterNoticeStart.toLocalTime().withSecond(0).withNano(0));
+        afterNotice.setEndTime(afterNoticeStart.plusMinutes(30).toLocalTime().withSecond(0).withNano(0));
+        afterNotice.setIsBlocked(false);
+        afterNotice.setMeetingType(MeetingType.FACE_TO_FACE.name());
+
+        AvailableSlotResponseDto mapped = AvailableSlotResponseDto.builder()
+                .slotId(22)
+                .staffId(10)
+                .slotDate(afterNotice.getSlotDate())
+                .startTime(afterNotice.getStartTime())
+                .endTime(afterNotice.getEndTime())
+                .meetingType(MeetingType.FACE_TO_FACE.name())
+                .build();
+
+        when(availabilitySlotRepository.findAvailableSlotsForStaff(
+                        eq(10), eq(today), eq(ACTIVE_APPOINTMENT_STATUSES)))
+                .thenReturn(List.of(withinNotice, afterNotice));
+        when(availabilitySlotMapper.toAvailableResponse(afterNotice)).thenReturn(mapped);
+
+        List<AvailableSlotResponseDto> result = availabilitySlotService.getAvailableSlotsForStaff(10);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getSlotId()).isEqualTo(22);
+        verify(availabilitySlotMapper).toAvailableResponse(afterNotice);
+        verify(availabilitySlotMapper, never()).toAvailableResponse(withinNotice);
+    }
+
+    @Test
+    void getAvailableSlotsForStaff_excludesPastSlotsOnSameDay() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = now.toLocalDate();
+
+        // Ensure a clearly past start time on the same calendar day.
+        LocalTime pastStart = now.toLocalTime().isAfter(LocalTime.of(1, 0))
+                ? LocalTime.of(0, 0)
+                : now.toLocalTime().minusMinutes(1);
+        AvailabilitySlot past = new AvailabilitySlot();
+        past.setSlotId(31);
+        past.setStaff(academician);
+        past.setSlotDate(today);
+        past.setStartTime(pastStart);
+        past.setEndTime(pastStart.plusMinutes(30));
+        past.setIsBlocked(false);
+        past.setMeetingType(MeetingType.FACE_TO_FACE.name());
+
+        LocalDateTime futureStart = now.plusMinutes(AppointmentConstraints.MINIMUM_BOOKING_NOTICE_MINUTES + 20);
+        AvailabilitySlot future = new AvailabilitySlot();
+        future.setSlotId(32);
+        future.setStaff(academician);
+        future.setSlotDate(futureStart.toLocalDate());
+        future.setStartTime(futureStart.toLocalTime().withSecond(0).withNano(0));
+        future.setEndTime(futureStart.plusMinutes(30).toLocalTime().withSecond(0).withNano(0));
+        future.setIsBlocked(false);
+        future.setMeetingType(MeetingType.ONLINE.name());
+
+        AvailableSlotResponseDto mapped = AvailableSlotResponseDto.builder()
+                .slotId(32)
+                .staffId(10)
+                .slotDate(future.getSlotDate())
+                .startTime(future.getStartTime())
+                .endTime(future.getEndTime())
+                .meetingType(MeetingType.ONLINE.name())
+                .build();
+
+        when(availabilitySlotRepository.findAvailableSlotsForStaff(
+                        eq(10), eq(today), eq(ACTIVE_APPOINTMENT_STATUSES)))
+                .thenReturn(List.of(past, future));
+        when(availabilitySlotMapper.toAvailableResponse(future)).thenReturn(mapped);
+
+        List<AvailableSlotResponseDto> result = availabilitySlotService.getAvailableSlotsForStaff(10);
+
+        assertThat(result).extracting(AvailableSlotResponseDto::getSlotId).containsExactly(32);
+        verify(availabilitySlotMapper, never()).toAvailableResponse(past);
+    }
+
+    @Test
+    void getAvailableSlotsForStaff_usesRepositoryFilterForBlockedAndBookedSlots() {
+        LocalDate today = LocalDate.now();
+        when(availabilitySlotRepository.findAvailableSlotsForStaff(
+                        eq(10), eq(today), eq(ACTIVE_APPOINTMENT_STATUSES)))
+                .thenReturn(List.of());
+
+        List<AvailableSlotResponseDto> result = availabilitySlotService.getAvailableSlotsForStaff(10);
+
+        assertThat(result).isEmpty();
+        verify(availabilitySlotRepository).findAvailableSlotsForStaff(
+                10, today, ACTIVE_APPOINTMENT_STATUSES);
     }
 }

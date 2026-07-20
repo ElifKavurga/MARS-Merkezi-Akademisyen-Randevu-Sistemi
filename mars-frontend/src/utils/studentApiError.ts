@@ -14,8 +14,15 @@ export function resolveStudentApiError(
     if (err.response?.status === 403) {
       return STUDENT_UI.ACCESS_DENIED;
     }
-    if (err.response?.status === 404 && options?.notFoundMessage) {
-      return options.notFoundMessage;
+    if (err.response?.status === 404) {
+      if (options?.notFoundMessage) {
+        return options.notFoundMessage;
+      }
+      const apiMessage = err.response?.data?.message;
+      if (typeof apiMessage === 'string' && apiMessage.trim() !== '') {
+        return apiMessage;
+      }
+      return STUDENT_UI.NOT_FOUND_GENERIC;
     }
     const apiMessage = err.response?.data?.message;
     if (typeof apiMessage === 'string' && apiMessage.trim() !== '') {

@@ -10,7 +10,8 @@ export const STUDENT_UI = {
   PROFILE_SUBTITLE:
     'Akademisyen bilgilerini, derslerini ve uygun randevu saatlerini inceleyin.',
   LOAD_ERROR_GENERIC: 'Veri yüklenemedi. Lütfen tekrar deneyin.',
-  ACCESS_DENIED: 'Bu sayfaya erişim yetkiniz yok.',
+  ACCESS_DENIED: 'Bu işlem için yetkiniz yok.',
+  NOT_FOUND_GENERIC: 'İstenen kayıt bulunamadı.',
   PRIMARY_BUTTON_CLASS:
     'inline-flex items-center justify-center gap-2 rounded-lg bg-primary-container px-5 py-2.5 font-label-md text-label-md text-on-primary transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
   SECONDARY_BUTTON_CLASS:

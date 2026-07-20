@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -16,6 +17,8 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -23,17 +26,20 @@ import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.mars.StudentAcademicianMessages;
 import com.mars.config.CorsConfig;
 import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.PageResponseDto;
 import com.mars.dto.StudentAcademicianCourseDto;
 import com.mars.dto.StudentAcademicianDetailResponseDto;
 import com.mars.dto.StudentAcademicianResponseDto;
+import com.mars.exception.BadRequestException;
 import com.mars.exception.ResourceNotFoundException;
 import com.mars.exception.handler.GlobalExceptionHandler;
 import com.mars.security.JwtAuthenticationFilter;
 import com.mars.security.SecurityConfig;
 import com.mars.security.SecurityErrorWriter;
+import com.mars.security.SecurityMessages;
 import com.mars.service.StudentAcademicianService;
 
 import jakarta.servlet.FilterChain;
@@ -215,19 +221,72 @@ class StudentAcademicianControllerTest {
 
     @Test
     @WithMockUser(roles = "STUDENT")
-    void getAcademicianDetail_notFound_returnsNotFound() throws Exception {
+    void getAcademicianDetail_notFound_returnsStandardApiError() throws Exception {
         when(studentAcademicianService.getAcademicianDetail(99))
-                .thenThrow(new ResourceNotFoundException("Akademisyen bulunamadı."));
+                .thenThrow(new ResourceNotFoundException(StudentAcademicianMessages.ACADEMICIAN_NOT_FOUND));
 
         mockMvc.perform(get("/students/academicians/99"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message").value(StudentAcademicianMessages.ACADEMICIAN_NOT_FOUND))
+                .andExpect(jsonPath("$.path").value("/students/academicians/99"));
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    void getAcademicianAvailability_notFound_returnsStandardApiError() throws Exception {
+        when(studentAcademicianService.getAcademicianAvailability(99))
+                .thenThrow(new ResourceNotFoundException(StudentAcademicianMessages.ACADEMICIAN_NOT_FOUND));
+
+        mockMvc.perform(get("/students/academicians/99/availability"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message").value(StudentAcademicianMessages.ACADEMICIAN_NOT_FOUND));
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    void searchAcademicians_invalidSort_returnsStandardBadRequest() throws Exception {
+        when(studentAcademicianService.searchAcademicians(
+                        isNull(), isNull(), isNull(), isNull(), eq("INVALID"), eq(0), eq(12)))
+                .thenThrow(new BadRequestException(StudentAcademicianMessages.INVALID_SORT));
+
+        mockMvc.perform(get("/students/academicians").param("sort", "INVALID"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value(StudentAcademicianMessages.INVALID_SORT));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"ADMIN", "ACADEMICIAN", "ASSISTANT", "HOD"})
+    void studentAcademicianEndpoints_nonStudentRoles_returnForbidden(String role) throws Exception {
+        mockMvc.perform(get("/students/academicians").with(user("user").roles(role)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.message").value(SecurityMessages.ACCESS_DENIED));
+
+        mockMvc.perform(get("/students/academicians/titles").with(user("user").roles(role)))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/students/academicians/7").with(user("user").roles(role)))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/students/academicians/7/availability").with(user("user").roles(role)))
+                .andExpect(status().isForbidden());
     }
 
     @Test
     @WithMockUser(roles = "ACADEMICIAN")
     void getAcademicianDetail_asAcademician_returnsForbidden() throws Exception {
         mockMvc.perform(get("/students/academicians/7"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.message").value(SecurityMessages.ACCESS_DENIED));
     }
 
     @Test
@@ -247,6 +306,8 @@ class StudentAcademicianControllerTest {
     @Test
     void searchAcademicians_unauthenticated_returnsUnauthorized() throws Exception {
         mockMvc.perform(get("/students/academicians"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.status").value(401));
     }
 }
