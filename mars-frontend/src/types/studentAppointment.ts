@@ -43,7 +43,7 @@ export type StudentAvailableSlot = {
   meetingType: string;
 };
 
-/** Öğrencinin aktif randevu listesi öğesi (PENDING / APPROVED). */
+/** Öğrencinin aktif randevu listesi / detay öğesi. */
 export type StudentAppointmentListItem = {
   appointmentId: number;
   staffId: number;
@@ -58,5 +58,7 @@ export type StudentAppointmentListItem = {
   courseCode: string | null;
   courseName: string | null;
   meetingType: string;
-  appointmentStatus: 'PENDING' | 'APPROVED';
+  appointmentStatus: string;
+  officeName?: string | null;
+  officeLocation?: string | null;
 };

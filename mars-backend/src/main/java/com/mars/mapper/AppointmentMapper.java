@@ -125,6 +125,9 @@ public class AppointmentMapper {
                         : null)
                 .meetingType(appointment.getMeetingType())
                 .appointmentStatus(appointment.getAppointmentStatus())
+                // Ofis alanları User entity’de henüz yok; profil detayı ile aynı placeholder.
+                .officeName(null)
+                .officeLocation(null)
                 .build();
     }
 }

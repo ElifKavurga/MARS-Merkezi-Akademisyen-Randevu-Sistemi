@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +20,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Öğrenci randevu oluşturma ve aktif randevu listesi.
+ * Öğrenci randevu oluşturma, aktif liste ve detay.
  * Başarı gövdesi FE uyumu için ham DTO döner; hatalar GlobalExceptionHandler ApiResponse ile.
  */
 @RestController
@@ -32,6 +33,12 @@ public class StudentAppointmentController {
     @GetMapping
     public ResponseEntity<List<StudentAppointmentResponseDto>> getActiveAppointments() {
         return ResponseEntity.ok(appointmentService.getStudentActiveAppointments());
+    }
+
+    @GetMapping("/{appointmentId}")
+    public ResponseEntity<StudentAppointmentResponseDto> getAppointment(
+            @PathVariable Integer appointmentId) {
+        return ResponseEntity.ok(appointmentService.getStudentAppointment(appointmentId));
     }
 
     @PostMapping

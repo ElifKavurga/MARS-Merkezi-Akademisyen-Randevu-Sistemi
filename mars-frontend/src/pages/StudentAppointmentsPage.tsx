@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import AppointmentStatusBadge from '../components/AppointmentStatusBadge';
 import StudentBreadcrumb from '../components/StudentBreadcrumb';
 import StudentEmptyState from '../components/StudentEmptyState';
@@ -6,7 +7,7 @@ import StudentErrorState from '../components/StudentErrorState';
 import StudentLoadingState from '../components/StudentLoadingState';
 import StudentPageHeader from '../components/StudentPageHeader';
 import { getMeetingTypeLabel } from '../constants/appointment';
-import { ROUTES } from '../constants/routes';
+import { ROUTES, studentAppointmentDetailPath } from '../constants/routes';
 import { STUDENT_APPOINTMENT_MESSAGES } from '../constants/studentAppointment';
 import { STUDENT_UI } from '../constants/studentUi';
 import { useToast } from '../hooks/useToast';
@@ -33,7 +34,11 @@ function formatCourseLabel(appointment: StudentAppointmentListItem): string {
   if (appointment.courseCode && appointment.courseName) {
     return `${appointment.courseCode} — ${appointment.courseName}`;
   }
-  return appointment.courseCode ?? appointment.courseName ?? STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_NO_COURSE;
+  return (
+    appointment.courseCode
+    ?? appointment.courseName
+    ?? STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_NO_COURSE
+  );
 }
 
 function AppointmentCard({ appointment }: { appointment: StudentAppointmentListItem }) {
@@ -73,7 +78,11 @@ function AppointmentCard({ appointment }: { appointment: StudentAppointmentListI
   ];
 
   return (
-    <article className="flex min-w-0 flex-col rounded-xl border border-outline-variant bg-surface-container-lowest p-5 transition-colors hover:border-primary-container sm:p-6">
+    <Link
+      to={studentAppointmentDetailPath(appointment.appointmentId)}
+      className="flex min-w-0 flex-col rounded-xl border border-outline-variant bg-surface-container-lowest p-5 no-underline transition-colors hover:border-primary-container hover:no-underline focus:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim focus-visible:ring-offset-2 sm:p-6"
+      aria-label={`${appointment.staffName} randevu detayı`}
+    >
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-label-sm text-label-sm text-on-surface-variant">
@@ -96,7 +105,7 @@ function AppointmentCard({ appointment }: { appointment: StudentAppointmentListI
           </div>
         ))}
       </dl>
-    </article>
+    </Link>
   );
 }
 

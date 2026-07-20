@@ -30,4 +30,8 @@ public class StudentAppointmentResponseDto {
     private String courseName;
     private String meetingType;
     private String appointmentStatus;
+    /** Yüz yüze görüşmede ofis bilgisi (henüz User’da yoksa null). */
+    private String officeName;
+    /** Yüz yüze görüşmede bina/konum bilgisi (henüz User’da yoksa null). */
+    private String officeLocation;
 }

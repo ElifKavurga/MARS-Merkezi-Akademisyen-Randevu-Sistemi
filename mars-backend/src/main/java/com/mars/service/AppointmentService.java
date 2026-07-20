@@ -125,6 +125,21 @@ public class AppointmentService {
     }
 
     @Transactional(readOnly = true)
+    public StudentAppointmentResponseDto getStudentAppointment(Integer appointmentId) {
+        User student = getCurrentStudent();
+        return appointmentRepository.findByIdAndStudentIdWithDetails(
+                        appointmentId, student.getUserId())
+                .map(appointmentMapper::toStudentResponse)
+                .orElseGet(() -> {
+                    if (appointmentRepository.existsByAppointmentId(appointmentId)) {
+                        throw new AccessDeniedException(
+                                AppointmentMessages.STUDENT_APPOINTMENT_ACCESS_DENIED);
+                    }
+                    throw new ResourceNotFoundException(AppointmentMessages.APPOINTMENT_NOT_FOUND);
+                });
+    }
+
+    @Transactional(readOnly = true)
     public List<StaffAppointmentResponseDto> getStaffAppointments(
             String status,
             RoleType requiredRole) {

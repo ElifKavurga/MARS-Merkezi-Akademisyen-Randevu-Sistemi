@@ -68,6 +68,23 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
     @Query("""
             SELECT a
             FROM Appointment a
+            JOIN FETCH a.staff st
+            JOIN FETCH st.department
+            JOIN FETCH a.category
+            JOIN FETCH a.slot
+            LEFT JOIN FETCH a.course
+            WHERE a.appointmentId = :appointmentId
+              AND a.student.userId = :studentId
+            """)
+    Optional<Appointment> findByIdAndStudentIdWithDetails(
+            @Param("appointmentId") Integer appointmentId,
+            @Param("studentId") Integer studentId);
+
+    boolean existsByAppointmentId(Integer appointmentId);
+
+    @Query("""
+            SELECT a
+            FROM Appointment a
             JOIN FETCH a.student
             JOIN FETCH a.category
             JOIN FETCH a.slot

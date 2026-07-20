@@ -7,6 +7,15 @@ export async function getStudentActiveAppointments(): Promise<StudentAppointment
   return Array.isArray(data) ? data : [];
 }
 
+export async function getStudentAppointment(
+  appointmentId: number,
+): Promise<StudentAppointmentListItem> {
+  const { data } = await apiClient.get<StudentAppointmentListItem>(
+    `/students/appointments/${appointmentId}`,
+  );
+  return data;
+}
+
 export async function createStudentAppointment(
   payload: AppointmentCreatePayload,
 ): Promise<Appointment> {

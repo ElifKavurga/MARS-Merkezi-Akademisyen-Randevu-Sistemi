@@ -103,6 +103,48 @@ class StudentAppointmentControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "STUDENT")
+    void getAppointment_asStudent_returnsOk() throws Exception {
+        StudentAppointmentResponseDto item = StudentAppointmentResponseDto.builder()
+                .appointmentId(42)
+                .staffId(5)
+                .staffName("Dr. Ayşe Yılmaz")
+                .academicTitle("Doç. Dr.")
+                .departmentName("Bilgisayar Mühendisliği")
+                .appointmentDate(LocalDate.of(2026, 7, 22))
+                .startTime(LocalTime.of(10, 0))
+                .endTime(LocalTime.of(10, 30))
+                .categoryName("Danışmanlık")
+                .meetingType(MeetingType.ONLINE.name())
+                .appointmentStatus(AppointmentStatus.APPROVED.name())
+                .officeName(null)
+                .officeLocation(null)
+                .build();
+        when(appointmentService.getStudentAppointment(42)).thenReturn(item);
+
+        mockMvc.perform(get("/students/appointments/42"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.appointmentId").value(42))
+                .andExpect(jsonPath("$.meetingType").value("ONLINE"))
+                .andExpect(jsonPath("$.appointmentStatus").value("APPROVED"));
+
+        verify(appointmentService).getStudentAppointment(42);
+    }
+
+    @Test
+    @WithMockUser(roles = "ACADEMICIAN")
+    void getAppointment_asAcademician_returnsForbidden() throws Exception {
+        mockMvc.perform(get("/students/appointments/42"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void getAppointment_unauthenticated_returnsUnauthorized() throws Exception {
+        mockMvc.perform(get("/students/appointments/42"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     @WithMockUser(roles = "ACADEMICIAN")
     void getActiveAppointments_asAcademician_returnsForbidden() throws Exception {
         mockMvc.perform(get("/students/appointments"))
