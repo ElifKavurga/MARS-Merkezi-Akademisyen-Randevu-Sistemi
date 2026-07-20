@@ -13,7 +13,7 @@ export default function StudentSegmentedTabs<T extends string>({
 }: StudentSegmentedTabsProps<T>) {
   return (
     <div
-      className="inline-flex w-full max-w-md rounded-xl bg-surface-container p-1 sm:w-auto"
+      className="inline-flex w-full max-w-lg gap-1.5 rounded-2xl bg-surface-container/80 p-1.5 sm:w-auto"
       role="tablist"
       aria-label={ariaLabel}
     >
@@ -25,14 +25,14 @@ export default function StudentSegmentedTabs<T extends string>({
             type="button"
             role="tab"
             aria-selected={active}
-            className={`min-w-0 flex-1 rounded-lg px-3 py-2 font-label-md text-label-md transition-all duration-200 ease-out sm:flex-none sm:px-4 ${
+            className={`min-w-0 flex-1 rounded-xl px-4 py-2.5 font-label-md text-label-md transition-colors duration-200 ease-out sm:flex-none sm:min-w-[9.5rem] ${
               active
-                ? 'bg-primary-container text-on-primary shadow-sm'
-                : 'bg-transparent text-on-surface-variant hover:bg-surface-container-high/70 hover:text-on-surface'
+                ? 'bg-primary-container text-on-primary'
+                : 'bg-transparent text-on-surface-variant hover:bg-white/60 hover:text-on-surface'
             }`}
             onClick={() => onChange(option.value)}
           >
-            <span className="block truncate">{option.label}</span>
+            <span className="block truncate text-center">{option.label}</span>
           </button>
         );
       })}

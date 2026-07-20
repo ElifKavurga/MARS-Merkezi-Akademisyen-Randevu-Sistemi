@@ -178,7 +178,7 @@ export default function StudentAppointmentsPage() {
         description={STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_SUBTITLE}
       />
 
-      <div className="mb-4">
+      <div className="mb-7 sm:mb-8">
         <StudentSegmentedTabs
           value={activeTab}
           options={TAB_OPTIONS}
@@ -199,11 +199,11 @@ export default function StudentAppointmentsPage() {
         />
       ) : (
         <>
-          <section className="mb-4 rounded-xl border border-outline-variant bg-surface-container-lowest p-3 sm:p-4">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
-              <div className="relative min-w-0 md:col-span-2 xl:col-span-2">
+          <section className="mb-6 rounded-xl border border-outline-variant/80 bg-surface-container-lowest p-3 sm:p-4">
+            <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:gap-2.5">
+              <div className={`${STUDENT_UI.SEARCH_FIELD_WRAP_CLASS} lg:min-w-[14rem] lg:flex-[1.35]`}>
                 <span
-                  className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant"
+                  className="material-symbols-outlined shrink-0 text-[20px] leading-none text-on-surface-variant"
                   aria-hidden
                 >
                   search
@@ -219,7 +219,7 @@ export default function StudentAppointmentsPage() {
               </div>
 
               <select
-                className={STUDENT_UI.FILTER_CONTROL_CLASS}
+                className={`${STUDENT_UI.FILTER_CONTROL_CLASS} lg:flex-1`}
                 aria-label={STUDENT_APPOINTMENT_MESSAGES.FILTER_STATUS}
                 value={filters.status}
                 onChange={(event) => updateFilter('status', event.target.value)}
@@ -233,7 +233,7 @@ export default function StudentAppointmentsPage() {
               </select>
 
               <select
-                className={STUDENT_UI.FILTER_CONTROL_CLASS}
+                className={`${STUDENT_UI.FILTER_CONTROL_CLASS} lg:flex-1`}
                 aria-label={STUDENT_APPOINTMENT_MESSAGES.FILTER_MEETING_TYPE}
                 value={filters.meetingType}
                 onChange={(event) => updateFilter('meetingType', event.target.value)}
@@ -251,7 +251,7 @@ export default function StudentAppointmentsPage() {
 
               <input
                 type="date"
-                className={STUDENT_UI.FILTER_CONTROL_CLASS}
+                className={`${STUDENT_UI.FILTER_CONTROL_CLASS} lg:w-[9.75rem] lg:flex-none`}
                 aria-label={STUDENT_APPOINTMENT_MESSAGES.FILTER_DATE_FROM}
                 value={filters.dateFrom}
                 onChange={(event) => updateFilter('dateFrom', event.target.value)}
@@ -259,16 +259,14 @@ export default function StudentAppointmentsPage() {
 
               <input
                 type="date"
-                className={STUDENT_UI.FILTER_CONTROL_CLASS}
+                className={`${STUDENT_UI.FILTER_CONTROL_CLASS} lg:w-[9.75rem] lg:flex-none`}
                 aria-label={STUDENT_APPOINTMENT_MESSAGES.FILTER_DATE_TO}
                 value={filters.dateTo}
                 onChange={(event) => updateFilter('dateTo', event.target.value)}
               />
-            </div>
 
-            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <select
-                className={`${STUDENT_UI.FILTER_CONTROL_CLASS} sm:max-w-xs`}
+                className={`${STUDENT_UI.FILTER_CONTROL_CLASS} lg:flex-1`}
                 aria-label={STUDENT_APPOINTMENT_MESSAGES.FILTER_SORT}
                 value={filters.sort}
                 onChange={(event) =>
@@ -281,8 +279,10 @@ export default function StudentAppointmentsPage() {
                   </option>
                 ))}
               </select>
+            </div>
 
-              {filtersActive ? (
+            {filtersActive ? (
+              <div className="mt-3 flex justify-end">
                 <button
                   type="button"
                   className={STUDENT_UI.SECONDARY_BUTTON_CLASS}
@@ -290,8 +290,8 @@ export default function StudentAppointmentsPage() {
                 >
                   {STUDENT_APPOINTMENT_MESSAGES.FILTER_CLEAR}
                 </button>
-              ) : null}
-            </div>
+              </div>
+            ) : null}
           </section>
 
           {filteredAppointments.length === 0 ? (
