@@ -11,6 +11,7 @@ export type StudentAppointmentStepId = (typeof STUDENT_APPOINTMENT_STEPS)[number
 export const STUDENT_APPOINTMENT_STEP_CATEGORY = 0;
 export const STUDENT_APPOINTMENT_STEP_COURSE = 1;
 export const STUDENT_APPOINTMENT_STEP_SLOT = 2;
+export const STUDENT_APPOINTMENT_STEP_MEETING_TYPE = 3;
 
 /** Sprint 22.1 uyumluluğu — kategori adımı indeksi. */
 export const STUDENT_APPOINTMENT_ACTIVE_STEP_INDEX = STUDENT_APPOINTMENT_STEP_CATEGORY;
@@ -54,9 +55,18 @@ export const STUDENT_APPOINTMENT_MESSAGES = {
   STEP_COURSE_EMPTY_DESCRIPTION:
     'Bu akademisyene ait seçilebilir aktif ders bulunmuyor.',
   STEP_COURSE_SKIPPED: 'Atlandı',
-  STEP_SLOT_TITLE: 'Slot',
-  STEP_SLOT_DESCRIPTION:
-    'Uygun randevu saati seçimi bir sonraki adımda açılacaktır. Seçimleriniz korundu.',
+  STEP_SLOT_TITLE: 'Slot Seçimi',
+  STEP_SLOT_DESCRIPTION: 'Uygun randevu saatlerinden birini seçin.',
+  STEP_SLOT_LOADING: 'Uygun randevu saatleri yükleniyor...',
+  STEP_SLOT_LOAD_ERROR: 'Uygun randevu saatleri yüklenirken bir hata oluştu.',
+  STEP_SLOT_EMPTY_TITLE: 'Uygun randevu saati bulunamadı',
+  STEP_SLOT_EMPTY_DESCRIPTION: 'Bu akademisyen için uygun randevu saati bulunamadı.',
+  STEP_SLOT_DURATION: (minutes: number) => `${minutes} dk`,
+  CONTINUE_SLOT_DISABLED: 'Devam etmek için bir randevu saati seçin.',
+  BACK_TO_SLOT: 'Slota Dön',
+  STEP_MEETING_TYPE_TITLE: 'Görüşme Türü',
+  STEP_MEETING_TYPE_DESCRIPTION:
+    'Görüşme türü seçimi bir sonraki adımda açılacaktır. Seçimleriniz korundu.',
   BACK_TO_COURSE: 'Derse Dön',
   STEP_LOCKED: 'Bu adım henüz aktif değil.',
   NO_TITLE: 'Ünvan belirtilmemiş',

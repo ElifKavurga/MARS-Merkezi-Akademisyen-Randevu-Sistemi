@@ -41,7 +41,9 @@ import com.mars.dto.AvailabilitySlotUpdateRequest;
 import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.RecurrenceRuleCreateRequest;
 import com.mars.dto.RecurrenceRuleResponseDto;
+import com.mars.entity.Appointment;
 import com.mars.entity.AvailabilitySlot;
+import com.mars.entity.RecurrenceRule;
 import com.mars.entity.Role;
 import com.mars.entity.User;
 import com.mars.enums.AppointmentStatus;
@@ -78,6 +80,9 @@ class AvailabilitySlotServiceTest {
 
     @Mock
     private RecurrenceRuleService recurrenceRuleService;
+
+    @Mock
+    private com.mars.repository.OutOfOfficePeriodRepository outOfOfficePeriodRepository;
 
     @InjectMocks
     private AvailabilitySlotService availabilitySlotService;
@@ -824,5 +829,320 @@ class AvailabilitySlotServiceTest {
         assertThat(result).isEmpty();
         verify(availabilitySlotRepository).findAvailableSlotsForStaff(
                 10, today, ACTIVE_APPOINTMENT_STATUSES);
+    }
+
+    @Test
+    void getBookableAvailableSlotsForStaff_splitsAvailabilityByDurationMinutes() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = now.toLocalDate();
+        LocalDate rangeEnd = AcademicTermCalendar.resolveBookableHorizonEnd(today);
+        LocalDate slotDate = now.plusDays(1).toLocalDate();
+
+        AvailabilitySlot officeHour = new AvailabilitySlot();
+        officeHour.setSlotId(41);
+        officeHour.setStaff(academician);
+        officeHour.setSlotDate(slotDate);
+        officeHour.setStartTime(LocalTime.of(10, 0));
+        officeHour.setEndTime(LocalTime.of(11, 0));
+        officeHour.setIsBlocked(false);
+        officeHour.setMeetingType(MeetingType.ONLINE.name());
+
+        AvailableSlotResponseDto first = AvailableSlotResponseDto.builder()
+                .slotId(41)
+                .staffId(10)
+                .slotDate(slotDate)
+                .startTime(LocalTime.of(10, 0))
+                .endTime(LocalTime.of(10, 30))
+                .meetingType(MeetingType.ONLINE.name())
+                .build();
+        AvailableSlotResponseDto second = AvailableSlotResponseDto.builder()
+                .slotId(41)
+                .staffId(10)
+                .slotDate(slotDate)
+                .startTime(LocalTime.of(10, 30))
+                .endTime(LocalTime.of(11, 0))
+                .meetingType(MeetingType.ONLINE.name())
+                .build();
+
+        when(availabilitySlotRepository.countByStaff_UserId(10)).thenReturn(1L);
+        when(availabilitySlotRepository.countByStaff_UserIdAndIsBlocked(10, false)).thenReturn(1L);
+        when(availabilitySlotRepository.findBookableSlotTemplatesForStaff(10, today))
+                .thenReturn(List.of(officeHour));
+        when(appointmentRepository.findActiveAppointmentsForStaffInDateRange(
+                        10, today, rangeEnd, ACTIVE_APPOINTMENT_STATUSES))
+                .thenReturn(List.of());
+        when(outOfOfficePeriodRepository.existsOverlappingPeriod(10, slotDate, slotDate))
+                .thenReturn(false);
+        when(availabilitySlotMapper.toAvailableResponse(
+                        officeHour, slotDate, LocalTime.of(10, 0), LocalTime.of(10, 30)))
+                .thenReturn(first);
+        when(availabilitySlotMapper.toAvailableResponse(
+                        officeHour, slotDate, LocalTime.of(10, 30), LocalTime.of(11, 0)))
+                .thenReturn(second);
+
+        List<AvailableSlotResponseDto> result =
+                availabilitySlotService.getBookableAvailableSlotsForStaff(10, 30);
+
+        assertThat(result).containsExactly(first, second);
+    }
+
+    @Test
+    void getBookableAvailableSlotsForStaff_excludesBlockedOooWithinNoticeAndOverlappingAppointment() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = now.toLocalDate();
+        LocalDate rangeEnd = AcademicTermCalendar.resolveBookableHorizonEnd(today);
+
+        AvailabilitySlot blocked = oneTimeSlot(51, now.plusDays(1).toLocalDate(), LocalTime.of(10, 0), true);
+        blocked.setEndTime(LocalTime.of(10, 30));
+        AvailabilitySlot ooo = oneTimeSlot(53, now.plusDays(2).toLocalDate(), LocalTime.of(10, 0), false);
+        ooo.setEndTime(LocalTime.of(10, 30));
+        LocalDateTime withinStart = now.plusMinutes(10);
+        AvailabilitySlot withinNotice = oneTimeSlot(
+                54,
+                withinStart.toLocalDate(),
+                withinStart.toLocalTime().withSecond(0).withNano(0),
+                false);
+        withinNotice.setEndTime(withinNotice.getStartTime().plusMinutes(30));
+
+        AvailabilitySlot bookedParent = oneTimeSlot(52, now.plusDays(1).toLocalDate(), LocalTime.of(11, 0), false);
+        bookedParent.setEndTime(LocalTime.of(11, 30));
+        Appointment overlapping = new Appointment();
+        overlapping.setSlot(bookedParent);
+
+        when(availabilitySlotRepository.countByStaff_UserId(10)).thenReturn(4L);
+        when(availabilitySlotRepository.countByStaff_UserIdAndIsBlocked(10, false)).thenReturn(3L);
+        when(availabilitySlotRepository.findBookableSlotTemplatesForStaff(10, today))
+                .thenReturn(List.of(blocked, bookedParent, ooo, withinNotice));
+        when(appointmentRepository.findActiveAppointmentsForStaffInDateRange(
+                        10, today, rangeEnd, ACTIVE_APPOINTMENT_STATUSES))
+                .thenReturn(List.of(overlapping));
+        when(outOfOfficePeriodRepository.existsOverlappingPeriod(10, ooo.getSlotDate(), ooo.getSlotDate()))
+                .thenReturn(true);
+        when(outOfOfficePeriodRepository.existsOverlappingPeriod(
+                        eq(10), eq(blocked.getSlotDate()), eq(blocked.getSlotDate())))
+                .thenReturn(false);
+
+        List<AvailableSlotResponseDto> result =
+                availabilitySlotService.getBookableAvailableSlotsForStaff(10, 30);
+
+        assertThat(result).isEmpty();
+        verify(availabilitySlotMapper, never())
+                .toAvailableResponse(any(AvailabilitySlot.class), any(), any(), any());
+    }
+
+    @Test
+    void getBookableAvailableSlotsForStaff_expandsWeeklyRecurrenceThenSplitsAndSorts() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = now.toLocalDate();
+        LocalDate rangeEnd = AcademicTermCalendar.resolveBookableHorizonEnd(today);
+        LocalDate firstOccurrence = today.with(TemporalAdjusters.next(DayOfWeek.WEDNESDAY));
+        if (firstOccurrence.isAfter(rangeEnd)) {
+            return;
+        }
+        LocalDate recurrenceEnd = firstOccurrence.plusWeeks(1);
+        if (recurrenceEnd.isAfter(rangeEnd)) {
+            recurrenceEnd = rangeEnd;
+        }
+
+        RecurrenceRule rule = new RecurrenceRule();
+        rule.setRecurrenceRuleId(1);
+        rule.setRepeatType(RepeatType.WEEKLY.name());
+        rule.setStartDate(today);
+        rule.setEndDate(recurrenceEnd);
+
+        AvailabilitySlot recurring = new AvailabilitySlot();
+        recurring.setSlotId(61);
+        recurring.setStaff(academician);
+        recurring.setSlotDate(firstOccurrence);
+        recurring.setStartTime(LocalTime.of(13, 0));
+        recurring.setEndTime(LocalTime.of(14, 0));
+        recurring.setIsBlocked(false);
+        recurring.setMeetingType(MeetingType.FACE_TO_FACE.name());
+        recurring.setRecurrenceRule(rule);
+
+        when(availabilitySlotRepository.countByStaff_UserId(10)).thenReturn(1L);
+        when(availabilitySlotRepository.countByStaff_UserIdAndIsBlocked(10, false)).thenReturn(1L);
+        when(availabilitySlotRepository.findBookableSlotTemplatesForStaff(10, today))
+                .thenReturn(List.of(recurring));
+        when(appointmentRepository.findActiveAppointmentsForStaffInDateRange(
+                        10, today, rangeEnd, ACTIVE_APPOINTMENT_STATUSES))
+                .thenReturn(List.of());
+        when(outOfOfficePeriodRepository.existsOverlappingPeriod(eq(10), any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(false);
+        when(availabilitySlotMapper.toAvailableResponse(
+                        eq(recurring), any(LocalDate.class), any(LocalTime.class), any(LocalTime.class)))
+                .thenAnswer(invocation -> AvailableSlotResponseDto.builder()
+                        .slotId(61)
+                        .slotDate(invocation.getArgument(1))
+                        .startTime(invocation.getArgument(2))
+                        .endTime(invocation.getArgument(3))
+                        .meetingType(MeetingType.FACE_TO_FACE.name())
+                        .build());
+
+        List<AvailableSlotResponseDto> result =
+                availabilitySlotService.getBookableAvailableSlotsForStaff(10, 30);
+
+        assertThat(result).isNotEmpty();
+        assertThat(result.get(0).getSlotDate()).isEqualTo(firstOccurrence);
+        assertThat(result.get(0).getStartTime()).isEqualTo(LocalTime.of(13, 0));
+        assertThat(result.get(0).getEndTime()).isEqualTo(LocalTime.of(13, 30));
+        for (int i = 1; i < result.size(); i++) {
+            AvailableSlotResponseDto previous = result.get(i - 1);
+            AvailableSlotResponseDto current = result.get(i);
+            if (previous.getSlotDate().equals(current.getSlotDate())) {
+                assertThat(current.getStartTime()).isAfterOrEqualTo(previous.getStartTime());
+            } else {
+                assertThat(current.getSlotDate()).isAfter(previous.getSlotDate());
+            }
+        }
+    }
+
+    @Test
+    void getBookableAvailableSlotsForStaff_appointmentOnAnchorDate_doesNotWipeLaterOccurrences() {
+        LocalDateTime now = LocalDateTime.now(java.time.ZoneId.of("Europe/Istanbul"));
+        LocalDate today = now.toLocalDate();
+        LocalDate rangeEnd = AcademicTermCalendar.resolveBookableHorizonEnd(today);
+        LocalDate firstOccurrence = today.with(TemporalAdjusters.next(DayOfWeek.WEDNESDAY));
+        if (firstOccurrence.isAfter(rangeEnd)) {
+            return;
+        }
+        LocalDate secondOccurrence = firstOccurrence.plusWeeks(1);
+        if (secondOccurrence.isAfter(rangeEnd)) {
+            return;
+        }
+
+        RecurrenceRule rule = new RecurrenceRule();
+        rule.setRecurrenceRuleId(9);
+        rule.setRepeatType(RepeatType.WEEKLY.name());
+        rule.setStartDate(today);
+        rule.setEndDate(rangeEnd);
+
+        AvailabilitySlot recurring = new AvailabilitySlot();
+        recurring.setSlotId(70);
+        recurring.setStaff(academician);
+        recurring.setSlotDate(firstOccurrence);
+        recurring.setStartTime(LocalTime.of(10, 0));
+        recurring.setEndTime(LocalTime.of(11, 0));
+        recurring.setIsBlocked(false);
+        recurring.setMeetingType(MeetingType.FACE_TO_FACE.name());
+        recurring.setRecurrenceRule(rule);
+
+        Appointment bookedAnchor = new Appointment();
+        AvailabilitySlot bookedSlotView = new AvailabilitySlot();
+        bookedSlotView.setSlotId(70);
+        bookedSlotView.setSlotDate(firstOccurrence);
+        bookedSlotView.setStartTime(LocalTime.of(10, 0));
+        bookedSlotView.setEndTime(LocalTime.of(11, 0));
+        bookedAnchor.setSlot(bookedSlotView);
+
+        when(availabilitySlotRepository.countByStaff_UserId(10)).thenReturn(1L);
+        when(availabilitySlotRepository.countByStaff_UserIdAndIsBlocked(10, false)).thenReturn(1L);
+        when(availabilitySlotRepository.findBookableSlotTemplatesForStaff(10, today))
+                .thenReturn(List.of(recurring));
+        when(appointmentRepository.findActiveAppointmentsForStaffInDateRange(
+                        10, today, rangeEnd, ACTIVE_APPOINTMENT_STATUSES))
+                .thenReturn(List.of(bookedAnchor));
+        when(outOfOfficePeriodRepository.existsOverlappingPeriod(eq(10), any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(false);
+        when(availabilitySlotMapper.toAvailableResponse(
+                        eq(recurring), any(LocalDate.class), any(LocalTime.class), any(LocalTime.class)))
+                .thenAnswer(invocation -> AvailableSlotResponseDto.builder()
+                        .slotId(70)
+                        .slotDate(invocation.getArgument(1))
+                        .startTime(invocation.getArgument(2))
+                        .endTime(invocation.getArgument(3))
+                        .meetingType(MeetingType.FACE_TO_FACE.name())
+                        .build());
+
+        List<AvailableSlotResponseDto> result =
+                availabilitySlotService.getBookableAvailableSlotsForStaff(10, 30);
+
+        assertThat(result).isNotEmpty();
+        assertThat(result)
+                .extracting(AvailableSlotResponseDto::getSlotDate)
+                .doesNotContain(firstOccurrence);
+        assertThat(result)
+                .extracting(AvailableSlotResponseDto::getSlotDate)
+                .contains(secondOccurrence);
+    }
+
+    @Test
+    void getBookableAvailableSlotsForStaff_oooInsideShortWindow_keepsLaterOccurrencesBeyond14Days() {
+        // Regresyon: today+14 sert kesimi, OOO (17–30 Tem) sonrası Perşembe (6 Ağu+) slotları eliyordu.
+        LocalDate today = LocalDate.now(java.time.ZoneId.of("Europe/Istanbul"));
+        LocalDate rangeEnd = AcademicTermCalendar.resolveBookableHorizonEnd(today);
+        LocalDate firstThursday = LocalDate.of(2026, 7, 23);
+        LocalDate afterOooThursday = LocalDate.of(2026, 8, 6);
+        if (afterOooThursday.isAfter(rangeEnd) || afterOooThursday.isBefore(today)) {
+            return;
+        }
+
+        RecurrenceRule rule = new RecurrenceRule();
+        rule.setRecurrenceRuleId(35);
+        rule.setRepeatType(RepeatType.WEEKLY.name());
+        rule.setStartDate(firstThursday);
+        rule.setEndDate(LocalDate.of(2026, 8, 31));
+
+        AvailabilitySlot recurring = new AvailabilitySlot();
+        recurring.setSlotId(38);
+        recurring.setStaff(academician);
+        recurring.setSlotDate(firstThursday);
+        recurring.setStartTime(LocalTime.of(8, 30));
+        recurring.setEndTime(LocalTime.of(17, 0));
+        recurring.setIsBlocked(false);
+        recurring.setMeetingType(MeetingType.FACE_TO_FACE.name());
+        recurring.setRecurrenceRule(rule);
+
+        when(availabilitySlotRepository.countByStaff_UserId(10)).thenReturn(1L);
+        when(availabilitySlotRepository.countByStaff_UserIdAndIsBlocked(10, false)).thenReturn(1L);
+        when(availabilitySlotRepository.findBookableSlotTemplatesForStaff(eq(10), any(LocalDate.class)))
+                .thenReturn(List.of(recurring));
+        when(appointmentRepository.findActiveAppointmentsForStaffInDateRange(
+                        eq(10), any(LocalDate.class), any(LocalDate.class), eq(ACTIVE_APPOINTMENT_STATUSES)))
+                .thenReturn(List.of());
+        when(outOfOfficePeriodRepository.existsOverlappingPeriod(eq(10), any(LocalDate.class), any(LocalDate.class)))
+                .thenAnswer(invocation -> {
+                    LocalDate date = invocation.getArgument(1);
+                    return !date.isBefore(LocalDate.of(2026, 7, 17))
+                            && !date.isAfter(LocalDate.of(2026, 7, 30));
+                });
+        when(availabilitySlotMapper.toAvailableResponse(
+                        eq(recurring), any(LocalDate.class), any(LocalTime.class), any(LocalTime.class)))
+                .thenAnswer(invocation -> AvailableSlotResponseDto.builder()
+                        .slotId(38)
+                        .slotDate(invocation.getArgument(1))
+                        .startTime(invocation.getArgument(2))
+                        .endTime(invocation.getArgument(3))
+                        .meetingType(MeetingType.FACE_TO_FACE.name())
+                        .build());
+
+        List<AvailableSlotResponseDto> result =
+                availabilitySlotService.getBookableAvailableSlotsForStaff(10, 30);
+
+        assertThat(result).isNotEmpty();
+        assertThat(result)
+                .extracting(AvailableSlotResponseDto::getSlotDate)
+                .contains(afterOooThursday);
+        if (!firstThursday.isBefore(today)) {
+            assertThat(result)
+                    .extracting(AvailableSlotResponseDto::getSlotDate)
+                    .doesNotContain(firstThursday);
+        }
+        assertThat(afterOooThursday.isAfter(today.plusDays(14))).isTrue();
+    }
+
+    private static AvailabilitySlot oneTimeSlot(
+            int slotId, LocalDate date, LocalTime start, boolean blocked) {
+        AvailabilitySlot item = new AvailabilitySlot();
+        item.setSlotId(slotId);
+        User staff = new User();
+        staff.setUserId(10);
+        item.setStaff(staff);
+        item.setSlotDate(date);
+        item.setStartTime(start);
+        item.setEndTime(start.plusMinutes(30));
+        item.setIsBlocked(blocked);
+        item.setMeetingType(MeetingType.FACE_TO_FACE.name());
+        return item;
     }
 }

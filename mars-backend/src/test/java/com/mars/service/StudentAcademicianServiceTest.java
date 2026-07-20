@@ -50,6 +50,9 @@ class StudentAcademicianServiceTest {
     private CourseRepository courseRepository;
 
     @Mock
+    private com.mars.repository.AppointmentCategoryRepository appointmentCategoryRepository;
+
+    @Mock
     private UserMapper userMapper;
 
     @Mock
@@ -237,6 +240,35 @@ class StudentAcademicianServiceTest {
         assertThatThrownBy(() -> studentAcademicianService.listAcademicianCourses(99))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage(StudentAcademicianMessages.ACADEMICIAN_NOT_FOUND);
+    }
+
+    @Test
+    void listAvailableSlots_validCategoryWithoutCourse_returnsBookableSlots() {
+        User academician = activeAcademician(7, true);
+        com.mars.entity.AppointmentCategory category = new com.mars.entity.AppointmentCategory();
+        category.setCategoryId(3);
+        category.setRequiresCourseSelection(false);
+        category.setDurationMinutes(30);
+
+        AvailableSlotResponseDto slot = AvailableSlotResponseDto.builder().slotId(11).build();
+
+        when(userRepository.findActiveAcademicianById(eq(7), anyList())).thenReturn(Optional.of(academician));
+        when(appointmentCategoryRepository.findById(3)).thenReturn(Optional.of(category));
+        when(availabilitySlotService.getBookableAvailableSlotsForStaff(7, 30)).thenReturn(List.of(slot));
+
+        List<AvailableSlotResponseDto> result = studentAcademicianService.listAvailableSlots(7, 3, null);
+
+        assertThat(result).containsExactly(slot);
+        verify(availabilitySlotService).getBookableAvailableSlotsForStaff(7, 30);
+    }
+
+    @Test
+    void listAvailableSlots_missingCategory_throwsBadRequest() {
+        User academician = activeAcademician(7, true);
+        when(userRepository.findActiveAcademicianById(eq(7), anyList())).thenReturn(Optional.of(academician));
+
+        assertThatThrownBy(() -> studentAcademicianService.listAvailableSlots(7, null, null))
+                .isInstanceOf(BadRequestException.class);
     }
 
     private static User activeAcademician(int userId, boolean accepting) {

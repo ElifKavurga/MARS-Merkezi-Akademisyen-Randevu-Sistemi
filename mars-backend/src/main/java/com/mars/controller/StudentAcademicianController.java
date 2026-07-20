@@ -67,4 +67,12 @@ public class StudentAcademicianController {
             @PathVariable("id") Integer id) {
         return ResponseEntity.ok(studentAcademicianService.listAcademicianCourses(id));
     }
+
+    @GetMapping("/{id}/available-slots")
+    public ResponseEntity<List<AvailableSlotResponseDto>> listAvailableSlots(
+            @PathVariable("id") Integer id,
+            @RequestParam Integer categoryId,
+            @RequestParam(required = false) Integer courseId) {
+        return ResponseEntity.ok(studentAcademicianService.listAvailableSlots(id, categoryId, courseId));
+    }
 }

@@ -29,4 +29,13 @@ public final class AcademicTermCalendar {
         }
         return LocalDate.of(year, 8, 31);
     }
+
+    /**
+     * Öğrenci bookable-slot listesi için üst sınır: mevcut dönem sonu + bir sonraki dönem sonu.
+     * Yaz döneminde OOO sonrası gelen haftalık occurrence'lar 31 Ağustos'ta kesilmez.
+     */
+    public static LocalDate resolveBookableHorizonEnd(LocalDate referenceDate) {
+        LocalDate currentTermEnd = resolveCurrentTermEndDate(referenceDate);
+        return resolveCurrentTermEndDate(currentTermEnd.plusDays(1));
+    }
 }

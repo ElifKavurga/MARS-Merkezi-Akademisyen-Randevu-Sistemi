@@ -199,4 +199,18 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
             @Param("startTime") LocalTime startTime,
             @Param("endTime") LocalTime endTime,
             @Param("statuses") Collection<String> statuses);
+
+    @Query("""
+            SELECT a
+            FROM Appointment a
+            JOIN FETCH a.slot s
+            WHERE a.staff.userId = :staffId
+              AND s.slotDate BETWEEN :from AND :to
+              AND a.appointmentStatus IN :statuses
+            """)
+    List<Appointment> findActiveAppointmentsForStaffInDateRange(
+            @Param("staffId") Integer staffId,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to,
+            @Param("statuses") Collection<String> statuses);
 }

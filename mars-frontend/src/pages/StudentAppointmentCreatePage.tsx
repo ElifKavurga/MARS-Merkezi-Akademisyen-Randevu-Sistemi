@@ -8,11 +8,13 @@ import StudentErrorState from '../components/StudentErrorState';
 import StudentLoadingState from '../components/StudentLoadingState';
 import StudentPageHeader from '../components/StudentPageHeader';
 import UserAvatar from '../components/UserAvatar';
+import { getMeetingTypeLabel } from '../constants/appointment';
 import {
   STUDENT_APPOINTMENT_CATEGORY_GROUP_LABELS,
   STUDENT_APPOINTMENT_MESSAGES,
   STUDENT_APPOINTMENT_STEP_CATEGORY,
   STUDENT_APPOINTMENT_STEP_COURSE,
+  STUDENT_APPOINTMENT_STEP_MEETING_TYPE,
   STUDENT_APPOINTMENT_STEP_SLOT,
 } from '../constants/studentAppointment';
 import { studentAcademicianProfilePath, ROUTES } from '../constants/routes';
@@ -21,6 +23,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 import { getStudentAppointmentCategories } from '../services/studentAppointmentCategoryService';
 import {
+  getStudentAcademicianAvailableSlots,
   getStudentAcademicianCourses,
   getStudentAcademicianDetail,
 } from '../services/studentAcademicianService';
@@ -28,6 +31,7 @@ import type { StudentAcademicianCourse, StudentAcademicianDetail } from '../type
 import type {
   StudentAppointmentCategory,
   StudentAppointmentDraft,
+  StudentAvailableSlot,
 } from '../types/studentAppointment';
 import {
   loadStudentAppointmentDraft,
@@ -37,6 +41,32 @@ import {
   isStudentApiNotFound,
   resolveStudentApiError,
 } from '../utils/studentApiError';
+
+const CLEARED_SLOT_FIELDS = {
+  slotId: null,
+  slotDate: null,
+  startTime: null,
+  endTime: null,
+  meetingType: null,
+} as const;
+
+function slotSelectionKey(
+  slot: Pick<StudentAvailableSlot, 'slotId' | 'slotDate' | 'startTime'>,
+): string {
+  return `${slot.slotId}|${slot.slotDate}|${slot.startTime}`;
+}
+
+function formatSlotDateLabel(slotDate: string): string {
+  return new Date(`${slotDate}T00:00:00`).toLocaleDateString('tr-TR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+function formatSlotTime(time: string): string {
+  return time.slice(0, 5);
+}
 
 function AcademicianSummary({ academician }: { academician: StudentAcademicianDetail }) {
   return (
@@ -85,6 +115,7 @@ function categoryToDraft(category: StudentAppointmentCategory): StudentAppointme
     courseId: null,
     courseCode: null,
     courseName: null,
+    ...CLEARED_SLOT_FIELDS,
   };
 }
 
@@ -299,13 +330,46 @@ function CourseStepPanel({
   );
 }
 
-function SlotStepPlaceholder({
-  draft,
+function SlotStepPanel({
+  slots,
+  selectedKey,
+  loading,
+  error,
+  durationMinutes,
+  requiresCourseSelection,
+  onRetry,
+  onSelect,
+  onContinue,
   onBack,
 }: {
-  draft: StudentAppointmentDraft;
+  slots: StudentAvailableSlot[];
+  selectedKey: string | null;
+  loading: boolean;
+  error: string | null;
+  durationMinutes: number;
+  requiresCourseSelection: boolean;
+  onRetry: () => void;
+  onSelect: (slot: StudentAvailableSlot) => void;
+  onContinue: () => void;
   onBack: () => void;
 }) {
+  const canContinue = selectedKey != null;
+
+  const groupedSlots = useMemo(() => {
+    const byDate = new Map<string, StudentAvailableSlot[]>();
+    for (const slot of slots) {
+      const list = byDate.get(slot.slotDate) ?? [];
+      list.push(slot);
+      byDate.set(slot.slotDate, list);
+    }
+    return Array.from(byDate.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, dateSlots]) => ({
+        date,
+        slots: [...dateSlots].sort((a, b) => a.startTime.localeCompare(b.startTime)),
+      }));
+  }, [slots]);
+
   return (
     <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-6">
       <h2 className="font-headline-md text-headline-md text-primary">
@@ -313,6 +377,123 @@ function SlotStepPlaceholder({
       </h2>
       <p className="mt-2 font-body-md text-body-md text-on-surface-variant">
         {STUDENT_APPOINTMENT_MESSAGES.STEP_SLOT_DESCRIPTION}
+      </p>
+
+      <div className="mt-5">
+        {loading ? (
+          <StudentLoadingState
+            label={STUDENT_APPOINTMENT_MESSAGES.STEP_SLOT_LOADING}
+            compact
+          />
+        ) : error ? (
+          <StudentErrorState message={error} onRetry={onRetry} />
+        ) : slots.length === 0 ? (
+          <StudentEmptyState
+            icon="event_busy"
+            title={STUDENT_APPOINTMENT_MESSAGES.STEP_SLOT_EMPTY_TITLE}
+            description={STUDENT_APPOINTMENT_MESSAGES.STEP_SLOT_EMPTY_DESCRIPTION}
+            className="border-0 bg-surface px-4 py-8"
+          />
+        ) : (
+          <div
+            className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5"
+            role="radiogroup"
+            aria-label={STUDENT_APPOINTMENT_MESSAGES.STEP_SLOT_TITLE}
+          >
+            {groupedSlots.map((group) => (
+              <div
+                key={group.date}
+                className="min-w-0 rounded-lg border border-outline-variant/80 bg-surface px-3 py-3"
+              >
+                <h3 className="mb-2 font-label-md text-label-md font-semibold text-on-surface">
+                  {formatSlotDateLabel(group.date)}
+                </h3>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {group.slots.map((slot) => {
+                    const key = slotSelectionKey(slot);
+                    const selected = selectedKey === key;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={() => onSelect(slot)}
+                        className={`flex min-w-0 flex-col items-start gap-0.5 rounded-lg border px-2.5 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim focus-visible:ring-offset-1 ${
+                          selected
+                            ? 'border-2 border-primary bg-primary-fixed text-on-primary-fixed shadow-sm'
+                            : 'border border-outline-variant bg-surface-container-lowest hover:border-primary hover:bg-surface-container'
+                        }`}
+                      >
+                        <span
+                          className={`font-body-md text-body-md font-semibold ${
+                            selected ? 'text-on-primary-fixed' : 'text-on-surface'
+                          }`}
+                        >
+                          {formatSlotTime(slot.startTime)}
+                        </span>
+                        <span
+                          className={`font-label-sm text-label-sm ${
+                            selected ? 'text-on-primary-fixed-variant' : 'text-on-surface-variant'
+                          }`}
+                        >
+                          {STUDENT_APPOINTMENT_MESSAGES.STEP_SLOT_DURATION(durationMinutes)}
+                          {' · '}
+                          {getMeetingTypeLabel(slot.meetingType)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
+        <button
+          type="button"
+          className={`${STUDENT_UI.SECONDARY_BUTTON_CLASS} w-full sm:w-auto`}
+          onClick={onBack}
+        >
+          {requiresCourseSelection
+            ? STUDENT_APPOINTMENT_MESSAGES.BACK_TO_COURSE
+            : STUDENT_APPOINTMENT_MESSAGES.BACK_TO_CATEGORY}
+        </button>
+        <button
+          type="button"
+          className={`${STUDENT_UI.PRIMARY_BUTTON_CLASS} w-full sm:w-auto`}
+          disabled={!canContinue}
+          title={canContinue ? undefined : STUDENT_APPOINTMENT_MESSAGES.CONTINUE_SLOT_DISABLED}
+          onClick={onContinue}
+        >
+          {STUDENT_APPOINTMENT_MESSAGES.CONTINUE}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function MeetingTypeStepPlaceholder({
+  draft,
+  onBack,
+}: {
+  draft: StudentAppointmentDraft;
+  onBack: () => void;
+}) {
+  const slotSummary =
+    draft.slotDate && draft.startTime && draft.endTime
+      ? `${formatSlotDateLabel(draft.slotDate)} · ${formatSlotTime(draft.startTime)} – ${formatSlotTime(draft.endTime)}`
+      : '—';
+
+  return (
+    <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-6">
+      <h2 className="font-headline-md text-headline-md text-primary">
+        {STUDENT_APPOINTMENT_MESSAGES.STEP_MEETING_TYPE_TITLE}
+      </h2>
+      <p className="mt-2 font-body-md text-body-md text-on-surface-variant">
+        {STUDENT_APPOINTMENT_MESSAGES.STEP_MEETING_TYPE_DESCRIPTION}
       </p>
       <dl className="mt-4 space-y-2 rounded-lg border border-outline-variant bg-surface p-4">
         <div className="flex flex-wrap justify-between gap-2">
@@ -327,6 +508,16 @@ function SlotStepPlaceholder({
               : '—'}
           </dd>
         </div>
+        <div className="flex flex-wrap justify-between gap-2">
+          <dt className="font-label-sm text-label-sm text-on-surface-variant">Slot</dt>
+          <dd className="font-body-md text-body-md text-on-surface">{slotSummary}</dd>
+        </div>
+        <div className="flex flex-wrap justify-between gap-2">
+          <dt className="font-label-sm text-label-sm text-on-surface-variant">Görüşme türü</dt>
+          <dd className="font-body-md text-body-md text-on-surface">
+            {draft.meetingType ? getMeetingTypeLabel(draft.meetingType) : '—'}
+          </dd>
+        </div>
       </dl>
       <div className="mt-6 flex justify-stretch sm:justify-start">
         <button
@@ -334,9 +525,7 @@ function SlotStepPlaceholder({
           className={`${STUDENT_UI.SECONDARY_BUTTON_CLASS} w-full sm:w-auto`}
           onClick={onBack}
         >
-          {draft.requiresCourseSelection
-            ? STUDENT_APPOINTMENT_MESSAGES.BACK_TO_COURSE
-            : STUDENT_APPOINTMENT_MESSAGES.BACK_TO_CATEGORY}
+          {STUDENT_APPOINTMENT_MESSAGES.BACK_TO_SLOT}
         </button>
       </div>
     </section>
@@ -358,6 +547,9 @@ export default function StudentAppointmentCreatePage() {
   const [courses, setCourses] = useState<StudentAcademicianCourse[]>([]);
   const [coursesLoading, setCoursesLoading] = useState(false);
   const [coursesError, setCoursesError] = useState<string | null>(null);
+  const [slots, setSlots] = useState<StudentAvailableSlot[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [slotsError, setSlotsError] = useState<string | null>(null);
   const [selectedDraft, setSelectedDraft] = useState<StudentAppointmentDraft | null>(null);
   const [activeStepIndex, setActiveStepIndex] = useState(STUDENT_APPOINTMENT_STEP_CATEGORY);
 
@@ -470,6 +662,49 @@ export default function StudentAppointmentCreatePage() {
     }
   }, [academicianId, toast]);
 
+  const loadSlots = useCallback(async () => {
+    if (!Number.isInteger(academicianId) || academicianId < 1 || !selectedDraft?.categoryId) {
+      return;
+    }
+    setSlotsLoading(true);
+    setSlotsError(null);
+    try {
+      const data = await getStudentAcademicianAvailableSlots(academicianId, {
+        categoryId: selectedDraft.categoryId,
+        courseId: selectedDraft.courseId,
+      });
+      const nextSlots = Array.isArray(data) ? data : [];
+      setSlots(nextSlots);
+      setSelectedDraft((current) => {
+        if (!current?.slotId || !current.slotDate || !current.startTime) {
+          return current;
+        }
+        const stillExists = nextSlots.some(
+          (item) =>
+            item.slotId === current.slotId
+            && item.slotDate === current.slotDate
+            && item.startTime === current.startTime,
+        );
+        if (stillExists) {
+          return current;
+        }
+        const cleared = { ...current, ...CLEARED_SLOT_FIELDS };
+        saveStudentAppointmentDraft(academicianId, cleared);
+        return cleared;
+      });
+    } catch (err) {
+      const message = resolveStudentApiError(
+        err,
+        STUDENT_APPOINTMENT_MESSAGES.STEP_SLOT_LOAD_ERROR,
+      );
+      setSlots([]);
+      setSlotsError(message);
+      toast.error(message);
+    } finally {
+      setSlotsLoading(false);
+    }
+  }, [academicianId, selectedDraft?.categoryId, selectedDraft?.courseId, toast]);
+
   useEffect(() => {
     void loadAcademician();
   }, [loadAcademician]);
@@ -489,6 +724,16 @@ export default function StudentAppointmentCreatePage() {
       void loadCourses();
     }
   }, [academician, activeStepIndex, selectedDraft?.requiresCourseSelection, loadCourses]);
+
+  useEffect(() => {
+    if (
+      academician?.isAcceptingAppointments &&
+      activeStepIndex === STUDENT_APPOINTMENT_STEP_SLOT &&
+      selectedDraft?.categoryId
+    ) {
+      void loadSlots();
+    }
+  }, [academician, activeStepIndex, selectedDraft?.categoryId, loadSlots]);
 
   const skippedStepIndices = useMemo(() => {
     if (
@@ -515,6 +760,7 @@ export default function StudentAppointmentCreatePage() {
         courseId: null,
         courseCode: null,
         courseName: null,
+        ...CLEARED_SLOT_FIELDS,
       };
       persistDraft(withClearedCourse);
       setActiveStepIndex(STUDENT_APPOINTMENT_STEP_COURSE);
@@ -525,6 +771,7 @@ export default function StudentAppointmentCreatePage() {
       courseId: null,
       courseCode: null,
       courseName: null,
+      ...CLEARED_SLOT_FIELDS,
     };
     persistDraft(withoutCourse);
     setActiveStepIndex(STUDENT_APPOINTMENT_STEP_SLOT);
@@ -539,6 +786,7 @@ export default function StudentAppointmentCreatePage() {
       courseId: course.courseId,
       courseCode: course.courseCode,
       courseName: course.courseName,
+      ...CLEARED_SLOT_FIELDS,
     });
   };
 
@@ -546,7 +794,32 @@ export default function StudentAppointmentCreatePage() {
     if (!selectedDraft?.courseId) {
       return;
     }
+    persistDraft({
+      ...selectedDraft,
+      ...CLEARED_SLOT_FIELDS,
+    });
     setActiveStepIndex(STUDENT_APPOINTMENT_STEP_SLOT);
+  };
+
+  const handleSelectSlot = (slot: StudentAvailableSlot) => {
+    if (!selectedDraft) {
+      return;
+    }
+    persistDraft({
+      ...selectedDraft,
+      slotId: slot.slotId,
+      slotDate: slot.slotDate,
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+      meetingType: slot.meetingType,
+    });
+  };
+
+  const handleContinueFromSlot = () => {
+    if (!selectedDraft?.slotId || !selectedDraft.slotDate || !selectedDraft.startTime) {
+      return;
+    }
+    setActiveStepIndex(STUDENT_APPOINTMENT_STEP_MEETING_TYPE);
   };
 
   const handleBackFromSlot = () => {
@@ -555,6 +828,10 @@ export default function StudentAppointmentCreatePage() {
       return;
     }
     setActiveStepIndex(STUDENT_APPOINTMENT_STEP_CATEGORY);
+  };
+
+  const handleBackFromMeetingType = () => {
+    setActiveStepIndex(STUDENT_APPOINTMENT_STEP_SLOT);
   };
 
   if (!user) {
@@ -646,6 +923,15 @@ export default function StudentAppointmentCreatePage() {
     );
   }
 
+  const selectedSlotKey =
+    selectedDraft?.slotId != null && selectedDraft.slotDate && selectedDraft.startTime
+      ? slotSelectionKey({
+          slotId: selectedDraft.slotId,
+          slotDate: selectedDraft.slotDate,
+          startTime: selectedDraft.startTime,
+        })
+      : null;
+
   return (
     <div className="w-full min-w-0 animate-fade-in">
       {breadcrumb}
@@ -667,8 +953,24 @@ export default function StudentAppointmentCreatePage() {
         skippedStepIndices={skippedStepIndices}
       />
 
-      {activeStepIndex === STUDENT_APPOINTMENT_STEP_SLOT && selectedDraft ? (
-        <SlotStepPlaceholder draft={selectedDraft} onBack={handleBackFromSlot} />
+      {activeStepIndex === STUDENT_APPOINTMENT_STEP_MEETING_TYPE && selectedDraft ? (
+        <MeetingTypeStepPlaceholder
+          draft={selectedDraft}
+          onBack={handleBackFromMeetingType}
+        />
+      ) : activeStepIndex === STUDENT_APPOINTMENT_STEP_SLOT && selectedDraft ? (
+        <SlotStepPanel
+          slots={slots}
+          selectedKey={selectedSlotKey}
+          loading={slotsLoading}
+          error={slotsError}
+          durationMinutes={selectedDraft.durationMinutes}
+          requiresCourseSelection={selectedDraft.requiresCourseSelection}
+          onRetry={() => void loadSlots()}
+          onSelect={handleSelectSlot}
+          onContinue={handleContinueFromSlot}
+          onBack={handleBackFromSlot}
+        />
       ) : activeStepIndex === STUDENT_APPOINTMENT_STEP_COURSE && selectedDraft ? (
         <CourseStepPanel
           courses={courses}

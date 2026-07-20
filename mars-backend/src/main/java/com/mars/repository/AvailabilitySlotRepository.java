@@ -112,4 +112,24 @@ public interface AvailabilitySlotRepository extends JpaRepository<AvailabilitySl
             @Param("staffId") Integer staffId,
             @Param("from") LocalDate from,
             @Param("to") LocalDate to);
+
+    /**
+     * Öğrenci bookable-slot hesabı için şablonlar.
+     * Üst tarih sınırı yok: one-time için slotDate &gt;= from,
+     * recurring için endDate &gt;= from (hala aktif kural).
+     * Occurrence genişletmesi serviste horizon ile sınırlanır.
+     */
+    @Query("""
+            SELECT s FROM AvailabilitySlot s
+            LEFT JOIN FETCH s.recurrenceRule
+            WHERE s.staff.userId = :staffId
+              AND (
+                (s.recurrenceRule IS NULL AND s.slotDate >= :from)
+                OR (s.recurrenceRule IS NOT NULL AND s.recurrenceRule.endDate >= :from)
+              )
+            ORDER BY s.slotDate ASC, s.startTime ASC
+            """)
+    List<AvailabilitySlot> findBookableSlotTemplatesForStaff(
+            @Param("staffId") Integer staffId,
+            @Param("from") LocalDate from);
 }

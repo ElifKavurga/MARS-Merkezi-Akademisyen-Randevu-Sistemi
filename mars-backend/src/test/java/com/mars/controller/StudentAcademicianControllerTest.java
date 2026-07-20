@@ -232,6 +232,27 @@ class StudentAcademicianControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "STUDENT")
+    void listAvailableSlots_asStudent_returnsSlots() throws Exception {
+        when(studentAcademicianService.listAvailableSlots(7, 3, null))
+                .thenReturn(List.of(
+                        AvailableSlotResponseDto.builder()
+                                .slotId(11)
+                                .staffId(7)
+                                .slotDate(LocalDate.of(2026, 8, 15))
+                                .startTime(LocalTime.of(9, 0))
+                                .endTime(LocalTime.of(9, 30))
+                                .meetingType("FACE_TO_FACE")
+                                .build()));
+
+        mockMvc.perform(get("/students/academicians/7/available-slots").param("categoryId", "3"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].slotId").value(11))
+                .andExpect(jsonPath("$[0].slotDate").value("2026-08-15"))
+                .andExpect(jsonPath("$[0].startTime").value("09:00:00"));
+    }
+
+    @Test
     @WithMockUser(roles = "ACADEMICIAN")
     void listAcademicianCourses_asAcademician_returnsForbidden() throws Exception {
         mockMvc.perform(get("/students/academicians/7/courses"))

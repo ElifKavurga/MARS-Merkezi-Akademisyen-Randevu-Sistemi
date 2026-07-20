@@ -6,6 +6,7 @@ import type {
   StudentAcademicianPage,
   StudentAcademicianSearchParams,
 } from '../types/studentAcademician';
+import type { StudentAvailableSlot } from '../types/studentAppointment';
 
 export async function searchStudentAcademicians(
   params: StudentAcademicianSearchParams = {},
@@ -52,6 +53,22 @@ export async function getStudentAcademicianCourses(
 ): Promise<StudentAcademicianCourse[]> {
   const { data } = await apiClient.get<StudentAcademicianCourse[]>(
     `/students/academicians/${userId}/courses`,
+  );
+  return data;
+}
+
+export async function getStudentAcademicianAvailableSlots(
+  userId: number,
+  params: { categoryId: number; courseId?: number | null },
+): Promise<StudentAvailableSlot[]> {
+  const { data } = await apiClient.get<StudentAvailableSlot[]>(
+    `/students/academicians/${userId}/available-slots`,
+    {
+      params: {
+        categoryId: params.categoryId,
+        courseId: params.courseId ?? undefined,
+      },
+    },
   );
   return data;
 }

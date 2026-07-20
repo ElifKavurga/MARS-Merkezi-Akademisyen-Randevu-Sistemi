@@ -74,14 +74,26 @@ public class AvailabilitySlotMapper {
     }
 
     public AvailableSlotResponseDto toAvailableResponse(AvailabilitySlot slot) {
+        return toAvailableResponse(slot, slot.getSlotDate());
+    }
+
+    public AvailableSlotResponseDto toAvailableResponse(AvailabilitySlot slot, LocalDate occurrenceDate) {
+        return toAvailableResponse(slot, occurrenceDate, slot.getStartTime(), slot.getEndTime());
+    }
+
+    public AvailableSlotResponseDto toAvailableResponse(
+            AvailabilitySlot slot,
+            LocalDate occurrenceDate,
+            LocalTime windowStart,
+            LocalTime windowEnd) {
         User staff = slot.getStaff();
         return AvailableSlotResponseDto.builder()
                 .slotId(slot.getSlotId())
                 .staffId(staff != null ? staff.getUserId() : null)
                 .staffName(staff != null ? staff.getFullName() : null)
-                .slotDate(slot.getSlotDate())
-                .startTime(slot.getStartTime())
-                .endTime(slot.getEndTime())
+                .slotDate(occurrenceDate)
+                .startTime(windowStart)
+                .endTime(windowEnd)
                 .meetingType(slot.getMeetingType() != null
                         ? slot.getMeetingType()
                         : MeetingType.FACE_TO_FACE.name())

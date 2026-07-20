@@ -4,6 +4,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -26,6 +27,7 @@ import com.mars.dto.AvailabilitySlotStatsResponseDto;
 import com.mars.dto.AvailabilitySlotUpdateRequest;
 import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.RecurrenceRuleCreateRequest;
+import com.mars.entity.Appointment;
 import com.mars.entity.AvailabilitySlot;
 import com.mars.entity.User;
 import com.mars.enums.AppointmentStatus;
@@ -39,16 +41,21 @@ import com.mars.exception.ResourceNotFoundException;
 import com.mars.mapper.AvailabilitySlotMapper;
 import com.mars.repository.AppointmentRepository;
 import com.mars.repository.AvailabilitySlotRepository;
+import com.mars.repository.OutOfOfficePeriodRepository;
 import com.mars.security.CustomUserDetails;
 import com.mars.security.SecurityMessages;
 import com.mars.util.AcademicTermCalendar;
 import com.mars.util.AvailabilityTimeRules;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AvailabilitySlotService {
+
+    private static final ZoneId APP_ZONE = ZoneId.of("Europe/Istanbul");
 
     private static final Set<String> ACTIVE_APPOINTMENT_STATUSES = Set.of(
             AppointmentStatus.PENDING.name(),
@@ -56,6 +63,7 @@ public class AvailabilitySlotService {
 
     private final AvailabilitySlotRepository availabilitySlotRepository;
     private final AppointmentRepository appointmentRepository;
+    private final OutOfOfficePeriodRepository outOfOfficePeriodRepository;
     private final AvailabilitySlotMapper availabilitySlotMapper;
     private final RecurrenceRuleService recurrenceRuleService;
 
@@ -91,7 +99,7 @@ public class AvailabilitySlotService {
         if (staffId == null) {
             throw new BadRequestException("Akademisyen seçimi zorunludur.");
         }
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(APP_ZONE);
         LocalDate today = now.toLocalDate();
         LocalDateTime earliestBookable = now.plusMinutes(AppointmentConstraints.MINIMUM_BOOKING_NOTICE_MINUTES);
         return availabilitySlotRepository
@@ -99,8 +107,207 @@ public class AvailabilitySlotService {
                 .stream()
                 .filter(slot -> !isSlotInPast(slot, today, now.toLocalTime()))
                 .filter(slot -> isSlotAfterBookingNotice(slot, earliestBookable))
+                .filter(slot -> !outOfOfficePeriodRepository.existsOverlappingPeriod(
+                        staffId, slot.getSlotDate(), slot.getSlotDate()))
                 .map(availabilitySlotMapper::toAvailableResponse)
                 .toList();
+    }
+
+    /**
+     * Öğrenci randevu akışı için uygun slotlar.
+     * Recurrence genişletmesi → durationMinutes dilimleme → BR-017 / OOO / blocked / randevu filtreleri.
+     */
+    @Transactional(readOnly = true)
+    public List<AvailableSlotResponseDto> getBookableAvailableSlotsForStaff(
+            Integer staffId,
+            Integer durationMinutes) {
+        if (staffId == null) {
+            throw new BadRequestException("Akademisyen seçimi zorunludur.");
+        }
+        if (durationMinutes == null || durationMinutes < 1) {
+            throw new BadRequestException("Geçerli bir görüşme süresi zorunludur.");
+        }
+
+        LocalDateTime now = LocalDateTime.now(APP_ZONE);
+        LocalDate today = now.toLocalDate();
+        // Regresyon düzeltmesi: today+14 sert kesimi, OOO sonrası uygun haftalık
+        // occurrence'ları (ör. 6 Ağustos+) yanlışlıkla eliyordu. Dönem ufku geri.
+        LocalDate rangeEnd = AcademicTermCalendar.resolveBookableHorizonEnd(today);
+        LocalDateTime earliestBookable = now.plusMinutes(AppointmentConstraints.MINIMUM_BOOKING_NOTICE_MINUTES);
+
+        long totalSlotsForStaff = availabilitySlotRepository.countByStaff_UserId(staffId);
+        long availableUnblocked = availabilitySlotRepository.countByStaff_UserIdAndIsBlocked(staffId, false);
+
+        List<AvailabilitySlot> templates =
+                availabilitySlotRepository.findBookableSlotTemplatesForStaff(staffId, today);
+
+        int availabilitySlotCount = templates.size();
+        int recurrenceCount = 0;
+        for (AvailabilitySlot slot : templates) {
+            if (slot.getRecurrenceRule() != null) {
+                recurrenceCount++;
+            }
+        }
+
+        log.info("AvailabilitySlot count={}", availabilitySlotCount);
+        log.info(
+                "AvailabilitySlot diagnostic staffId={} totalRows={} unblockedRows={} today={} rangeEnd={}",
+                staffId,
+                totalSlotsForStaff,
+                availableUnblocked,
+                today,
+                rangeEnd);
+        log.info("Recurrence count={}", recurrenceCount);
+
+        if (availabilitySlotCount == 0 && availableUnblocked > 0) {
+            log.warn(
+                    "Repository returned 0 bookable templates but staff has {} unblocked AvailabilitySlot rows. Check findBookableSlotTemplatesForStaff.",
+                    availableUnblocked);
+        }
+
+        List<Appointment> activeAppointments =
+                appointmentRepository.findActiveAppointmentsForStaffInDateRange(
+                        staffId, today, rangeEnd, ACTIVE_APPOINTMENT_STATUSES);
+
+        record Candidate(
+                AvailabilitySlot slot,
+                LocalDate occurrenceDate,
+                LocalTime windowStart,
+                LocalTime windowEnd) {
+        }
+
+        List<Candidate> candidates = new ArrayList<>();
+        int occurrenceCount = 0;
+        for (AvailabilitySlot slot : templates) {
+            List<LocalDate> occurrences = expandOccurrenceDates(slot, today, rangeEnd);
+            occurrenceCount += occurrences.size();
+            log.info(
+                    "slotId={} hasRecurrence={} repeatType={} occurrenceCount={} officeHours={}-{}",
+                    slot.getSlotId(),
+                    slot.getRecurrenceRule() != null,
+                    slot.getRecurrenceRule() != null ? slot.getRecurrenceRule().getRepeatType() : null,
+                    occurrences.size(),
+                    slot.getStartTime(),
+                    slot.getEndTime());
+
+            for (LocalDate occurrenceDate : occurrences) {
+                for (LocalTime[] window : splitIntoDurationWindows(
+                        slot.getStartTime(), slot.getEndTime(), durationMinutes)) {
+                    candidates.add(new Candidate(slot, occurrenceDate, window[0], window[1]));
+                }
+            }
+        }
+
+        log.info("Occurrence count={}", occurrenceCount);
+        log.info("Generated reservation slots={}", candidates.size());
+        log.info("After reservation window filter={}", candidates.size());
+
+        candidates.removeIf(c ->
+                isOccurrenceBeforeBookingNotice(c.occurrenceDate(), c.windowStart(), earliestBookable));
+        log.info("After BR-017={}", candidates.size());
+
+        candidates.removeIf(c -> outOfOfficePeriodRepository.existsOverlappingPeriod(
+                staffId, c.occurrenceDate(), c.occurrenceDate()));
+        log.info("After OutOfOffice={}", candidates.size());
+
+        candidates.removeIf(c -> Boolean.TRUE.equals(c.slot().getIsBlocked()));
+        log.info("After Blocked={}", candidates.size());
+
+        candidates.removeIf(c -> hasOverlappingActiveAppointment(
+                activeAppointments, c.occurrenceDate(), c.windowStart(), c.windowEnd()));
+        log.info("After Appointment filter={}", candidates.size());
+
+        List<AvailableSlotResponseDto> result = new ArrayList<>(candidates.size());
+        for (Candidate candidate : candidates) {
+            result.add(availabilitySlotMapper.toAvailableResponse(
+                    candidate.slot(),
+                    candidate.occurrenceDate(),
+                    candidate.windowStart(),
+                    candidate.windowEnd()));
+        }
+        result.sort(
+                java.util.Comparator.comparing(AvailableSlotResponseDto::getSlotDate)
+                        .thenComparing(AvailableSlotResponseDto::getStartTime));
+        log.info("Final response count={}", result.size());
+        return result;
+    }
+
+    private static List<LocalTime[]> splitIntoDurationWindows(
+            LocalTime rangeStart,
+            LocalTime rangeEnd,
+            int durationMinutes) {
+        if (rangeStart == null || rangeEnd == null || !rangeStart.isBefore(rangeEnd)) {
+            return List.of();
+        }
+        List<LocalTime[]> windows = new ArrayList<>();
+        LocalTime cursor = rangeStart;
+        while (!cursor.plusMinutes(durationMinutes).isAfter(rangeEnd)) {
+            LocalTime windowEnd = cursor.plusMinutes(durationMinutes);
+            windows.add(new LocalTime[] {cursor, windowEnd});
+            cursor = windowEnd;
+        }
+        return windows;
+    }
+
+    private static boolean hasOverlappingActiveAppointment(
+            List<Appointment> appointments,
+            LocalDate occurrenceDate,
+            LocalTime windowStart,
+            LocalTime windowEnd) {
+        for (Appointment appointment : appointments) {
+            AvailabilitySlot bookedSlot = appointment.getSlot();
+            if (bookedSlot == null || bookedSlot.getSlotDate() == null) {
+                continue;
+            }
+            if (!occurrenceDate.equals(bookedSlot.getSlotDate())) {
+                continue;
+            }
+            if (bookedSlot.getStartTime().isBefore(windowEnd)
+                    && bookedSlot.getEndTime().isAfter(windowStart)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private List<LocalDate> expandOccurrenceDates(AvailabilitySlot slot, LocalDate from, LocalDate to) {
+        var rule = slot.getRecurrenceRule();
+        if (rule == null) {
+            if (!slot.getSlotDate().isBefore(from) && !slot.getSlotDate().isAfter(to)) {
+                return List.of(slot.getSlotDate());
+            }
+            return List.of();
+        }
+
+        if (!RepeatType.WEEKLY.name().equalsIgnoreCase(rule.getRepeatType())) {
+            // Sistem yalnızca WEEKLY destekler (RecurrenceRuleService); sessizce boş dönme.
+            log.warn(
+                    "available-slots slotId={} unsupported repeatType={} (only WEEKLY is expanded)",
+                    slot.getSlotId(),
+                    rule.getRepeatType());
+            return List.of();
+        }
+
+        LocalDate rangeStart = rule.getStartDate().isAfter(from) ? rule.getStartDate() : from;
+        LocalDate rangeEnd = rule.getEndDate().isBefore(to) ? rule.getEndDate() : to;
+        if (rangeStart.isAfter(rangeEnd)) {
+            return List.of();
+        }
+
+        DayOfWeek weekday = slot.getSlotDate().getDayOfWeek();
+        List<LocalDate> dates = new ArrayList<>();
+        LocalDate occurrence = rangeStart.with(TemporalAdjusters.nextOrSame(weekday));
+        while (!occurrence.isAfter(rangeEnd)) {
+            dates.add(occurrence);
+            occurrence = occurrence.plusWeeks(1);
+        }
+        return dates;
+    }
+
+    private boolean isOccurrenceBeforeBookingNotice(
+            LocalDate occurrenceDate, LocalTime startTime, LocalDateTime earliestBookable) {
+        LocalDateTime slotStart = LocalDateTime.of(occurrenceDate, startTime);
+        return slotStart.isBefore(earliestBookable);
     }
 
     @Transactional
