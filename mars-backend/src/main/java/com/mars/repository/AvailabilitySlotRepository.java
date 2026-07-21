@@ -130,20 +130,30 @@ public interface AvailabilitySlotRepository extends JpaRepository<AvailabilitySl
      * Üst tarih sınırı yok: one-time için slotDate &gt;= from,
      * recurring için endDate &gt;= from (hala aktif kural).
      * Occurrence genişletmesi serviste horizon ile sınırlanır.
+     *
+     * Randevu oluşturma sırasında yaratılan tekil occurrence slotları (recurrenceRule IS NULL)
+     * üzerinde aktif randevu varsa şablon listesinden hariç tutulur; aksi hâlde tekrarlayan
+     * şablonun genişlettiği candidate ile çakışarak duplicate gösterime yol açar.
      */
     @Query("""
             SELECT s FROM AvailabilitySlot s
             LEFT JOIN FETCH s.recurrenceRule
             WHERE s.staff.userId = :staffId
               AND (
-                (s.recurrenceRule IS NULL AND s.slotDate >= :from)
+                (s.recurrenceRule IS NULL AND s.slotDate >= :from
+                  AND NOT EXISTS (
+                    SELECT 1 FROM Appointment a
+                    WHERE a.slot.slotId = s.slotId
+                      AND a.appointmentStatus IN :activeStatuses
+                  ))
                 OR (s.recurrenceRule IS NOT NULL AND s.recurrenceRule.endDate >= :from)
               )
             ORDER BY s.slotDate ASC, s.startTime ASC
             """)
     List<AvailabilitySlot> findBookableSlotTemplatesForStaff(
             @Param("staffId") Integer staffId,
-            @Param("from") LocalDate from);
+            @Param("from") LocalDate from,
+            @Param("activeStatuses") Collection<String> activeStatuses);
 
     @Query("""
             SELECT s FROM AvailabilitySlot s

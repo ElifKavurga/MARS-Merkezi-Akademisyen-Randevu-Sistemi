@@ -1,7 +1,7 @@
 export const STUDENT_UI = {
   RETRY: 'Tekrar Dene',
   BREADCRUMB_HOME: 'Ana Sayfa',
-  BREADCRUMB_SEARCH: 'Akademisyen / Asistan Ara',
+  BREADCRUMB_SEARCH: 'Randevu Al',
   BREADCRUMB_APPOINTMENTS: 'Randevularım',
   BREADCRUMB_PROFILE: 'Profil Detayı',
   DASHBOARD_TITLE: 'Ana Sayfa',
@@ -10,7 +10,7 @@ export const STUDENT_UI = {
   DASHBOARD_LOADING: 'Ana sayfa yükleniyor...',
   INFO_TITLE: 'Bilgilendirme',
   INFO_DESCRIPTION:
-    'Akademisyen veya asistanlardan randevu almak için Akademisyen / Asistan Ara menüsünü kullanabilirsiniz.',
+    'Akademisyen veya asistanlardan randevu almak için Randevu Al menüsünü kullanabilirsiniz.',
   UPCOMING_TITLE: 'Yaklaşan Randevular',
   UPCOMING_EMPTY_TITLE: 'Yaklaşan randevu yok',
   UPCOMING_EMPTY_DESCRIPTION: 'Yaklaşan randevularınız burada görüntülenecek.',

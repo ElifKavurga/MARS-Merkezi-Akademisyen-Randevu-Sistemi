@@ -147,7 +147,7 @@ public class AvailabilitySlotService {
         long availableUnblocked = availabilitySlotRepository.countByStaff_UserIdAndIsBlocked(staffId, false);
 
         List<AvailabilitySlot> templates =
-                availabilitySlotRepository.findBookableSlotTemplatesForStaff(staffId, today);
+                availabilitySlotRepository.findBookableSlotTemplatesForStaff(staffId, today, ACTIVE_APPOINTMENT_STATUSES);
 
         int availabilitySlotCount = templates.size();
         int recurrenceCount = 0;

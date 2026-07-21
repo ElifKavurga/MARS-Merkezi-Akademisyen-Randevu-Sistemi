@@ -3,6 +3,7 @@ package com.mars.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -866,7 +867,7 @@ class AvailabilitySlotServiceTest {
 
         when(availabilitySlotRepository.countByStaff_UserId(10)).thenReturn(1L);
         when(availabilitySlotRepository.countByStaff_UserIdAndIsBlocked(10, false)).thenReturn(1L);
-        when(availabilitySlotRepository.findBookableSlotTemplatesForStaff(10, today))
+        when(availabilitySlotRepository.findBookableSlotTemplatesForStaff(eq(10), eq(today), anyCollection()))
                 .thenReturn(List.of(officeHour));
         when(appointmentRepository.findActiveAppointmentsForStaffInDateRange(
                         10, today, rangeEnd, ACTIVE_APPOINTMENT_STATUSES))
@@ -911,7 +912,7 @@ class AvailabilitySlotServiceTest {
 
         when(availabilitySlotRepository.countByStaff_UserId(10)).thenReturn(4L);
         when(availabilitySlotRepository.countByStaff_UserIdAndIsBlocked(10, false)).thenReturn(3L);
-        when(availabilitySlotRepository.findBookableSlotTemplatesForStaff(10, today))
+        when(availabilitySlotRepository.findBookableSlotTemplatesForStaff(eq(10), eq(today), anyCollection()))
                 .thenReturn(List.of(blocked, bookedParent, ooo, withinNotice));
         when(appointmentRepository.findActiveAppointmentsForStaffInDateRange(
                         10, today, rangeEnd, ACTIVE_APPOINTMENT_STATUSES))
@@ -962,7 +963,7 @@ class AvailabilitySlotServiceTest {
 
         when(availabilitySlotRepository.countByStaff_UserId(10)).thenReturn(1L);
         when(availabilitySlotRepository.countByStaff_UserIdAndIsBlocked(10, false)).thenReturn(1L);
-        when(availabilitySlotRepository.findBookableSlotTemplatesForStaff(10, today))
+        when(availabilitySlotRepository.findBookableSlotTemplatesForStaff(eq(10), eq(today), anyCollection()))
                 .thenReturn(List.of(recurring));
         when(appointmentRepository.findActiveAppointmentsForStaffInDateRange(
                         10, today, rangeEnd, ACTIVE_APPOINTMENT_STATUSES))
@@ -1037,7 +1038,7 @@ class AvailabilitySlotServiceTest {
 
         when(availabilitySlotRepository.countByStaff_UserId(10)).thenReturn(1L);
         when(availabilitySlotRepository.countByStaff_UserIdAndIsBlocked(10, false)).thenReturn(1L);
-        when(availabilitySlotRepository.findBookableSlotTemplatesForStaff(10, today))
+        when(availabilitySlotRepository.findBookableSlotTemplatesForStaff(eq(10), eq(today), anyCollection()))
                 .thenReturn(List.of(recurring));
         when(appointmentRepository.findActiveAppointmentsForStaffInDateRange(
                         10, today, rangeEnd, ACTIVE_APPOINTMENT_STATUSES))
@@ -1095,7 +1096,7 @@ class AvailabilitySlotServiceTest {
 
         when(availabilitySlotRepository.countByStaff_UserId(10)).thenReturn(1L);
         when(availabilitySlotRepository.countByStaff_UserIdAndIsBlocked(10, false)).thenReturn(1L);
-        when(availabilitySlotRepository.findBookableSlotTemplatesForStaff(eq(10), any(LocalDate.class)))
+        when(availabilitySlotRepository.findBookableSlotTemplatesForStaff(eq(10), any(LocalDate.class), anyCollection()))
                 .thenReturn(List.of(recurring));
         when(appointmentRepository.findActiveAppointmentsForStaffInDateRange(
                         eq(10), any(LocalDate.class), any(LocalDate.class), eq(ACTIVE_APPOINTMENT_STATUSES)))

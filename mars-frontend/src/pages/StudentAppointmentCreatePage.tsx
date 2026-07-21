@@ -26,6 +26,7 @@ import {
 import { studentAcademicianProfilePath, ROUTES } from '../constants/routes';
 import { STUDENT_UI } from '../constants/studentUi';
 import { useAuth } from '../hooks/useAuth';
+import { toLocalIsoDate } from '../constants/calendar';
 import { useToast } from '../hooks/useToast';
 import { getStudentAppointmentCategories } from '../services/studentAppointmentCategoryService';
 import {
@@ -939,12 +940,19 @@ export default function StudentAppointmentCreatePage() {
         courseId: selectedDraft.courseId,
       });
       const nextSlots = Array.isArray(data) ? data : [];
-      setSlots(nextSlots);
+      const todayStr = toLocalIsoDate(new Date());
+      const maxDate = new Date();
+      maxDate.setDate(maxDate.getDate() + 14);
+      const maxDateStr = toLocalIsoDate(maxDate);
+      const filteredSlots = nextSlots.filter(
+        (slot) => slot.slotDate >= todayStr && slot.slotDate <= maxDateStr,
+      );
+      setSlots(filteredSlots);
       setSelectedDraft((current) => {
         if (!current?.slotId || !current.slotDate || !current.startTime) {
           return current;
         }
-        const stillExists = nextSlots.some(
+        const stillExists = filteredSlots.some(
           (item) =>
             item.slotId === current.slotId
             && item.slotDate === current.slotDate
