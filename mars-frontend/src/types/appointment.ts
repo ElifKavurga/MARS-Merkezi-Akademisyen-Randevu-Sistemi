@@ -28,6 +28,9 @@ export type AppointmentCreatePayload = {
   courseId?: number | null;
   meetingType?: string | null;
   isLimitedDuration?: boolean;
+  appointmentDate?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
 };
 
 export type AppointmentStatus =

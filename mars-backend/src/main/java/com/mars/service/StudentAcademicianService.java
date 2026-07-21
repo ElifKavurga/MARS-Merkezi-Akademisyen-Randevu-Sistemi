@@ -26,6 +26,7 @@ import com.mars.exception.BadRequestException;
 import com.mars.exception.ResourceNotFoundException;
 import com.mars.mapper.UserMapper;
 import com.mars.repository.AppointmentCategoryRepository;
+import com.mars.repository.CourseAssignmentRepository;
 import com.mars.repository.CourseRepository;
 import com.mars.repository.UserRepository;
 
@@ -43,10 +44,12 @@ public class StudentAcademicianService {
 
     private static final List<String> ACADEMICIAN_ROLE_NAMES = List.of(
             RoleType.ACADEMICIAN.name(),
-            RoleType.HOD.name());
+            RoleType.HOD.name(),
+            RoleType.ASSISTANT.name());
 
     private final UserRepository userRepository;
     private final CourseRepository courseRepository;
+    private final CourseAssignmentRepository courseAssignmentRepository;
     private final AppointmentCategoryRepository appointmentCategoryRepository;
     private final UserMapper userMapper;
     private final AvailabilitySlotService availabilitySlotService;
@@ -104,11 +107,7 @@ public class StudentAcademicianService {
     public StudentAcademicianDetailResponseDto getAcademicianDetail(Integer userId) {
         User academician = requireActiveAcademician(userId);
 
-        List<StudentAcademicianCourseDto> courses = courseRepository
-                .findByOwnerAcademician_UserIdAndIsActiveTrueOrderByCourseNameAsc(userId)
-                .stream()
-                .map(userMapper::toStudentAcademicianCourse)
-                .toList();
+        List<StudentAcademicianCourseDto> courses = listAcademicianCourses(userId);
 
         return userMapper.toStudentAcademicianDetail(academician, courses);
     }
@@ -121,12 +120,21 @@ public class StudentAcademicianService {
 
     @Transactional(readOnly = true)
     public List<StudentAcademicianCourseDto> listAcademicianCourses(Integer userId) {
-        requireActiveAcademician(userId);
-        return courseRepository
-                .findByOwnerAcademician_UserIdAndIsActiveTrueOrderByCourseNameAsc(userId)
-                .stream()
-                .map(userMapper::toStudentAcademicianCourse)
-                .toList();
+        User staff = requireActiveAcademician(userId);
+        if (RoleType.ASSISTANT.name().equals(staff.getRole().getRoleName())) {
+            return courseAssignmentRepository.findAssignedCoursesByAssistantId(userId)
+                    .stream()
+                    .map(ca -> ca.getCourse())
+                    .filter(c -> c != null && Boolean.TRUE.equals(c.getIsActive()))
+                    .map(userMapper::toStudentAcademicianCourse)
+                    .toList();
+        } else {
+            return courseRepository
+                    .findByOwnerAcademician_UserIdAndIsActiveTrueOrderByCourseNameAsc(userId)
+                    .stream()
+                    .map(userMapper::toStudentAcademicianCourse)
+                    .toList();
+        }
     }
 
     @Transactional(readOnly = true)
@@ -188,9 +196,15 @@ public class StudentAcademicianService {
             Course course = courseRepository
                     .findById(courseId)
                     .orElseThrow(() -> new ResourceNotFoundException(AppointmentMessages.COURSE_NOT_FOUND));
-            if (course.getOwnerAcademician() == null
-                    || !Objects.equals(course.getOwnerAcademician().getUserId(), academician.getUserId())) {
-                throw new BadRequestException(AppointmentMessages.COURSE_STAFF_MISMATCH);
+            if (RoleType.ASSISTANT.name().equals(academician.getRole().getRoleName())) {
+                if (!courseAssignmentRepository.existsByCourse_CourseIdAndAssistant_UserId(courseId, academician.getUserId())) {
+                    throw new BadRequestException(AppointmentMessages.COURSE_STAFF_MISMATCH);
+                }
+            } else {
+                if (course.getOwnerAcademician() == null
+                        || !Objects.equals(course.getOwnerAcademician().getUserId(), academician.getUserId())) {
+                    throw new BadRequestException(AppointmentMessages.COURSE_STAFF_MISMATCH);
+                }
             }
             if (!Boolean.TRUE.equals(course.getIsActive())) {
                 throw new BadRequestException(AppointmentMessages.COURSE_NOT_FOUND);

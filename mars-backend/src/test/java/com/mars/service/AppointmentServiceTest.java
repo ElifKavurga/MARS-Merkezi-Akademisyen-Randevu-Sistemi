@@ -281,9 +281,9 @@ class AppointmentServiceTest {
 
     @Test
     void createAppointment_nonBookableStaffRole_throwsBadRequest() {
-        Role assistantRole = new Role();
-        assistantRole.setRoleName(RoleType.ASSISTANT.name());
-        staff.setRole(assistantRole);
+        Role studentRole = new Role();
+        studentRole.setRoleName(RoleType.STUDENT.name());
+        staff.setRole(studentRole);
         when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
         when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
 

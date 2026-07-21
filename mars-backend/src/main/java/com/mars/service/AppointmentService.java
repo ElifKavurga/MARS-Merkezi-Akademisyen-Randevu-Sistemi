@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.security.access.AccessDeniedException;
@@ -38,6 +39,7 @@ import com.mars.mapper.AppointmentMapper;
 import com.mars.repository.AppointmentCategoryRepository;
 import com.mars.repository.AppointmentRepository;
 import com.mars.repository.AvailabilitySlotRepository;
+import com.mars.repository.CourseAssignmentRepository;
 import com.mars.repository.CourseRepository;
 import com.mars.repository.OutOfOfficePeriodRepository;
 import com.mars.repository.StudentPenaltyStatusRepository;
@@ -64,12 +66,14 @@ public class AppointmentService {
 
     private static final Set<String> BOOKABLE_STAFF_ROLES = Set.of(
             RoleType.ACADEMICIAN.name(),
-            RoleType.HOD.name());
+            RoleType.HOD.name(),
+            RoleType.ASSISTANT.name());
 
     private final AppointmentRepository appointmentRepository;
     private final AvailabilitySlotRepository availabilitySlotRepository;
     private final AppointmentCategoryRepository appointmentCategoryRepository;
     private final CourseRepository courseRepository;
+    private final CourseAssignmentRepository courseAssignmentRepository;
     private final StudentPenaltyStatusRepository studentPenaltyStatusRepository;
     private final OutOfOfficePeriodRepository outOfOfficePeriodRepository;
     private final AppointmentMapper appointmentMapper;
@@ -88,17 +92,62 @@ public class AppointmentService {
         ensureStudentNotRestricted(student.getUserId());
 
         // Race condition: slot satırını kilitle, ardından müsaitlik son kez doğrulanır.
-        AvailabilitySlot slot = availabilitySlotRepository.findByIdWithStaffForUpdate(request.getSlotId())
+        AvailabilitySlot templateSlot = availabilitySlotRepository.findByIdWithStaffForUpdate(request.getSlotId())
                 .orElseThrow(() -> new ResourceNotFoundException(AppointmentMessages.SLOT_NOT_FOUND));
 
-        User staff = slot.getStaff();
+        User staff = templateSlot.getStaff();
         ensureStaffIsBookable(staff);
+
+        // Resolve requested date/time
+        LocalDate bookingDate = request.getAppointmentDate() != null ? request.getAppointmentDate() : templateSlot.getSlotDate();
+        LocalTime bookingStart = request.getStartTime() != null ? request.getStartTime() : templateSlot.getStartTime();
+        LocalTime bookingEnd = request.getEndTime() != null ? request.getEndTime() : templateSlot.getEndTime();
+
+        AvailabilitySlot slot;
+        if (templateSlot.getRecurrenceRule() != null
+                || !bookingDate.equals(templateSlot.getSlotDate())
+                || !bookingStart.equals(templateSlot.getStartTime())
+                || !bookingEnd.equals(templateSlot.getEndTime())) {
+            
+            // Check if there is already a specific occurrence slot created
+            Optional<AvailabilitySlot> existingSlot = availabilitySlotRepository.findDuplicateSlot(
+                    staff.getUserId(), bookingDate, bookingStart, bookingEnd);
+            
+            if (existingSlot.isPresent()) {
+                slot = existingSlot.get();
+            } else {
+                // Create a persistent copy/slice of the availability slot for this specific booking
+                AvailabilitySlot newSlot = new AvailabilitySlot();
+                newSlot.setStaff(staff);
+                newSlot.setSlotDate(bookingDate);
+                newSlot.setStartTime(bookingStart);
+                newSlot.setEndTime(bookingEnd);
+                newSlot.setIsBlocked(templateSlot.getIsBlocked());
+                newSlot.setMeetingType(templateSlot.getMeetingType());
+                newSlot.setRecurrenceRule(null); // specific booked slot, not a recurrence template
+                
+                slot = availabilitySlotRepository.save(newSlot);
+            }
+        } else {
+            slot = templateSlot;
+        }
+
         ensureSlotBookable(slot, staff.getUserId());
 
         if (appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(
                 slot.getSlotId(), ACTIVE_APPOINTMENT_STATUSES)) {
             throw new ConflictException(AppointmentMessages.SLOT_TAKEN);
         }
+
+        if (appointmentRepository.existsOverlappingActiveAppointmentForStaff(
+                staff.getUserId(),
+                slot.getSlotDate(),
+                slot.getStartTime(),
+                slot.getEndTime(),
+                ACTIVE_APPOINTMENT_STATUSES)) {
+            throw new ConflictException(AppointmentMessages.SLOT_TAKEN);
+        }
+
         if (appointmentRepository.existsOverlappingActiveAppointmentForStudent(
                 student.getUserId(),
                 slot.getSlotDate(),
@@ -315,9 +364,15 @@ public class AppointmentService {
             }
             Course course = courseRepository.findById(courseId)
                     .orElseThrow(() -> new ResourceNotFoundException(AppointmentMessages.COURSE_NOT_FOUND));
-            if (course.getOwnerAcademician() == null
-                    || !Objects.equals(course.getOwnerAcademician().getUserId(), staff.getUserId())) {
-                throw new BadRequestException(AppointmentMessages.COURSE_STAFF_MISMATCH);
+            if (RoleType.ASSISTANT.name().equals(staff.getRole().getRoleName())) {
+                if (!courseAssignmentRepository.existsByCourse_CourseIdAndAssistant_UserId(courseId, staff.getUserId())) {
+                    throw new BadRequestException(AppointmentMessages.COURSE_STAFF_MISMATCH);
+                }
+            } else {
+                if (course.getOwnerAcademician() == null
+                        || !Objects.equals(course.getOwnerAcademician().getUserId(), staff.getUserId())) {
+                    throw new BadRequestException(AppointmentMessages.COURSE_STAFF_MISMATCH);
+                }
             }
             if (!Boolean.TRUE.equals(course.getIsActive())) {
                 throw new BadRequestException(AppointmentMessages.COURSE_INACTIVE);

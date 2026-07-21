@@ -1118,6 +1118,9 @@ export default function StudentAppointmentCreatePage() {
         categoryId: selectedDraft.categoryId,
         courseId: selectedDraft.requiresCourseSelection ? selectedDraft.courseId : undefined,
         meetingType: selectedDraft.meetingType,
+        appointmentDate: selectedDraft.slotDate,
+        startTime: selectedDraft.startTime,
+        endTime: selectedDraft.endTime,
       });
       if (Number.isInteger(academicianId) && academicianId >= 1) {
         clearStudentAppointmentDraft(academicianId);

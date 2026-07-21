@@ -1,16 +1,16 @@
 export const STUDENT_UI = {
   RETRY: 'Tekrar Dene',
   BREADCRUMB_HOME: 'Ana Sayfa',
-  BREADCRUMB_SEARCH: 'Akademisyen Ara',
+  BREADCRUMB_SEARCH: 'Akademisyen / Asistan Ara',
   BREADCRUMB_APPOINTMENTS: 'Randevularım',
-  BREADCRUMB_PROFILE: 'Akademisyen Profili',
+  BREADCRUMB_PROFILE: 'Profil Detayı',
   DASHBOARD_TITLE: 'Ana Sayfa',
   DASHBOARD_SUBTITLE:
     'Randevu süreçlerinizi, bekleme listelerinizi ve ceza durumunuzu buradan takip edebilirsiniz.',
   DASHBOARD_LOADING: 'Ana sayfa yükleniyor...',
   INFO_TITLE: 'Bilgilendirme',
   INFO_DESCRIPTION:
-    'Akademisyenlerden randevu almak için Akademisyen Ara menüsünü kullanabilirsiniz.',
+    'Akademisyen veya asistanlardan randevu almak için Akademisyen / Asistan Ara menüsünü kullanabilirsiniz.',
   UPCOMING_TITLE: 'Yaklaşan Randevular',
   UPCOMING_EMPTY_TITLE: 'Yaklaşan randevu yok',
   UPCOMING_EMPTY_DESCRIPTION: 'Yaklaşan randevularınız burada görüntülenecek.',
@@ -23,9 +23,9 @@ export const STUDENT_UI = {
   PENALTY_EMPTY_TITLE: 'Ceza kaydı yok',
   PENALTY_EMPTY_DESCRIPTION: 'Ceza durumunuz burada görüntülenecek.',
   PENALTY_LOADING: 'Ceza durumu yükleniyor...',
-  PROFILE_TITLE: 'Akademisyen Profili',
+  PROFILE_TITLE: 'Profil Detayı',
   PROFILE_SUBTITLE:
-    'Akademisyen bilgilerini, derslerini ve uygun randevu saatlerini inceleyin.',
+    'Personel bilgilerini, derslerini ve uygun randevu saatlerini inceleyin.',
   LOAD_ERROR_GENERIC: 'Veri yüklenemedi. Lütfen tekrar deneyin.',
   ACCESS_DENIED: 'Bu işlem için yetkiniz yok.',
   NOT_FOUND_GENERIC: 'İstenen kayıt bulunamadı.',

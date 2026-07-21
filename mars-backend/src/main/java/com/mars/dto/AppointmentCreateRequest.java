@@ -1,5 +1,8 @@
 package com.mars.dto;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -28,4 +31,16 @@ public class AppointmentCreateRequest {
     private String meetingType;
 
     private Boolean isLimitedDuration;
+
+    private LocalDate appointmentDate;
+    private LocalTime startTime;
+    private LocalTime endTime;
+
+    public AppointmentCreateRequest(Integer slotId, Integer categoryId, Integer courseId, String meetingType, Boolean isLimitedDuration) {
+        this.slotId = slotId;
+        this.categoryId = categoryId;
+        this.courseId = courseId;
+        this.meetingType = meetingType;
+        this.isLimitedDuration = isLimitedDuration;
+    }
 }

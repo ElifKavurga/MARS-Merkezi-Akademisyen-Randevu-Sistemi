@@ -262,6 +262,22 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
             @Param("statuses") Collection<String> statuses);
 
     @Query("""
+            SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END
+            FROM Appointment a
+            WHERE a.staff.userId = :staffId
+              AND a.slot.slotDate = :slotDate
+              AND a.slot.startTime < :endTime
+              AND a.slot.endTime > :startTime
+              AND a.appointmentStatus IN :statuses
+            """)
+    boolean existsOverlappingActiveAppointmentForStaff(
+            @Param("staffId") Integer staffId,
+            @Param("slotDate") LocalDate slotDate,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime,
+            @Param("statuses") Collection<String> statuses);
+
+    @Query("""
             SELECT a
             FROM Appointment a
             JOIN FETCH a.slot s

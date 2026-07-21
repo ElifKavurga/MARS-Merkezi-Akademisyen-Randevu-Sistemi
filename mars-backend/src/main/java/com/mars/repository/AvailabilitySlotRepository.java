@@ -144,4 +144,17 @@ public interface AvailabilitySlotRepository extends JpaRepository<AvailabilitySl
     List<AvailabilitySlot> findBookableSlotTemplatesForStaff(
             @Param("staffId") Integer staffId,
             @Param("from") LocalDate from);
+
+    @Query("""
+            SELECT s FROM AvailabilitySlot s
+            WHERE s.staff.userId = :staffId
+              AND s.slotDate = :slotDate
+              AND s.startTime = :startTime
+              AND s.endTime = :endTime
+            """)
+    Optional<AvailabilitySlot> findDuplicateSlot(
+            @Param("staffId") Integer staffId,
+            @Param("slotDate") LocalDate slotDate,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime);
 }
