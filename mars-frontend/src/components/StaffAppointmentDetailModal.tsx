@@ -11,6 +11,7 @@ import ModalShell from './ModalShell';
 type StaffAppointmentDetailModalProps = {
   appointment: StaffAppointment | null;
   actionDisabled?: boolean;
+  canDecide?: boolean;
   canDelegate?: boolean;
   onApprove: (appointment: StaffAppointment) => void;
   onReject: (appointment: StaffAppointment) => void;
@@ -60,6 +61,7 @@ function MetaRow({
 export default function StaffAppointmentDetailModal({
   appointment,
   actionDisabled = false,
+  canDecide = false,
   canDelegate = false,
   onApprove,
   onReject,
@@ -99,7 +101,7 @@ export default function StaffAppointmentDetailModal({
               {DELEGATION_MESSAGES.ACTION_LABEL}
             </button>
           ) : null}
-          {appointment?.appointmentStatus === 'PENDING' ? (
+          {canDecide && appointment ? (
             <>
               <button
                 type="button"

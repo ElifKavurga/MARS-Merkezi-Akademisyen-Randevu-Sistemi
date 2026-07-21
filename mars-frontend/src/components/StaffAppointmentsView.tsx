@@ -24,6 +24,7 @@ import Loading from './Loading';
 import StaffAppointmentDetailModal from './StaffAppointmentDetailModal';
 import StudentSegmentedTabs from './StudentSegmentedTabs';
 import { STUDENT_UI } from '../constants/studentUi';
+import { canDecideStaffAppointment } from '../utils/staffAppointmentPermissions';
 
 type AppointmentView = 'PENDING' | 'ALL';
 type AppointmentAction = {
@@ -123,7 +124,7 @@ export default function StaffAppointmentsView({
     type: AppointmentAction['type'],
     appointment: StaffAppointment,
   ) => {
-    if (actionLoading || appointment.appointmentStatus !== 'PENDING') {
+    if (actionLoading || !canDecideStaffAppointment(appointment, scope, user)) {
       return;
     }
     setActionError(null);
@@ -271,6 +272,7 @@ export default function StaffAppointmentsView({
               <tbody>
                 {appointments.map((appointment) => {
                   const showDelegate = canDelegateAppointment(appointment, scope, user);
+                  const showDecisionActions = canDecideStaffAppointment(appointment, scope, user);
                   return (
                     <tr
                       key={appointment.appointmentId}
@@ -301,7 +303,7 @@ export default function StaffAppointmentsView({
                       </td>
                       <td className="px-5 py-4 text-right">
                         <div className="flex flex-wrap items-center justify-end gap-2">
-                          {appointment.appointmentStatus === 'PENDING' ? (
+                          {showDecisionActions ? (
                             <>
                               <button
                                 type="button"
@@ -365,6 +367,11 @@ export default function StaffAppointmentsView({
       <StaffAppointmentDetailModal
         appointment={selectedAppointment}
         actionDisabled={actionLoading}
+        canDecide={
+          selectedAppointment
+            ? canDecideStaffAppointment(selectedAppointment, scope, user)
+            : false
+        }
         canDelegate={
           selectedAppointment
             ? canDelegateAppointment(selectedAppointment, scope, user)

@@ -104,7 +104,7 @@ class DelegationServiceTest {
         foreign.setCourse(course);
         foreign.setAppointmentStatus(AppointmentStatus.PENDING.name());
 
-        when(appointmentRepository.findByIdWithStaffAndCourse(101)).thenReturn(Optional.of(foreign));
+        when(appointmentRepository.findByIdForUpdate(101)).thenReturn(Optional.of(foreign));
 
         CreateDelegationRequest request = new CreateDelegationRequest(101, 20);
 
@@ -117,7 +117,7 @@ class DelegationServiceTest {
     @Test
     void createDelegation_rejectsSecondPendingForSameAppointment() {
         authenticate(academician);
-        when(appointmentRepository.findByIdWithStaffAndCourse(100)).thenReturn(Optional.of(appointment));
+        when(appointmentRepository.findByIdForUpdate(100)).thenReturn(Optional.of(appointment));
         when(userRepository.findByIdWithRoleAndDepartment(20)).thenReturn(Optional.of(assistant));
         when(courseAssignmentRepository.existsByCourse_CourseIdAndAssistant_UserId(5, 20)).thenReturn(true);
         when(delegationLogRepository.existsByAppointment_AppointmentIdAndDelegationStatus(
@@ -128,6 +128,19 @@ class DelegationServiceTest {
         assertThatThrownBy(() -> delegationService.createDelegation(request))
                 .isInstanceOf(ConflictException.class)
                 .hasMessage(DelegationMessages.PENDING_EXISTS);
+        verify(delegationLogRepository, never()).save(any());
+    }
+
+    @Test
+    void createDelegation_rejectsProcessedAppointmentBeforeCreatingRequest() {
+        authenticate(academician);
+        appointment.setAppointmentStatus(AppointmentStatus.REJECTED.name());
+        when(appointmentRepository.findByIdForUpdate(100)).thenReturn(Optional.of(appointment));
+
+        assertThatThrownBy(() -> delegationService.createDelegation(
+                new CreateDelegationRequest(100, 20)))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage(DelegationMessages.APPOINTMENT_NOT_PROCESSABLE);
         verify(delegationLogRepository, never()).save(any());
     }
 
@@ -207,6 +220,7 @@ class DelegationServiceTest {
                 .build();
 
         when(delegationLogRepository.findByIdForUpdate(1)).thenReturn(Optional.of(log));
+        when(appointmentRepository.findByIdForUpdate(100)).thenReturn(Optional.of(appointment));
         when(delegationLogRepository.findByAppointment_AppointmentIdAndDelegationStatusAndDelegationIdNot(
                 eq(100), eq(DelegationStatus.PENDING.name()), eq(1))).thenReturn(List.of());
         when(delegationLogRepository.save(log)).thenReturn(log);
@@ -220,6 +234,20 @@ class DelegationServiceTest {
         assertThat(log.getDelegationStatus()).isEqualTo(DelegationStatus.ACCEPTED.name());
         assertThat(appointment.getStaff()).isEqualTo(assistant);
         verify(appointmentRepository).save(appointment);
+    }
+
+    @Test
+    void acceptDelegation_rechecksAppointmentStatusUnderLock() {
+        authenticate(assistant);
+        DelegationLog log = pendingDelegation(1, academician, assistant);
+        appointment.setAppointmentStatus(AppointmentStatus.APPROVED.name());
+        when(delegationLogRepository.findByIdForUpdate(1)).thenReturn(Optional.of(log));
+        when(appointmentRepository.findByIdForUpdate(100)).thenReturn(Optional.of(appointment));
+
+        assertThatThrownBy(() -> delegationService.acceptDelegation(1))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage(DelegationMessages.APPOINTMENT_NOT_PROCESSABLE);
+        verify(appointmentRepository, never()).save(any());
     }
 
     @Test

@@ -205,6 +205,19 @@ class AcademicianAppointmentControllerTest {
         assertForbidden("PATCH", "/academician/appointments/11/reject");
     }
 
+    @Test
+    void getAppointment_withoutAuthentication_returnsUnauthorized() throws Exception {
+        mockMvc.perform(get("/academician/appointments/11"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401));
+    }
+
+    @Test
+    @WithMockUser(roles = "STUDENT")
+    void rescheduleAppointment_asStudent_returnsForbidden() throws Exception {
+        assertForbidden("PATCH", "/academician/appointments/11/reschedule");
+    }
+
     private void assertForbidden(String method, String path) throws Exception {
         if ("GET".equals(method)) {
             mockMvc.perform(get(path))

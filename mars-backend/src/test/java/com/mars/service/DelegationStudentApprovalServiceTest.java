@@ -159,7 +159,7 @@ class DelegationStudentApprovalServiceTest {
     }
 
     private void stubCreate(User target, boolean relatedAssistant) {
-        when(appointmentRepository.findByIdWithStaffAndCourse(100)).thenReturn(Optional.of(appointment));
+        when(appointmentRepository.findByIdForUpdate(100)).thenReturn(Optional.of(appointment));
         when(userRepository.findByIdWithRoleAndDepartment(target.getUserId())).thenReturn(Optional.of(target));
         when(courseAssignmentRepository.existsByCourse_CourseIdAndAssistant_UserId(5, target.getUserId()))
                 .thenReturn(relatedAssistant);

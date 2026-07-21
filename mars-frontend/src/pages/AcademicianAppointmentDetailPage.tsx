@@ -4,16 +4,23 @@ import { isAxiosError } from 'axios';
 import AppointmentStatusBadge from '../components/AppointmentStatusBadge';
 import AppointmentRescheduleModal from '../components/AppointmentRescheduleModal';
 import ConfirmModal from '../components/ConfirmModal';
+import DelegationModal from '../components/DelegationModal';
 import StudentBackLink from '../components/StudentBackLink';
 import StudentErrorState from '../components/StudentErrorState';
 import StudentLoadingState from '../components/StudentLoadingState';
 import StudentPageHeader from '../components/StudentPageHeader';
 import { STAFF_APPOINTMENT_MESSAGES, getMeetingTypeLabel } from '../constants/appointment';
+import { canDelegateAppointment, DELEGATION_MESSAGES } from '../constants/delegation';
 import { ROUTES } from '../constants/routes';
 import { STUDENT_UI } from '../constants/studentUi';
 import { useToast } from '../hooks/useToast';
+import { useAuth } from '../hooks/useAuth';
 import { approveStaffAppointment, getStaffAppointment, rejectStaffAppointment } from '../services/appointmentService';
 import type { StaffAppointment } from '../types/appointment';
+import {
+  canDecideStaffAppointment,
+  canRescheduleAcademicianAppointment,
+} from '../utils/staffAppointmentPermissions';
 
 function formatDate(date: string): string {
   return new Intl.DateTimeFormat('tr-TR', {
@@ -86,6 +93,8 @@ export default function AcademicianAppointmentDetailPage() {
   const [isRejecting, setIsRejecting] = useState(false);
   const [rejectionError, setRejectionError] = useState<string | null>(null);
   const [showReschedule, setShowReschedule] = useState(false);
+  const [showDelegation, setShowDelegation] = useState(false);
+  const { user } = useAuth();
   const toast = useToast();
 
   const loadAppointment = useCallback(async () => {
@@ -119,7 +128,7 @@ export default function AcademicianAppointmentDetailPage() {
   }, [loadAppointment]);
 
   const handleApproveClick = () => {
-    if (!appointment || appointment.appointmentStatus !== 'PENDING' || isApproving || isRejecting) {
+    if (!appointment || !canDecideStaffAppointment(appointment, 'academician', user) || isApproving || isRejecting) {
       return;
     }
     setApprovalError(null);
@@ -127,7 +136,7 @@ export default function AcademicianAppointmentDetailPage() {
   };
 
   const handleRejectClick = () => {
-    if (!appointment || appointment.appointmentStatus !== 'PENDING' || isApproving || isRejecting) {
+    if (!appointment || !canDecideStaffAppointment(appointment, 'academician', user) || isApproving || isRejecting) {
       return;
     }
     setRejectionError(null);
@@ -206,8 +215,12 @@ export default function AcademicianAppointmentDetailPage() {
   const timeLabel = appointment
     ? `${formatTime(appointment.startTime)} – ${formatTime(appointment.endTime)}`
     : '';
+  const canDecide = appointment !== null
+    && canDecideStaffAppointment(appointment, 'academician', user);
   const canReschedule = appointment !== null
-    && !['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(appointment.appointmentStatus);
+    && canRescheduleAcademicianAppointment(appointment, user);
+  const canDelegate = appointment !== null
+    && canDelegateAppointment(appointment, 'academician', user);
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
@@ -215,7 +228,7 @@ export default function AcademicianAppointmentDetailPage() {
         <StudentBackLink to={ROUTES.ACADEMICIAN_APPOINTMENTS} label="Geri Dön" />
         {appointment ? (
           <div className="flex flex-wrap gap-2">
-            {appointment.appointmentStatus === 'PENDING' ? (
+            {canDecide ? (
               <>
                 <button
                   type="button"
@@ -246,6 +259,17 @@ export default function AcademicianAppointmentDetailPage() {
               >
                 <span className="material-symbols-outlined text-[18px]" aria-hidden>edit_calendar</span>
                 Yeniden Planla
+              </button>
+            ) : null}
+            {canDelegate ? (
+              <button
+                type="button"
+                className={STUDENT_UI.SECONDARY_BUTTON_CLASS}
+                disabled={isApproving || isRejecting}
+                onClick={() => setShowDelegation(true)}
+              >
+                <span className="material-symbols-outlined text-[18px]" aria-hidden>swap_horiz</span>
+                {DELEGATION_MESSAGES.ACTION_LABEL}
               </button>
             ) : null}
           </div>
@@ -384,6 +408,16 @@ export default function AcademicianAppointmentDetailPage() {
           setAppointment(updatedAppointment);
           setShowReschedule(false);
           toast.success(STAFF_APPOINTMENT_MESSAGES.RESCHEDULE_SUCCESS);
+        }}
+      />
+
+      <DelegationModal
+        appointment={showDelegation && canDelegate ? appointment : null}
+        onClose={() => setShowDelegation(false)}
+        onSuccess={(message) => {
+          setShowDelegation(false);
+          toast.success(message);
+          void loadAppointment();
         }}
       />
     </div>

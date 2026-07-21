@@ -1,9 +1,9 @@
-import type { AuthUser } from '../types/auth';
 import type {
-  AppointmentStatus,
   StaffAppointment,
   StaffAppointmentScope,
 } from '../types/appointment';
+import type { AuthUser } from '../types/auth';
+import { canDelegateAcademicianAppointment } from '../utils/staffAppointmentPermissions';
 
 export const DELEGATION_MESSAGES = {
   ACTION_LABEL: 'Devret',
@@ -70,34 +70,12 @@ export function getDelegationStatusLabel(status: string): string {
   return DELEGATION_STATUS_LABELS[status] ?? status;
 }
 
-const NON_DELEGATABLE_STATUSES: ReadonlySet<AppointmentStatus> = new Set([
-  'APPROVED',
-  'CANCELLED',
-  'COMPLETED',
-  'NO_SHOW',
-]);
-
 export function canDelegateAppointment(
   appointment: StaffAppointment,
   scope: StaffAppointmentScope,
   user: AuthUser | null | undefined,
 ): boolean {
-  if (scope !== 'academician') {
-    return false;
-  }
-  if (!user || user.role !== 'ACADEMICIAN') {
-    return false;
-  }
-  if (appointment.staffId !== user.userId) {
-    return false;
-  }
-  if (appointment.courseId == null) {
-    return false;
-  }
-  if (NON_DELEGATABLE_STATUSES.has(appointment.appointmentStatus)) {
-    return false;
-  }
-  return true;
+  return canDelegateAcademicianAppointment(appointment, scope, user);
 }
 
 export function formatCourseLabel(appointment: StaffAppointment): string {

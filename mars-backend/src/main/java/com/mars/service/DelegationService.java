@@ -47,10 +47,6 @@ public class DelegationService {
     private static final long STUDENT_APPROVAL_MINUTES = 60;
     private static final Set<String> ACTIVE_APPOINTMENT_STATUSES = Set.of(
             AppointmentStatus.PENDING.name(), AppointmentStatus.APPROVED.name());
-    private static final Set<String> TERMINAL_APPOINTMENT_STATUSES = Set.of(
-            AppointmentStatus.CANCELLED.name(),
-            AppointmentStatus.COMPLETED.name(),
-            AppointmentStatus.NO_SHOW.name());
     private static final Set<String> TARGET_ROLES = Set.of(
             RoleType.ACADEMICIAN.name(), RoleType.ASSISTANT.name());
 
@@ -89,7 +85,7 @@ public class DelegationService {
             throw new BadRequestException(DelegationMessages.TARGET_REQUIRED);
         }
 
-        Appointment appointment = getOwnedAppointment(request.getAppointmentId(), academician);
+        Appointment appointment = getOwnedAppointmentForUpdate(request.getAppointmentId(), academician);
         validateAppointmentStatus(appointment.getAppointmentStatus());
         requireCourse(appointment);
 
@@ -211,7 +207,7 @@ public class DelegationService {
                 .stream().map(delegationMapper::toResponse).toList();
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = ConflictException.class)
     public DelegationResponse acceptStudentApproval(Integer delegationId) {
         User student = getCurrentStudent();
         DelegationLog log = getStudentApprovalForDecision(delegationId, student);
@@ -230,7 +226,7 @@ public class DelegationService {
         return toResponse(log);
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = ConflictException.class)
     public DelegationResponse rejectStudentApproval(Integer delegationId) {
         User student = getCurrentStudent();
         DelegationLog log = getStudentApprovalForDecision(delegationId, student);
@@ -319,8 +315,17 @@ public class DelegationService {
     }
 
     private void completeTransfer(DelegationLog log, User target) {
-        Appointment appointment = log.getAppointment();
+        Appointment appointment = appointmentRepository.findByIdForUpdate(
+                        log.getAppointment().getAppointmentId())
+                .orElseThrow(() -> new ResourceNotFoundException(DelegationMessages.APPOINTMENT_NOT_FOUND));
+        if (appointment.getStaff() == null
+                || !Objects.equals(
+                        appointment.getStaff().getUserId(),
+                        log.getDelegatedByUser().getUserId())) {
+            throw new ConflictException(DelegationMessages.APPOINTMENT_NOT_PROCESSABLE);
+        }
         validateAppointmentProcessable(appointment.getAppointmentStatus());
+        log.setAppointment(appointment);
         LocalDateTime now = LocalDateTime.now(APP_ZONE);
         if (log.getStudentApprovalExpiresAt() != null
                 && !now.isBefore(log.getStudentApprovalExpiresAt())) {
@@ -440,6 +445,16 @@ public class DelegationService {
         return appointment;
     }
 
+    private Appointment getOwnedAppointmentForUpdate(Integer appointmentId, User academician) {
+        Appointment appointment = appointmentRepository.findByIdForUpdate(appointmentId)
+                .orElseThrow(() -> new ResourceNotFoundException(DelegationMessages.APPOINTMENT_NOT_FOUND));
+        if (appointment.getStaff() == null
+                || !Objects.equals(appointment.getStaff().getUserId(), academician.getUserId())) {
+            throw new AccessDeniedException(DelegationMessages.OWNERSHIP_DENIED);
+        }
+        return appointment;
+    }
+
     private void validateTarget(User target, User academician) {
         if (!Boolean.TRUE.equals(target.getIsActive()) || target.getRole() == null
                 || !TARGET_ROLES.contains(target.getRole().getRoleName())
@@ -486,17 +501,14 @@ public class DelegationService {
     }
 
     private void validateAppointmentProcessable(String status) {
-        if (TERMINAL_APPOINTMENT_STATUSES.contains(status)) {
+        if (!AppointmentStatus.PENDING.name().equals(status)) {
             throw new ConflictException(DelegationMessages.APPOINTMENT_NOT_PROCESSABLE);
         }
     }
 
     private void validateAppointmentStatus(String status) {
-        if (AppointmentStatus.APPROVED.name().equals(status)) {
-            throw new BadRequestException(DelegationMessages.APPROVED_NOT_ALLOWED);
-        }
-        if (TERMINAL_APPOINTMENT_STATUSES.contains(status)) {
-            throw new BadRequestException(DelegationMessages.TERMINAL_STATUS_NOT_ALLOWED);
+        if (!AppointmentStatus.PENDING.name().equals(status)) {
+            throw new BadRequestException(DelegationMessages.APPOINTMENT_NOT_PROCESSABLE);
         }
     }
 

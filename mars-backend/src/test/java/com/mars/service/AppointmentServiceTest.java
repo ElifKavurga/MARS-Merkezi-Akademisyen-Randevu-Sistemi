@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -782,6 +783,48 @@ class AppointmentServiceTest {
         assertThat(result.getAppointmentStatus()).isEqualTo(AppointmentStatus.APPROVED.name());
         assertThat(appointment.getSlot()).isSameAs(target);
         verify(appointmentRepository).save(appointment);
+    }
+
+    @Test
+    void rescheduleStaffAppointment_targetLockedByDelegation_throwsConflict() {
+        authenticateAsAcademician();
+        Appointment appointment = assistantAppointment(100, AppointmentStatus.APPROVED.name());
+        LocalDate newDate = LocalDate.now().plusDays(3);
+        AvailabilitySlot target = new AvailabilitySlot();
+        target.setSlotId(6);
+        target.setStaff(staff);
+        target.setSlotDate(newDate);
+        target.setStartTime(LocalTime.of(13, 0));
+        target.setEndTime(LocalTime.of(13, 10));
+        target.setMeetingType(MeetingType.ONLINE.name());
+        target.setIsBlocked(false);
+        AvailableSlotResponseDto availableSlot = AvailableSlotResponseDto.builder()
+                .slotId(6)
+                .slotDate(newDate)
+                .startTime(LocalTime.of(13, 0))
+                .endTime(LocalTime.of(13, 10))
+                .meetingType(MeetingType.ONLINE.name())
+                .isBooked(false)
+                .build();
+        AppointmentRescheduleRequest request = new AppointmentRescheduleRequest(
+                6, newDate, LocalTime.of(13, 0), LocalTime.of(13, 10), MeetingType.ONLINE.name());
+
+        when(appointmentRepository.findByIdAndStaffIdForUpdate(100, 10))
+                .thenReturn(Optional.of(appointment));
+        when(availabilitySlotService.getBookableAvailableSlotsForStaff(10, 10, true))
+                .thenReturn(List.of(availableSlot));
+        when(availabilitySlotRepository.findByIdWithStaffForUpdate(6))
+                .thenReturn(Optional.of(target));
+        when(delegationLogRepository.existsActiveSlotLock(
+                eq(10), eq(newDate), eq(LocalTime.of(13, 0)), eq(LocalTime.of(13, 10)),
+                any(LocalDateTime.class), eq(null)))
+                .thenReturn(true);
+
+        assertThatThrownBy(() -> appointmentService.rescheduleStaffAppointment(
+                100, request, RoleType.ACADEMICIAN))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage(AppointmentMessages.SLOT_TAKEN);
+        verify(appointmentRepository, never()).save(any());
     }
 
     @ParameterizedTest

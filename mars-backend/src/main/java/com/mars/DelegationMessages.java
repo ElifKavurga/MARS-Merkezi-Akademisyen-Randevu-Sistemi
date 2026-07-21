@@ -42,8 +42,7 @@ public final class DelegationMessages {
     public static final String NOT_PENDING =
             "Yalnızca bekleyen delegasyonlar üzerinde işlem yapılabilir.";
     public static final String APPOINTMENT_NOT_PROCESSABLE =
-            "İptal edilmiş, tamamlanmış veya no-show işaretli randevular için "
-                    + "delegasyon işlemi yapılamaz.";
+            "Yalnızca bekleyen randevu talepleri için delegasyon işlemi yapılabilir.";
     public static final String STUDENT_DECISION_ACCESS_DENIED =
             "Bu delegasyon üzerinde yalnızca randevu sahibi öğrenci işlem yapabilir.";
     public static final String NOT_PENDING_STUDENT_APPROVAL =

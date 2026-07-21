@@ -321,7 +321,14 @@ public class AppointmentService {
                         targetSlot.getStartTime(),
                         targetSlot.getEndTime(),
                         appointmentId,
-                        ACTIVE_APPOINTMENT_STATUSES)) {
+                        ACTIVE_APPOINTMENT_STATUSES)
+                || delegationLogRepository.existsActiveSlotLock(
+                        staff.getUserId(),
+                        targetSlot.getSlotDate(),
+                        targetSlot.getStartTime(),
+                        targetSlot.getEndTime(),
+                        LocalDateTime.now(APP_ZONE),
+                        null)) {
             throw new ConflictException(AppointmentMessages.SLOT_TAKEN);
         }
 
