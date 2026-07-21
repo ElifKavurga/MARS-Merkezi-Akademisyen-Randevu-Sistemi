@@ -32,7 +32,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.mars.AppointmentConstraints;
 import com.mars.AvailabilitySlotMessages;
 import com.mars.dto.AvailabilitySlotBlockRequest;
 import com.mars.dto.AvailabilitySlotCreateRequest;
@@ -728,7 +727,7 @@ class AvailabilitySlotServiceTest {
 
     @Test
     void getAvailableSlotsForStaff_excludesSlotsWithinBookingNotice_br017() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(java.time.ZoneId.of("Europe/Istanbul"));
         LocalDate today = now.toLocalDate();
 
         LocalDateTime withinStart = now.plusMinutes(10);
@@ -741,8 +740,9 @@ class AvailabilitySlotServiceTest {
         withinNotice.setIsBlocked(false);
         withinNotice.setMeetingType(MeetingType.FACE_TO_FACE.name());
 
-        LocalDateTime afterNoticeStart =
-                now.plusMinutes(AppointmentConstraints.MINIMUM_BOOKING_NOTICE_MINUTES + 15);
+        // Keep the valid slot away from midnight so its LocalTime end never wraps
+        // to the next day and makes the fixture look like a past slot.
+        LocalDateTime afterNoticeStart = now.toLocalDate().plusDays(2).atTime(10, 0);
         AvailabilitySlot afterNotice = new AvailabilitySlot();
         afterNotice.setSlotId(22);
         afterNotice.setStaff(academician);
@@ -775,24 +775,21 @@ class AvailabilitySlotServiceTest {
     }
 
     @Test
-    void getAvailableSlotsForStaff_excludesPastSlotsOnSameDay() {
-        LocalDateTime now = LocalDateTime.now();
+    void getAvailableSlotsForStaff_excludesPastSlots() {
+        LocalDateTime now = LocalDateTime.now(java.time.ZoneId.of("Europe/Istanbul"));
         LocalDate today = now.toLocalDate();
 
-        // Ensure a clearly past start time on the same calendar day.
-        LocalTime pastStart = now.toLocalTime().isAfter(LocalTime.of(1, 0))
-                ? LocalTime.of(0, 0)
-                : now.toLocalTime().minusMinutes(1);
+        LocalTime pastStart = LocalTime.of(10, 0);
         AvailabilitySlot past = new AvailabilitySlot();
         past.setSlotId(31);
         past.setStaff(academician);
-        past.setSlotDate(today);
+        past.setSlotDate(today.minusDays(1));
         past.setStartTime(pastStart);
         past.setEndTime(pastStart.plusMinutes(30));
         past.setIsBlocked(false);
         past.setMeetingType(MeetingType.FACE_TO_FACE.name());
 
-        LocalDateTime futureStart = now.plusMinutes(AppointmentConstraints.MINIMUM_BOOKING_NOTICE_MINUTES + 20);
+        LocalDateTime futureStart = today.plusDays(2).atTime(10, 0);
         AvailabilitySlot future = new AvailabilitySlot();
         future.setSlotId(32);
         future.setStaff(academician);
@@ -838,7 +835,7 @@ class AvailabilitySlotServiceTest {
 
     @Test
     void getBookableAvailableSlotsForStaff_splitsAvailabilityByDurationMinutes() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(java.time.ZoneId.of("Europe/Istanbul"));
         LocalDate today = now.toLocalDate();
         LocalDate rangeEnd = AcademicTermCalendar.resolveBookableHorizonEnd(today);
         LocalDate slotDate = now.plusDays(1).toLocalDate();
@@ -892,8 +889,41 @@ class AvailabilitySlotServiceTest {
     }
 
     @Test
+    void getBookableAvailableSlotsForStaff_excludesSlotLockedByPendingDelegation() {
+        LocalDate today = LocalDate.now(java.time.ZoneId.of("Europe/Istanbul"));
+        LocalDate rangeEnd = AcademicTermCalendar.resolveBookableHorizonEnd(today);
+        LocalDate slotDate = today.plusDays(2);
+        AvailabilitySlot locked = oneTimeSlot(42, slotDate, LocalTime.of(10, 0), false);
+
+        when(availabilitySlotRepository.countByStaff_UserId(10)).thenReturn(1L);
+        when(availabilitySlotRepository.countByStaff_UserIdAndIsBlocked(10, false)).thenReturn(1L);
+        when(availabilitySlotRepository.findBookableSlotTemplatesForStaff(eq(10), eq(today), anyCollection()))
+                .thenReturn(List.of(locked));
+        when(appointmentRepository.findActiveAppointmentsForStaffInDateRange(
+                        10, today, rangeEnd, ACTIVE_APPOINTMENT_STATUSES))
+                .thenReturn(List.of());
+        when(outOfOfficePeriodRepository.existsOverlappingPeriod(10, slotDate, slotDate))
+                .thenReturn(false);
+        when(delegationLogRepository.existsActiveSlotLock(
+                        eq(10),
+                        eq(slotDate),
+                        eq(LocalTime.of(10, 0)),
+                        eq(LocalTime.of(10, 30)),
+                        any(LocalDateTime.class),
+                        eq(null)))
+                .thenReturn(true);
+
+        List<AvailableSlotResponseDto> result =
+                availabilitySlotService.getBookableAvailableSlotsForStaff(10, 30);
+
+        assertThat(result).isEmpty();
+        verify(availabilitySlotMapper, never())
+                .toAvailableResponse(any(AvailabilitySlot.class), any(), any(), any());
+    }
+
+    @Test
     void getBookableAvailableSlotsForStaff_excludesBlockedOooWithinNoticeAndOverlappingAppointment() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(java.time.ZoneId.of("Europe/Istanbul"));
         LocalDate today = now.toLocalDate();
         LocalDate rangeEnd = AcademicTermCalendar.resolveBookableHorizonEnd(today);
 
@@ -937,7 +967,7 @@ class AvailabilitySlotServiceTest {
 
     @Test
     void getBookableAvailableSlotsForStaff_expandsWeeklyRecurrenceThenSplitsAndSorts() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(java.time.ZoneId.of("Europe/Istanbul"));
         LocalDate today = now.toLocalDate();
         LocalDate rangeEnd = AcademicTermCalendar.resolveBookableHorizonEnd(today);
         LocalDate firstOccurrence = today.with(TemporalAdjusters.next(DayOfWeek.WEDNESDAY));

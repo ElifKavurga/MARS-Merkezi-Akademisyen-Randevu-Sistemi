@@ -47,39 +47,41 @@ export default function StudentSegmentedTabs<T extends string>({
   };
 
   return (
-    <div
-      className="inline-flex w-full max-w-lg gap-1.5 rounded-2xl bg-surface-container/80 p-1.5 sm:w-auto"
-      role="tablist"
-      aria-label={ariaLabel}
-      onKeyDown={handleKeyDown}
-    >
-      {options.map((option) => {
-        const active = option.value === value;
-        return (
-          <button
-            key={option.value}
-            ref={(node) => {
-              if (node) {
-                buttonRefs.current.set(option.value, node);
-              } else {
-                buttonRefs.current.delete(option.value);
-              }
-            }}
-            type="button"
-            role="tab"
-            aria-selected={active}
-            tabIndex={active ? 0 : -1}
-            className={`min-w-0 flex-1 rounded-xl px-4 py-2.5 font-label-md text-label-md transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim focus-visible:ring-offset-2 sm:flex-none sm:min-w-[9.5rem] ${
-              active
-                ? 'bg-primary-container text-on-primary'
-                : 'bg-transparent text-on-surface-variant hover:bg-white/60 hover:text-on-surface'
-            }`}
-            onClick={() => onChange(option.value)}
-          >
-            <span className="block truncate text-center">{option.label}</span>
-          </button>
-        );
-      })}
+    <div className="w-full overflow-x-auto pb-1 [scrollbar-width:thin]">
+      <div
+        className="inline-flex min-w-full gap-1.5 rounded-2xl bg-surface-container/80 p-1.5 sm:min-w-0"
+        role="tablist"
+        aria-label={ariaLabel}
+        onKeyDown={handleKeyDown}
+      >
+        {options.map((option) => {
+          const active = option.value === value;
+          return (
+            <button
+              key={option.value}
+              ref={(node) => {
+                if (node) {
+                  buttonRefs.current.set(option.value, node);
+                } else {
+                  buttonRefs.current.delete(option.value);
+                }
+              }}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              tabIndex={active ? 0 : -1}
+              className={`min-w-[8rem] flex-1 shrink-0 rounded-xl px-4 py-2.5 font-label-md text-label-md transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim focus-visible:ring-offset-2 sm:flex-none sm:min-w-[9.5rem] ${
+                active
+                  ? 'bg-primary-container text-on-primary'
+                  : 'bg-transparent text-on-surface-variant hover:bg-white/60 hover:text-on-surface'
+              }`}
+              onClick={() => onChange(option.value)}
+            >
+              <span className="block whitespace-nowrap text-center">{option.label}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -143,6 +143,33 @@ class DelegationStudentApprovalServiceTest {
     }
 
     @Test
+    void studentAcceptanceTransfersAppointmentAndConsumesSlotLock() {
+        authenticate(student);
+        targetSlot.setStaff(unrelatedAssistant);
+        DelegationLog log = studentApprovalLog(5, unrelatedAssistant);
+        log.setTargetSlot(targetSlot);
+        log.setTargetSlotDate(targetSlot.getSlotDate());
+        log.setTargetStartTime(targetSlot.getStartTime());
+        log.setTargetEndTime(targetSlot.getEndTime());
+        when(delegationLogRepository.findByIdForUpdate(5)).thenReturn(Optional.of(log));
+        when(appointmentRepository.findByIdForUpdate(100)).thenReturn(Optional.of(appointment));
+        when(availabilitySlotRepository.findByIdWithStaffForUpdate(41)).thenReturn(Optional.of(targetSlot));
+        when(appointmentRepository.save(appointment)).thenReturn(appointment);
+        when(delegationLogRepository.save(log)).thenReturn(log);
+        stubResponse(log);
+
+        DelegationResponse result = delegationService.acceptStudentApproval(5);
+
+        assertThat(result.getDelegationStatus()).isEqualTo(DelegationStatus.ACCEPTED.name());
+        assertThat(log.getSlotLockStatus()).isEqualTo(SlotLockStatus.CONSUMED.name());
+        assertThat(appointment.getStaff()).isEqualTo(unrelatedAssistant);
+        assertThat(appointment.getSlot()).isEqualTo(targetSlot);
+        verify(appointmentRepository).save(appointment);
+        verify(notificationService).createPreparedEmailNotification(
+                eq(academician), eq("DELEGATION_STUDENT_ACCEPTED"), any(), any(), eq(log));
+    }
+
+    @Test
     void timeoutReleasesSlotAndNotifiesAcademician() {
         DelegationLog log = studentApprovalLog(4, unrelatedAssistant);
         log.setStudentApprovalExpiresAt(LocalDateTime.now().minusMinutes(1));

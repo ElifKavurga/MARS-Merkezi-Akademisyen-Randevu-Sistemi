@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { isAxiosError } from 'axios';
 import { useNavigate } from 'react-router-dom';
 import AcademicianAppointmentCard from '../components/AcademicianAppointmentCard';
@@ -76,6 +76,7 @@ export default function AcademicianAppointmentsPage() {
   const reqIdRef = useRef<Partial<Record<AcademicianTab, number>>>({});
 
   const [search, setSearch] = useState('');
+  const deferredSearch = useDeferredValue(search);
   const [sort, setSort] = useState<SortKey>('DATE_ASC');
 
   const navigate = useNavigate();
@@ -119,19 +120,19 @@ export default function AcademicianAppointmentsPage() {
   };
 
   // ── Detay ───────────────────────────────────────────────────────────────────
-  const handleDetailClick = (appointmentId: number) => {
+  const handleDetailClick = useCallback((appointmentId: number) => {
     navigate(academicianAppointmentDetailPath(appointmentId));
-  };
+  }, [navigate]);
 
   // ── Filtreleme & sıralama ────────────────────────────────────────────────────
   const rawList = byTab[activeTab] ?? EMPTY_LIST;
   const filtered = useMemo(() => {
-    const q = search.trim().toLocaleLowerCase('tr-TR');
+    const q = deferredSearch.trim().toLocaleLowerCase('tr-TR');
     const result = q
       ? rawList.filter((a) => a.studentName.toLocaleLowerCase('tr-TR').includes(q))
       : rawList;
     return sortAppointments(result, sort);
-  }, [rawList, search, sort]);
+  }, [rawList, deferredSearch, sort]);
 
   const isLoading = Boolean(loadingByTab[activeTab]);
   const error = errorByTab[activeTab] ?? null;

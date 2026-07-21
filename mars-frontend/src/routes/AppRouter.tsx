@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 import AdminLayout from '../layouts/AdminLayout';
@@ -5,43 +6,69 @@ import AcademicianLayout from '../layouts/AcademicianLayout';
 import AssistantLayout from '../layouts/AssistantLayout';
 import StudentLayout from '../layouts/StudentLayout';
 import ProtectedRoute from './ProtectedRoute';
-import LoginPage from '../pages/LoginPage';
-import ResetPasswordPage from '../pages/ResetPasswordPage';
-import DashboardPage from '../pages/DashboardPage';
-import AdminHomePage from '../pages/AdminHomePage';
-import AdminDashboard from '../pages/AdminDashboard';
-import AdminCategoriesPage from '../pages/AdminCategoriesPage';
-import AdminPenaltyRulesPage from '../pages/AdminPenaltyRulesPage';
-import HodDashboard from '../pages/HodDashboard';
-import AcademicianDashboard from '../pages/AcademicianDashboard';
-import AcademicianCoursesPage from '../pages/AcademicianCoursesPage';
-import CourseDetailPage from '../pages/CourseDetailPage';
-import AcademicianAvailabilityPage from '../pages/AcademicianAvailabilityPage';
-import AcademicianAppointmentsPage from '../pages/AcademicianAppointmentsPage';
-import AcademicianAppointmentDetailPage from '../pages/AcademicianAppointmentDetailPage';
-import AcademicianCalendarPage from '../pages/AcademicianCalendarPage';
-import AcademicianOutOfOfficePage from '../pages/AcademicianOutOfOfficePage';
-import AssistantDashboardPage from '../pages/AssistantDashboardPage';
-import AssistantCoursesPage from '../pages/AssistantCoursesPage';
-import AssistantAvailabilityPage from '../pages/AssistantAvailabilityPage';
-import AssistantAppointmentsPage from '../pages/AssistantAppointmentsPage';
-import AssistantIncomingDelegationsPage from '../pages/AssistantIncomingDelegationsPage';
-import DelegationHistoryPage from '../pages/DelegationHistoryPage';
-import AssistantCalendarPage from '../pages/AssistantCalendarPage';
-import ProfilePage from '../pages/ProfilePage';
-import StudentDashboard from '../pages/StudentDashboard';
-import StudentAcademicianSearchPage from '../pages/StudentAcademicianSearchPage';
-import StudentAcademicianProfilePage from '../pages/StudentAcademicianProfilePage';
-import StudentAppointmentCreatePage from '../pages/StudentAppointmentCreatePage';
-import StudentAppointmentsPage from '../pages/StudentAppointmentsPage';
-import StudentAppointmentDetailPage from '../pages/StudentAppointmentDetailPage';
-import NotFoundPage from '../pages/NotFoundPage';
 import { ROUTES } from '../constants/routes';
 import { ROLES } from '../constants/roles';
 
+const LoginPage = lazy(() => import('../pages/LoginPage'));
+const ResetPasswordPage = lazy(() => import('../pages/ResetPasswordPage'));
+const DashboardPage = lazy(() => import('../pages/DashboardPage'));
+const AdminHomePage = lazy(() => import('../pages/AdminHomePage'));
+const AdminDashboard = lazy(() => import('../pages/AdminDashboard'));
+const AdminCategoriesPage = lazy(() => import('../pages/AdminCategoriesPage'));
+const AdminPenaltyRulesPage = lazy(() => import('../pages/AdminPenaltyRulesPage'));
+const HodDashboard = lazy(() => import('../pages/HodDashboard'));
+const AcademicianDashboard = lazy(() => import('../pages/AcademicianDashboard'));
+const AcademicianCoursesPage = lazy(() => import('../pages/AcademicianCoursesPage'));
+const CourseDetailPage = lazy(() => import('../pages/CourseDetailPage'));
+const AcademicianAvailabilityPage = lazy(() => import('../pages/AcademicianAvailabilityPage'));
+const AcademicianAppointmentsPage = lazy(() => import('../pages/AcademicianAppointmentsPage'));
+const AcademicianAppointmentDetailPage = lazy(
+  () => import('../pages/AcademicianAppointmentDetailPage'),
+);
+const AcademicianCalendarPage = lazy(() => import('../pages/AcademicianCalendarPage'));
+const AcademicianOutOfOfficePage = lazy(() => import('../pages/AcademicianOutOfOfficePage'));
+const AssistantDashboardPage = lazy(() => import('../pages/AssistantDashboardPage'));
+const AssistantCoursesPage = lazy(() => import('../pages/AssistantCoursesPage'));
+const AssistantAvailabilityPage = lazy(() => import('../pages/AssistantAvailabilityPage'));
+const AssistantAppointmentsPage = lazy(() => import('../pages/AssistantAppointmentsPage'));
+const AssistantIncomingDelegationsPage = lazy(
+  () => import('../pages/AssistantIncomingDelegationsPage'),
+);
+const DelegationHistoryPage = lazy(() => import('../pages/DelegationHistoryPage'));
+const AssistantCalendarPage = lazy(() => import('../pages/AssistantCalendarPage'));
+const ProfilePage = lazy(() => import('../pages/ProfilePage'));
+const StudentDashboard = lazy(() => import('../pages/StudentDashboard'));
+const StudentAcademicianSearchPage = lazy(() => import('../pages/StudentAcademicianSearchPage'));
+const StudentAcademicianProfilePage = lazy(
+  () => import('../pages/StudentAcademicianProfilePage'),
+);
+const StudentAppointmentCreatePage = lazy(
+  () => import('../pages/StudentAppointmentCreatePage'),
+);
+const StudentAppointmentsPage = lazy(() => import('../pages/StudentAppointmentsPage'));
+const StudentAppointmentDetailPage = lazy(
+  () => import('../pages/StudentAppointmentDetailPage'),
+);
+const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
+
+function RouteFallback() {
+  return (
+    <div className="flex min-h-48 items-center justify-center" role="status" aria-live="polite">
+      <div className="flex items-center gap-3 text-on-surface-variant">
+        <span
+          className="size-5 animate-spin rounded-full border-2 border-outline-variant border-t-primary"
+          aria-hidden
+        />
+        <span className="font-body-md text-body-md">Sayfa yükleniyor...</span>
+      </div>
+    </div>
+  );
+}
+
 export default function AppRouter() {
   return (
-    <Routes>
+    <Suspense fallback={<RouteFallback />}>
+      <Routes>
       <Route path={ROUTES.LOGIN} element={<LoginPage />} />
       <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage />} />
 
@@ -159,6 +186,7 @@ export default function AppRouter() {
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+      </Routes>
+    </Suspense>
   );
 }

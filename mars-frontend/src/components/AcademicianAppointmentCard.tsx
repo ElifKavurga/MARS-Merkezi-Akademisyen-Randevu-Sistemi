@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import AppointmentStatusBadge from './AppointmentStatusBadge';
 import { getMeetingTypeLabel, STAFF_APPOINTMENT_MESSAGES } from '../constants/appointment';
 import { STUDENT_UI } from '../constants/studentUi';
@@ -55,7 +56,7 @@ type AcademicianAppointmentCardProps = {
   onDetailClick: (appointmentId: number) => void;
 };
 
-export default function AcademicianAppointmentCard({
+function AcademicianAppointmentCard({
   appointment,
   detailLoading = false,
   onDetailClick,
@@ -142,3 +143,5 @@ export default function AcademicianAppointmentCard({
     </article>
   );
 }
+
+export default memo(AcademicianAppointmentCard);
