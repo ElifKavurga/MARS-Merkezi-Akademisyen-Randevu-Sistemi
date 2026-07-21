@@ -1,16 +1,19 @@
 # syntax=docker/dockerfile:1
 
-FROM maven:3.9.9-eclipse-temurin-21-alpine AS build
+FROM eclipse-temurin:25-jdk AS build
 WORKDIR /app
 
-COPY pom.xml .
+COPY .mvn/ .mvn/
+COPY mvnw pom.xml ./
 COPY src ./src
+
+RUN chmod +x mvnw
 
 # Maven cache kalıcı tutulur; her --build'de bağımlılıklar yeniden inmez.
 RUN --mount=type=cache,target=/root/.m2 \
-    mvn -B -DskipTests package
+    ./mvnw -B -DskipTests package
 
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 
 RUN addgroup -S mars && adduser -S mars -G mars

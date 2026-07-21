@@ -7,7 +7,7 @@
 ```
 mars/
  ├── docker-compose.yml   # PostgreSQL (dev)
- ├── mars-backend          # Spring Boot 3.5 / Java 21 API
+ ├── mars-backend          # Spring Boot 3.5 / Java 25 API
  └── mars-frontend        # React + Vite + TypeScript UI
 ```
 
@@ -48,7 +48,7 @@ npm run dev
 
 | Bileşen    | Sürüm   |
 |------------|---------|
-| Java       | 21      |
+| Java       | 25      |
 | Node.js    | 20+     |
 | PostgreSQL | 16+ (dev/prod) |
 | Docker     | Opsiyonel (dev DB) |

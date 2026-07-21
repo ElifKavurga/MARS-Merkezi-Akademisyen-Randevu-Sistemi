@@ -17,7 +17,7 @@ Kurumsal `@...edu.tr` kimlik doğrulama, rol tabanlı erişim ve (planlanan) ran
 
 | Madde | Durum |
 |--------|--------|
-| Spring Boot 3.5 / Java 21 | ✅ |
+| Spring Boot 3.5 / Java 25 | ✅ |
 | React + Vite + TypeScript | ✅ |
 | Docker / Docker Compose | ✅ |
 | Flyway migrasyonları | ✅ |

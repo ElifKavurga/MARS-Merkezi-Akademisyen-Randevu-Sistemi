@@ -4,7 +4,7 @@ Modern Akademisyen Randevu Sistemi — Spring Boot API katmanı.
 
 ## Teknoloji Yığını
 
-- Java 21
+- Java 25
 - Spring Boot 3.5.x
 - Spring Web, Data JPA, Security, Validation, Actuator
 - PostgreSQL (dev/prod) · H2 (local/test)
