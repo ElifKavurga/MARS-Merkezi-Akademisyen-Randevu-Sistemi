@@ -11,7 +11,7 @@ import { STAFF_APPOINTMENT_MESSAGES, getMeetingTypeLabel } from '../constants/ap
 import { ROUTES } from '../constants/routes';
 import { STUDENT_UI } from '../constants/studentUi';
 import { useToast } from '../hooks/useToast';
-import { approveStaffAppointment, getStaffAppointment } from '../services/appointmentService';
+import { approveStaffAppointment, getStaffAppointment, rejectStaffAppointment } from '../services/appointmentService';
 import type { StaffAppointment } from '../types/appointment';
 
 function formatDate(date: string): string {
@@ -81,6 +81,9 @@ export default function AcademicianAppointmentDetailPage() {
   const [showApproveConfirm, setShowApproveConfirm] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [approvalError, setApprovalError] = useState<string | null>(null);
+  const [showRejectConfirm, setShowRejectConfirm] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [rejectionError, setRejectionError] = useState<string | null>(null);
   const toast = useToast();
 
   const loadAppointment = useCallback(async () => {
@@ -114,11 +117,19 @@ export default function AcademicianAppointmentDetailPage() {
   }, [loadAppointment]);
 
   const handleApproveClick = () => {
-    if (!appointment || appointment.appointmentStatus !== 'PENDING' || isApproving) {
+    if (!appointment || appointment.appointmentStatus !== 'PENDING' || isApproving || isRejecting) {
       return;
     }
     setApprovalError(null);
     setShowApproveConfirm(true);
+  };
+
+  const handleRejectClick = () => {
+    if (!appointment || appointment.appointmentStatus !== 'PENDING' || isApproving || isRejecting) {
+      return;
+    }
+    setRejectionError(null);
+    setShowRejectConfirm(true);
   };
 
   const handleApproveConfirm = async () => {
@@ -153,6 +164,38 @@ export default function AcademicianAppointmentDetailPage() {
     }
   };
 
+  const handleRejectConfirm = async () => {
+    if (!appointment || isRejecting) {
+      return;
+    }
+
+    setIsRejecting(true);
+    setRejectionError(null);
+    try {
+      const updatedAppointment = await rejectStaffAppointment(
+        'academician',
+        appointment.appointmentId,
+      );
+      setAppointment(updatedAppointment);
+      setShowRejectConfirm(false);
+      toast.success(STAFF_APPOINTMENT_MESSAGES.REJECT_SUCCESS);
+    } catch (err) {
+      let message: string = STAFF_APPOINTMENT_MESSAGES.ACTION_ERROR;
+      if (isAxiosError(err)) {
+        if (err.response?.status === 403) {
+          message = STAFF_APPOINTMENT_MESSAGES.ACTION_ACCESS_DENIED;
+        } else if (err.response?.status === 404) {
+          message = STAFF_APPOINTMENT_MESSAGES.ACTION_NOT_FOUND;
+        } else if (err.response?.status === 409) {
+          message = STAFF_APPOINTMENT_MESSAGES.ACTION_NOT_PENDING;
+        }
+      }
+      setRejectionError(message);
+    } finally {
+      setIsRejecting(false);
+    }
+  };
+
   const courseLabel = appointment?.courseName
     ? `${appointment.courseCode ?? ''} ${appointment.courseName}`.trim()
     : null;
@@ -167,17 +210,30 @@ export default function AcademicianAppointmentDetailPage() {
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <StudentBackLink to={ROUTES.ACADEMICIAN_APPOINTMENTS} label="Geri Dön" />
         {appointment?.appointmentStatus === 'PENDING' ? (
-          <button
-            type="button"
-            className={STUDENT_UI.PRIMARY_BUTTON_CLASS}
-            disabled={isApproving}
-            onClick={handleApproveClick}
-          >
-            <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
-              check
-            </span>
-            {isApproving ? 'Onaylanıyor...' : 'Randevuyu Onayla'}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={STUDENT_UI.PRIMARY_BUTTON_CLASS}
+              disabled={isApproving || isRejecting}
+              onClick={handleApproveClick}
+            >
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                check
+              </span>
+              {isApproving ? 'Onaylanıyor...' : 'Randevuyu Onayla'}
+            </button>
+            <button
+              type="button"
+              className="flex items-center gap-1.5 rounded-lg border border-outline bg-surface-container-lowest px-4 py-2.5 font-label-md text-label-md text-on-surface transition-colors duration-150 hover:bg-surface-container disabled:opacity-50"
+              disabled={isApproving || isRejecting}
+              onClick={handleRejectClick}
+            >
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                close
+              </span>
+              {isRejecting ? 'Reddediliyor...' : 'Randevuyu Reddet'}
+            </button>
+          </div>
         ) : null}
       </div>
 
@@ -283,6 +339,24 @@ export default function AcademicianAppointmentDetailPage() {
           if (!isApproving) {
             setShowApproveConfirm(false);
             setApprovalError(null);
+          }
+        }}
+      />
+
+      <ConfirmModal
+        open={showRejectConfirm && Boolean(appointment)}
+        title={STAFF_APPOINTMENT_MESSAGES.REJECT_TITLE}
+        description={STAFF_APPOINTMENT_MESSAGES.REJECT_DESCRIPTION}
+        confirmLabel="Reddet"
+        loading={isRejecting}
+        error={rejectionError}
+        variant="danger"
+        zIndexClass="z-[60]"
+        onConfirm={() => void handleRejectConfirm()}
+        onClose={() => {
+          if (!isRejecting) {
+            setShowRejectConfirm(false);
+            setRejectionError(null);
           }
         }}
       />

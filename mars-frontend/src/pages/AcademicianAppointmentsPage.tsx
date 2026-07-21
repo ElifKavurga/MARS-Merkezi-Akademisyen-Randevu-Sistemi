@@ -6,6 +6,7 @@ import StudentEmptyState from '../components/StudentEmptyState';
 import StudentErrorState from '../components/StudentErrorState';
 import StudentLoadingState from '../components/StudentLoadingState';
 import StudentPageHeader from '../components/StudentPageHeader';
+import StudentSegmentedTabs from '../components/StudentSegmentedTabs';
 import {
   STAFF_APPOINTMENT_MESSAGES,
 } from '../constants/appointment';
@@ -17,13 +18,13 @@ import type { AppointmentStatus, StaffAppointment } from '../types/appointment';
 // ─── Tab tanımları ────────────────────────────────────────────────────────────
 type AcademicianTab = AppointmentStatus;
 
-const TABS: { value: AcademicianTab; label: string; icon: string }[] = [
-  { value: 'PENDING',   label: STAFF_APPOINTMENT_MESSAGES.TAB_PENDING,   icon: 'pending' },
-  { value: 'APPROVED',  label: STAFF_APPOINTMENT_MESSAGES.TAB_APPROVED,  icon: 'check_circle' },
-  { value: 'REJECTED',  label: STAFF_APPOINTMENT_MESSAGES.TAB_REJECTED,  icon: 'cancel' },
-  { value: 'COMPLETED', label: STAFF_APPOINTMENT_MESSAGES.TAB_COMPLETED, icon: 'task_alt' },
-  { value: 'NO_SHOW',   label: STAFF_APPOINTMENT_MESSAGES.TAB_NO_SHOW,   icon: 'person_off' },
-  { value: 'CANCELLED', label: STAFF_APPOINTMENT_MESSAGES.TAB_CANCELLED, icon: 'event_busy' },
+const TABS: readonly { value: AcademicianTab; label: string }[] = [
+  { value: 'PENDING',   label: STAFF_APPOINTMENT_MESSAGES.TAB_PENDING },
+  { value: 'APPROVED',  label: STAFF_APPOINTMENT_MESSAGES.TAB_APPROVED },
+  { value: 'REJECTED',  label: STAFF_APPOINTMENT_MESSAGES.TAB_REJECTED },
+  { value: 'COMPLETED', label: STAFF_APPOINTMENT_MESSAGES.TAB_COMPLETED },
+  { value: 'NO_SHOW',   label: STAFF_APPOINTMENT_MESSAGES.TAB_NO_SHOW },
+  { value: 'CANCELLED', label: STAFF_APPOINTMENT_MESSAGES.TAB_CANCELLED },
 ];
 
 const EMPTY_MAP: Record<AcademicianTab, string> = {
@@ -145,53 +146,13 @@ export default function AcademicianAppointmentsPage() {
       />
 
       {/* ── Sekme çubuğu ── */}
-      <div className="mb-6 overflow-x-auto">
-        <nav
-          className="flex min-w-max gap-1 rounded-xl border border-outline-variant/80 bg-surface-container-lowest p-1"
-          role="tablist"
-          aria-label="Randevu durumu sekmeleri"
-        >
-          {TABS.map((tab) => {
-            const isActive = tab.value === activeTab;
-            const count = byTab[tab.value]?.length;
-            return (
-              <button
-                key={tab.value}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                id={`tab-${tab.value}`}
-                aria-controls={`tabpanel-${tab.value}`}
-                className={[
-                  'flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 py-2 font-label-md text-[13px] font-medium transition-all duration-150',
-                  isActive
-                    ? 'bg-primary-container text-on-primary shadow-sm'
-                    : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface',
-                ].join(' ')}
-                onClick={() => handleTabChange(tab.value)}
-              >
-                <span
-                  className={`material-symbols-outlined text-[15px] ${isActive ? 'text-on-primary' : 'text-on-surface-variant'}`}
-                  aria-hidden
-                >
-                  {tab.icon}
-                </span>
-                {tab.label}
-                {count !== undefined && count > 0 ? (
-                  <span
-                    className={`ml-0.5 min-w-[1.25rem] rounded-full px-1.5 py-0.5 text-center text-[11px] font-semibold leading-none ${
-                      isActive
-                        ? 'bg-on-primary/15 text-on-primary'
-                        : 'bg-surface-container-high text-on-surface-variant'
-                    }`}
-                  >
-                    {count}
-                  </span>
-                ) : null}
-              </button>
-            );
-          })}
-        </nav>
+      <div className="mb-6">
+        <StudentSegmentedTabs
+          value={activeTab}
+          options={TABS}
+          ariaLabel="Randevu durumu sekmeleri"
+          onChange={(tab) => handleTabChange(tab as AcademicianTab)}
+        />
       </div>
 
       {/* ── Arama & Sıralama ── */}
