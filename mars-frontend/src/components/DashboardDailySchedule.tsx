@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatTimeLabel } from '../constants/availability';
 import { toLocalIsoDate } from '../constants/calendar';
-import { getMeetingTypeLabel } from '../constants/appointment';
 import type { CalendarEvent } from '../types/calendar';
 import {
   DAILY_SCHEDULE_ROW_HEIGHT,
@@ -76,34 +75,38 @@ function AppointmentBlock({
   onClick: (event: CalendarEvent) => void;
 }) {
   const { event, rowStart, rowSpan } = appointment;
-  const meetingType =
-    event.meetingType === 'FACE_TO_FACE' || event.meetingType === 'ONLINE'
-      ? getMeetingTypeLabel(event.meetingType)
-      : null;
+  const studentName = event.studentName?.trim() || 'Öğrenci';
   const timeLabel = `${formatTimeLabel(event.startTime)} - ${formatTimeLabel(event.endTime)}`;
 
   return (
     <button
       type="button"
-      className={`z-10 m-0.5 min-w-0 overflow-hidden rounded-lg border px-2 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim focus-visible:ring-inset sm:px-2.5 ${appointmentClass(event.appointmentStatus)}`}
+      className={`z-10 m-0.5 min-w-0 overflow-hidden rounded-lg border px-2 py-1.5 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim focus-visible:ring-inset ${appointmentClass(event.appointmentStatus)}`}
       style={{
         gridColumn: 2,
         gridRow: `${rowStart} / span ${rowSpan}`,
       }}
       onClick={() => onClick(event)}
-      aria-label={`${event.studentName ?? 'Öğrenci'} randevusu, ${timeLabel}`}
+      aria-label={`${studentName} randevusu, ${timeLabel}`}
     >
-      <div className="flex h-full min-h-0 flex-col justify-center overflow-hidden">
-        <p className="truncate font-label-md text-label-md font-semibold leading-tight">
-          {event.studentName ?? 'Öğrenci'}
+      <div className="flex h-full min-h-0 flex-col justify-start gap-0.5 overflow-hidden text-left">
+        <p
+          className="m-0 w-full truncate font-label-md text-[12px] font-semibold leading-4"
+          title={studentName}
+        >
+          {studentName}
         </p>
-        <p className="truncate font-label-sm text-label-sm leading-tight opacity-80">
-          {rowSpan === 1 ? formatTimeLabel(event.startTime) : timeLabel}
-        </p>
-        {rowSpan >= 2 && meetingType ? (
-          <p className="mt-0.5 truncate font-label-sm text-label-sm leading-tight opacity-80">
-            {meetingType}
-            {rowSpan >= 3 && event.categoryName ? ` · ${event.categoryName}` : ''}
+        {rowSpan >= 2 ? (
+          <p className="m-0 w-full truncate font-label-sm text-[12px] leading-4 opacity-80" title={timeLabel}>
+            {timeLabel}
+          </p>
+        ) : null}
+        {rowSpan >= 3 && event.categoryName ? (
+          <p
+            className="m-0 w-full truncate font-label-sm text-[12px] leading-4 opacity-80"
+            title={event.categoryName}
+          >
+            {event.categoryName}
           </p>
         ) : null}
       </div>

@@ -182,7 +182,7 @@ export default function AcademicianDashboard() {
 
       <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-12">
         <DashboardDailySchedule
-          className="lg:col-span-8"
+          className="lg:col-span-6"
           selectedDate={dailySchedule.selectedDate}
           events={dailySchedule.events}
           loading={dailySchedule.loading}
@@ -195,7 +195,7 @@ export default function AcademicianDashboard() {
         />
 
         <DashboardPendingRequests
-          className="lg:col-span-4"
+          className="lg:col-span-6"
           appointments={summary?.pendingAppointments ?? []}
           loading={loading}
           errorMessage={error}
