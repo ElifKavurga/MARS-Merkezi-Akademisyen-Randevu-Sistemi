@@ -37,10 +37,12 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
     @Query("""
             SELECT a
             FROM Appointment a
-            JOIN FETCH a.student
+            JOIN FETCH a.student stu
+            JOIN FETCH stu.department
             JOIN FETCH a.category
             JOIN FETCH a.slot
-            JOIN FETCH a.staff
+            JOIN FETCH a.staff st
+            JOIN FETCH st.department
             LEFT JOIN FETCH a.course
             WHERE a.staff.userId = :staffId
               AND (:status IS NULL OR a.appointmentStatus = :status)
@@ -113,10 +115,12 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
     @Query("""
             SELECT a
             FROM Appointment a
-            JOIN FETCH a.student
+            JOIN FETCH a.student stu
+            JOIN FETCH stu.department
             JOIN FETCH a.category
             JOIN FETCH a.slot
-            JOIN FETCH a.staff
+            JOIN FETCH a.staff st
+            JOIN FETCH st.department
             LEFT JOIN FETCH a.course
             WHERE a.appointmentId = :appointmentId
               AND a.staff.userId = :staffId

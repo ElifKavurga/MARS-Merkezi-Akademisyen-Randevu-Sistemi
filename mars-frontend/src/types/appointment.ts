@@ -45,6 +45,11 @@ export type StaffAppointment = {
   appointmentId: number;
   staffId: number;
   studentName: string;
+  studentEmail: string | null;
+  studentDepartmentName: string | null;
+  staffName: string | null;
+  staffAcademicTitle: string | null;
+  staffDepartmentName: string | null;
   appointmentDate: string;
   startTime: string;
   endTime: string;

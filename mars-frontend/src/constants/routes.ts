@@ -14,6 +14,7 @@ export const ROUTES = {
   ACADEMICIAN_COURSE_DETAIL: '/academician/courses/:courseId',
   ACADEMICIAN_AVAILABILITY: '/academician/availability',
   ACADEMICIAN_APPOINTMENTS: '/academician/appointments',
+  ACADEMICIAN_APPOINTMENT_DETAIL: '/academician/appointments/:appointmentId',
   ACADEMICIAN_DELEGATION_HISTORY: '/academician/delegations/history',
   ACADEMICIAN_CALENDAR: '/academician/calendar',
   ACADEMICIAN_OUT_OF_OFFICE: '/academician/out-of-office',
@@ -38,6 +39,10 @@ export const ROUTES = {
 
 export function academicianCourseDetailPath(courseId: number | string): string {
   return `/academician/courses/${courseId}`;
+}
+
+export function academicianAppointmentDetailPath(appointmentId: number | string): string {
+  return `/academician/appointments/${appointmentId}`;
 }
 
 export function studentAcademicianProfilePath(userId: number | string): string {

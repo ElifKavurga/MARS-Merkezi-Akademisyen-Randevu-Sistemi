@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { isAxiosError } from 'axios';
+import { useNavigate } from 'react-router-dom';
 import AcademicianAppointmentCard from '../components/AcademicianAppointmentCard';
-import StaffAppointmentDetailModal from '../components/StaffAppointmentDetailModal';
 import StudentEmptyState from '../components/StudentEmptyState';
 import StudentErrorState from '../components/StudentErrorState';
 import StudentLoadingState from '../components/StudentLoadingState';
@@ -9,11 +9,9 @@ import StudentPageHeader from '../components/StudentPageHeader';
 import {
   STAFF_APPOINTMENT_MESSAGES,
 } from '../constants/appointment';
+import { academicianAppointmentDetailPath } from '../constants/routes';
 import { STUDENT_UI } from '../constants/studentUi';
-import {
-  getStaffAppointment,
-  getStaffAppointments,
-} from '../services/appointmentService';
+import { getStaffAppointments } from '../services/appointmentService';
 import type { AppointmentStatus, StaffAppointment } from '../types/appointment';
 
 // ─── Tab tanımları ────────────────────────────────────────────────────────────
@@ -79,8 +77,7 @@ export default function AcademicianAppointmentsPage() {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortKey>('DATE_ASC');
 
-  const [detailLoadingId, setDetailLoadingId] = useState<number | null>(null);
-  const [selectedAppointment, setSelectedAppointment] = useState<StaffAppointment | null>(null);
+  const navigate = useNavigate();
 
   // ── Veri yükleme ────────────────────────────────────────────────────────────
   const loadTab = useCallback(async (tab: AcademicianTab) => {
@@ -121,17 +118,8 @@ export default function AcademicianAppointmentsPage() {
   };
 
   // ── Detay ───────────────────────────────────────────────────────────────────
-  const handleDetailClick = async (appointmentId: number) => {
-    if (detailLoadingId !== null) return;
-    setDetailLoadingId(appointmentId);
-    try {
-      const detail = await getStaffAppointment(SCOPE, appointmentId);
-      setSelectedAppointment(detail);
-    } catch {
-      // sessizce başarısız
-    } finally {
-      setDetailLoadingId(null);
-    }
+  const handleDetailClick = (appointmentId: number) => {
+    navigate(academicianAppointmentDetailPath(appointmentId));
   };
 
   // ── Filtreleme & sıralama ────────────────────────────────────────────────────
@@ -280,24 +268,12 @@ export default function AcademicianAppointmentsPage() {
               <AcademicianAppointmentCard
                 key={appointment.appointmentId}
                 appointment={appointment}
-                detailLoading={detailLoadingId === appointment.appointmentId}
-                onDetailClick={() => void handleDetailClick(appointment.appointmentId)}
+                onDetailClick={handleDetailClick}
               />
             ))}
           </div>
         )}
       </div>
-
-      {/* ── Detay Modalı ── */}
-      <StaffAppointmentDetailModal
-        appointment={selectedAppointment}
-        actionDisabled={false}
-        canDelegate={false}
-        onApprove={() => {/* Bu sprintte devre dışı */}}
-        onReject={() => {/* Bu sprintte devre dışı */}}
-        onDelegate={() => {/* Bu sprintte devre dışı */}}
-        onClose={() => setSelectedAppointment(null)}
-      />
     </div>
   );
 }

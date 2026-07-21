@@ -66,6 +66,23 @@ public class AppointmentMapper {
                 .studentName(appointment.getStudent() != null
                         ? appointment.getStudent().getFullName()
                         : null)
+                .studentEmail(appointment.getStudent() != null
+                        ? appointment.getStudent().getInstitutionalEmail()
+                        : null)
+                .studentDepartmentName(appointment.getStudent() != null
+                                && appointment.getStudent().getDepartment() != null
+                        ? appointment.getStudent().getDepartment().getDepartmentName()
+                        : null)
+                .staffName(appointment.getStaff() != null
+                        ? appointment.getStaff().getFullName()
+                        : null)
+                .staffAcademicTitle(appointment.getStaff() != null
+                        ? appointment.getStaff().getAcademicTitle()
+                        : null)
+                .staffDepartmentName(appointment.getStaff() != null
+                                && appointment.getStaff().getDepartment() != null
+                        ? appointment.getStaff().getDepartment().getDepartmentName()
+                        : null)
                 .appointmentDate(appointment.getSlot() != null
                         ? appointment.getSlot().getSlotDate()
                         : null)

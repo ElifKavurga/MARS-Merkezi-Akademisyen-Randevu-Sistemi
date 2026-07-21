@@ -19,6 +19,11 @@ public class StaffAppointmentResponseDto {
     private Integer appointmentId;
     private Integer staffId;
     private String studentName;
+    private String studentEmail;
+    private String studentDepartmentName;
+    private String staffName;
+    private String staffAcademicTitle;
+    private String staffDepartmentName;
     private LocalDate appointmentDate;
     private LocalTime startTime;
     private LocalTime endTime;
