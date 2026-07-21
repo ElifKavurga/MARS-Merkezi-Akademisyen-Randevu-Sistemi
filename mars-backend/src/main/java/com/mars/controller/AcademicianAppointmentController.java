@@ -6,14 +6,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mars.dto.AppointmentRescheduleRequest;
+import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.StaffAppointmentResponseDto;
 import com.mars.enums.RoleType;
 import com.mars.service.AppointmentService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -51,5 +55,22 @@ public class AcademicianAppointmentController {
         return ResponseEntity.ok(
                 appointmentService.rejectStaffAppointment(
                         appointmentId, RoleType.ACADEMICIAN));
+    }
+
+    @GetMapping("/{appointmentId}/reschedule-slots")
+    public ResponseEntity<List<AvailableSlotResponseDto>> getRescheduleSlots(
+            @PathVariable Integer appointmentId) {
+        return ResponseEntity.ok(
+                appointmentService.getStaffAppointmentRescheduleSlots(
+                        appointmentId, RoleType.ACADEMICIAN));
+    }
+
+    @PatchMapping("/{appointmentId}/reschedule")
+    public ResponseEntity<StaffAppointmentResponseDto> rescheduleAppointment(
+            @PathVariable Integer appointmentId,
+            @Valid @RequestBody AppointmentRescheduleRequest request) {
+        return ResponseEntity.ok(
+                appointmentService.rescheduleStaffAppointment(
+                        appointmentId, request, RoleType.ACADEMICIAN));
     }
 }

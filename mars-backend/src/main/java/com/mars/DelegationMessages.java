@@ -4,10 +4,17 @@ public final class DelegationMessages {
 
     public static final String APPOINTMENT_REQUIRED = "Randevu seçimi zorunludur.";
     public static final String ASSISTANT_REQUIRED = "Asistan seçimi zorunludur.";
+    public static final String TARGET_REQUIRED = "Hedef personel seçimi zorunludur.";
+    public static final String TARGET_NOT_FOUND = "Hedef personel bulunamadı.";
+    public static final String INVALID_TARGET = "Delegasyon hedefi aktif bir akademisyen veya asistan olmalıdır.";
+    public static final String TARGET_SLOT_NOT_FOUND = "Hedef personele ait slot bulunamadı.";
+    public static final String TARGET_SLOT_UNAVAILABLE = "Hedef personelin ilgili slotu artık müsait değil.";
     public static final String ONLY_ACADEMICIAN =
             "Delegasyon yalnızca akademisyenler tarafından başlatılabilir.";
     public static final String ONLY_ASSISTANT =
             "Gelen delegasyonlar yalnızca asistanlar tarafından görüntülenebilir.";
+    public static final String ONLY_STUDENT =
+            "Delegasyon onayı yalnızca ilgili öğrenci tarafından verilebilir.";
     public static final String HISTORY_ACCESS_DENIED =
             "Delegasyon geçmişi yalnızca akademisyen veya asistan tarafından görüntülenebilir.";
     public static final String APPOINTMENT_NOT_FOUND = "Randevu bulunamadı.";
@@ -37,6 +44,12 @@ public final class DelegationMessages {
     public static final String APPOINTMENT_NOT_PROCESSABLE =
             "İptal edilmiş, tamamlanmış veya no-show işaretli randevular için "
                     + "delegasyon işlemi yapılamaz.";
+    public static final String STUDENT_DECISION_ACCESS_DENIED =
+            "Bu delegasyon üzerinde yalnızca randevu sahibi öğrenci işlem yapabilir.";
+    public static final String NOT_PENDING_STUDENT_APPROVAL =
+            "Yalnızca öğrenci onayı bekleyen delegasyonlar üzerinde işlem yapılabilir.";
+    public static final String STUDENT_APPROVAL_EXPIRED =
+            "Delegasyon için bir saatlik öğrenci onay süresi dolmuştur.";
 
     private DelegationMessages() {
     }

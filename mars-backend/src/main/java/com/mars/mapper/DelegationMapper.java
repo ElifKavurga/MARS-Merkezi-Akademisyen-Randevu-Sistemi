@@ -25,6 +25,7 @@ public class DelegationMapper {
         delegationLog.setDelegatedAt(delegatedAt);
         delegationLog.setUpdatedAt(delegatedAt);
         delegationLog.setDelegationStatus(DelegationStatus.PENDING.name());
+        delegationLog.setApprovalRequired(false);
         return delegationLog;
     }
 
@@ -62,6 +63,11 @@ public class DelegationMapper {
                         ? appointment.getSlot().getEndTime()
                         : null)
                 .meetingType(appointment != null ? appointment.getMeetingType() : null)
+                .delegatedToRole(delegatedToUser != null && delegatedToUser.getRole() != null
+                        ? delegatedToUser.getRole().getRoleName() : null)
+                .approvalRequired(Boolean.TRUE.equals(delegationLog.getApprovalRequired()))
+                .studentApprovalExpiresAt(delegationLog.getStudentApprovalExpiresAt())
+                .slotLockStatus(delegationLog.getSlotLockStatus())
                 .build();
     }
 }

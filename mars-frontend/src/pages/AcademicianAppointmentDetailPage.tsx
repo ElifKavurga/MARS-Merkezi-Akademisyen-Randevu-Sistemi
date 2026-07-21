@@ -2,6 +2,7 @@ import { useCallback, useEffect, type ReactNode, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import AppointmentStatusBadge from '../components/AppointmentStatusBadge';
+import AppointmentRescheduleModal from '../components/AppointmentRescheduleModal';
 import ConfirmModal from '../components/ConfirmModal';
 import StudentBackLink from '../components/StudentBackLink';
 import StudentErrorState from '../components/StudentErrorState';
@@ -84,6 +85,7 @@ export default function AcademicianAppointmentDetailPage() {
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
   const [rejectionError, setRejectionError] = useState<string | null>(null);
+  const [showReschedule, setShowReschedule] = useState(false);
   const toast = useToast();
 
   const loadAppointment = useCallback(async () => {
@@ -204,35 +206,48 @@ export default function AcademicianAppointmentDetailPage() {
   const timeLabel = appointment
     ? `${formatTime(appointment.startTime)} – ${formatTime(appointment.endTime)}`
     : '';
+  const canReschedule = appointment !== null
+    && !['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(appointment.appointmentStatus);
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <StudentBackLink to={ROUTES.ACADEMICIAN_APPOINTMENTS} label="Geri Dön" />
-        {appointment?.appointmentStatus === 'PENDING' ? (
+        {appointment ? (
           <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className={STUDENT_UI.PRIMARY_BUTTON_CLASS}
-              disabled={isApproving || isRejecting}
-              onClick={handleApproveClick}
-            >
-              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
-                check
-              </span>
-              {isApproving ? 'Onaylanıyor...' : 'Randevuyu Onayla'}
-            </button>
-            <button
-              type="button"
-              className="flex items-center gap-1.5 rounded-lg border border-outline bg-surface-container-lowest px-4 py-2.5 font-label-md text-label-md text-on-surface transition-colors duration-150 hover:bg-surface-container disabled:opacity-50"
-              disabled={isApproving || isRejecting}
-              onClick={handleRejectClick}
-            >
-              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
-                close
-              </span>
-              {isRejecting ? 'Reddediliyor...' : 'Randevuyu Reddet'}
-            </button>
+            {appointment.appointmentStatus === 'PENDING' ? (
+              <>
+                <button
+                  type="button"
+                  className={STUDENT_UI.PRIMARY_BUTTON_CLASS}
+                  disabled={isApproving || isRejecting}
+                  onClick={handleApproveClick}
+                >
+                  <span className="material-symbols-outlined text-[18px]" aria-hidden="true">check</span>
+                  {isApproving ? 'Onaylanıyor...' : 'Randevuyu Onayla'}
+                </button>
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 rounded-lg border border-outline bg-surface-container-lowest px-4 py-2.5 font-label-md text-label-md text-on-surface transition-colors duration-150 hover:bg-surface-container disabled:opacity-50"
+                  disabled={isApproving || isRejecting}
+                  onClick={handleRejectClick}
+                >
+                  <span className="material-symbols-outlined text-[18px]" aria-hidden="true">close</span>
+                  {isRejecting ? 'Reddediliyor...' : 'Randevuyu Reddet'}
+                </button>
+              </>
+            ) : null}
+            {canReschedule ? (
+              <button
+                type="button"
+                className={STUDENT_UI.SECONDARY_BUTTON_CLASS}
+                disabled={isApproving || isRejecting}
+                onClick={() => setShowReschedule(true)}
+              >
+                <span className="material-symbols-outlined text-[18px]" aria-hidden>edit_calendar</span>
+                Yeniden Planla
+              </button>
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -358,6 +373,17 @@ export default function AcademicianAppointmentDetailPage() {
             setShowRejectConfirm(false);
             setRejectionError(null);
           }
+        }}
+      />
+
+      <AppointmentRescheduleModal
+        appointment={appointment}
+        open={showReschedule && canReschedule}
+        onClose={() => setShowReschedule(false)}
+        onSuccess={(updatedAppointment) => {
+          setAppointment(updatedAppointment);
+          setShowReschedule(false);
+          toast.success(STAFF_APPOINTMENT_MESSAGES.RESCHEDULE_SUCCESS);
         }}
       />
     </div>

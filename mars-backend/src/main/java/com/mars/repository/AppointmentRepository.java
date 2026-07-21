@@ -239,6 +239,18 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
     @Query("""
             SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END
             FROM Appointment a
+            WHERE a.slot.slotId = :slotId
+              AND a.appointmentId <> :appointmentId
+              AND a.appointmentStatus IN :statuses
+            """)
+    boolean existsActiveAppointmentForSlotExcludingAppointment(
+            @Param("slotId") Integer slotId,
+            @Param("appointmentId") Integer appointmentId,
+            @Param("statuses") Collection<String> statuses);
+
+    @Query("""
+            SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END
+            FROM Appointment a
             WHERE a.slot.staff.userId = :staffId
               AND a.slot.slotDate BETWEEN :startDate AND :endDate
               AND a.appointmentStatus IN :statuses
@@ -268,6 +280,24 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
     @Query("""
             SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END
             FROM Appointment a
+            WHERE a.student.userId = :studentId
+              AND a.appointmentId <> :appointmentId
+              AND a.slot.slotDate = :slotDate
+              AND a.slot.startTime < :endTime
+              AND a.slot.endTime > :startTime
+              AND a.appointmentStatus IN :statuses
+            """)
+    boolean existsOverlappingActiveAppointmentForStudentExcludingAppointment(
+            @Param("studentId") Integer studentId,
+            @Param("slotDate") LocalDate slotDate,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime,
+            @Param("appointmentId") Integer appointmentId,
+            @Param("statuses") Collection<String> statuses);
+
+    @Query("""
+            SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END
+            FROM Appointment a
             WHERE a.staff.userId = :staffId
               AND a.slot.slotDate = :slotDate
               AND a.slot.startTime < :endTime
@@ -279,6 +309,24 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
             @Param("slotDate") LocalDate slotDate,
             @Param("startTime") LocalTime startTime,
             @Param("endTime") LocalTime endTime,
+            @Param("statuses") Collection<String> statuses);
+
+    @Query("""
+            SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END
+            FROM Appointment a
+            WHERE a.staff.userId = :staffId
+              AND a.appointmentId <> :appointmentId
+              AND a.slot.slotDate = :slotDate
+              AND a.slot.startTime < :endTime
+              AND a.slot.endTime > :startTime
+              AND a.appointmentStatus IN :statuses
+            """)
+    boolean existsOverlappingActiveAppointmentForStaffExcludingAppointment(
+            @Param("staffId") Integer staffId,
+            @Param("slotDate") LocalDate slotDate,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime,
+            @Param("appointmentId") Integer appointmentId,
             @Param("statuses") Collection<String> statuses);
 
     @Query("""

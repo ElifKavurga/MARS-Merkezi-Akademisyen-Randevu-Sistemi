@@ -9,21 +9,21 @@ export const DELEGATION_MESSAGES = {
   ACTION_LABEL: 'Devret',
   MODAL_TITLE: 'Randevuyu Devret',
   MODAL_DESCRIPTION:
-    'Bu randevu talebini ilgili dersin atanmış asistanına devredebilirsiniz.',
+    'Bu randevuyu uygun akademisyen veya asistana yönlendirebilirsiniz.',
   COURSE_LABEL: 'Ders',
-  ASSISTANT_LABEL: 'Asistan',
+  ASSISTANT_LABEL: 'Hedef Personel',
   SUMMARY_LABEL: 'Delegasyon Özeti',
   SUMMARY_TEXT:
-    'Onayladığınızda asistanın kabulünü bekleyen bir delegasyon kaydı oluşturulur. Randevu sahibi henüz değişmez.',
-  SELECT_ASSISTANT: 'Asistan seçin',
+    'Dersin asistanına yönlendirme normal delegasyon akışına girer. Diğer personeller için öğrencinin bir saat içinde onayı gerekir.',
+  SELECT_ASSISTANT: 'Personel seçin',
   SINGLE_ASSISTANT_HINT: 'Derse atanmış tek asistan otomatik seçildi.',
-  NO_ASSISTANTS: 'Bu derse atanmış aktif asistan bulunamadı.',
-  ASSISTANTS_LOAD_ERROR: 'Asistan listesi yüklenemedi.',
-  ASSISTANT_REQUIRED: 'Asistan seçimi zorunludur.',
+  NO_ASSISTANTS: 'Bu tarih ve saatte uygun hedef personel bulunamadı.',
+  ASSISTANTS_LOAD_ERROR: 'Uygun personel listesi yüklenemedi.',
+  ASSISTANT_REQUIRED: 'Hedef personel seçimi zorunludur.',
   CONFIRM_LABEL: 'Onayla',
   SUCCESS: 'Delegasyon talebi başarıyla oluşturuldu.',
   ERROR: 'Delegasyon oluşturulamadı. Lütfen tekrar deneyin.',
-  LOADING_ASSISTANTS: 'Asistanlar yükleniyor...',
+  LOADING_ASSISTANTS: 'Uygun personeller yükleniyor...',
 } as const;
 
 export const INCOMING_DELEGATION_MESSAGES = {
@@ -61,6 +61,9 @@ export const DELEGATION_STATUS_LABELS: Record<string, string> = {
   PENDING: 'Bekliyor',
   ACCEPTED: 'Kabul Edildi',
   REJECTED: 'Reddedildi',
+  PENDING_STUDENT_APPROVAL: 'Öğrenci Onayı Bekliyor',
+  STUDENT_REJECTED: 'Öğrenci Reddetti',
+  EXPIRED: 'Süresi Doldu',
 };
 
 export function getDelegationStatusLabel(status: string): string {

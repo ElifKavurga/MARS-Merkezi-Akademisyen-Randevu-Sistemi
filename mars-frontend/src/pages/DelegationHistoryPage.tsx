@@ -11,7 +11,9 @@ import { useToast } from '../hooks/useToast';
 import { getDelegationHistory } from '../services/delegationService';
 import type { DelegationResponse } from '../types/delegation';
 
-const VALID_STATUS_FILTERS = new Set(['PENDING', 'ACCEPTED', 'REJECTED']);
+const VALID_STATUS_FILTERS = new Set([
+  'PENDING', 'PENDING_STUDENT_APPROVAL', 'ACCEPTED', 'REJECTED', 'STUDENT_REJECTED', 'EXPIRED',
+]);
 
 function resolveStatusFilter(raw: string | null): string {
   if (!raw) {
@@ -215,8 +217,11 @@ export default function DelegationHistoryPage() {
           >
             <option value="">{DELEGATION_HISTORY_MESSAGES.STATUS_FILTER_ALL}</option>
             <option value="PENDING">Bekliyor</option>
+            <option value="PENDING_STUDENT_APPROVAL">Öğrenci Onayı Bekleniyor</option>
             <option value="ACCEPTED">Kabul Edildi</option>
             <option value="REJECTED">Reddedildi</option>
+            <option value="STUDENT_REJECTED">Öğrenci Reddetti</option>
+            <option value="EXPIRED">Süresi Doldu</option>
           </select>
 
           <input

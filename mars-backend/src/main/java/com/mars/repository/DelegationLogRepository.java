@@ -1,5 +1,8 @@
 package com.mars.repository;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -93,4 +96,53 @@ public interface DelegationLogRepository extends JpaRepository<DelegationLog, In
     long countByDelegatedByUser_UserIdAndDelegationStatus(Integer userId, String delegationStatus);
 
     long countByDelegatedToUser_UserIdAndDelegationStatus(Integer userId, String delegationStatus);
+
+    @Query("""
+            SELECT CASE WHEN COUNT(d) > 0 THEN true ELSE false END
+            FROM DelegationLog d
+            WHERE d.delegatedToUser.userId = :staffId
+              AND d.targetSlotDate = :slotDate
+              AND d.targetStartTime < :endTime
+              AND d.targetEndTime > :startTime
+              AND d.slotLockStatus = 'LOCKED'
+              AND d.studentApprovalExpiresAt > :now
+              AND (:excludedDelegationId IS NULL OR d.delegationId <> :excludedDelegationId)
+            """)
+    boolean existsActiveSlotLock(
+            @Param("staffId") Integer staffId,
+            @Param("slotDate") LocalDate slotDate,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime,
+            @Param("now") LocalDateTime now,
+            @Param("excludedDelegationId") Integer excludedDelegationId);
+
+    @Query("""
+            SELECT d FROM DelegationLog d
+            JOIN FETCH d.delegatedByUser
+            JOIN FETCH d.delegatedToUser
+            JOIN FETCH d.appointment a
+            JOIN FETCH a.student
+            WHERE d.delegationStatus = :status
+              AND d.studentApprovalExpiresAt <= :now
+            """)
+    List<DelegationLog> findExpiredStudentApprovals(
+            @Param("status") String status,
+            @Param("now") LocalDateTime now);
+
+    @Query("""
+            SELECT d FROM DelegationLog d
+            JOIN FETCH d.appointment a
+            JOIN FETCH a.slot
+            JOIN FETCH a.category
+            JOIN FETCH a.staff
+            LEFT JOIN FETCH a.course
+            JOIN FETCH d.delegatedByUser
+            JOIN FETCH d.delegatedToUser
+            WHERE a.student.userId = :studentId
+              AND d.delegationStatus = :status
+            ORDER BY d.delegatedAt DESC
+            """)
+    List<DelegationLog> findStudentApprovals(
+            @Param("studentId") Integer studentId,
+            @Param("status") String status);
 }

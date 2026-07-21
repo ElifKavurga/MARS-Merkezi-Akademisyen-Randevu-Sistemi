@@ -37,6 +37,19 @@ public interface UserRepository extends JpaRepository<User, Integer> {
             """)
     List<User> findActiveUsersByRoleName(@Param("roleName") String roleName);
 
+    @Query("""
+            SELECT u FROM User u
+            JOIN FETCH u.role r
+            JOIN FETCH u.department
+            WHERE r.roleName IN :roleNames
+              AND u.isActive = true
+              AND u.userId <> :excludedUserId
+            ORDER BY u.fullName ASC
+            """)
+    List<User> findActiveUsersByRoleNamesExcludingUser(
+            @Param("roleNames") Collection<String> roleNames,
+            @Param("excludedUserId") Integer excludedUserId);
+
     @Query(
             value = """
                     SELECT u FROM User u

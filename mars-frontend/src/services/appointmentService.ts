@@ -2,10 +2,12 @@ import { apiClient } from './apiClient';
 import type {
   Appointment,
   AppointmentCreatePayload,
+  AppointmentReschedulePayload,
   AvailableSlot,
   StaffAppointment,
   StaffAppointmentScope,
 } from '../types/appointment';
+import type { StudentAvailableSlot } from '../types/studentAppointment';
 import type { AppointmentCategory } from '../types/category';
 
 export async function createAppointment(
@@ -63,6 +65,26 @@ export async function rejectStaffAppointment(
 ): Promise<StaffAppointment> {
   const { data } = await apiClient.patch<StaffAppointment>(
     `/${scope}/appointments/${appointmentId}/reject`,
+  );
+  return data;
+}
+
+export async function getStaffAppointmentRescheduleSlots(
+  appointmentId: number,
+): Promise<StudentAvailableSlot[]> {
+  const { data } = await apiClient.get<StudentAvailableSlot[]>(
+    `/academician/appointments/${appointmentId}/reschedule-slots`,
+  );
+  return Array.isArray(data) ? data : [];
+}
+
+export async function rescheduleStaffAppointment(
+  appointmentId: number,
+  payload: AppointmentReschedulePayload,
+): Promise<StaffAppointment> {
+  const { data } = await apiClient.patch<StaffAppointment>(
+    `/academician/appointments/${appointmentId}/reschedule`,
+    payload,
   );
   return data;
 }

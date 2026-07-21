@@ -19,10 +19,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.mars.config.CorsConfig;
+import com.mars.dto.AppointmentRescheduleRequest;
+import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.StaffAppointmentResponseDto;
 import com.mars.enums.AppointmentStatus;
 import com.mars.enums.MeetingType;
@@ -127,6 +130,55 @@ class AcademicianAppointmentControllerTest {
         mockMvc.perform(patch("/academician/appointments/11/reject"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.appointmentStatus").value("REJECTED"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ACADEMICIAN")
+    void getRescheduleSlots_asAcademician_returnsCalculatedSlots() throws Exception {
+        AvailableSlotResponseDto slot = AvailableSlotResponseDto.builder()
+                .slotId(21)
+                .slotDate(LocalDate.of(2026, 7, 24))
+                .startTime(LocalTime.of(13, 0))
+                .endTime(LocalTime.of(13, 10))
+                .meetingType(MeetingType.ONLINE.name())
+                .isBooked(false)
+                .build();
+        when(appointmentService.getStaffAppointmentRescheduleSlots(11, RoleType.ACADEMICIAN))
+                .thenReturn(List.of(slot));
+
+        mockMvc.perform(get("/academician/appointments/11/reschedule-slots"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].slotId").value(21))
+                .andExpect(jsonPath("$[0].isBooked").value(false));
+    }
+
+    @Test
+    @WithMockUser(roles = "ACADEMICIAN")
+    void rescheduleAppointment_asAcademician_returnsUpdatedTime() throws Exception {
+        StaffAppointmentResponseDto response = appointmentResponse(AppointmentStatus.APPROVED);
+        response.setAppointmentDate(LocalDate.of(2026, 7, 24));
+        response.setStartTime(LocalTime.of(13, 0));
+        response.setEndTime(LocalTime.of(13, 10));
+        when(appointmentService.rescheduleStaffAppointment(
+                org.mockito.ArgumentMatchers.eq(11),
+                any(AppointmentRescheduleRequest.class),
+                org.mockito.ArgumentMatchers.eq(RoleType.ACADEMICIAN)))
+                .thenReturn(response);
+
+        mockMvc.perform(patch("/academician/appointments/11/reschedule")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "slotId": 21,
+                                  "appointmentDate": "2026-07-24",
+                                  "startTime": "13:00:00",
+                                  "endTime": "13:10:00",
+                                  "meetingType": "ONLINE"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.appointmentDate").value("2026-07-24"))
+                .andExpect(jsonPath("$.startTime").value("13:00:00"));
     }
 
     @Test

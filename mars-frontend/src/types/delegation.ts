@@ -1,9 +1,33 @@
 export type CreateDelegationPayload = {
   appointmentId: number;
-  assistantId: number;
+  targetUserId: number;
+  targetSlotId: number;
+  targetSlotDate: string;
+  targetStartTime: string;
+  targetEndTime: string;
 };
 
-export type DelegationStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED';
+export type DelegationStatus =
+  | 'PENDING'
+  | 'PENDING_STUDENT_APPROVAL'
+  | 'ACCEPTED'
+  | 'REJECTED'
+  | 'STUDENT_REJECTED'
+  | 'EXPIRED';
+
+export type DelegationTarget = {
+  userId: number;
+  fullName: string;
+  institutionalEmail: string;
+  role: 'ACADEMICIAN' | 'ASSISTANT';
+  departmentName: string | null;
+  relatedCourseAssistant: boolean;
+  requiresStudentApproval: boolean;
+  targetSlotId: number;
+  targetSlotDate: string;
+  targetStartTime: string;
+  targetEndTime: string;
+};
 
 export type DelegationResponse = {
   delegationId: number;
@@ -22,4 +46,8 @@ export type DelegationResponse = {
   startTime: string | null;
   endTime: string | null;
   meetingType: string | null;
+  delegatedToRole: string | null;
+  approvalRequired: boolean;
+  studentApprovalExpiresAt: string | null;
+  slotLockStatus: string | null;
 };

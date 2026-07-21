@@ -62,3 +62,11 @@ export type StaffAppointment = {
 };
 
 export type StaffAppointmentScope = 'assistant' | 'academician';
+
+export type AppointmentReschedulePayload = {
+  slotId: number;
+  appointmentDate: string;
+  startTime: string;
+  endTime: string;
+  meetingType: string;
+};

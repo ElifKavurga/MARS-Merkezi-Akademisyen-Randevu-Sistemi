@@ -59,6 +59,7 @@ import com.mars.exception.ResourceNotFoundException;
 import com.mars.mapper.AvailabilitySlotMapper;
 import com.mars.repository.AppointmentRepository;
 import com.mars.repository.AvailabilitySlotRepository;
+import com.mars.repository.DelegationLogRepository;
 import com.mars.security.CustomUserDetails;
 import com.mars.util.AcademicTermCalendar;
 import com.mars.util.AvailabilityTimeRules;
@@ -75,6 +76,9 @@ class AvailabilitySlotServiceTest {
 
     @Mock
     private AppointmentRepository appointmentRepository;
+
+    @Mock
+    private DelegationLogRepository delegationLogRepository;
 
     @Mock
     private AvailabilitySlotMapper availabilitySlotMapper;

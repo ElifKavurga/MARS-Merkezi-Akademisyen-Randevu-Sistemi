@@ -55,6 +55,8 @@ public final class AppointmentMessages {
     public static final String ALREADY_REJECTED = "Randevu zaten reddedilmiş.";
     public static final String NOT_PENDING =
             "Yalnızca bekleyen randevu talepleri üzerinde işlem yapılabilir.";
+    public static final String RESCHEDULE_NOT_ALLOWED =
+            "Tamamlanmış, iptal edilmiş veya No-Show randevular yeniden planlanamaz.";
 
     private AppointmentMessages() {
     }

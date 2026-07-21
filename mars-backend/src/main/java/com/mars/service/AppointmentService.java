@@ -20,7 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.mars.AppointmentConstraints;
 import com.mars.AppointmentMessages;
 import com.mars.dto.AppointmentCreateRequest;
+import com.mars.dto.AppointmentRescheduleRequest;
 import com.mars.dto.AppointmentResponseDto;
+import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.StaffAppointmentResponseDto;
 import com.mars.dto.StudentAppointmentResponseDto;
 import com.mars.entity.Appointment;
@@ -41,6 +43,7 @@ import com.mars.repository.AppointmentRepository;
 import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.repository.CourseAssignmentRepository;
 import com.mars.repository.CourseRepository;
+import com.mars.repository.DelegationLogRepository;
 import com.mars.repository.OutOfOfficePeriodRepository;
 import com.mars.repository.StudentPenaltyStatusRepository;
 import com.mars.security.CustomUserDetails;
@@ -77,6 +80,8 @@ public class AppointmentService {
     private final StudentPenaltyStatusRepository studentPenaltyStatusRepository;
     private final OutOfOfficePeriodRepository outOfOfficePeriodRepository;
     private final AppointmentMapper appointmentMapper;
+    private final AvailabilitySlotService availabilitySlotService;
+    private final DelegationLogRepository delegationLogRepository;
 
     @Transactional
     public AppointmentResponseDto createAppointment(AppointmentCreateRequest request) {
@@ -103,39 +108,23 @@ public class AppointmentService {
         LocalTime bookingStart = request.getStartTime() != null ? request.getStartTime() : templateSlot.getStartTime();
         LocalTime bookingEnd = request.getEndTime() != null ? request.getEndTime() : templateSlot.getEndTime();
 
-        AvailabilitySlot slot;
-        if (templateSlot.getRecurrenceRule() != null
-                || !bookingDate.equals(templateSlot.getSlotDate())
-                || !bookingStart.equals(templateSlot.getStartTime())
-                || !bookingEnd.equals(templateSlot.getEndTime())) {
-            
-            // Check if there is already a specific occurrence slot created
-            Optional<AvailabilitySlot> existingSlot = availabilitySlotRepository.findDuplicateSlot(
-                    staff.getUserId(), bookingDate, bookingStart, bookingEnd);
-            
-            if (existingSlot.isPresent()) {
-                slot = existingSlot.get();
-            } else {
-                // Create a persistent copy/slice of the availability slot for this specific booking
-                AvailabilitySlot newSlot = new AvailabilitySlot();
-                newSlot.setStaff(staff);
-                newSlot.setSlotDate(bookingDate);
-                newSlot.setStartTime(bookingStart);
-                newSlot.setEndTime(bookingEnd);
-                newSlot.setIsBlocked(templateSlot.getIsBlocked());
-                newSlot.setMeetingType(templateSlot.getMeetingType());
-                newSlot.setRecurrenceRule(null); // specific booked slot, not a recurrence template
-                
-                slot = availabilitySlotRepository.save(newSlot);
-            }
-        } else {
-            slot = templateSlot;
-        }
+        AvailabilitySlot slot = resolveRequestedAvailability(
+                templateSlot, staff, bookingDate, bookingStart, bookingEnd);
 
         ensureSlotBookable(slot, staff.getUserId());
 
         if (appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(
                 slot.getSlotId(), ACTIVE_APPOINTMENT_STATUSES)) {
+            throw new ConflictException(AppointmentMessages.SLOT_TAKEN);
+        }
+
+        if (delegationLogRepository.existsActiveSlotLock(
+                staff.getUserId(),
+                slot.getSlotDate(),
+                slot.getStartTime(),
+                slot.getEndTime(),
+                LocalDateTime.now(APP_ZONE),
+                null)) {
             throw new ConflictException(AppointmentMessages.SLOT_TAKEN);
         }
 
@@ -261,6 +250,90 @@ public class AppointmentService {
                 appointmentId, AppointmentStatus.REJECTED, requiredRole);
     }
 
+    @Transactional(readOnly = true)
+    public List<AvailableSlotResponseDto> getStaffAppointmentRescheduleSlots(
+            Integer appointmentId,
+            RoleType requiredRole) {
+        User staff = getCurrentStaff(requiredRole);
+        Appointment appointment = appointmentRepository.findByIdAndStaffIdWithDetails(
+                        appointmentId, staff.getUserId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(AppointmentMessages.APPOINTMENT_NOT_FOUND));
+
+        validateReschedulableStatus(appointment.getAppointmentStatus());
+        return availabilitySlotService.getBookableAvailableSlotsForStaff(
+                staff.getUserId(), appointment.getCategory().getDurationMinutes(), true);
+    }
+
+    @Transactional
+    public StaffAppointmentResponseDto rescheduleStaffAppointment(
+            Integer appointmentId,
+            AppointmentRescheduleRequest request,
+            RoleType requiredRole) {
+        User staff = getCurrentStaff(requiredRole);
+        Appointment appointment = appointmentRepository.findByIdAndStaffIdForUpdate(
+                        appointmentId, staff.getUserId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(AppointmentMessages.APPOINTMENT_NOT_FOUND));
+
+        validateReschedulableStatus(appointment.getAppointmentStatus());
+
+        boolean selectedSlotIsAvailable = availabilitySlotService
+                .getBookableAvailableSlotsForStaff(
+                        staff.getUserId(), appointment.getCategory().getDurationMinutes(), true)
+                .stream()
+                .anyMatch(slot -> !Boolean.TRUE.equals(slot.getIsBooked())
+                        && Objects.equals(slot.getSlotId(), request.getSlotId())
+                        && Objects.equals(slot.getSlotDate(), request.getAppointmentDate())
+                        && Objects.equals(slot.getStartTime(), request.getStartTime())
+                        && Objects.equals(slot.getEndTime(), request.getEndTime()));
+        if (!selectedSlotIsAvailable) {
+            throw new ConflictException(AppointmentMessages.SLOT_TAKEN);
+        }
+
+        AvailabilitySlot templateSlot = availabilitySlotRepository
+                .findByIdWithStaffForUpdate(request.getSlotId())
+                .orElseThrow(() -> new ResourceNotFoundException(AppointmentMessages.SLOT_NOT_FOUND));
+        if (!Objects.equals(templateSlot.getStaff().getUserId(), staff.getUserId())) {
+            throw new ResourceNotFoundException(AppointmentMessages.SLOT_NOT_FOUND);
+        }
+
+        AvailabilitySlot targetSlot = resolveRequestedAvailability(
+                templateSlot,
+                staff,
+                request.getAppointmentDate(),
+                request.getStartTime(),
+                request.getEndTime());
+        ensureSlotBookable(targetSlot, staff.getUserId());
+
+        if (appointmentRepository.existsActiveAppointmentForSlotExcludingAppointment(
+                targetSlot.getSlotId(), appointmentId, ACTIVE_APPOINTMENT_STATUSES)
+                || appointmentRepository.existsOverlappingActiveAppointmentForStaffExcludingAppointment(
+                        staff.getUserId(),
+                        targetSlot.getSlotDate(),
+                        targetSlot.getStartTime(),
+                        targetSlot.getEndTime(),
+                        appointmentId,
+                        ACTIVE_APPOINTMENT_STATUSES)
+                || appointmentRepository.existsOverlappingActiveAppointmentForStudentExcludingAppointment(
+                        appointment.getStudent().getUserId(),
+                        targetSlot.getSlotDate(),
+                        targetSlot.getStartTime(),
+                        targetSlot.getEndTime(),
+                        appointmentId,
+                        ACTIVE_APPOINTMENT_STATUSES)) {
+            throw new ConflictException(AppointmentMessages.SLOT_TAKEN);
+        }
+
+        String meetingType = resolveAppointmentMeetingType(
+                targetSlot.getMeetingType(), request.getMeetingType());
+        appointment.setSlot(targetSlot);
+        appointment.setMeetingType(meetingType);
+        appointment.setUpdatedAt(LocalDateTime.now(APP_ZONE));
+
+        return appointmentMapper.toStaffResponse(appointmentRepository.save(appointment));
+    }
+
     private StaffAppointmentResponseDto updateStaffAppointmentStatus(
             Integer appointmentId,
             AppointmentStatus targetStatus,
@@ -290,6 +363,42 @@ public class AppointmentService {
             throw new ConflictException(AppointmentMessages.ALREADY_REJECTED);
         }
         throw new ConflictException(AppointmentMessages.NOT_PENDING);
+    }
+
+    private void validateReschedulableStatus(String currentStatus) {
+        if (AppointmentStatus.COMPLETED.name().equals(currentStatus)
+                || AppointmentStatus.CANCELLED.name().equals(currentStatus)
+                || AppointmentStatus.NO_SHOW.name().equals(currentStatus)) {
+            throw new ConflictException(AppointmentMessages.RESCHEDULE_NOT_ALLOWED);
+        }
+    }
+
+    private AvailabilitySlot resolveRequestedAvailability(
+            AvailabilitySlot templateSlot,
+            User staff,
+            LocalDate bookingDate,
+            LocalTime bookingStart,
+            LocalTime bookingEnd) {
+        if (templateSlot.getRecurrenceRule() == null
+                && bookingDate.equals(templateSlot.getSlotDate())
+                && bookingStart.equals(templateSlot.getStartTime())
+                && bookingEnd.equals(templateSlot.getEndTime())) {
+            return templateSlot;
+        }
+
+        return availabilitySlotRepository.findDuplicateSlot(
+                        staff.getUserId(), bookingDate, bookingStart, bookingEnd)
+                .orElseGet(() -> {
+                    AvailabilitySlot newSlot = new AvailabilitySlot();
+                    newSlot.setStaff(staff);
+                    newSlot.setSlotDate(bookingDate);
+                    newSlot.setStartTime(bookingStart);
+                    newSlot.setEndTime(bookingEnd);
+                    newSlot.setIsBlocked(templateSlot.getIsBlocked());
+                    newSlot.setMeetingType(templateSlot.getMeetingType());
+                    newSlot.setRecurrenceRule(null);
+                    return availabilitySlotRepository.save(newSlot);
+                });
     }
 
     private void validateStudentCancellable(Appointment appointment) {

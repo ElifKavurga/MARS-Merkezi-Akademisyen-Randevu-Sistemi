@@ -31,7 +31,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.mars.AppointmentMessages;
 import com.mars.dto.AppointmentCreateRequest;
+import com.mars.dto.AppointmentRescheduleRequest;
 import com.mars.dto.AppointmentResponseDto;
+import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.StaffAppointmentResponseDto;
 import com.mars.dto.StudentAppointmentResponseDto;
 import com.mars.entity.Appointment;
@@ -51,6 +53,7 @@ import com.mars.repository.AppointmentCategoryRepository;
 import com.mars.repository.AppointmentRepository;
 import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.repository.CourseRepository;
+import com.mars.repository.DelegationLogRepository;
 import com.mars.repository.OutOfOfficePeriodRepository;
 import com.mars.repository.StudentPenaltyStatusRepository;
 import com.mars.security.CustomUserDetails;
@@ -76,6 +79,10 @@ class AppointmentServiceTest {
     private OutOfOfficePeriodRepository outOfOfficePeriodRepository;
     @Mock
     private AppointmentMapper appointmentMapper;
+    @Mock
+    private AvailabilitySlotService availabilitySlotService;
+    @Mock
+    private DelegationLogRepository delegationLogRepository;
 
     @InjectMocks
     private AppointmentService appointmentService;
@@ -117,6 +124,7 @@ class AppointmentServiceTest {
         category = new AppointmentCategory();
         category.setCategoryId(3);
         category.setCategoryName("Akademik Danışmanlık");
+        category.setDurationMinutes(10);
         category.setRequiresCourseSelection(false);
 
         baseRequest = new AppointmentCreateRequest(5, 3, null, null, false);
@@ -707,6 +715,94 @@ class AppointmentServiceTest {
                 appointmentService.rejectStaffAppointment(100, RoleType.ACADEMICIAN);
 
         assertThat(result.getAppointmentStatus()).isEqualTo(AppointmentStatus.REJECTED.name());
+    }
+
+    @Test
+    void getStaffAppointmentRescheduleSlots_ownedAppointment_reusesAvailabilityCalculation() {
+        authenticateAsAcademician();
+        Appointment appointment = assistantAppointment(100, AppointmentStatus.APPROVED.name());
+        AvailableSlotResponseDto availableSlot = AvailableSlotResponseDto.builder()
+                .slotId(6)
+                .slotDate(LocalDate.now().plusDays(3))
+                .startTime(LocalTime.of(13, 0))
+                .endTime(LocalTime.of(13, 10))
+                .isBooked(false)
+                .build();
+        when(appointmentRepository.findByIdAndStaffIdWithDetails(100, 10))
+                .thenReturn(Optional.of(appointment));
+        when(availabilitySlotService.getBookableAvailableSlotsForStaff(10, 10, true))
+                .thenReturn(List.of(availableSlot));
+
+        List<AvailableSlotResponseDto> result = appointmentService
+                .getStaffAppointmentRescheduleSlots(100, RoleType.ACADEMICIAN);
+
+        assertThat(result).containsExactly(availableSlot);
+        verify(availabilitySlotService).getBookableAvailableSlotsForStaff(10, 10, true);
+    }
+
+    @Test
+    void rescheduleStaffAppointment_ownedAvailableSlot_updatesOnlySchedule() {
+        authenticateAsAcademician();
+        Appointment appointment = assistantAppointment(100, AppointmentStatus.APPROVED.name());
+        LocalDate newDate = LocalDate.now().plusDays(3);
+        AvailabilitySlot target = new AvailabilitySlot();
+        target.setSlotId(6);
+        target.setStaff(staff);
+        target.setSlotDate(newDate);
+        target.setStartTime(LocalTime.of(13, 0));
+        target.setEndTime(LocalTime.of(13, 10));
+        target.setMeetingType(MeetingType.ONLINE.name());
+        target.setIsBlocked(false);
+        AvailableSlotResponseDto availableSlot = AvailableSlotResponseDto.builder()
+                .slotId(6)
+                .slotDate(newDate)
+                .startTime(LocalTime.of(13, 0))
+                .endTime(LocalTime.of(13, 10))
+                .meetingType(MeetingType.ONLINE.name())
+                .isBooked(false)
+                .build();
+        AppointmentRescheduleRequest request = new AppointmentRescheduleRequest(
+                6, newDate, LocalTime.of(13, 0), LocalTime.of(13, 10), MeetingType.ONLINE.name());
+
+        when(appointmentRepository.findByIdAndStaffIdForUpdate(100, 10))
+                .thenReturn(Optional.of(appointment));
+        when(availabilitySlotService.getBookableAvailableSlotsForStaff(10, 10, true))
+                .thenReturn(List.of(availableSlot));
+        when(availabilitySlotRepository.findByIdWithStaffForUpdate(6))
+                .thenReturn(Optional.of(target));
+        when(appointmentRepository.save(appointment)).thenReturn(appointment);
+        when(appointmentMapper.toStaffResponse(appointment))
+                .thenAnswer(invocation -> new AppointmentMapper().toStaffResponse(appointment));
+
+        StaffAppointmentResponseDto result = appointmentService.rescheduleStaffAppointment(
+                100, request, RoleType.ACADEMICIAN);
+
+        assertThat(result.getAppointmentDate()).isEqualTo(newDate);
+        assertThat(result.getStartTime()).isEqualTo(LocalTime.of(13, 0));
+        assertThat(result.getAppointmentStatus()).isEqualTo(AppointmentStatus.APPROVED.name());
+        assertThat(appointment.getSlot()).isSameAs(target);
+        verify(appointmentRepository).save(appointment);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = AppointmentStatus.class, names = {"COMPLETED", "CANCELLED", "NO_SHOW"})
+    void rescheduleStaffAppointment_terminalStatus_throwsConflict(AppointmentStatus status) {
+        authenticateAsAcademician();
+        Appointment appointment = assistantAppointment(100, status.name());
+        when(appointmentRepository.findByIdAndStaffIdForUpdate(100, 10))
+                .thenReturn(Optional.of(appointment));
+        AppointmentRescheduleRequest request = new AppointmentRescheduleRequest(
+                6,
+                LocalDate.now().plusDays(3),
+                LocalTime.of(13, 0),
+                LocalTime.of(13, 10),
+                MeetingType.ONLINE.name());
+
+        assertThatThrownBy(() -> appointmentService.rescheduleStaffAppointment(
+                100, request, RoleType.ACADEMICIAN))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage(AppointmentMessages.RESCHEDULE_NOT_ALLOWED);
+        verify(appointmentRepository, never()).save(any());
     }
 
     @Test

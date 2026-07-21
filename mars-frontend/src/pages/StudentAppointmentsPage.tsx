@@ -8,6 +8,7 @@ import StudentErrorState from '../components/StudentErrorState';
 import StudentLoadingState from '../components/StudentLoadingState';
 import StudentPageHeader from '../components/StudentPageHeader';
 import StudentSegmentedTabs from '../components/StudentSegmentedTabs';
+import StudentDelegationApprovals from '../components/StudentDelegationApprovals';
 import { APPOINTMENT_STATUS_LABELS, getMeetingTypeLabel } from '../constants/appointment';
 import { MEETING_TYPE } from '../constants/availability';
 import { studentAppointmentDetailPath } from '../constants/routes';
@@ -353,6 +354,13 @@ export default function StudentAppointmentsPage() {
       <StudentPageHeader
         title={STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_TITLE}
         description={STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_SUBTITLE}
+      />
+
+      <StudentDelegationApprovals
+        onDecision={() => {
+          setAppointmentsByTab((current) => ({ ...current, active: undefined }));
+          void loadTab('active');
+        }}
       />
 
       <div className="mb-7 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">

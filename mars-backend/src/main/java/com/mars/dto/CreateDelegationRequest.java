@@ -17,7 +17,31 @@ public class CreateDelegationRequest {
     @Positive(message = "Randevu seçimi zorunludur.")
     private Integer appointmentId;
 
-    @NotNull(message = "Asistan seçimi zorunludur.")
     @Positive(message = "Asistan seçimi zorunludur.")
     private Integer assistantId;
+
+    @Positive(message = "Hedef personel seçimi zorunludur.")
+    private Integer targetUserId;
+
+    @NotNull(message = "Hedef slot seçimi zorunludur.")
+    @Positive(message = "Hedef slot seçimi zorunludur.")
+    private Integer targetSlotId;
+
+    @NotNull(message = "Hedef slot tarihi zorunludur.")
+    private java.time.LocalDate targetSlotDate;
+
+    @NotNull(message = "Hedef başlangıç saati zorunludur.")
+    private java.time.LocalTime targetStartTime;
+
+    @NotNull(message = "Hedef bitiş saati zorunludur.")
+    private java.time.LocalTime targetEndTime;
+
+    public Integer resolveTargetUserId() {
+        return targetUserId != null ? targetUserId : assistantId;
+    }
+
+    public CreateDelegationRequest(Integer appointmentId, Integer assistantId) {
+        this.appointmentId = appointmentId;
+        this.assistantId = assistantId;
+    }
 }

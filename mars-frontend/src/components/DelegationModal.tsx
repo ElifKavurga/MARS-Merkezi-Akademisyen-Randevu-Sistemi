@@ -5,10 +5,9 @@ import {
   formatCourseLabel,
 } from '../constants/delegation';
 import { FORM_SELECT_CLASS } from '../constants/ui';
-import { getCourseAssistants } from '../services/courseService';
-import { createDelegation } from '../services/delegationService';
+import { createDelegation, getDelegationTargets } from '../services/delegationService';
 import type { StaffAppointment } from '../types/appointment';
-import type { CourseAssistant } from '../types/course';
+import type { DelegationTarget } from '../types/delegation';
 import Loading from './Loading';
 import ModalFormFooter from './ModalFormFooter';
 import ModalHeader from './ModalHeader';
@@ -36,41 +35,39 @@ export default function DelegationModal({
   onClose,
   onSuccess,
 }: DelegationModalProps) {
-  const [assistants, setAssistants] = useState<CourseAssistant[]>([]);
-  const [assistantId, setAssistantId] = useState<number>(0);
+  const [targets, setTargets] = useState<DelegationTarget[]>([]);
+  const [targetUserId, setTargetUserId] = useState<number>(0);
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const open = appointment !== null;
-  const courseId = appointment?.courseId ?? null;
-
   useEffect(() => {
-    if (!open || courseId == null) {
+    if (!open || !appointment) {
       return;
     }
 
     let cancelled = false;
-    setAssistantId(0);
+    setTargetUserId(0);
     setError(null);
     setLoadingOptions(true);
 
     void (async () => {
       try {
-        const data = await getCourseAssistants(courseId);
+        const data = await getDelegationTargets(appointment.appointmentId);
         if (cancelled) {
           return;
         }
-        setAssistants(data);
+        setTargets(data);
         if (data.length === 1) {
-          setAssistantId(data[0].assistantId);
+          setTargetUserId(data[0].userId);
         }
       } catch (err) {
         if (cancelled) {
           return;
         }
         setError(getBackendErrorMessage(err, DELEGATION_MESSAGES.ASSISTANTS_LOAD_ERROR));
-        setAssistants([]);
+        setTargets([]);
       } finally {
         if (!cancelled) {
           setLoadingOptions(false);
@@ -81,7 +78,7 @@ export default function DelegationModal({
     return () => {
       cancelled = true;
     };
-  }, [open, courseId, appointment?.appointmentId]);
+  }, [open, appointment]);
 
   if (!appointment) {
     return null;
@@ -91,7 +88,7 @@ export default function DelegationModal({
     if (submitting) {
       return;
     }
-    setAssistantId(0);
+    setTargetUserId(0);
     setError(null);
     onClose();
   };
@@ -104,7 +101,8 @@ export default function DelegationModal({
 
     setError(null);
 
-    if (!assistantId) {
+    const selectedTarget = targets.find((item) => item.userId === targetUserId);
+    if (!selectedTarget) {
       setError(DELEGATION_MESSAGES.ASSISTANT_REQUIRED);
       return;
     }
@@ -113,9 +111,13 @@ export default function DelegationModal({
     try {
       await createDelegation({
         appointmentId: appointment.appointmentId,
-        assistantId,
+        targetUserId: selectedTarget.userId,
+        targetSlotId: selectedTarget.targetSlotId,
+        targetSlotDate: selectedTarget.targetSlotDate,
+        targetStartTime: selectedTarget.targetStartTime,
+        targetEndTime: selectedTarget.targetEndTime,
       });
-      setAssistantId(0);
+      setTargetUserId(0);
       setError(null);
       onSuccess(DELEGATION_MESSAGES.SUCCESS);
       onClose();
@@ -126,7 +128,7 @@ export default function DelegationModal({
     }
   };
 
-  const selectedAssistant = assistants.find((item) => item.assistantId === assistantId);
+  const selectedTarget = targets.find((item) => item.userId === targetUserId);
   const courseLabel = formatCourseLabel(appointment);
 
   return (
@@ -140,7 +142,7 @@ export default function DelegationModal({
       footer={
         <ModalFormFooter
           submitting={submitting}
-          submitDisabled={loadingOptions || assistants.length === 0 || !assistantId}
+          submitDisabled={loadingOptions || targets.length === 0 || !targetUserId}
           onCancel={handleClose}
           submitLabel={DELEGATION_MESSAGES.CONFIRM_LABEL}
         />
@@ -173,8 +175,8 @@ export default function DelegationModal({
             </dd>
             <dd className="mt-2 font-label-sm text-label-sm text-on-surface-variant">
               Öğrenci: {appointment.studentName} · Kategori: {appointment.categoryName}
-              {selectedAssistant
-                ? ` · Asistan: ${selectedAssistant.assistantName}`
+              {selectedTarget
+                ? ` · Hedef: ${selectedTarget.fullName}`
                 : ''}
             </dd>
           </div>
@@ -189,11 +191,13 @@ export default function DelegationModal({
           </label>
           {loadingOptions ? (
             <Loading variant="inline" label={DELEGATION_MESSAGES.LOADING_ASSISTANTS} />
-          ) : assistants.length === 1 ? (
+          ) : targets.length === 1 ? (
             <p className="rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2.5 font-body-md text-body-md text-on-background">
-              {assistants[0].assistantName}
+              {targets[0].fullName}
               <span className="mt-1 block font-label-sm text-label-sm text-on-surface-variant">
-                {DELEGATION_MESSAGES.SINGLE_ASSISTANT_HINT}
+                {targets[0].requiresStudentApproval
+                  ? 'Öğrenci onayı gerekli · Yanıt süresi 1 saat'
+                  : DELEGATION_MESSAGES.SINGLE_ASSISTANT_HINT}
               </span>
             </p>
           ) : (
@@ -201,20 +205,26 @@ export default function DelegationModal({
               id="delegationAssistantId"
               className={FORM_SELECT_CLASS}
               required
-              disabled={submitting || assistants.length === 0}
-              value={assistantId || ''}
-              onChange={(event) => setAssistantId(Number(event.target.value))}
+              disabled={submitting || targets.length === 0}
+              value={targetUserId || ''}
+              onChange={(event) => setTargetUserId(Number(event.target.value))}
               aria-label={DELEGATION_MESSAGES.ASSISTANT_LABEL}
             >
               <option value="">{DELEGATION_MESSAGES.SELECT_ASSISTANT}</option>
-              {assistants.map((assistant) => (
-                <option key={assistant.assistantId} value={assistant.assistantId}>
-                  {assistant.assistantName} — {assistant.institutionalEmail}
+              {targets.map((target) => (
+                <option key={target.userId} value={target.userId}>
+                  {target.fullName} — {target.role === 'ACADEMICIAN' ? 'Akademisyen' : 'Asistan'}
+                  {target.requiresStudentApproval ? ' · Öğrenci onayı gerekli' : ' · Ders asistanı'}
                 </option>
               ))}
             </select>
           )}
-          {!loadingOptions && assistants.length === 0 && !error ? (
+          {selectedTarget?.requiresStudentApproval ? (
+            <p className="rounded-lg border border-secondary/30 bg-secondary-container/40 px-3 py-2 font-label-sm text-label-sm text-on-secondary-container">
+              Öğrencinin 1 saat içinde onayı beklenecek. Bu sürede hedef slot kilitlenecektir.
+            </p>
+          ) : null}
+          {!loadingOptions && targets.length === 0 && !error ? (
             <p className="font-label-sm text-label-sm text-on-surface-variant">
               {DELEGATION_MESSAGES.NO_ASSISTANTS}
             </p>

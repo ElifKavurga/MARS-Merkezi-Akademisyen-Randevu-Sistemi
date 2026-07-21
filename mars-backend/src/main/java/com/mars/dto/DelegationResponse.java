@@ -33,4 +33,8 @@ public class DelegationResponse {
     private LocalTime startTime;
     private LocalTime endTime;
     private String meetingType;
+    private String delegatedToRole;
+    private Boolean approvalRequired;
+    private LocalDateTime studentApprovalExpiresAt;
+    private String slotLockStatus;
 }

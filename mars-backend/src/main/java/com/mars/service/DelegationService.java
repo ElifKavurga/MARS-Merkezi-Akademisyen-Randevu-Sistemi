@@ -1,10 +1,12 @@
 package com.mars.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -12,19 +14,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mars.DelegationMessages;
+import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.CreateDelegationRequest;
 import com.mars.dto.DelegationResponse;
+import com.mars.dto.DelegationTargetResponse;
 import com.mars.entity.Appointment;
+import com.mars.entity.AvailabilitySlot;
 import com.mars.entity.DelegationLog;
 import com.mars.entity.User;
 import com.mars.enums.AppointmentStatus;
 import com.mars.enums.DelegationStatus;
 import com.mars.enums.RoleType;
+import com.mars.enums.SlotLockStatus;
 import com.mars.exception.BadRequestException;
 import com.mars.exception.ConflictException;
 import com.mars.exception.ResourceNotFoundException;
 import com.mars.mapper.DelegationMapper;
 import com.mars.repository.AppointmentRepository;
+import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.repository.CourseAssignmentRepository;
 import com.mars.repository.DelegationLogRepository;
 import com.mars.repository.UserRepository;
@@ -36,99 +43,128 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class DelegationService {
-
+    private static final ZoneId APP_ZONE = ZoneId.of("Europe/Istanbul");
+    private static final long STUDENT_APPROVAL_MINUTES = 60;
+    private static final Set<String> ACTIVE_APPOINTMENT_STATUSES = Set.of(
+            AppointmentStatus.PENDING.name(), AppointmentStatus.APPROVED.name());
     private static final Set<String> TERMINAL_APPOINTMENT_STATUSES = Set.of(
             AppointmentStatus.CANCELLED.name(),
             AppointmentStatus.COMPLETED.name(),
             AppointmentStatus.NO_SHOW.name());
+    private static final Set<String> TARGET_ROLES = Set.of(
+            RoleType.ACADEMICIAN.name(), RoleType.ASSISTANT.name());
 
     private final DelegationLogRepository delegationLogRepository;
     private final AppointmentRepository appointmentRepository;
+    private final AvailabilitySlotRepository availabilitySlotRepository;
     private final CourseAssignmentRepository courseAssignmentRepository;
     private final UserRepository userRepository;
     private final DelegationMapper delegationMapper;
+    private final AvailabilitySlotService availabilitySlotService;
+    private final NotificationService notificationService;
+
+    @Transactional(readOnly = true)
+    public List<DelegationTargetResponse> getDelegationTargets(Integer appointmentId) {
+        User academician = getCurrentAcademician();
+        Appointment appointment = getOwnedAppointment(appointmentId, academician);
+        validateAppointmentStatus(appointment.getAppointmentStatus());
+        requireCourse(appointment);
+
+        return userRepository.findActiveUsersByRoleNamesExcludingUser(
+                        TARGET_ROLES, academician.getUserId())
+                .stream()
+                .map(user -> toTargetResponse(appointment, user))
+                .filter(Objects::nonNull)
+                .toList();
+    }
 
     @Transactional
     public DelegationResponse createDelegation(CreateDelegationRequest request) {
         User academician = getCurrentAcademician();
-
         if (request.getAppointmentId() == null) {
             throw new BadRequestException(DelegationMessages.APPOINTMENT_REQUIRED);
         }
-        if (request.getAssistantId() == null) {
-            throw new BadRequestException(DelegationMessages.ASSISTANT_REQUIRED);
+        Integer targetUserId = request.resolveTargetUserId();
+        if (targetUserId == null) {
+            throw new BadRequestException(DelegationMessages.TARGET_REQUIRED);
         }
 
-        Appointment appointment = appointmentRepository
-                .findByIdWithStaffAndCourse(request.getAppointmentId())
-                .orElseThrow(() -> new ResourceNotFoundException(DelegationMessages.APPOINTMENT_NOT_FOUND));
-
-        if (appointment.getStaff() == null
-                || !Objects.equals(appointment.getStaff().getUserId(), academician.getUserId())) {
-            throw new AccessDeniedException(DelegationMessages.OWNERSHIP_DENIED);
-        }
-
+        Appointment appointment = getOwnedAppointment(request.getAppointmentId(), academician);
         validateAppointmentStatus(appointment.getAppointmentStatus());
+        requireCourse(appointment);
 
-        if (appointment.getCourse() == null || appointment.getCourse().getCourseId() == null) {
-            throw new BadRequestException(DelegationMessages.COURSE_REQUIRED);
+        User target = userRepository.findByIdWithRoleAndDepartment(targetUserId)
+                .orElseThrow(() -> new ResourceNotFoundException(DelegationMessages.TARGET_NOT_FOUND));
+        validateTarget(target, academician);
+
+        boolean relatedCourseAssistant = isRelatedCourseAssistant(appointment, target);
+        boolean approvalRequired = !relatedCourseAssistant;
+        validateNoPendingDelegation(appointment.getAppointmentId());
+
+        AvailableSlotResponseDto selectedSlot = findSelectedAvailableSlot(appointment, target, request);
+        AvailabilitySlot targetTemplate = availabilitySlotRepository
+                .findByIdWithStaffForUpdate(selectedSlot.getSlotId())
+                .orElseThrow(() -> new ResourceNotFoundException(DelegationMessages.TARGET_SLOT_NOT_FOUND));
+        if (!Objects.equals(targetTemplate.getStaff().getUserId(), target.getUserId())) {
+            throw new ConflictException(DelegationMessages.TARGET_SLOT_UNAVAILABLE);
         }
 
-        User assistant = userRepository.findByIdWithRoleAndDepartment(request.getAssistantId())
-                .orElseThrow(() -> new ResourceNotFoundException(DelegationMessages.ASSISTANT_NOT_FOUND));
-
-        if (!Boolean.TRUE.equals(assistant.getIsActive())) {
-            throw new BadRequestException(DelegationMessages.ASSISTANT_INACTIVE);
-        }
-        if (assistant.getRole() == null
-                || !RoleType.ASSISTANT.name().equals(assistant.getRole().getRoleName())) {
-            throw new BadRequestException(DelegationMessages.ASSISTANT_ROLE_REQUIRED);
-        }
-        if (!courseAssignmentRepository.existsByCourse_CourseIdAndAssistant_UserId(
-                appointment.getCourse().getCourseId(), assistant.getUserId())) {
-            throw new BadRequestException(DelegationMessages.ASSISTANT_NOT_ASSIGNED);
-        }
-
-        if (delegationLogRepository.existsByAppointment_AppointmentIdAndDelegationStatus(
-                appointment.getAppointmentId(), DelegationStatus.PENDING.name())) {
-            throw new ConflictException(DelegationMessages.PENDING_EXISTS);
+        LocalDateTime now = LocalDateTime.now(APP_ZONE);
+        if (appointmentRepository.existsOverlappingActiveAppointmentForStaff(
+                target.getUserId(),
+                selectedSlot.getSlotDate(),
+                selectedSlot.getStartTime(),
+                selectedSlot.getEndTime(),
+                ACTIVE_APPOINTMENT_STATUSES)
+                || delegationLogRepository.existsActiveSlotLock(
+                        target.getUserId(),
+                        selectedSlot.getSlotDate(),
+                        selectedSlot.getStartTime(),
+                        selectedSlot.getEndTime(),
+                        now,
+                        null)) {
+            throw new ConflictException(DelegationMessages.TARGET_SLOT_UNAVAILABLE);
         }
 
-        DelegationLog delegationLog = delegationMapper.toEntity(
-                appointment,
-                academician,
-                assistant,
-                LocalDateTime.now());
-        DelegationLog saved = delegationLogRepository.save(delegationLog);
-        return delegationMapper.toResponse(
-                delegationLogRepository.findByIdWithDetails(saved.getDelegationId())
-                        .orElse(saved));
+        DelegationLog log = delegationMapper.toEntity(appointment, academician, target, now);
+        log.setTargetSlot(targetTemplate);
+        log.setTargetSlotDate(selectedSlot.getSlotDate());
+        log.setTargetStartTime(selectedSlot.getStartTime());
+        log.setTargetEndTime(selectedSlot.getEndTime());
+        log.setApprovalRequired(approvalRequired);
+        if (approvalRequired) {
+            log.setDelegationStatus(DelegationStatus.PENDING_STUDENT_APPROVAL.name());
+            log.setStudentApprovalExpiresAt(now.plusMinutes(STUDENT_APPROVAL_MINUTES));
+            log.setSlotLockStatus(SlotLockStatus.LOCKED.name());
+        }
+
+        DelegationLog saved = delegationLogRepository.save(log);
+        if (approvalRequired) {
+            notificationService.createPreparedEmailNotification(
+                    appointment.getStudent(),
+                    "DELEGATION_STUDENT_APPROVAL",
+                    "Randevu yönlendirme onayı",
+                    "Randevunuz farklı bir personele yönlendirilmek isteniyor.",
+                    saved);
+        }
+        return toResponse(saved);
     }
 
     @Transactional(readOnly = true)
     public List<DelegationResponse> getIncomingDelegations() {
         User assistant = getCurrentAssistant();
-        return delegationLogRepository
-                .findIncomingByAssistantIdAndStatus(
-                        assistant.getUserId(),
-                        DelegationStatus.PENDING.name())
-                .stream()
-                .map(delegationMapper::toResponse)
-                .toList();
+        return delegationLogRepository.findIncomingByAssistantIdAndStatus(
+                        assistant.getUserId(), DelegationStatus.PENDING.name())
+                .stream().map(delegationMapper::toResponse).toList();
     }
 
     @Transactional(readOnly = true)
     public List<DelegationResponse> getDelegationHistory() {
         User currentUser = getCurrentHistoryUser();
-        String roleName = currentUser.getRole() != null ? currentUser.getRole().getRoleName() : null;
-
-        List<DelegationLog> history;
-        if (RoleType.ACADEMICIAN.name().equals(roleName)) {
-            history = delegationLogRepository.findHistoryByDelegatedByUserId(currentUser.getUserId());
-        } else {
-            history = delegationLogRepository.findHistoryByDelegatedToUserId(currentUser.getUserId());
-        }
-
+        String roleName = currentUser.getRole().getRoleName();
+        List<DelegationLog> history = RoleType.ACADEMICIAN.name().equals(roleName)
+                ? delegationLogRepository.findHistoryByDelegatedByUserId(currentUser.getUserId())
+                : delegationLogRepository.findHistoryByDelegatedToUserId(currentUser.getUserId());
         return history.stream().map(delegationMapper::toResponse).toList();
     }
 
@@ -136,161 +172,374 @@ public class DelegationService {
     public DelegationResponse getDelegation(Integer delegationId) {
         requireValidDelegationId(delegationId);
         User academician = getCurrentAcademician();
-        DelegationLog delegationLog = delegationLogRepository.findByIdWithDetails(delegationId)
+        DelegationLog log = delegationLogRepository.findByIdWithDetails(delegationId)
                 .orElseThrow(() -> new ResourceNotFoundException(DelegationMessages.DELEGATION_NOT_FOUND));
-
-        if (delegationLog.getDelegatedByUser() == null
-                || !Objects.equals(delegationLog.getDelegatedByUser().getUserId(), academician.getUserId())) {
+        if (!Objects.equals(log.getDelegatedByUser().getUserId(), academician.getUserId())) {
             throw new AccessDeniedException(DelegationMessages.ACCESS_DENIED);
         }
-
-        return delegationMapper.toResponse(delegationLog);
+        return delegationMapper.toResponse(log);
     }
 
     @Transactional
     public DelegationResponse acceptDelegation(Integer delegationId) {
         User assistant = getCurrentAssistant();
-        DelegationLog delegationLog = getOwnedPendingDelegationForDecision(delegationId, assistant);
-
-        Appointment appointment = delegationLog.getAppointment();
-        if (appointment == null) {
-            throw new ResourceNotFoundException(DelegationMessages.APPOINTMENT_NOT_FOUND);
-        }
-        validateAppointmentProcessable(appointment.getAppointmentStatus());
-
-        LocalDateTime now = LocalDateTime.now();
-        delegationLog.setDelegationStatus(DelegationStatus.ACCEPTED.name());
-        delegationLog.setUpdatedAt(now);
-        appointment.setStaff(assistant);
-        appointment.setUpdatedAt(now);
-
-        rejectOtherPendingDelegations(appointment.getAppointmentId(), delegationLog.getDelegationId(), now);
-
-        delegationLogRepository.save(delegationLog);
-        appointmentRepository.save(appointment);
-
-        return delegationMapper.toResponse(
-                delegationLogRepository.findByIdWithDetails(delegationLog.getDelegationId())
-                        .orElse(delegationLog));
+        DelegationLog log = getOwnedPendingDelegationForDecision(delegationId, assistant);
+        completeTransfer(log, assistant);
+        log.setDelegationStatus(DelegationStatus.ACCEPTED.name());
+        log.setUpdatedAt(LocalDateTime.now(APP_ZONE));
+        delegationLogRepository.save(log);
+        return toResponse(log);
     }
 
     @Transactional
     public DelegationResponse rejectDelegation(Integer delegationId) {
         User assistant = getCurrentAssistant();
-        DelegationLog delegationLog = getOwnedPendingDelegationForDecision(delegationId, assistant);
+        DelegationLog log = getOwnedPendingDelegationForDecision(delegationId, assistant);
+        validateAppointmentProcessable(log.getAppointment().getAppointmentStatus());
+        log.setDelegationStatus(DelegationStatus.REJECTED.name());
+        log.setUpdatedAt(LocalDateTime.now(APP_ZONE));
+        delegationLogRepository.save(log);
+        return toResponse(log);
+    }
 
-        Appointment appointment = delegationLog.getAppointment();
-        if (appointment == null) {
-            throw new ResourceNotFoundException(DelegationMessages.APPOINTMENT_NOT_FOUND);
+    @Transactional
+    public List<DelegationResponse> getPendingStudentApprovals() {
+        User student = getCurrentStudent();
+        expirePendingApprovals(LocalDateTime.now(APP_ZONE));
+        return delegationLogRepository.findStudentApprovals(
+                        student.getUserId(), DelegationStatus.PENDING_STUDENT_APPROVAL.name())
+                .stream().map(delegationMapper::toResponse).toList();
+    }
+
+    @Transactional
+    public DelegationResponse acceptStudentApproval(Integer delegationId) {
+        User student = getCurrentStudent();
+        DelegationLog log = getStudentApprovalForDecision(delegationId, student);
+        completeTransfer(log, log.getDelegatedToUser());
+        LocalDateTime now = LocalDateTime.now(APP_ZONE);
+        log.setDelegationStatus(DelegationStatus.ACCEPTED.name());
+        log.setSlotLockStatus(SlotLockStatus.CONSUMED.name());
+        log.setUpdatedAt(now);
+        delegationLogRepository.save(log);
+        notificationService.createPreparedEmailNotification(
+                log.getDelegatedByUser(),
+                "DELEGATION_STUDENT_ACCEPTED",
+                "Delegasyon kabul edildi",
+                "Öğrenci randevu yönlendirmesini kabul etti.",
+                log);
+        return toResponse(log);
+    }
+
+    @Transactional
+    public DelegationResponse rejectStudentApproval(Integer delegationId) {
+        User student = getCurrentStudent();
+        DelegationLog log = getStudentApprovalForDecision(delegationId, student);
+        LocalDateTime now = LocalDateTime.now(APP_ZONE);
+        log.setDelegationStatus(DelegationStatus.STUDENT_REJECTED.name());
+        log.setSlotLockStatus(SlotLockStatus.RELEASED.name());
+        log.setUpdatedAt(now);
+        delegationLogRepository.save(log);
+        notificationService.createPreparedEmailNotification(
+                log.getDelegatedByUser(),
+                "DELEGATION_STUDENT_REJECTED",
+                "Delegasyon reddedildi",
+                "Öğrenci randevu yönlendirmesini reddetti.",
+                log);
+        return toResponse(log);
+    }
+
+    @Scheduled(fixedDelay = 60_000)
+    @Transactional
+    public void expireStudentApprovals() {
+        expirePendingApprovals(LocalDateTime.now(APP_ZONE));
+    }
+
+    private void expirePendingApprovals(LocalDateTime now) {
+        List<DelegationLog> expired = delegationLogRepository.findExpiredStudentApprovals(
+                DelegationStatus.PENDING_STUDENT_APPROVAL.name(), now);
+        for (DelegationLog log : expired) {
+            log.setDelegationStatus(DelegationStatus.EXPIRED.name());
+            log.setSlotLockStatus(SlotLockStatus.RELEASED.name());
+            log.setUpdatedAt(now);
+            notificationService.createPreparedEmailNotification(
+                    log.getDelegatedByUser(),
+                    "DELEGATION_EXPIRED",
+                    "Delegasyon süresi doldu",
+                    "Öğrenci bir saat içinde yanıt vermediği için delegasyon iptal edildi.",
+                    log);
         }
+        delegationLogRepository.saveAll(expired);
+    }
+
+    private DelegationTargetResponse toTargetResponse(Appointment appointment, User target) {
+        AvailableSlotResponseDto slot = findMatchingSlot(appointment, target);
+        if (slot == null) {
+            return null;
+        }
+        boolean related = isRelatedCourseAssistant(appointment, target);
+        return DelegationTargetResponse.builder()
+                .userId(target.getUserId())
+                .fullName(target.getFullName())
+                .institutionalEmail(target.getInstitutionalEmail())
+                .role(target.getRole().getRoleName())
+                .departmentName(target.getDepartment() == null ? null : target.getDepartment().getDepartmentName())
+                .relatedCourseAssistant(related)
+                .requiresStudentApproval(!related)
+                .targetSlotId(slot.getSlotId())
+                .targetSlotDate(slot.getSlotDate())
+                .targetStartTime(slot.getStartTime())
+                .targetEndTime(slot.getEndTime())
+                .build();
+    }
+
+    private AvailableSlotResponseDto findMatchingSlot(Appointment appointment, User target) {
+        return availabilitySlotService.getBookableAvailableSlotsForStaff(
+                        target.getUserId(), appointment.getCategory().getDurationMinutes())
+                .stream()
+                .filter(slot -> Objects.equals(slot.getSlotDate(), appointment.getSlot().getSlotDate()))
+                .filter(slot -> Objects.equals(slot.getStartTime(), appointment.getSlot().getStartTime()))
+                .filter(slot -> Objects.equals(slot.getEndTime(), appointment.getSlot().getEndTime()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private AvailableSlotResponseDto findSelectedAvailableSlot(
+            Appointment appointment,
+            User target,
+            CreateDelegationRequest request) {
+        AvailableSlotResponseDto matching = findMatchingSlot(appointment, target);
+        if (matching == null
+                || !Objects.equals(matching.getSlotId(), request.getTargetSlotId())
+                || !Objects.equals(matching.getSlotDate(), request.getTargetSlotDate())
+                || !Objects.equals(matching.getStartTime(), request.getTargetStartTime())
+                || !Objects.equals(matching.getEndTime(), request.getTargetEndTime())) {
+            throw new ConflictException(DelegationMessages.TARGET_SLOT_UNAVAILABLE);
+        }
+        return matching;
+    }
+
+    private void completeTransfer(DelegationLog log, User target) {
+        Appointment appointment = log.getAppointment();
         validateAppointmentProcessable(appointment.getAppointmentStatus());
+        LocalDateTime now = LocalDateTime.now(APP_ZONE);
+        if (log.getStudentApprovalExpiresAt() != null
+                && !now.isBefore(log.getStudentApprovalExpiresAt())) {
+            log.setDelegationStatus(DelegationStatus.EXPIRED.name());
+            log.setSlotLockStatus(SlotLockStatus.RELEASED.name());
+            log.setUpdatedAt(now);
+            delegationLogRepository.save(log);
+            throw new ConflictException(DelegationMessages.STUDENT_APPROVAL_EXPIRED);
+        }
 
-        LocalDateTime now = LocalDateTime.now();
-        delegationLog.setDelegationStatus(DelegationStatus.REJECTED.name());
-        delegationLog.setUpdatedAt(now);
-        DelegationLog saved = delegationLogRepository.save(delegationLog);
+        // V7/V8 ile oluşturulmuş bekleyen delegasyonlarda hedef slot bilgisi yoktur.
+        // Bu kayıtlar mevcut davranışla tamamlanmaya devam eder.
+        if (log.getTargetSlot() == null) {
+            appointment.setStaff(target);
+            appointment.setUpdatedAt(now);
+            appointmentRepository.save(appointment);
+            rejectOtherPendingDelegations(appointment.getAppointmentId(), log.getDelegationId(), now);
+            return;
+        }
 
-        return delegationMapper.toResponse(
-                delegationLogRepository.findByIdWithDetails(saved.getDelegationId())
-                        .orElse(saved));
+        AvailabilitySlot template = availabilitySlotRepository
+                .findByIdWithStaffForUpdate(log.getTargetSlot().getSlotId())
+                .orElseThrow(() -> new ResourceNotFoundException(DelegationMessages.TARGET_SLOT_NOT_FOUND));
+        if (!Objects.equals(template.getStaff().getUserId(), target.getUserId())) {
+            throw new ConflictException(DelegationMessages.TARGET_SLOT_UNAVAILABLE);
+        }
+        if (appointmentRepository.existsOverlappingActiveAppointmentForStaffExcludingAppointment(
+                target.getUserId(),
+                log.getTargetSlotDate(),
+                log.getTargetStartTime(),
+                log.getTargetEndTime(),
+                appointment.getAppointmentId(),
+                ACTIVE_APPOINTMENT_STATUSES)
+                || delegationLogRepository.existsActiveSlotLock(
+                        target.getUserId(),
+                        log.getTargetSlotDate(),
+                        log.getTargetStartTime(),
+                        log.getTargetEndTime(),
+                        now,
+                        log.getDelegationId())) {
+            throw new ConflictException(DelegationMessages.TARGET_SLOT_UNAVAILABLE);
+        }
+
+        AvailabilitySlot concreteSlot = resolveTargetSlot(template, target, log);
+        appointment.setStaff(target);
+        appointment.setSlot(concreteSlot);
+        appointment.setUpdatedAt(now);
+        appointmentRepository.save(appointment);
+        rejectOtherPendingDelegations(appointment.getAppointmentId(), log.getDelegationId(), now);
+    }
+
+    private AvailabilitySlot resolveTargetSlot(AvailabilitySlot template, User target, DelegationLog log) {
+        if (template.getRecurrenceRule() == null
+                && Objects.equals(template.getSlotDate(), log.getTargetSlotDate())
+                && Objects.equals(template.getStartTime(), log.getTargetStartTime())
+                && Objects.equals(template.getEndTime(), log.getTargetEndTime())) {
+            return template;
+        }
+        return availabilitySlotRepository.findDuplicateSlot(
+                        target.getUserId(),
+                        log.getTargetSlotDate(),
+                        log.getTargetStartTime(),
+                        log.getTargetEndTime())
+                .orElseGet(() -> {
+                    AvailabilitySlot slot = new AvailabilitySlot();
+                    slot.setStaff(target);
+                    slot.setSlotDate(log.getTargetSlotDate());
+                    slot.setStartTime(log.getTargetStartTime());
+                    slot.setEndTime(log.getTargetEndTime());
+                    slot.setIsBlocked(template.getIsBlocked());
+                    slot.setMeetingType(template.getMeetingType());
+                    slot.setRecurrenceRule(null);
+                    return availabilitySlotRepository.save(slot);
+                });
+    }
+
+    private DelegationLog getStudentApprovalForDecision(Integer delegationId, User student) {
+        requireValidDelegationId(delegationId);
+        DelegationLog log = delegationLogRepository.findByIdForUpdate(delegationId)
+                .orElseThrow(() -> new ResourceNotFoundException(DelegationMessages.DELEGATION_NOT_FOUND));
+        if (!Objects.equals(log.getAppointment().getStudent().getUserId(), student.getUserId())) {
+            throw new AccessDeniedException(DelegationMessages.STUDENT_DECISION_ACCESS_DENIED);
+        }
+        if (!DelegationStatus.PENDING_STUDENT_APPROVAL.name().equals(log.getDelegationStatus())) {
+            throw new ConflictException(DelegationMessages.NOT_PENDING_STUDENT_APPROVAL);
+        }
+        if (!LocalDateTime.now(APP_ZONE).isBefore(log.getStudentApprovalExpiresAt())) {
+            log.setDelegationStatus(DelegationStatus.EXPIRED.name());
+            log.setSlotLockStatus(SlotLockStatus.RELEASED.name());
+            log.setUpdatedAt(LocalDateTime.now(APP_ZONE));
+            delegationLogRepository.save(log);
+            throw new ConflictException(DelegationMessages.STUDENT_APPROVAL_EXPIRED);
+        }
+        return log;
     }
 
     private DelegationLog getOwnedPendingDelegationForDecision(Integer delegationId, User assistant) {
         requireValidDelegationId(delegationId);
-
-        // Pessimistic lock prevents concurrent accept/reject on the same PENDING row.
-        DelegationLog delegationLog = delegationLogRepository.findByIdForUpdate(delegationId)
+        DelegationLog log = delegationLogRepository.findByIdForUpdate(delegationId)
                 .orElseThrow(() -> new ResourceNotFoundException(DelegationMessages.DELEGATION_NOT_FOUND));
-
-        if (delegationLog.getDelegatedToUser() == null
-                || !Objects.equals(delegationLog.getDelegatedToUser().getUserId(), assistant.getUserId())) {
+        if (!Objects.equals(log.getDelegatedToUser().getUserId(), assistant.getUserId())) {
             throw new AccessDeniedException(DelegationMessages.DECISION_ACCESS_DENIED);
         }
-
-        if (!DelegationStatus.PENDING.name().equals(delegationLog.getDelegationStatus())) {
+        if (!DelegationStatus.PENDING.name().equals(log.getDelegationStatus())) {
             throw new ConflictException(DelegationMessages.NOT_PENDING);
         }
-
-        return delegationLog;
+        return log;
     }
 
-    private void requireValidDelegationId(Integer delegationId) {
-        if (delegationId == null || delegationId <= 0) {
-            throw new BadRequestException(DelegationMessages.INVALID_DELEGATION_ID);
+    private Appointment getOwnedAppointment(Integer appointmentId, User academician) {
+        Appointment appointment = appointmentRepository.findByIdWithStaffAndCourse(appointmentId)
+                .orElseThrow(() -> new ResourceNotFoundException(DelegationMessages.APPOINTMENT_NOT_FOUND));
+        if (appointment.getStaff() == null
+                || !Objects.equals(appointment.getStaff().getUserId(), academician.getUserId())) {
+            throw new AccessDeniedException(DelegationMessages.OWNERSHIP_DENIED);
+        }
+        return appointment;
+    }
+
+    private void validateTarget(User target, User academician) {
+        if (!Boolean.TRUE.equals(target.getIsActive()) || target.getRole() == null
+                || !TARGET_ROLES.contains(target.getRole().getRoleName())
+                || Objects.equals(target.getUserId(), academician.getUserId())) {
+            throw new BadRequestException(DelegationMessages.INVALID_TARGET);
         }
     }
 
-    private void rejectOtherPendingDelegations(
-            Integer appointmentId,
-            Integer acceptedDelegationId,
-            LocalDateTime updatedAt) {
-        List<DelegationLog> otherPending =
-                delegationLogRepository.findByAppointment_AppointmentIdAndDelegationStatusAndDelegationIdNot(
-                        appointmentId,
-                        DelegationStatus.PENDING.name(),
-                        acceptedDelegationId);
-        if (otherPending.isEmpty()) {
-            return;
+    private boolean isRelatedCourseAssistant(Appointment appointment, User target) {
+        return RoleType.ASSISTANT.name().equals(target.getRole().getRoleName())
+                && courseAssignmentRepository.existsByCourse_CourseIdAndAssistant_UserId(
+                        appointment.getCourse().getCourseId(), target.getUserId());
+    }
+
+    private void validateNoPendingDelegation(Integer appointmentId) {
+        if (delegationLogRepository.existsByAppointment_AppointmentIdAndDelegationStatus(
+                appointmentId, DelegationStatus.PENDING.name())
+                || delegationLogRepository.existsByAppointment_AppointmentIdAndDelegationStatus(
+                        appointmentId, DelegationStatus.PENDING_STUDENT_APPROVAL.name())) {
+            throw new ConflictException(DelegationMessages.PENDING_EXISTS);
         }
-        for (DelegationLog other : otherPending) {
+    }
+
+    private void requireCourse(Appointment appointment) {
+        if (appointment.getCourse() == null || appointment.getCourse().getCourseId() == null) {
+            throw new BadRequestException(DelegationMessages.COURSE_REQUIRED);
+        }
+    }
+
+    private void rejectOtherPendingDelegations(Integer appointmentId, Integer acceptedId, LocalDateTime now) {
+        List<DelegationLog> others = delegationLogRepository
+                .findByAppointment_AppointmentIdAndDelegationStatusAndDelegationIdNot(
+                        appointmentId, DelegationStatus.PENDING.name(), acceptedId);
+        for (DelegationLog other : others) {
             other.setDelegationStatus(DelegationStatus.REJECTED.name());
-            other.setUpdatedAt(updatedAt);
+            other.setUpdatedAt(now);
         }
-        delegationLogRepository.saveAll(otherPending);
+        delegationLogRepository.saveAll(others);
     }
 
-    private void validateAppointmentProcessable(String appointmentStatus) {
-        if (TERMINAL_APPOINTMENT_STATUSES.contains(appointmentStatus)) {
+    private DelegationResponse toResponse(DelegationLog log) {
+        return delegationMapper.toResponse(
+                delegationLogRepository.findByIdWithDetails(log.getDelegationId()).orElse(log));
+    }
+
+    private void validateAppointmentProcessable(String status) {
+        if (TERMINAL_APPOINTMENT_STATUSES.contains(status)) {
             throw new ConflictException(DelegationMessages.APPOINTMENT_NOT_PROCESSABLE);
         }
     }
 
-    private void validateAppointmentStatus(String appointmentStatus) {
-        if (AppointmentStatus.APPROVED.name().equals(appointmentStatus)) {
+    private void validateAppointmentStatus(String status) {
+        if (AppointmentStatus.APPROVED.name().equals(status)) {
             throw new BadRequestException(DelegationMessages.APPROVED_NOT_ALLOWED);
         }
-        if (TERMINAL_APPOINTMENT_STATUSES.contains(appointmentStatus)) {
+        if (TERMINAL_APPOINTMENT_STATUSES.contains(status)) {
             throw new BadRequestException(DelegationMessages.TERMINAL_STATUS_NOT_ALLOWED);
         }
     }
 
+    private void requireValidDelegationId(Integer id) {
+        if (id == null || id <= 0) {
+            throw new BadRequestException(DelegationMessages.INVALID_DELEGATION_ID);
+        }
+    }
+
     private User getCurrentAcademician() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails userDetails)) {
-            throw new AccessDeniedException(SecurityMessages.ACCESS_DENIED);
-        }
-        User user = userDetails.getUser();
-        String roleName = user.getRole() != null ? user.getRole().getRoleName() : null;
-        if (!RoleType.ACADEMICIAN.name().equals(roleName)) {
-            throw new AccessDeniedException(DelegationMessages.ONLY_ACADEMICIAN);
-        }
-        return user;
+        return getCurrentUserWithRole(RoleType.ACADEMICIAN, DelegationMessages.ONLY_ACADEMICIAN);
     }
 
     private User getCurrentAssistant() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails userDetails)) {
-            throw new AccessDeniedException(SecurityMessages.ACCESS_DENIED);
-        }
-        User user = userDetails.getUser();
-        String roleName = user.getRole() != null ? user.getRole().getRoleName() : null;
-        if (!RoleType.ASSISTANT.name().equals(roleName)) {
-            throw new AccessDeniedException(DelegationMessages.ONLY_ASSISTANT);
+        return getCurrentUserWithRole(RoleType.ASSISTANT, DelegationMessages.ONLY_ASSISTANT);
+    }
+
+    private User getCurrentStudent() {
+        return getCurrentUserWithRole(RoleType.STUDENT, DelegationMessages.ONLY_STUDENT);
+    }
+
+    private User getCurrentHistoryUser() {
+        User user = getAuthenticatedUser();
+        String role = user.getRole() == null ? null : user.getRole().getRoleName();
+        if (!RoleType.ACADEMICIAN.name().equals(role) && !RoleType.ASSISTANT.name().equals(role)) {
+            throw new AccessDeniedException(DelegationMessages.HISTORY_ACCESS_DENIED);
         }
         return user;
     }
 
-    private User getCurrentHistoryUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails userDetails)) {
-            throw new AccessDeniedException(SecurityMessages.ACCESS_DENIED);
-        }
-        User user = userDetails.getUser();
-        String roleName = user.getRole() != null ? user.getRole().getRoleName() : null;
-        if (!RoleType.ACADEMICIAN.name().equals(roleName)
-                && !RoleType.ASSISTANT.name().equals(roleName)) {
-            throw new AccessDeniedException(DelegationMessages.HISTORY_ACCESS_DENIED);
+    private User getCurrentUserWithRole(RoleType role, String message) {
+        User user = getAuthenticatedUser();
+        if (user.getRole() == null || !role.name().equals(user.getRole().getRoleName())) {
+            throw new AccessDeniedException(message);
         }
         return user;
+    }
+
+    private User getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails details)) {
+            throw new AccessDeniedException(SecurityMessages.ACCESS_DENIED);
+        }
+        return details.getUser();
     }
 }

@@ -40,6 +40,7 @@ import com.mars.exception.ConflictException;
 import com.mars.exception.ResourceNotFoundException;
 import com.mars.mapper.AvailabilitySlotMapper;
 import com.mars.repository.AppointmentRepository;
+import com.mars.repository.DelegationLogRepository;
 import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.repository.OutOfOfficePeriodRepository;
 import com.mars.security.CustomUserDetails;
@@ -63,6 +64,7 @@ public class AvailabilitySlotService {
 
     private final AvailabilitySlotRepository availabilitySlotRepository;
     private final AppointmentRepository appointmentRepository;
+    private final DelegationLogRepository delegationLogRepository;
     private final OutOfOfficePeriodRepository outOfOfficePeriodRepository;
     private final AvailabilitySlotMapper availabilitySlotMapper;
     private final RecurrenceRuleService recurrenceRuleService;
@@ -223,14 +225,22 @@ public class AvailabilitySlotService {
 
         if (!Boolean.TRUE.equals(includeBooked)) {
             candidates.removeIf(c -> hasOverlappingActiveAppointment(
-                    activeAppointments, c.occurrenceDate(), c.windowStart(), c.windowEnd()));
+                    activeAppointments, c.occurrenceDate(), c.windowStart(), c.windowEnd())
+                    || hasActiveDelegationLock(
+                            staffId, c.occurrenceDate(), c.windowStart(), c.windowEnd(), now));
             log.info("After Appointment filter={}", candidates.size());
         }
 
         List<AvailableSlotResponseDto> result = new ArrayList<>(candidates.size());
         for (Candidate candidate : candidates) {
             boolean isBooked = hasOverlappingActiveAppointment(
-                    activeAppointments, candidate.occurrenceDate(), candidate.windowStart(), candidate.windowEnd());
+                    activeAppointments, candidate.occurrenceDate(), candidate.windowStart(), candidate.windowEnd())
+                    || hasActiveDelegationLock(
+                            staffId,
+                            candidate.occurrenceDate(),
+                            candidate.windowStart(),
+                            candidate.windowEnd(),
+                            now);
             AvailableSlotResponseDto dto = availabilitySlotMapper.toAvailableResponse(
                     candidate.slot(),
                     candidate.occurrenceDate(),
@@ -244,6 +254,16 @@ public class AvailabilitySlotService {
                         .thenComparing(AvailableSlotResponseDto::getStartTime));
         log.info("Final response count={}", result.size());
         return result;
+    }
+
+    private boolean hasActiveDelegationLock(
+            Integer staffId,
+            LocalDate slotDate,
+            LocalTime startTime,
+            LocalTime endTime,
+            LocalDateTime now) {
+        return delegationLogRepository.existsActiveSlotLock(
+                staffId, slotDate, startTime, endTime, now, null);
     }
 
     private static List<LocalTime[]> splitIntoDurationWindows(

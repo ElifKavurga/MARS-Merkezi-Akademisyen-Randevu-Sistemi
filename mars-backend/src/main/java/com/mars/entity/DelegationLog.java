@@ -1,6 +1,8 @@
 package com.mars.entity;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -49,4 +51,26 @@ public class DelegationLog {
 
     @Column(name = "delegation_status", nullable = false)
     private String delegationStatus;
+
+    @Column(name = "approval_required", nullable = false)
+    private Boolean approvalRequired;
+
+    @Column(name = "student_approval_expires_at")
+    private LocalDateTime studentApprovalExpiresAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "target_slot_id")
+    private AvailabilitySlot targetSlot;
+
+    @Column(name = "target_slot_date")
+    private LocalDate targetSlotDate;
+
+    @Column(name = "target_start_time")
+    private LocalTime targetStartTime;
+
+    @Column(name = "target_end_time")
+    private LocalTime targetEndTime;
+
+    @Column(name = "slot_lock_status")
+    private String slotLockStatus;
 }

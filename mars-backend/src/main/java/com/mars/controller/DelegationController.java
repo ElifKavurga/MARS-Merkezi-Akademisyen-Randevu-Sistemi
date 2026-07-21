@@ -9,10 +9,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mars.dto.CreateDelegationRequest;
 import com.mars.dto.DelegationResponse;
+import com.mars.dto.DelegationTargetResponse;
 import com.mars.service.DelegationService;
 
 import jakarta.validation.Valid;
@@ -30,6 +32,27 @@ public class DelegationController {
             @Valid @RequestBody CreateDelegationRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(delegationService.createDelegation(request));
+    }
+
+    @GetMapping("/targets")
+    public ResponseEntity<List<DelegationTargetResponse>> getDelegationTargets(
+            @RequestParam Integer appointmentId) {
+        return ResponseEntity.ok(delegationService.getDelegationTargets(appointmentId));
+    }
+
+    @GetMapping("/student/pending")
+    public ResponseEntity<List<DelegationResponse>> getPendingStudentApprovals() {
+        return ResponseEntity.ok(delegationService.getPendingStudentApprovals());
+    }
+
+    @PostMapping("/{id}/student-accept")
+    public ResponseEntity<DelegationResponse> acceptStudentApproval(@PathVariable("id") Integer id) {
+        return ResponseEntity.ok(delegationService.acceptStudentApproval(id));
+    }
+
+    @PostMapping("/{id}/student-reject")
+    public ResponseEntity<DelegationResponse> rejectStudentApproval(@PathVariable("id") Integer id) {
+        return ResponseEntity.ok(delegationService.rejectStudentApproval(id));
     }
 
     @GetMapping("/incoming")

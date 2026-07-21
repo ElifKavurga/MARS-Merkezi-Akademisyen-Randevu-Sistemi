@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { getMyNotifications } from '../services/notificationService';
 
 export type NotificationPreviewItem = {
   id: string;
@@ -13,13 +14,34 @@ type NotificationBellProps = {
 };
 
 export default function NotificationBell({
-  items = [],
-  unreadCount = 0,
+  items,
+  unreadCount,
 }: NotificationBellProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const panelId = useId();
-  const badgeCount = unreadCount > 0 ? unreadCount : items.length;
+  const [fetchedItems, setFetchedItems] = useState<NotificationPreviewItem[]>([]);
+  const visibleItems = items ?? fetchedItems;
+  const badgeCount = unreadCount ?? visibleItems.length;
+
+  useEffect(() => {
+    if (items) return;
+    let cancelled = false;
+    void getMyNotifications()
+      .then((notifications) => {
+        if (cancelled) return;
+        setFetchedItems(notifications.map((notification) => ({
+          id: String(notification.notificationId),
+          title: notification.title,
+          description: notification.message,
+          createdAtLabel: new Intl.DateTimeFormat('tr-TR', {
+            day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+          }).format(new Date(notification.createdAt)),
+        })));
+      })
+      .catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [items]);
 
   useEffect(() => {
     if (!open) {
@@ -76,7 +98,7 @@ export default function NotificationBell({
           <div className="border-b border-outline-variant px-4 py-3">
             <p className="font-label-md text-label-md font-semibold text-primary">Bildirimler</p>
           </div>
-          {items.length === 0 ? (
+          {visibleItems.length === 0 ? (
             <div className="px-4 py-8 text-center">
               <span
                 className="material-symbols-outlined text-[28px] text-on-surface-variant/50"
@@ -90,7 +112,7 @@ export default function NotificationBell({
             </div>
           ) : (
             <ul className="max-h-72 overflow-y-auto py-1">
-              {items.map((item) => (
+              {visibleItems.map((item) => (
                 <li
                   key={item.id}
                   className="border-b border-outline-variant/50 px-4 py-3 last:border-b-0"
