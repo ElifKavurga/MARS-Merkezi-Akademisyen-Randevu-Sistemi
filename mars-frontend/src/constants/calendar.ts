@@ -192,12 +192,6 @@ function parseTimeToMinutes(time: string): number {
   return hours * 60 + minutes;
 }
 
-function minutesToTime(totalMinutes: number): string {
-  const clamped = Math.max(0, Math.min(totalMinutes, 24 * 60 - 1));
-  const hours = Math.floor(clamped / 60);
-  const minutes = clamped % 60;
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
-}
 
 export function getAppointmentDurationMinutes(event: CalendarEvent): number {
   return Math.max(
@@ -206,21 +200,13 @@ export function getAppointmentDurationMinutes(event: CalendarEvent): number {
   );
 }
 
-/** Time-grid visual end: appointments capped so chips stay compact. */
+/** Time-grid visual end: return actual end time so height matches duration. */
 export function getCalendarVisualEndTime(event: CalendarEvent): string {
-  if (event.eventType !== 'APPOINTMENT') {
-    const parts = event.endTime.split(':');
-    const hours = (parts[0] ?? '00').padStart(2, '0');
-    const minutes = (parts[1] ?? '00').padStart(2, '0');
-    const seconds = (parts[2] ?? '00').padStart(2, '0');
-    return `${hours}:${minutes}:${seconds}`;
-  }
-  const start = parseTimeToMinutes(event.startTime);
-  const duration = getAppointmentDurationMinutes(event);
-  const visualMinutes = duration <= 0
-    ? APPOINTMENT_VISUAL_MAX_MINUTES
-    : Math.min(duration, APPOINTMENT_VISUAL_MAX_MINUTES);
-  return minutesToTime(start + visualMinutes);
+  const parts = event.endTime.split(':');
+  const hours = (parts[0] ?? '00').padStart(2, '0');
+  const minutes = (parts[1] ?? '00').padStart(2, '0');
+  const seconds = (parts[2] ?? '00').padStart(2, '0');
+  return `${hours}:${minutes}:${seconds}`;
 }
 
 export function shouldRenderAppointmentBusyLane(event: CalendarEvent): boolean {

@@ -4,9 +4,14 @@ import {
   formatCalendarTimeRange,
   getMeetingTypeIcon,
 } from '../constants/calendar';
-import { STUDENT_UI } from '../constants/studentUi';
 import { formatStudentAppointmentDate } from '../utils/studentAppointmentFormat';
+import { STUDENT_UI } from '../constants/studentUi';
 import type { CalendarEvent } from '../types/calendar';
+
+type StaffCalendarEventCardProps = {
+  event: CalendarEvent;
+  onOpen: (event: CalendarEvent) => void;
+};
 
 function MetaRow({
   icon,
@@ -35,11 +40,6 @@ function MetaRow({
   );
 }
 
-type StaffCalendarEventCardProps = {
-  event: CalendarEvent;
-  onOpen: (event: CalendarEvent) => void;
-};
-
 /** Appointment-only list card — aligned with student Randevularım design system. */
 export default function StaffCalendarEventCard({
   event,
@@ -52,6 +52,7 @@ export default function StaffCalendarEventCard({
 
   return (
     <article className="flex h-full min-w-0 flex-col rounded-xl border border-outline-variant bg-surface-container-lowest p-3.5 transition-colors hover:border-primary-container/40 sm:p-4">
+      {/* Header Info */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <h3 className="truncate font-headline-md text-[16px] leading-5 font-semibold text-on-background">
@@ -66,6 +67,7 @@ export default function StaffCalendarEventCard({
         </div>
       </div>
 
+      {/* Date & Time Section */}
       <div
         className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-surface-container/70 px-2.5 py-2"
         aria-label={`Tarih: ${dateLabel}, Saat: ${timeLabel}`}
@@ -84,6 +86,7 @@ export default function StaffCalendarEventCard({
         </div>
       </div>
 
+      {/* Meta details grid */}
       <div className="mt-2.5 grid flex-1 grid-cols-1 content-start gap-1.5 sm:grid-cols-2">
         <MetaRow icon="category" label="Kategori" value={categoryLabel} />
         <MetaRow
@@ -93,6 +96,7 @@ export default function StaffCalendarEventCard({
         />
       </div>
 
+      {/* Detail Button */}
       <div className="mt-3 border-t border-outline-variant/70 pt-3">
         <button
           type="button"

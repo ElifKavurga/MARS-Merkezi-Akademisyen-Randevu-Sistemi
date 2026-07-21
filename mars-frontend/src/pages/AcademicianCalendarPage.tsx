@@ -33,6 +33,15 @@ const VIEW_OPTIONS = [
   { value: 'calendar' as const, label: CALENDAR_MESSAGES.VIEW_CALENDAR },
 ];
 
+const APPOINTMENT_FILTER_OPTIONS = [
+  { value: 'ALL', label: 'Tüm Randevular' },
+  { value: 'PENDING', label: 'Bekleyenler' },
+  { value: 'APPROVED', label: 'Onaylananlar' },
+  { value: 'REJECTED', label: 'Reddedilenler' },
+  { value: 'COMPLETED', label: 'Tamamlananlar' },
+  { value: 'CANCELLED_OR_OTHER', label: 'İptal / Diğer' },
+] as const;
+
 function initialWeekRange(): CalendarDateRange {
   const now = new Date();
   const day = now.getDay();
@@ -63,6 +72,7 @@ export default function AcademicianCalendarPage({
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [range, setRange] = useState<CalendarDateRange>(initialWeekRange);
   const [filter, setFilter] = useState<CalendarFilter>(CALENDAR_FILTER.ALL);
+  const [appointmentFilter, setAppointmentFilter] = useState<string>('ALL');
   const [viewMode, setViewMode] = useState<CalendarViewMode>('calendar');
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -113,10 +123,18 @@ export default function AcademicianCalendarPage({
   );
 
   /** Liste: yalnızca Appointment — müsaitlik slotları asla listelenmez. */
-  const listAppointments = useMemo(
-    () => filteredEvents.filter(isCalendarAppointment),
-    [filteredEvents],
-  );
+  const listAppointments = useMemo(() => {
+    const rawAppointments = events.filter(isCalendarAppointment);
+    if (appointmentFilter === 'ALL') {
+      return rawAppointments;
+    }
+    if (appointmentFilter === 'CANCELLED_OR_OTHER') {
+      return rawAppointments.filter(
+        (app) => app.appointmentStatus === 'CANCELLED' || app.appointmentStatus === 'NO_SHOW',
+      );
+    }
+    return rawAppointments.filter((app) => app.appointmentStatus === appointmentFilter);
+  }, [events, appointmentFilter]);
 
   const openEvent = (event: CalendarEvent) => {
     setSelectedEvent(event);
@@ -134,21 +152,36 @@ export default function AcademicianCalendarPage({
         </div>
         <label className="flex flex-col gap-1.5 sm:min-w-[200px]">
           <span className="font-label-md text-label-md text-on-surface-variant">Filtre</span>
-          <select
-            className={STUDENT_UI.FILTER_CONTROL_CLASS}
-            value={filter}
-            onChange={(e) => setFilter(e.target.value as CalendarFilter)}
-            aria-label="Takvim filtresi"
-          >
-            {(includeAppointments
-              ? STAFF_CALENDAR_FILTER_OPTIONS
-              : CALENDAR_FILTER_OPTIONS
-            ).map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          {viewMode === 'calendar' ? (
+            <select
+              className={STUDENT_UI.FILTER_CONTROL_CLASS}
+              value={filter}
+              onChange={(e) => setFilter(e.target.value as CalendarFilter)}
+              aria-label="Takvim filtresi"
+            >
+              {(includeAppointments
+                ? STAFF_CALENDAR_FILTER_OPTIONS
+                : CALENDAR_FILTER_OPTIONS
+              ).map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <select
+              className={STUDENT_UI.FILTER_CONTROL_CLASS}
+              value={appointmentFilter}
+              onChange={(e) => setAppointmentFilter(e.target.value)}
+              aria-label="Randevu filtresi"
+            >
+              {APPOINTMENT_FILTER_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          )}
         </label>
       </div>
 

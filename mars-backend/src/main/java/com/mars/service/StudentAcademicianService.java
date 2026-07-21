@@ -134,18 +134,34 @@ public class StudentAcademicianService {
             Integer academicianId,
             Integer categoryId,
             Integer courseId) {
+        return listAvailableSlots(academicianId, categoryId, courseId, false);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AvailableSlotResponseDto> listAvailableSlots(
+            Integer academicianId,
+            Integer categoryId,
+            Integer courseId,
+            Boolean includeBooked) {
         log.info(
-                "available-slots request AcademicianId={} CategoryId={} CourseId={}",
+                "available-slots request AcademicianId={} CategoryId={} CourseId={} IncludeBooked={}",
                 academicianId,
                 categoryId,
-                courseId);
+                courseId,
+                includeBooked);
 
         User academician = requireActiveAcademician(academicianId);
         AppointmentCategory category = requireCategory(categoryId);
         validateCourseSelection(courseId, category, academician);
 
-        List<AvailableSlotResponseDto> result = availabilitySlotService.getBookableAvailableSlotsForStaff(
-                academicianId, category.getDurationMinutes());
+        List<AvailableSlotResponseDto> result;
+        if (Boolean.TRUE.equals(includeBooked)) {
+            result = availabilitySlotService.getBookableAvailableSlotsForStaff(
+                    academicianId, category.getDurationMinutes(), true);
+        } else {
+            result = availabilitySlotService.getBookableAvailableSlotsForStaff(
+                    academicianId, category.getDurationMinutes());
+        }
         log.info(
                 "available-slots Final response count={} (AcademicianId={})",
                 result.size(),

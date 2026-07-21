@@ -41,6 +41,7 @@ export type StudentAvailableSlot = {
   startTime: string;
   endTime: string;
   meetingType: string;
+  isBooked?: boolean;
 };
 
 /** Öğrencinin aktif randevu listesi / detay öğesi. */

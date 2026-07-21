@@ -86,6 +86,15 @@ public class AvailabilitySlotMapper {
             LocalDate occurrenceDate,
             LocalTime windowStart,
             LocalTime windowEnd) {
+        return toAvailableResponse(slot, occurrenceDate, windowStart, windowEnd, false);
+    }
+
+    public AvailableSlotResponseDto toAvailableResponse(
+            AvailabilitySlot slot,
+            LocalDate occurrenceDate,
+            LocalTime windowStart,
+            LocalTime windowEnd,
+            boolean isBooked) {
         User staff = slot.getStaff();
         return AvailableSlotResponseDto.builder()
                 .slotId(slot.getSlotId())
@@ -97,6 +106,7 @@ public class AvailabilitySlotMapper {
                 .meetingType(slot.getMeetingType() != null
                         ? slot.getMeetingType()
                         : MeetingType.FACE_TO_FACE.name())
+                .isBooked(isBooked)
                 .build();
     }
 }

@@ -17,12 +17,13 @@ import type {
   StaffAppointment,
   StaffAppointmentScope,
 } from '../types/appointment';
-import AdminActionButton from './AdminActionButton';
 import AppointmentStatusBadge from './AppointmentStatusBadge';
 import ConfirmModal from './ConfirmModal';
 import DelegationModal from './DelegationModal';
 import Loading from './Loading';
 import StaffAppointmentDetailModal from './StaffAppointmentDetailModal';
+import StudentSegmentedTabs from './StudentSegmentedTabs';
+import { STUDENT_UI } from '../constants/studentUi';
 
 type AppointmentView = 'PENDING' | 'ALL';
 type AppointmentAction = {
@@ -206,19 +207,18 @@ export default function StaffAppointmentsView({
 
       <section className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest">
         <div
-          className="flex gap-1 border-b border-outline-variant p-2"
+          className="flex border-b border-outline-variant p-4"
           role="tablist"
           aria-label="Randevu görünümü"
         >
-          <ViewTab
-            active={activeView === 'PENDING'}
-            label={STAFF_APPOINTMENT_MESSAGES.PENDING_TAB}
-            onClick={() => handleViewChange('PENDING')}
-          />
-          <ViewTab
-            active={activeView === 'ALL'}
-            label={STAFF_APPOINTMENT_MESSAGES.ALL_TAB}
-            onClick={() => handleViewChange('ALL')}
+          <StudentSegmentedTabs
+            value={activeView}
+            options={[
+              { value: 'PENDING', label: STAFF_APPOINTMENT_MESSAGES.PENDING_TAB },
+              { value: 'ALL', label: STAFF_APPOINTMENT_MESSAGES.ALL_TAB },
+            ] as const}
+            ariaLabel="Randevu görünümü"
+            onChange={(val) => handleViewChange(val as AppointmentView)}
           />
         </div>
 
@@ -303,50 +303,54 @@ export default function StaffAppointmentsView({
                         <div className="flex flex-wrap items-center justify-end gap-2">
                           {appointment.appointmentStatus === 'PENDING' ? (
                             <>
-                              <AdminActionButton
-                                variant="primary"
-                                icon="check"
+                              <button
+                                type="button"
+                                className={`${STUDENT_UI.PRIMARY_BUTTON_CLASS} py-1.5 px-3 text-[13px] gap-1.5`}
                                 disabled={actionLoading}
                                 onClick={() =>
                                   openActionConfirmation('approve', appointment)
                                 }
                               >
+                                <span className="material-symbols-outlined text-[16px]">check</span>
                                 Onayla
-                              </AdminActionButton>
-                              <AdminActionButton
-                                variant="danger"
-                                icon="close"
+                              </button>
+                              <button
+                                type="button"
+                                className={`${STUDENT_UI.DANGER_BUTTON_CLASS} py-1.5 px-3 text-[13px] gap-1.5`}
                                 disabled={actionLoading}
                                 onClick={() =>
                                   openActionConfirmation('reject', appointment)
                                 }
                               >
+                                <span className="material-symbols-outlined text-[16px]">close</span>
                                 Reddet
-                              </AdminActionButton>
+                              </button>
                             </>
                           ) : null}
                           {showDelegate ? (
-                            <AdminActionButton
-                              variant="neutral"
-                              icon="swap_horiz"
+                            <button
+                              type="button"
+                              className={`${STUDENT_UI.SECONDARY_BUTTON_CLASS} py-1.5 px-3 text-[13px] gap-1.5`}
                               disabled={actionLoading}
                               onClick={() => openDelegation(appointment)}
                             >
+                              <span className="material-symbols-outlined text-[16px]">swap_horiz</span>
                               Devret
-                            </AdminActionButton>
+                            </button>
                           ) : null}
-                          <AdminActionButton
-                            variant="neutral"
-                            icon="visibility"
+                          <button
+                            type="button"
+                            className={`${STUDENT_UI.SECONDARY_BUTTON_CLASS} py-1.5 px-3 text-[13px] gap-1.5`}
                             disabled={detailLoadingId !== null || actionLoading}
                             onClick={() =>
                               void handleShowDetail(appointment.appointmentId)
                             }
                           >
+                            <span className="material-symbols-outlined text-[16px]">visibility</span>
                             {detailLoadingId === appointment.appointmentId
                               ? 'Yükleniyor...'
                               : 'Detay'}
-                          </AdminActionButton>
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -408,31 +412,5 @@ export default function StaffAppointmentsView({
         }}
       />
     </div>
-  );
-}
-
-function ViewTab({
-  active,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      className={`rounded-lg px-4 py-2 font-label-md text-label-md transition-colors ${
-        active
-          ? 'bg-primary-container text-on-primary'
-          : 'text-on-surface-variant hover:bg-surface-container'
-      }`}
-      onClick={onClick}
-    >
-      {label}
-    </button>
   );
 }

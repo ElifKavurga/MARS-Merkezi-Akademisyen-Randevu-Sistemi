@@ -121,6 +121,14 @@ public class AvailabilitySlotService {
     public List<AvailableSlotResponseDto> getBookableAvailableSlotsForStaff(
             Integer staffId,
             Integer durationMinutes) {
+        return getBookableAvailableSlotsForStaff(staffId, durationMinutes, false);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AvailableSlotResponseDto> getBookableAvailableSlotsForStaff(
+            Integer staffId,
+            Integer durationMinutes,
+            Boolean includeBooked) {
         if (staffId == null) {
             throw new BadRequestException("Akademisyen seçimi zorunludur.");
         }
@@ -213,17 +221,23 @@ public class AvailabilitySlotService {
         candidates.removeIf(c -> Boolean.TRUE.equals(c.slot().getIsBlocked()));
         log.info("After Blocked={}", candidates.size());
 
-        candidates.removeIf(c -> hasOverlappingActiveAppointment(
-                activeAppointments, c.occurrenceDate(), c.windowStart(), c.windowEnd()));
-        log.info("After Appointment filter={}", candidates.size());
+        if (!Boolean.TRUE.equals(includeBooked)) {
+            candidates.removeIf(c -> hasOverlappingActiveAppointment(
+                    activeAppointments, c.occurrenceDate(), c.windowStart(), c.windowEnd()));
+            log.info("After Appointment filter={}", candidates.size());
+        }
 
         List<AvailableSlotResponseDto> result = new ArrayList<>(candidates.size());
         for (Candidate candidate : candidates) {
-            result.add(availabilitySlotMapper.toAvailableResponse(
+            boolean isBooked = hasOverlappingActiveAppointment(
+                    activeAppointments, candidate.occurrenceDate(), candidate.windowStart(), candidate.windowEnd());
+            AvailableSlotResponseDto dto = availabilitySlotMapper.toAvailableResponse(
                     candidate.slot(),
                     candidate.occurrenceDate(),
                     candidate.windowStart(),
-                    candidate.windowEnd()));
+                    candidate.windowEnd());
+            dto.setIsBooked(isBooked);
+            result.add(dto);
         }
         result.sort(
                 java.util.Comparator.comparing(AvailableSlotResponseDto::getSlotDate)

@@ -9,16 +9,15 @@ import {
   exclusiveEndToInclusiveIso,
   formatCalendarEventTitle,
   formatCalendarTimeRange,
-  getAppointmentBusyLaneColor,
   getCalendarEventStyle,
   getCalendarVisualEndTime,
   getMeetingTypeIcon,
-  shouldRenderAppointmentBusyLane,
   toFullCalendarDateTime,
   toLocalIsoDate,
 } from '../constants/calendar';
 import { getMeetingTypeLabel } from '../constants/appointment';
 import type { CalendarDateRange, CalendarEvent } from '../types/calendar';
+
 
 type AcademicianCalendarProps = {
   events: CalendarEvent[];
@@ -41,15 +40,9 @@ function EventBody({
 
   if (isAppointment) {
     return (
-      <div className="mars-cal-event-body flex w-full flex-col justify-center gap-0.5 overflow-hidden px-1 py-0.5 leading-tight">
-        <span className="truncate font-semibold">{timeRange}</span>
-        <span className="truncate">{event.studentName?.trim() || 'Öğrenci'}</span>
-        <span className="inline-flex min-w-0 items-center gap-0.5 truncate opacity-95">
-          <span className="material-symbols-outlined text-[12px] leading-none" aria-hidden>
-            {meetingIcon}
-          </span>
-          {!dense ? <span className="truncate">{meetingLabel}</span> : null}
-        </span>
+      <div className="mars-cal-event-body flex w-full h-full flex-col justify-center overflow-hidden px-1.5 py-0.5 leading-tight">
+        <span className="truncate font-semibold text-[10px] sm:text-[11px] opacity-90">{timeRange}</span>
+        <span className="truncate font-bold text-[12px] sm:text-[13px]">{event.studentName?.trim() || 'Öğrenci'}</span>
       </div>
     );
   }
@@ -83,29 +76,29 @@ function toCalendarInputs(events: CalendarEvent[]): EventInput[] {
     const style = getCalendarEventStyle(event);
     const eventKey = `${event.eventType}-${event.appointmentId ?? event.slotId}-${event.slotDate}-${event.startTime}`;
 
-    if (shouldRenderAppointmentBusyLane(event)) {
+    if (event.eventType === 'AVAILABILITY') {
       inputs.push({
-        id: `busy-${eventKey}`,
+        id: eventKey,
         start: toFullCalendarDateTime(event.slotDate, event.startTime),
         end: toFullCalendarDateTime(event.slotDate, event.endTime),
         display: 'background',
-        backgroundColor: getAppointmentBusyLaneColor(event),
-        classNames: ['mars-cal-busy-lane'],
-        extendedProps: { calendarEvent: event, isBusyLane: true },
+        backgroundColor: style.backgroundColor,
+        classNames: style.classNames,
+        extendedProps: { calendarEvent: event, isBusyLane: false },
+      });
+    } else {
+      inputs.push({
+        id: eventKey,
+        title: formatCalendarEventTitle(event),
+        start: toFullCalendarDateTime(event.slotDate, event.startTime),
+        end: toFullCalendarDateTime(event.slotDate, getCalendarVisualEndTime(event)),
+        backgroundColor: style.backgroundColor,
+        borderColor: style.borderColor,
+        textColor: style.textColor,
+        classNames: style.classNames,
+        extendedProps: { calendarEvent: event, isBusyLane: false },
       });
     }
-
-    inputs.push({
-      id: eventKey,
-      title: formatCalendarEventTitle(event),
-      start: toFullCalendarDateTime(event.slotDate, event.startTime),
-      end: toFullCalendarDateTime(event.slotDate, getCalendarVisualEndTime(event)),
-      backgroundColor: style.backgroundColor,
-      borderColor: style.borderColor,
-      textColor: style.textColor,
-      classNames: style.classNames,
-      extendedProps: { calendarEvent: event, isBusyLane: false },
-    });
   }
 
   return inputs;

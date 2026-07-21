@@ -72,7 +72,12 @@ public class StudentAcademicianController {
     public ResponseEntity<List<AvailableSlotResponseDto>> listAvailableSlots(
             @PathVariable("id") Integer id,
             @RequestParam Integer categoryId,
-            @RequestParam(required = false) Integer courseId) {
-        return ResponseEntity.ok(studentAcademicianService.listAvailableSlots(id, categoryId, courseId));
+            @RequestParam(required = false) Integer courseId,
+            @RequestParam(required = false, defaultValue = "false") Boolean includeBooked) {
+        if (Boolean.TRUE.equals(includeBooked)) {
+            return ResponseEntity.ok(studentAcademicianService.listAvailableSlots(id, categoryId, courseId, true));
+        } else {
+            return ResponseEntity.ok(studentAcademicianService.listAvailableSlots(id, categoryId, courseId));
+        }
     }
 }

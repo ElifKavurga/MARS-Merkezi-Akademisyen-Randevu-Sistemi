@@ -23,4 +23,7 @@ public class AvailableSlotResponseDto {
     private LocalTime startTime;
     private LocalTime endTime;
     private String meetingType;
+
+    @Builder.Default
+    private Boolean isBooked = false;
 }

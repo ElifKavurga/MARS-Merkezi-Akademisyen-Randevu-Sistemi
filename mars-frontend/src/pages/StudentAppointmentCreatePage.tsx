@@ -363,7 +363,9 @@ function SlotStepPanel({
   onContinue: () => void;
   onBack: () => void;
 }) {
-  const canContinue = selectedKey != null;
+  const canContinue = slots.some(
+    (slot) => !slot.isBooked && slotSelectionKey(slot) === selectedKey,
+  );
 
   const groupedSlots = useMemo(() => {
     const byDate = new Map<string, StudentAvailableSlot[]>();
@@ -422,6 +424,43 @@ function SlotStepPanel({
                   {group.slots.map((slot) => {
                     const key = slotSelectionKey(slot);
                     const selected = selectedKey === key;
+                    const isBooked = slot.isBooked === true;
+
+                    if (isBooked) {
+                      return (
+                        <div
+                          key={key}
+                          aria-disabled="true"
+                          className="relative flex min-w-0 flex-col gap-1 rounded-xl border border-outline-variant/60 bg-neutral-100 p-3 text-left opacity-60 cursor-not-allowed select-none transition-all duration-200"
+                        >
+                          <div className="flex w-full items-center justify-between gap-1.5">
+                            <span className="font-body-md text-body-md font-bold text-neutral-400 line-through">
+                              {formatSlotTime(slot.startTime)}
+                            </span>
+                            <span
+                              className="material-symbols-outlined text-[16px] text-neutral-400 shrink-0 select-none"
+                              aria-hidden="true"
+                            >
+                              lock
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap items-center justify-between gap-1">
+                            <span className="font-label-sm text-[12px] text-neutral-400">
+                              {STUDENT_APPOINTMENT_MESSAGES.STEP_SLOT_DURATION(durationMinutes)}
+                              {' · '}
+                              {getMeetingTypeLabel(slot.meetingType)}
+                            </span>
+                            <span className="inline-flex items-center gap-0.5 rounded-md bg-neutral-200 px-1.5 py-0.5 font-label-sm text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
+                              Dolu
+                            </span>
+                          </div>
+                          <span className="sr-only">
+                            {formatSlotTime(slot.startTime)} - Dolu. Bu saat başka bir öğrenci tarafından rezerve edilmiştir.
+                          </span>
+                        </div>
+                      );
+                    }
+
                     return (
                       <button
                         key={key}
@@ -429,19 +468,29 @@ function SlotStepPanel({
                         role="radio"
                         aria-checked={selected}
                         onClick={() => onSelect(slot)}
-                        className={`flex min-w-0 flex-col items-start gap-0.5 rounded-lg border px-2.5 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim focus-visible:ring-offset-1 ${
+                        className={`flex min-w-0 w-full flex-col items-start gap-0.5 rounded-lg border px-2.5 py-2 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim focus-visible:ring-offset-1 cursor-pointer hover:scale-[1.02] ${
                           selected
-                            ? 'border-2 border-primary bg-primary-fixed text-on-primary-fixed shadow-sm'
+                            ? 'border-2 border-primary bg-primary-fixed text-on-primary-fixed shadow-sm scale-[1.02]'
                             : 'border border-outline-variant bg-surface-container-lowest hover:border-primary hover:bg-surface-container'
                         }`}
                       >
-                        <span
-                          className={`font-body-md text-body-md font-semibold ${
-                            selected ? 'text-on-primary-fixed' : 'text-on-surface'
-                          }`}
-                        >
-                          {formatSlotTime(slot.startTime)}
-                        </span>
+                        <div className="flex w-full items-center justify-between gap-1.5">
+                          <span
+                            className={`font-body-md text-body-md font-semibold ${
+                              selected ? 'text-on-primary-fixed' : 'text-on-surface'
+                            }`}
+                          >
+                            {formatSlotTime(slot.startTime)}
+                          </span>
+                          <span
+                            className={`material-symbols-outlined text-[16px] shrink-0 select-none ${
+                              selected ? 'text-on-primary-fixed' : 'text-primary'
+                            }`}
+                            aria-hidden="true"
+                          >
+                            event_available
+                          </span>
+                        </div>
                         <span
                           className={`font-label-sm text-label-sm ${
                             selected ? 'text-on-primary-fixed-variant' : 'text-on-surface-variant'
@@ -450,6 +499,9 @@ function SlotStepPanel({
                           {STUDENT_APPOINTMENT_MESSAGES.STEP_SLOT_DURATION(durationMinutes)}
                           {' · '}
                           {getMeetingTypeLabel(slot.meetingType)}
+                        </span>
+                        <span className="sr-only">
+                          {formatSlotTime(slot.startTime)} - Müsait. Randevu almak için tıklayın.
                         </span>
                       </button>
                     );

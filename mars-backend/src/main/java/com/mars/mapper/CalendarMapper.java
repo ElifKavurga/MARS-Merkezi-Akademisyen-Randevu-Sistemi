@@ -34,7 +34,7 @@ public class CalendarMapper {
                 .appointmentId(appointment.getAppointmentId())
                 .slotDate(slot != null ? slot.getSlotDate() : null)
                 .startTime(slot != null ? slot.getStartTime() : null)
-                .endTime(slot != null ? slot.getEndTime() : null)
+                .endTime(slot != null && appointment.getCategory() != null && appointment.getCategory().getDurationMinutes() != null ? slot.getStartTime().plusMinutes(appointment.getCategory().getDurationMinutes()) : (slot != null ? slot.getEndTime() : null))
                 .recurrenceRuleId(null)
                 .isBlocked(null)
                 .meetingType(appointment.getMeetingType())

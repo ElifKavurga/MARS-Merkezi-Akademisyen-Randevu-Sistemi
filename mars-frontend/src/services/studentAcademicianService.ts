@@ -67,6 +67,7 @@ export async function getStudentAcademicianAvailableSlots(
       params: {
         categoryId: params.categoryId,
         courseId: params.courseId ?? undefined,
+        includeBooked: true,
       },
     },
   );
