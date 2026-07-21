@@ -2,13 +2,16 @@ import { useCallback, useEffect, type ReactNode, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import AppointmentStatusBadge from '../components/AppointmentStatusBadge';
+import ConfirmModal from '../components/ConfirmModal';
 import StudentBackLink from '../components/StudentBackLink';
 import StudentErrorState from '../components/StudentErrorState';
 import StudentLoadingState from '../components/StudentLoadingState';
 import StudentPageHeader from '../components/StudentPageHeader';
-import { getMeetingTypeLabel } from '../constants/appointment';
+import { STAFF_APPOINTMENT_MESSAGES, getMeetingTypeLabel } from '../constants/appointment';
 import { ROUTES } from '../constants/routes';
-import { getStaffAppointment } from '../services/appointmentService';
+import { STUDENT_UI } from '../constants/studentUi';
+import { useToast } from '../hooks/useToast';
+import { approveStaffAppointment, getStaffAppointment } from '../services/appointmentService';
 import type { StaffAppointment } from '../types/appointment';
 
 function formatDate(date: string): string {
@@ -75,6 +78,10 @@ export default function AcademicianAppointmentDetailPage() {
   const [appointment, setAppointment] = useState<StaffAppointment | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showApproveConfirm, setShowApproveConfirm] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+  const [approvalError, setApprovalError] = useState<string | null>(null);
+  const toast = useToast();
 
   const loadAppointment = useCallback(async () => {
     if (!isValidId) {
@@ -106,6 +113,46 @@ export default function AcademicianAppointmentDetailPage() {
     void loadAppointment();
   }, [loadAppointment]);
 
+  const handleApproveClick = () => {
+    if (!appointment || appointment.appointmentStatus !== 'PENDING' || isApproving) {
+      return;
+    }
+    setApprovalError(null);
+    setShowApproveConfirm(true);
+  };
+
+  const handleApproveConfirm = async () => {
+    if (!appointment || isApproving) {
+      return;
+    }
+
+    setIsApproving(true);
+    setApprovalError(null);
+    try {
+      const updatedAppointment = await approveStaffAppointment(
+        'academician',
+        appointment.appointmentId,
+      );
+      setAppointment(updatedAppointment);
+      setShowApproveConfirm(false);
+      toast.success(STAFF_APPOINTMENT_MESSAGES.APPROVE_SUCCESS);
+    } catch (err) {
+      let message: string = STAFF_APPOINTMENT_MESSAGES.ACTION_ERROR;
+      if (isAxiosError(err)) {
+        if (err.response?.status === 403) {
+          message = STAFF_APPOINTMENT_MESSAGES.ACTION_ACCESS_DENIED;
+        } else if (err.response?.status === 404) {
+          message = STAFF_APPOINTMENT_MESSAGES.ACTION_NOT_FOUND;
+        } else if (err.response?.status === 409) {
+          message = STAFF_APPOINTMENT_MESSAGES.ACTION_NOT_PENDING;
+        }
+      }
+      setApprovalError(message);
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
   const courseLabel = appointment?.courseName
     ? `${appointment.courseCode ?? ''} ${appointment.courseName}`.trim()
     : null;
@@ -117,8 +164,21 @@ export default function AcademicianAppointmentDetailPage() {
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
-      <div className="mb-3">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <StudentBackLink to={ROUTES.ACADEMICIAN_APPOINTMENTS} label="Geri Dön" />
+        {appointment?.appointmentStatus === 'PENDING' ? (
+          <button
+            type="button"
+            className={STUDENT_UI.PRIMARY_BUTTON_CLASS}
+            disabled={isApproving}
+            onClick={handleApproveClick}
+          >
+            <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+              check
+            </span>
+            {isApproving ? 'Onaylanıyor...' : 'Randevuyu Onayla'}
+          </button>
+        ) : null}
       </div>
 
       <StudentPageHeader
@@ -208,6 +268,24 @@ export default function AcademicianAppointmentDetailPage() {
           </InfoCard>
         </div>
       ) : null}
+
+      <ConfirmModal
+        open={showApproveConfirm && Boolean(appointment)}
+        title={STAFF_APPOINTMENT_MESSAGES.APPROVE_TITLE}
+        description={STAFF_APPOINTMENT_MESSAGES.APPROVE_DESCRIPTION}
+        confirmLabel="Onayla"
+        loading={isApproving}
+        error={approvalError}
+        variant="primary"
+        zIndexClass="z-[60]"
+        onConfirm={() => void handleApproveConfirm()}
+        onClose={() => {
+          if (!isApproving) {
+            setShowApproveConfirm(false);
+            setApprovalError(null);
+          }
+        }}
+      />
     </div>
   );
 }
