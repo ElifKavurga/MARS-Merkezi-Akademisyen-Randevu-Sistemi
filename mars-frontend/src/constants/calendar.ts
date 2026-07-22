@@ -1,6 +1,7 @@
 import type { CalendarEvent, CalendarFilter } from '../types/calendar';
 import { CALENDAR_FILTER } from '../types/calendar';
 import { formatTimeLabel } from './availability';
+import { getAppointmentStatusLabel, getMeetingTypeLabel } from './appointment';
 import { STUDENT_APPOINTMENT_STATUS_EVENT_COLORS } from './studentAppointment';
 
 export const CALENDAR_MESSAGES = {
@@ -98,22 +99,6 @@ export function getCalendarEventStyle(event: CalendarEvent): CalendarEventStyle 
       classNames: ['mars-cal-event', 'mars-cal-event--appointment'],
     };
   }
-  if (event.isBlocked) {
-    return {
-      backgroundColor: CALENDAR_EVENT_COLORS.BLOCKED_SOFT,
-      borderColor: CALENDAR_EVENT_COLORS.BLOCKED,
-      textColor: '#374151',
-      classNames: ['mars-cal-event', 'mars-cal-event--availability', 'mars-cal-event--blocked'],
-    };
-  }
-  if (event.recurrenceRuleId != null) {
-    return {
-      backgroundColor: CALENDAR_EVENT_COLORS.RECURRING_SOFT,
-      borderColor: CALENDAR_EVENT_COLORS.RECURRING,
-      textColor: '#0b1641',
-      classNames: ['mars-cal-event', 'mars-cal-event--availability', 'mars-cal-event--recurring'],
-    };
-  }
   return {
     backgroundColor: CALENDAR_EVENT_COLORS.NORMAL_SOFT,
     borderColor: CALENDAR_EVENT_COLORS.NORMAL,
@@ -198,6 +183,34 @@ export function getAppointmentDurationMinutes(event: CalendarEvent): number {
     0,
     parseTimeToMinutes(event.endTime) - parseTimeToMinutes(event.startTime),
   );
+}
+
+export function getTimeRangeDurationMinutes(startTime: string, endTime: string): number {
+  return Math.max(0, parseTimeToMinutes(endTime) - parseTimeToMinutes(startTime));
+}
+
+export function formatDurationLabel(minutes: number): string {
+  return `${minutes} dk`;
+}
+
+export function formatCalendarEventTooltip(event: CalendarEvent): string {
+  const duration = getAppointmentDurationMinutes(event);
+  if (event.eventType === 'APPOINTMENT') {
+    return [
+      `Öğrenci: ${event.studentName?.trim() || '—'}`,
+      `Kategori: ${event.categoryName?.trim() || '—'}`,
+      `Saat: ${formatCalendarTimeRange(event)}`,
+      `Süre: ${formatDurationLabel(duration)}`,
+      `Görüşme Türü: ${getMeetingTypeLabel(event.meetingType)}`,
+      `Durum: ${getAppointmentStatusLabel(event.appointmentStatus ?? '')}`,
+    ].join('\n');
+  }
+  return [
+    `Saat: ${formatCalendarTimeRange(event)}`,
+    `Süre: ${formatDurationLabel(duration)}`,
+    `Görüşme Türü: ${getMeetingTypeLabel(event.meetingType)}`,
+    `Durum: ${event.isBlocked ? 'Ofis dışı / engellenmiş' : 'Müsait'}`,
+  ].join('\n');
 }
 
 /** Time-grid visual end: return actual end time so height matches duration. */

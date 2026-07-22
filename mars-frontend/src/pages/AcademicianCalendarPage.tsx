@@ -228,30 +228,7 @@ export default function AcademicianCalendarPage({
           <LegendItem
             color={CALENDAR_EVENT_COLORS.NORMAL_SOFT}
             borderColor={CALENDAR_EVENT_COLORS.NORMAL}
-            label={CALENDAR_MESSAGES.LEGEND_AVAILABILITY}
-            dashed
-          />
-          <LegendItem
-            color={CALENDAR_EVENT_COLORS.RECURRING_SOFT}
-            borderColor={CALENDAR_EVENT_COLORS.RECURRING}
-            label={CALENDAR_MESSAGES.LEGEND_RECURRING}
-            dashed
-          />
-          <LegendItem
-            color={CALENDAR_EVENT_COLORS.BLOCKED_SOFT}
-            borderColor={CALENDAR_EVENT_COLORS.BLOCKED}
-            label={CALENDAR_MESSAGES.LEGEND_BLOCKED}
-            dashed
-          />
-          <LegendItem
-            color={CALENDAR_EVENT_COLORS.APPOINTMENT}
-            borderColor={CALENDAR_EVENT_COLORS.APPOINTMENT}
-            label={CALENDAR_MESSAGES.LEGEND_APPOINTMENT}
-          />
-          <LegendItem
-            color="rgba(217, 119, 6, 0.22)"
-            borderColor={CALENDAR_EVENT_COLORS.APPOINTMENT}
-            label={CALENDAR_MESSAGES.LEGEND_BUSY}
+            label="Müsaitlik"
           />
         </div>
       ) : null}

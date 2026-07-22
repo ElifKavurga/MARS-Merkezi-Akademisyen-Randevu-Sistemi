@@ -180,12 +180,14 @@ export const STUDENT_APPOINTMENT_MESSAGES = {
 
 /** Takvim etkinlik renkleri — badge nokta renkleriyle uyumlu; beyaz metin için yeterli kontrast. */
 export const STUDENT_APPOINTMENT_STATUS_EVENT_COLORS: Record<string, string> = {
-  PENDING: '#D97706',
-  APPROVED: '#059669',
-  REJECTED: '#DC2626',
-  COMPLETED: '#2563EB',
-  NO_SHOW: '#64748B',
-  CANCELLED: '#64748B',
+  PENDING: '#B45309',
+  APPROVED: '#047857',
+  REJECTED: '#B91C1C',
+  COMPLETED: '#1D4ED8',
+  NO_SHOW: '#475569',
+  CANCELLED: '#6B7280',
+  DELEGATION_PENDING: '#7C3AED',
+  RESCHEDULE_PENDING: '#C2410C',
   DEFAULT: '#0b1641',
 };
 
