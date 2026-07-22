@@ -1,7 +1,5 @@
 package com.mars.dto;
 
-import java.time.LocalDateTime;
-
 import com.mars.enums.NotificationType;
 
 import lombok.Builder;
@@ -9,14 +7,11 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class NotificationResponse {
-    private Integer notificationId;
+public class NotificationCreateRequest {
     private Integer userId;
-    private NotificationType notificationType;
     private String title;
     private String message;
+    private NotificationType notificationType;
     private Integer relatedAppointmentId;
     private Integer relatedDelegationId;
-    private Boolean isRead;
-    private LocalDateTime createdAt;
 }
