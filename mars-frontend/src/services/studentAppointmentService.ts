@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient';
-import type { Appointment, AppointmentCreatePayload } from '../types/appointment';
+import type { Appointment, AppointmentCreatePayload, AppointmentRescheduleApproval } from '../types/appointment';
 import type { StudentAppointmentListItem } from '../types/studentAppointment';
 
 export async function getStudentActiveAppointments(): Promise<StudentAppointmentListItem[]> {
@@ -36,5 +36,31 @@ export async function createStudentAppointment(
   payload: AppointmentCreatePayload,
 ): Promise<Appointment> {
   const { data } = await apiClient.post<Appointment>('/students/appointments', payload);
+  return data;
+}
+
+export async function getPendingRescheduleApproval(
+  appointmentId: number,
+): Promise<AppointmentRescheduleApproval | null> {
+  try {
+    const { data } = await apiClient.get<AppointmentRescheduleApproval>(
+      `/students/appointments/${appointmentId}/reschedule-request`,
+    );
+    return data;
+  } catch (error: unknown) {
+    const status = (error as { response?: { status?: number } }).response?.status;
+    if (status === 404) return null;
+    throw error;
+  }
+}
+
+export async function decideRescheduleApproval(
+  requestId: number,
+  accept: boolean,
+): Promise<AppointmentRescheduleApproval> {
+  const action = accept ? 'accept' : 'reject';
+  const { data } = await apiClient.patch<AppointmentRescheduleApproval>(
+    `/students/appointments/reschedule-requests/${requestId}/${action}`,
+  );
   return data;
 }

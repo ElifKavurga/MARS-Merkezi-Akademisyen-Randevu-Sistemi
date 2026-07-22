@@ -404,10 +404,9 @@ export default function AcademicianAppointmentDetailPage() {
         appointment={appointment}
         open={showReschedule && canReschedule}
         onClose={() => setShowReschedule(false)}
-        onSuccess={(updatedAppointment) => {
-          setAppointment(updatedAppointment);
+        onSuccess={() => {
           setShowReschedule(false);
-          toast.success(STAFF_APPOINTMENT_MESSAGES.RESCHEDULE_SUCCESS);
+          toast.success('Yeniden planlama talebi öğrenci onayına gönderildi.');
         }}
       />
 

@@ -58,6 +58,10 @@ public final class AppointmentMessages {
     public static final String RESCHEDULE_NOT_ALLOWED =
             "Tamamlanmış, iptal edilmiş veya No-Show randevular yeniden planlanamaz.";
 
+    public static final String RESCHEDULE_ALREADY_PENDING = "Bu randevu için bekleyen bir yeniden planlama talebi bulunuyor.";
+    public static final String RESCHEDULE_REQUEST_NOT_FOUND = "Yeniden planlama talebi bulunamadı.";
+    public static final String RESCHEDULE_REQUEST_EXPIRED = "Yeniden planlama talebinin süresi doldu.";
+
     private AppointmentMessages() {
     }
 }

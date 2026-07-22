@@ -3,6 +3,7 @@ import type {
   Appointment,
   AppointmentCreatePayload,
   AppointmentReschedulePayload,
+  AppointmentRescheduleApproval,
   AvailableSlot,
   StaffAppointment,
   StaffAppointmentScope,
@@ -81,8 +82,8 @@ export async function getStaffAppointmentRescheduleSlots(
 export async function rescheduleStaffAppointment(
   appointmentId: number,
   payload: AppointmentReschedulePayload,
-): Promise<StaffAppointment> {
-  const { data } = await apiClient.patch<StaffAppointment>(
+): Promise<AppointmentRescheduleApproval> {
+  const { data } = await apiClient.patch<AppointmentRescheduleApproval>(
     `/academician/appointments/${appointmentId}/reschedule`,
     payload,
   );

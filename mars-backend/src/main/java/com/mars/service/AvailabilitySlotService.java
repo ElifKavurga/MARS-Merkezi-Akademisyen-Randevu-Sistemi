@@ -40,6 +40,7 @@ import com.mars.exception.ConflictException;
 import com.mars.exception.ResourceNotFoundException;
 import com.mars.mapper.AvailabilitySlotMapper;
 import com.mars.repository.AppointmentRepository;
+import com.mars.repository.AppointmentRescheduleRequestRepository;
 import com.mars.repository.DelegationLogRepository;
 import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.repository.OutOfOfficePeriodRepository;
@@ -64,6 +65,7 @@ public class AvailabilitySlotService {
 
     private final AvailabilitySlotRepository availabilitySlotRepository;
     private final AppointmentRepository appointmentRepository;
+    private final AppointmentRescheduleRequestRepository appointmentRescheduleRequestRepository;
     private final DelegationLogRepository delegationLogRepository;
     private final OutOfOfficePeriodRepository outOfOfficePeriodRepository;
     private final AvailabilitySlotMapper availabilitySlotMapper;
@@ -111,6 +113,8 @@ public class AvailabilitySlotService {
                 .filter(slot -> isSlotAfterBookingNotice(slot, earliestBookable))
                 .filter(slot -> !outOfOfficePeriodRepository.existsOverlappingPeriod(
                         staffId, slot.getSlotDate(), slot.getSlotDate()))
+                .filter(slot -> !appointmentRescheduleRequestRepository.existsActiveSlotLock(
+                        staffId, slot.getSlotDate(), slot.getStartTime(), slot.getEndTime(), now))
                 .map(availabilitySlotMapper::toAvailableResponse)
                 .toList();
     }
@@ -227,6 +231,8 @@ public class AvailabilitySlotService {
             candidates.removeIf(c -> hasOverlappingActiveAppointment(
                     activeAppointments, c.occurrenceDate(), c.windowStart(), c.windowEnd())
                     || hasActiveDelegationLock(
+                            staffId, c.occurrenceDate(), c.windowStart(), c.windowEnd(), now)
+                    || hasActiveRescheduleLock(
                             staffId, c.occurrenceDate(), c.windowStart(), c.windowEnd(), now));
             log.info("After Appointment filter={}", candidates.size());
         }
@@ -236,6 +242,12 @@ public class AvailabilitySlotService {
             boolean isBooked = hasOverlappingActiveAppointment(
                     activeAppointments, candidate.occurrenceDate(), candidate.windowStart(), candidate.windowEnd())
                     || hasActiveDelegationLock(
+                            staffId,
+                            candidate.occurrenceDate(),
+                            candidate.windowStart(),
+                            candidate.windowEnd(),
+                            now)
+                    || hasActiveRescheduleLock(
                             staffId,
                             candidate.occurrenceDate(),
                             candidate.windowStart(),
@@ -264,6 +276,16 @@ public class AvailabilitySlotService {
             LocalDateTime now) {
         return delegationLogRepository.existsActiveSlotLock(
                 staffId, slotDate, startTime, endTime, now, null);
+    }
+
+    private boolean hasActiveRescheduleLock(
+            Integer staffId,
+            LocalDate slotDate,
+            LocalTime startTime,
+            LocalTime endTime,
+            LocalDateTime now) {
+        return appointmentRescheduleRequestRepository.existsActiveSlotLock(
+                staffId, slotDate, startTime, endTime, now);
     }
 
     private static List<LocalTime[]> splitIntoDurationWindows(

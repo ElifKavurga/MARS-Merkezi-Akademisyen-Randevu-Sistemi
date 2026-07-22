@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.mars.config.CorsConfig;
 import com.mars.dto.AppointmentRescheduleRequest;
+import com.mars.dto.AppointmentRescheduleResponse;
 import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.StaffAppointmentResponseDto;
 import com.mars.enums.AppointmentStatus;
@@ -155,10 +156,14 @@ class AcademicianAppointmentControllerTest {
     @Test
     @WithMockUser(roles = "ACADEMICIAN")
     void rescheduleAppointment_asAcademician_returnsUpdatedTime() throws Exception {
-        StaffAppointmentResponseDto response = appointmentResponse(AppointmentStatus.APPROVED);
-        response.setAppointmentDate(LocalDate.of(2026, 7, 24));
-        response.setStartTime(LocalTime.of(13, 0));
-        response.setEndTime(LocalTime.of(13, 10));
+        AppointmentRescheduleResponse response = AppointmentRescheduleResponse.builder()
+                .rescheduleRequestId(31)
+                .appointmentId(11)
+                .status("PENDING")
+                .proposedDate(LocalDate.of(2026, 7, 24))
+                .proposedStartTime(LocalTime.of(13, 0))
+                .proposedEndTime(LocalTime.of(13, 10))
+                .build();
         when(appointmentService.rescheduleStaffAppointment(
                 org.mockito.ArgumentMatchers.eq(11),
                 any(AppointmentRescheduleRequest.class),
@@ -177,8 +182,9 @@ class AcademicianAppointmentControllerTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.appointmentDate").value("2026-07-24"))
-                .andExpect(jsonPath("$.startTime").value("13:00:00"));
+                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.proposedDate").value("2026-07-24"))
+                .andExpect(jsonPath("$.proposedStartTime").value("13:00:00"));
     }
 
     @Test

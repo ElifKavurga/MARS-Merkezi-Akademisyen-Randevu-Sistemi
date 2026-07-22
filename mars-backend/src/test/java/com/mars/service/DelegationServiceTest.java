@@ -39,6 +39,7 @@ import com.mars.exception.ConflictException;
 import com.mars.exception.ResourceNotFoundException;
 import com.mars.mapper.DelegationMapper;
 import com.mars.repository.AppointmentRepository;
+import com.mars.repository.AppointmentRescheduleRequestRepository;
 import com.mars.repository.CourseAssignmentRepository;
 import com.mars.repository.DelegationLogRepository;
 import com.mars.repository.UserRepository;
@@ -51,6 +52,8 @@ class DelegationServiceTest {
     private DelegationLogRepository delegationLogRepository;
     @Mock
     private AppointmentRepository appointmentRepository;
+    @Mock
+    private AppointmentRescheduleRequestRepository appointmentRescheduleRequestRepository;
     @Mock
     private CourseAssignmentRepository courseAssignmentRepository;
     @Mock

@@ -12,6 +12,7 @@ const APPROVED_TYPES = new Set<NotificationType>([
 const REJECTED_TYPES = new Set<NotificationType>([
   'APPOINTMENT_REJECTED', 'APPOINTMENT_CANCELLED',
   'DELEGATION_REJECTED', 'DELEGATION_EXPIRED',
+  'APPOINTMENT_RESCHEDULE_REJECTED', 'APPOINTMENT_RESCHEDULE_EXPIRED',
 ]);
 
 export function getNotificationVisual(type: NotificationType): NotificationVisual {
@@ -21,7 +22,7 @@ export function getNotificationVisual(type: NotificationType): NotificationVisua
   if (REJECTED_TYPES.has(type)) {
     return { icon: 'cancel', iconClass: 'text-error', containerClass: 'bg-error-container/60' };
   }
-  if (type === 'APPOINTMENT_RESCHEDULED') {
+  if (type === 'APPOINTMENT_RESCHEDULED' || type === 'APPOINTMENT_RESCHEDULE_REQUESTED') {
     return { icon: 'event_repeat', iconClass: 'text-primary-container', containerClass: 'bg-primary-fixed' };
   }
   if (type === 'STUDENT_APPROVAL_PENDING') {

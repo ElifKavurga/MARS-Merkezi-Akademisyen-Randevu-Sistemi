@@ -1,13 +1,17 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ROUTES } from '../constants/routes';
 import { useNotifications } from '../hooks/useNotifications';
 import NotificationCard from './NotificationCard';
+import { useAuth } from '../hooks/useAuth';
+import { getNotificationTarget } from '../utils/notificationNavigation';
 
 const PREVIEW_LIMIT = 5;
 
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { recentNotifications, unreadCount, loading, markAsRead } = useNotifications();
   const rootRef = useRef<HTMLDivElement>(null);
   const panelId = useId();
@@ -61,7 +65,7 @@ export default function NotificationBell() {
             </div>
           ) : (
             <ul className="max-h-[min(65vh,25rem)] divide-y divide-outline-variant/70 overflow-y-auto">
-              {visibleItems.map((item) => <li key={item.notificationId}><NotificationCard notification={item} compact onRead={(notification) => void markAsRead(notification).catch(() => undefined)} /></li>)}
+              {visibleItems.map((item) => <li key={item.notificationId}><NotificationCard notification={item} compact onRead={(notification) => void markAsRead(notification).catch(() => undefined)} onOpen={(notification) => { const target = getNotificationTarget(notification, user?.role); if (target) { setOpen(false); navigate(target); } }} /></li>)}
             </ul>
           )}
           <Link to={ROUTES.NOTIFICATIONS} onClick={() => setOpen(false)} className="flex items-center justify-center gap-1.5 border-t border-outline-variant px-4 py-3 font-label-md text-label-md font-semibold text-primary-container no-underline transition-colors hover:bg-surface-container-low">

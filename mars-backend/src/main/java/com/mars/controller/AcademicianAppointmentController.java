@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mars.dto.AppointmentRescheduleRequest;
+import com.mars.dto.AppointmentRescheduleResponse;
 import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.StaffAppointmentResponseDto;
 import com.mars.enums.RoleType;
@@ -66,7 +67,7 @@ public class AcademicianAppointmentController {
     }
 
     @PatchMapping("/{appointmentId}/reschedule")
-    public ResponseEntity<StaffAppointmentResponseDto> rescheduleAppointment(
+    public ResponseEntity<AppointmentRescheduleResponse> rescheduleAppointment(
             @PathVariable Integer appointmentId,
             @Valid @RequestBody AppointmentRescheduleRequest request) {
         return ResponseEntity.ok(

@@ -33,11 +33,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.mars.AppointmentMessages;
 import com.mars.dto.AppointmentCreateRequest;
 import com.mars.dto.AppointmentRescheduleRequest;
+import com.mars.dto.AppointmentRescheduleResponse;
 import com.mars.dto.AppointmentResponseDto;
 import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.StaffAppointmentResponseDto;
 import com.mars.dto.StudentAppointmentResponseDto;
 import com.mars.entity.Appointment;
+import com.mars.entity.AppointmentRescheduleApproval;
 import com.mars.entity.AppointmentCategory;
 import com.mars.entity.AvailabilitySlot;
 import com.mars.entity.Role;
@@ -52,6 +54,7 @@ import com.mars.exception.ResourceNotFoundException;
 import com.mars.mapper.AppointmentMapper;
 import com.mars.repository.AppointmentCategoryRepository;
 import com.mars.repository.AppointmentRepository;
+import com.mars.repository.AppointmentRescheduleRequestRepository;
 import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.repository.CourseRepository;
 import com.mars.repository.DelegationLogRepository;
@@ -68,6 +71,8 @@ class AppointmentServiceTest {
 
     @Mock
     private AppointmentRepository appointmentRepository;
+    @Mock
+    private AppointmentRescheduleRequestRepository appointmentRescheduleRequestRepository;
     @Mock
     private AvailabilitySlotRepository availabilitySlotRepository;
     @Mock
@@ -744,7 +749,7 @@ class AppointmentServiceTest {
     }
 
     @Test
-    void rescheduleStaffAppointment_ownedAvailableSlot_updatesOnlySchedule() {
+    void rescheduleStaffAppointment_ownedAvailableSlot_createsPendingApprovalWithoutChangingAppointment() {
         authenticateAsAcademician();
         Appointment appointment = assistantAppointment(100, AppointmentStatus.APPROVED.name());
         LocalDate newDate = LocalDate.now().plusDays(3);
@@ -773,18 +778,23 @@ class AppointmentServiceTest {
                 .thenReturn(List.of(availableSlot));
         when(availabilitySlotRepository.findByIdWithStaffForUpdate(6))
                 .thenReturn(Optional.of(target));
-        when(appointmentRepository.save(appointment)).thenReturn(appointment);
-        when(appointmentMapper.toStaffResponse(appointment))
-                .thenAnswer(invocation -> new AppointmentMapper().toStaffResponse(appointment));
+        AvailabilitySlot originalSlot = appointment.getSlot();
+        when(appointmentRescheduleRequestRepository.save(any(AppointmentRescheduleApproval.class)))
+                .thenAnswer(invocation -> {
+                    AppointmentRescheduleApproval saved = invocation.getArgument(0);
+                    saved.setRescheduleRequestId(31);
+                    return saved;
+                });
 
-        StaffAppointmentResponseDto result = appointmentService.rescheduleStaffAppointment(
+        AppointmentRescheduleResponse result = appointmentService.rescheduleStaffAppointment(
                 100, request, RoleType.ACADEMICIAN);
 
-        assertThat(result.getAppointmentDate()).isEqualTo(newDate);
-        assertThat(result.getStartTime()).isEqualTo(LocalTime.of(13, 0));
-        assertThat(result.getAppointmentStatus()).isEqualTo(AppointmentStatus.APPROVED.name());
-        assertThat(appointment.getSlot()).isSameAs(target);
-        verify(appointmentRepository).save(appointment);
+        assertThat(result.getProposedDate()).isEqualTo(newDate);
+        assertThat(result.getProposedStartTime()).isEqualTo(LocalTime.of(13, 0));
+        assertThat(result.getStatus()).isEqualTo("PENDING");
+        assertThat(appointment.getSlot()).isSameAs(originalSlot);
+        verify(appointmentRepository, never()).save(appointment);
+        verify(appointmentRescheduleRequestRepository).save(any(AppointmentRescheduleApproval.class));
     }
 
     @Test
@@ -827,6 +837,41 @@ class AppointmentServiceTest {
                 .isInstanceOf(ConflictException.class)
                 .hasMessage(AppointmentMessages.SLOT_TAKEN);
         verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
+    void acceptStudentReschedule_movesAppointmentToNewSlotAndReleasesOriginalSlot() {
+        Appointment appointment = studentOwnedAppointment(100, AppointmentStatus.APPROVED.name());
+        AvailabilitySlot originalSlot = appointment.getSlot();
+        AvailabilitySlot targetSlot = new AvailabilitySlot();
+        targetSlot.setSlotId(6);
+        targetSlot.setStaff(staff);
+        targetSlot.setSlotDate(LocalDate.now().plusDays(3));
+        targetSlot.setStartTime(LocalTime.of(13, 0));
+        targetSlot.setEndTime(LocalTime.of(13, 10));
+        targetSlot.setMeetingType(MeetingType.ONLINE.name());
+
+        AppointmentRescheduleApproval approval = new AppointmentRescheduleApproval();
+        approval.setRescheduleRequestId(31);
+        approval.setAppointment(appointment);
+        approval.setOriginalSlot(originalSlot);
+        approval.setProposedSlot(targetSlot);
+        approval.setProposedMeetingType(MeetingType.ONLINE.name());
+        approval.setRequestStatus("PENDING");
+        approval.setExpiresAt(LocalDateTime.now(ZoneId.of("Europe/Istanbul")).plusHours(1));
+
+        when(appointmentRescheduleRequestRepository.findByIdForUpdate(31)).thenReturn(Optional.of(approval));
+        when(appointmentRepository.findByIdAndStudentIdForUpdate(100, 20)).thenReturn(Optional.of(appointment));
+        when(availabilitySlotRepository.findByIdWithStaffForUpdate(6)).thenReturn(Optional.of(targetSlot));
+        when(appointmentRepository.save(appointment)).thenReturn(appointment);
+        when(appointmentRescheduleRequestRepository.save(approval)).thenReturn(approval);
+
+        AppointmentRescheduleResponse result = appointmentService.acceptStudentReschedule(31);
+
+        assertThat(result.getStatus()).isEqualTo("ACCEPTED");
+        assertThat(appointment.getSlot()).isSameAs(targetSlot);
+        assertThat(appointment.getSlot()).isNotSameAs(originalSlot);
+        verify(appointmentRepository).save(appointment);
     }
 
     @ParameterizedTest

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.mars.dto.AppointmentCreateRequest;
 import com.mars.dto.AppointmentResponseDto;
+import com.mars.dto.AppointmentRescheduleResponse;
 import com.mars.dto.StudentAppointmentResponseDto;
 import com.mars.service.AppointmentService;
 
@@ -51,6 +52,24 @@ public class StudentAppointmentController {
     public ResponseEntity<StudentAppointmentResponseDto> cancelAppointment(
             @PathVariable Integer appointmentId) {
         return ResponseEntity.ok(appointmentService.cancelStudentAppointment(appointmentId));
+    }
+
+    @GetMapping("/{appointmentId}/reschedule-request")
+    public ResponseEntity<AppointmentRescheduleResponse> getPendingRescheduleRequest(
+            @PathVariable Integer appointmentId) {
+        return ResponseEntity.of(appointmentService.getPendingStudentReschedule(appointmentId));
+    }
+
+    @PatchMapping("/reschedule-requests/{requestId}/accept")
+    public ResponseEntity<AppointmentRescheduleResponse> acceptRescheduleRequest(
+            @PathVariable Integer requestId) {
+        return ResponseEntity.ok(appointmentService.acceptStudentReschedule(requestId));
+    }
+
+    @PatchMapping("/reschedule-requests/{requestId}/reject")
+    public ResponseEntity<AppointmentRescheduleResponse> rejectRescheduleRequest(
+            @PathVariable Integer requestId) {
+        return ResponseEntity.ok(appointmentService.rejectStudentReschedule(requestId));
     }
 
     @PostMapping

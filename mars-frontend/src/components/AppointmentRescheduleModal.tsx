@@ -17,7 +17,7 @@ type AppointmentRescheduleModalProps = {
   appointment: StaffAppointment | null;
   open: boolean;
   onClose: () => void;
-  onSuccess: (appointment: StaffAppointment) => void;
+  onSuccess: () => void;
 };
 
 function formatDate(date: string): string {
@@ -85,17 +85,18 @@ export default function AppointmentRescheduleModal({
       const meetingType = selectedSlot.meetingType === 'BOTH'
         ? appointment.meetingType
         : selectedSlot.meetingType;
-      const updated = await rescheduleStaffAppointment(appointment.appointmentId, {
+      await rescheduleStaffAppointment(appointment.appointmentId, {
         slotId: selectedSlot.slotId,
         appointmentDate: selectedSlot.slotDate,
         startTime: selectedSlot.startTime,
         endTime: selectedSlot.endTime,
         meetingType,
       });
-      onSuccess(updated);
+      onSuccess();
     } catch (err) {
-      const message = isAxiosError(err) && err.response?.status === 409
-        ? STAFF_APPOINTMENT_MESSAGES.RESCHEDULE_NOT_ALLOWED
+      const backendMessage = isAxiosError(err) ? err.response?.data?.message : null;
+      const message = typeof backendMessage === 'string' && backendMessage.trim()
+        ? backendMessage
         : STAFF_APPOINTMENT_MESSAGES.RESCHEDULE_ERROR;
       setError(message);
     } finally {

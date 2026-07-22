@@ -70,3 +70,14 @@ export type AppointmentReschedulePayload = {
   endTime: string;
   meetingType: string;
 };
+
+export type AppointmentRescheduleApproval = {
+  rescheduleRequestId: number;
+  appointmentId: number;
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED';
+  proposedDate: string;
+  proposedStartTime: string;
+  proposedEndTime: string;
+  proposedMeetingType: string;
+  expiresAt: string;
+};

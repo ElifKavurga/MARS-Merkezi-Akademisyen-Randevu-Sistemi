@@ -4,10 +4,15 @@ import NotificationCard from '../components/NotificationCard';
 import { getMyNotificationsPage } from '../services/notificationService';
 import type { NotificationItem, NotificationPage } from '../types/notification';
 import { useNotifications } from '../hooks/useNotifications';
+import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { getNotificationTarget } from '../utils/notificationNavigation';
 
 const PAGE_SIZE = 10;
 
 export default function NotificationsPage() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { latestNotification, markAsRead, markAllAsRead, unreadCount } = useNotifications();
   const [page, setPage] = useState(0);
   const [data, setData] = useState<NotificationPage | null>(null);
@@ -100,7 +105,7 @@ export default function NotificationsPage() {
         <>
           <section className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm" aria-label="Bildirim listesi">
             <ul className="m-0 divide-y divide-outline-variant p-0">
-              {data.content.map((notification) => <li key={notification.notificationId} className="list-none"><NotificationCard notification={notification} onRead={handleRead} /></li>)}
+              {data.content.map((notification) => <li key={notification.notificationId} className="list-none"><NotificationCard notification={notification} onRead={handleRead} onOpen={(item) => { const target = getNotificationTarget(item, user?.role); if (target) navigate(target); }} /></li>)}
             </ul>
           </section>
 

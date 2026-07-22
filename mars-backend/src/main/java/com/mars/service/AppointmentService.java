@@ -14,6 +14,7 @@ import java.util.Set;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,18 +22,21 @@ import com.mars.AppointmentConstraints;
 import com.mars.AppointmentMessages;
 import com.mars.dto.AppointmentCreateRequest;
 import com.mars.dto.AppointmentRescheduleRequest;
+import com.mars.dto.AppointmentRescheduleResponse;
 import com.mars.dto.AppointmentResponseDto;
 import com.mars.dto.NotificationCreateRequest;
 import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.StaffAppointmentResponseDto;
 import com.mars.dto.StudentAppointmentResponseDto;
 import com.mars.entity.Appointment;
+import com.mars.entity.AppointmentRescheduleApproval;
 import com.mars.entity.AppointmentCategory;
 import com.mars.entity.AvailabilitySlot;
 import com.mars.entity.Course;
 import com.mars.entity.StudentPenaltyStatus;
 import com.mars.entity.User;
 import com.mars.enums.AppointmentStatus;
+import com.mars.enums.RescheduleRequestStatus;
 import com.mars.enums.MeetingType;
 import com.mars.enums.NotificationType;
 import com.mars.enums.RoleType;
@@ -42,6 +46,7 @@ import com.mars.exception.ResourceNotFoundException;
 import com.mars.mapper.AppointmentMapper;
 import com.mars.repository.AppointmentCategoryRepository;
 import com.mars.repository.AppointmentRepository;
+import com.mars.repository.AppointmentRescheduleRequestRepository;
 import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.repository.CourseAssignmentRepository;
 import com.mars.repository.CourseRepository;
@@ -58,6 +63,7 @@ import lombok.RequiredArgsConstructor;
 public class AppointmentService {
 
     private static final ZoneId APP_ZONE = ZoneId.of("Europe/Istanbul");
+    private static final long RESCHEDULE_APPROVAL_HOURS = 2;
 
     private static final Set<String> ACTIVE_APPOINTMENT_STATUSES = Set.of(
             AppointmentStatus.PENDING.name(),
@@ -75,6 +81,7 @@ public class AppointmentService {
             RoleType.ASSISTANT.name());
 
     private final AppointmentRepository appointmentRepository;
+    private final AppointmentRescheduleRequestRepository appointmentRescheduleRequestRepository;
     private final AvailabilitySlotRepository availabilitySlotRepository;
     private final AppointmentCategoryRepository appointmentCategoryRepository;
     private final CourseRepository courseRepository;
@@ -128,6 +135,12 @@ public class AppointmentService {
                 slot.getEndTime(),
                 LocalDateTime.now(APP_ZONE),
                 null)) {
+            throw new ConflictException(AppointmentMessages.SLOT_TAKEN);
+        }
+
+        if (appointmentRescheduleRequestRepository.existsActiveSlotLock(
+                staff.getUserId(), slot.getSlotDate(), slot.getStartTime(), slot.getEndTime(),
+                LocalDateTime.now(APP_ZONE))) {
             throw new ConflictException(AppointmentMessages.SLOT_TAKEN);
         }
 
@@ -281,7 +294,7 @@ public class AppointmentService {
     }
 
     @Transactional
-    public StaffAppointmentResponseDto rescheduleStaffAppointment(
+    public AppointmentRescheduleResponse rescheduleStaffAppointment(
             Integer appointmentId,
             AppointmentRescheduleRequest request,
             RoleType requiredRole) {
@@ -292,6 +305,14 @@ public class AppointmentService {
                         new ResourceNotFoundException(AppointmentMessages.APPOINTMENT_NOT_FOUND));
 
         validateReschedulableStatus(appointment.getAppointmentStatus());
+        appointmentRescheduleRequestRepository.findByAppointment_AppointmentIdAndRequestStatus(
+                appointmentId, RescheduleRequestStatus.PENDING.name()).ifPresent(existing -> {
+                    LocalDateTime now = LocalDateTime.now(APP_ZONE);
+                    if (existing.getExpiresAt().isAfter(now)) {
+                        throw new ConflictException(AppointmentMessages.RESCHEDULE_ALREADY_PENDING);
+                    }
+                    expireReschedule(existing, now);
+                });
 
         boolean selectedSlotIsAvailable = availabilitySlotService
                 .getBookableAvailableSlotsForStaff(
@@ -321,17 +342,20 @@ public class AppointmentService {
                 request.getEndTime());
         ensureSlotBookable(targetSlot, staff.getUserId());
 
+        if (appointmentRepository.existsOverlappingActiveAppointmentForStudentExcludingAppointment(
+                appointment.getStudent().getUserId(),
+                targetSlot.getSlotDate(),
+                targetSlot.getStartTime(),
+                targetSlot.getEndTime(),
+                appointmentId,
+                ACTIVE_APPOINTMENT_STATUSES)) {
+            throw new ConflictException(AppointmentMessages.TIME_OVERLAP);
+        }
+
         if (appointmentRepository.existsActiveAppointmentForSlotExcludingAppointment(
                 targetSlot.getSlotId(), appointmentId, ACTIVE_APPOINTMENT_STATUSES)
                 || appointmentRepository.existsOverlappingActiveAppointmentForStaffExcludingAppointment(
                         staff.getUserId(),
-                        targetSlot.getSlotDate(),
-                        targetSlot.getStartTime(),
-                        targetSlot.getEndTime(),
-                        appointmentId,
-                        ACTIVE_APPOINTMENT_STATUSES)
-                || appointmentRepository.existsOverlappingActiveAppointmentForStudentExcludingAppointment(
-                        appointment.getStudent().getUserId(),
                         targetSlot.getSlotDate(),
                         targetSlot.getStartTime(),
                         targetSlot.getEndTime(),
@@ -343,24 +367,136 @@ public class AppointmentService {
                         targetSlot.getStartTime(),
                         targetSlot.getEndTime(),
                         LocalDateTime.now(APP_ZONE),
-                        null)) {
+                        null)
+                || appointmentRescheduleRequestRepository.existsActiveSlotLock(
+                        staff.getUserId(), targetSlot.getSlotDate(), targetSlot.getStartTime(),
+                        targetSlot.getEndTime(), LocalDateTime.now(APP_ZONE))) {
             throw new ConflictException(AppointmentMessages.SLOT_TAKEN);
         }
 
         String meetingType = resolveAppointmentMeetingType(
                 targetSlot.getMeetingType(), request.getMeetingType());
-        appointment.setSlot(targetSlot);
-        appointment.setMeetingType(meetingType);
-        appointment.setUpdatedAt(LocalDateTime.now(APP_ZONE));
-
-        Appointment saved = appointmentRepository.save(appointment);
+        LocalDateTime now = LocalDateTime.now(APP_ZONE);
+        AppointmentRescheduleApproval approval = new AppointmentRescheduleApproval();
+        approval.setAppointment(appointment);
+        approval.setOriginalSlot(appointment.getSlot());
+        approval.setProposedSlot(targetSlot);
+        approval.setProposedMeetingType(meetingType);
+        approval.setRequestStatus(RescheduleRequestStatus.PENDING.name());
+        approval.setExpiresAt(now.plusHours(RESCHEDULE_APPROVAL_HOURS));
+        approval.setCreatedAt(now);
+        approval.setUpdatedAt(now);
+        AppointmentRescheduleApproval savedApproval = appointmentRescheduleRequestRepository.save(approval);
         createAppointmentNotification(
-                saved,
+                appointment,
                 appointment.getStudent(),
-                NotificationType.APPOINTMENT_RESCHEDULED,
-                "Randevu Yeniden Planlandı",
-                "Randevunuz için yeni bir zaman planlandı.");
-        return appointmentMapper.toStaffResponse(saved);
+                NotificationType.APPOINTMENT_RESCHEDULE_REQUESTED,
+                "Yeniden Planlama Onayı",
+                "Akademisyen randevunuzu yeni bir tarihe taşımak istiyor.");
+        return toRescheduleResponse(savedApproval);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<AppointmentRescheduleResponse> getPendingStudentReschedule(Integer appointmentId) {
+        User student = getCurrentStudent();
+        return appointmentRescheduleRequestRepository.findStudentRequest(
+                        appointmentId, student.getUserId(), RescheduleRequestStatus.PENDING.name())
+                .filter(request -> request.getExpiresAt().isAfter(LocalDateTime.now(APP_ZONE)))
+                .map(this::toRescheduleResponse);
+    }
+
+    @Transactional(noRollbackFor = ConflictException.class)
+    public AppointmentRescheduleResponse acceptStudentReschedule(Integer requestId) {
+        return decideStudentReschedule(requestId, true);
+    }
+
+    @Transactional(noRollbackFor = ConflictException.class)
+    public AppointmentRescheduleResponse rejectStudentReschedule(Integer requestId) {
+        return decideStudentReschedule(requestId, false);
+    }
+
+    private AppointmentRescheduleResponse decideStudentReschedule(Integer requestId, boolean accept) {
+        User student = getCurrentStudent();
+        AppointmentRescheduleApproval request = appointmentRescheduleRequestRepository.findByIdForUpdate(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException(AppointmentMessages.RESCHEDULE_REQUEST_NOT_FOUND));
+        if (!Objects.equals(request.getAppointment().getStudent().getUserId(), student.getUserId())) {
+            throw new AccessDeniedException(SecurityMessages.ACCESS_DENIED);
+        }
+        if (!RescheduleRequestStatus.PENDING.name().equals(request.getRequestStatus())) {
+            throw new ConflictException(AppointmentMessages.RESCHEDULE_NOT_ALLOWED);
+        }
+        LocalDateTime now = LocalDateTime.now(APP_ZONE);
+        if (!request.getExpiresAt().isAfter(now)) {
+            expireReschedule(request, now);
+            throw new ConflictException(AppointmentMessages.RESCHEDULE_REQUEST_EXPIRED);
+        }
+
+        Appointment appointment = appointmentRepository.findByIdAndStudentIdForUpdate(
+                        request.getAppointment().getAppointmentId(), student.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException(AppointmentMessages.APPOINTMENT_NOT_FOUND));
+        if (accept) {
+            validateReschedulableStatus(appointment.getAppointmentStatus());
+            AvailabilitySlot targetSlot = availabilitySlotRepository.findByIdWithStaffForUpdate(
+                            request.getProposedSlot().getSlotId())
+                    .orElseThrow(() -> new ResourceNotFoundException(AppointmentMessages.SLOT_NOT_FOUND));
+            if (appointmentRepository.existsOverlappingActiveAppointmentForStudentExcludingAppointment(
+                    student.getUserId(), targetSlot.getSlotDate(), targetSlot.getStartTime(),
+                    targetSlot.getEndTime(), appointment.getAppointmentId(), ACTIVE_APPOINTMENT_STATUSES)) {
+                throw new ConflictException(AppointmentMessages.TIME_OVERLAP);
+            }
+            if (appointmentRepository.existsActiveAppointmentForSlotExcludingAppointment(
+                    targetSlot.getSlotId(), appointment.getAppointmentId(), ACTIVE_APPOINTMENT_STATUSES)) {
+                throw new ConflictException(AppointmentMessages.SLOT_TAKEN);
+            }
+            appointment.setSlot(targetSlot);
+            appointment.setMeetingType(request.getProposedMeetingType());
+            appointment.setUpdatedAt(now);
+            appointmentRepository.save(appointment);
+            request.setRequestStatus(RescheduleRequestStatus.ACCEPTED.name());
+            createAppointmentNotification(appointment, appointment.getStaff(), NotificationType.APPOINTMENT_RESCHEDULED,
+                    "Yeniden Planlama Kabul Edildi", "Öğrenci yeni randevu zamanını kabul etti.");
+            createAppointmentNotification(appointment, student, NotificationType.APPOINTMENT_RESCHEDULED,
+                    "Randevu Yeniden Planlandı", "Yeni randevu zamanınız kesinleşti.");
+        } else {
+            request.setRequestStatus(RescheduleRequestStatus.REJECTED.name());
+            createAppointmentNotification(appointment, appointment.getStaff(), NotificationType.APPOINTMENT_RESCHEDULE_REJECTED,
+                    "Yeniden Planlama Reddedildi", "Öğrenci yeni randevu zamanını reddetti.");
+        }
+        request.setUpdatedAt(now);
+        return toRescheduleResponse(appointmentRescheduleRequestRepository.save(request));
+    }
+
+    @Scheduled(fixedDelay = 60_000)
+    @Transactional
+    public void expirePendingRescheduleRequests() {
+        LocalDateTime now = LocalDateTime.now(APP_ZONE);
+        appointmentRescheduleRequestRepository.findExpiredPending(now)
+                .forEach(request -> expireReschedule(request, now));
+    }
+
+    private void expireReschedule(AppointmentRescheduleApproval request, LocalDateTime now) {
+        request.setRequestStatus(RescheduleRequestStatus.EXPIRED.name());
+        request.setUpdatedAt(now);
+        appointmentRescheduleRequestRepository.save(request);
+        Appointment appointment = request.getAppointment();
+        createAppointmentNotification(appointment, appointment.getStudent(), NotificationType.APPOINTMENT_RESCHEDULE_EXPIRED,
+                "Yeniden Planlama Süresi Doldu", "Yeniden planlama talebi süresi dolduğu için iptal edildi.");
+        createAppointmentNotification(appointment, appointment.getStaff(), NotificationType.APPOINTMENT_RESCHEDULE_EXPIRED,
+                "Yeniden Planlama Süresi Doldu", "Öğrenci iki saat içinde yanıt vermedi.");
+    }
+
+    private AppointmentRescheduleResponse toRescheduleResponse(AppointmentRescheduleApproval request) {
+        AvailabilitySlot slot = request.getProposedSlot();
+        return AppointmentRescheduleResponse.builder()
+                .rescheduleRequestId(request.getRescheduleRequestId())
+                .appointmentId(request.getAppointment().getAppointmentId())
+                .status(request.getRequestStatus())
+                .proposedDate(slot.getSlotDate())
+                .proposedStartTime(slot.getStartTime())
+                .proposedEndTime(slot.getEndTime())
+                .proposedMeetingType(request.getProposedMeetingType())
+                .expiresAt(request.getExpiresAt())
+                .build();
     }
 
     private StaffAppointmentResponseDto updateStaffAppointmentStatus(

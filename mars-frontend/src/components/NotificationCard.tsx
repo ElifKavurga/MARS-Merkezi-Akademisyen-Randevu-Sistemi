@@ -5,15 +5,19 @@ type NotificationCardProps = {
   notification: NotificationItem;
   compact?: boolean;
   onRead?: (notification: NotificationItem) => void;
+  onOpen?: (notification: NotificationItem) => void;
 };
 
-export default function NotificationCard({ notification, compact = false, onRead }: NotificationCardProps) {
+export default function NotificationCard({ notification, compact = false, onRead, onOpen }: NotificationCardProps) {
   const visual = getNotificationVisual(notification.notificationType);
   return (
     <button
       type="button"
       className={`group flex w-full items-start gap-3 border-0 text-left transition-colors hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-fixed-dim ${compact ? 'px-4 py-3' : 'p-4 sm:gap-4 sm:p-5'} ${notification.isRead ? 'bg-surface-container-lowest' : 'bg-primary-fixed/35'}`}
-      onClick={() => onRead?.(notification)}
+      onClick={() => {
+        onRead?.(notification);
+        onOpen?.(notification);
+      }}
       aria-label={`${notification.title}, ${notification.isRead ? 'okundu' : 'okunmadı'}`}
     >
       <span className={`flex shrink-0 items-center justify-center rounded-full transition-transform group-hover:scale-105 ${visual.containerClass} ${compact ? 'h-9 w-9' : 'h-11 w-11 sm:h-12 sm:w-12'}`}>

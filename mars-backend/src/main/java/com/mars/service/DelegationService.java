@@ -33,6 +33,7 @@ import com.mars.exception.ConflictException;
 import com.mars.exception.ResourceNotFoundException;
 import com.mars.mapper.DelegationMapper;
 import com.mars.repository.AppointmentRepository;
+import com.mars.repository.AppointmentRescheduleRequestRepository;
 import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.repository.CourseAssignmentRepository;
 import com.mars.repository.DelegationLogRepository;
@@ -54,6 +55,7 @@ public class DelegationService {
 
     private final DelegationLogRepository delegationLogRepository;
     private final AppointmentRepository appointmentRepository;
+    private final AppointmentRescheduleRequestRepository appointmentRescheduleRequestRepository;
     private final AvailabilitySlotRepository availabilitySlotRepository;
     private final CourseAssignmentRepository courseAssignmentRepository;
     private final UserRepository userRepository;
@@ -120,7 +122,10 @@ public class DelegationService {
                         selectedSlot.getStartTime(),
                         selectedSlot.getEndTime(),
                         now,
-                        null)) {
+                        null)
+                || appointmentRescheduleRequestRepository.existsActiveSlotLock(
+                        target.getUserId(), selectedSlot.getSlotDate(), selectedSlot.getStartTime(),
+                        selectedSlot.getEndTime(), now)) {
             throw new ConflictException(DelegationMessages.TARGET_SLOT_UNAVAILABLE);
         }
 

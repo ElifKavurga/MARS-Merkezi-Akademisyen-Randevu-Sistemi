@@ -13,8 +13,11 @@ import { STUDENT_UI } from '../constants/studentUi';
 import { useToast } from '../hooks/useToast';
 import {
   cancelStudentAppointment,
+  decideRescheduleApproval,
+  getPendingRescheduleApproval,
   getStudentAppointment,
 } from '../services/studentAppointmentService';
+import type { AppointmentRescheduleApproval } from '../types/appointment';
 import type { StudentAppointmentListItem } from '../types/studentAppointment';
 import { resolveStudentApiError } from '../utils/studentApiError';
 import { isStudentAppointmentCancellable } from '../utils/studentAppointmentCancel';
@@ -78,6 +81,8 @@ export default function StudentAppointmentDetailPage() {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
+  const [rescheduleApproval, setRescheduleApproval] = useState<AppointmentRescheduleApproval | null>(null);
+  const [rescheduleDecisionLoading, setRescheduleDecisionLoading] = useState(false);
 
   const appointmentId = Number(appointmentIdParam);
   const isValidId = Number.isInteger(appointmentId) && appointmentId > 0;
@@ -116,6 +121,28 @@ export default function StudentAppointmentDetailPage() {
   useEffect(() => {
     void loadAppointment();
   }, [loadAppointment]);
+
+  useEffect(() => {
+    if (!isValidId) return;
+    void getPendingRescheduleApproval(appointmentId)
+      .then(setRescheduleApproval)
+      .catch(() => setRescheduleApproval(null));
+  }, [appointmentId, isValidId]);
+
+  const handleRescheduleDecision = async (accept: boolean) => {
+    if (!rescheduleApproval || rescheduleDecisionLoading) return;
+    setRescheduleDecisionLoading(true);
+    try {
+      await decideRescheduleApproval(rescheduleApproval.rescheduleRequestId, accept);
+      setRescheduleApproval(null);
+      toast.success(accept ? 'Yeni randevu zamanı kabul edildi.' : 'Yeniden planlama talebi reddedildi.');
+      if (accept) await loadAppointment();
+    } catch (err) {
+      toast.error(resolveStudentApiError(err, 'Yeniden planlama işlemi tamamlanamadı.'));
+    } finally {
+      setRescheduleDecisionLoading(false);
+    }
+  };
 
   const handleConfirmCancel = async () => {
     if (!appointment || cancelLoading) {
@@ -193,6 +220,26 @@ export default function StudentAppointmentDetailPage() {
         />
       ) : appointment ? (
         <div className="flex flex-col gap-3 md:gap-4">
+          {rescheduleApproval ? (
+            <section className="rounded-xl border border-primary-container/30 bg-primary-fixed/35 p-4 sm:p-5" aria-label="Yeniden planlama onayı">
+              <div className="flex items-start gap-3">
+                <span className="material-symbols-outlined mt-0.5 text-primary-container" aria-hidden>edit_calendar</span>
+                <div className="min-w-0 flex-1">
+                  <h2 className="font-body-md text-base font-semibold text-on-surface">Akademisyen randevunuzu yeni bir tarihe taşımak istiyor.</h2>
+                  <p className="mt-2 font-body-md text-sm text-on-surface-variant">
+                    Önerilen zaman: {formatStudentAppointmentDate(rescheduleApproval.proposedDate)}, {formatStudentAppointmentTime(rescheduleApproval.proposedStartTime)} – {formatStudentAppointmentTime(rescheduleApproval.proposedEndTime)}
+                  </p>
+                  <p className="mt-1 font-body-md text-xs text-outline">
+                    Son yanıt zamanı: {new Date(rescheduleApproval.expiresAt).toLocaleString('tr-TR')}
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button type="button" disabled={rescheduleDecisionLoading} onClick={() => void handleRescheduleDecision(true)} className={STUDENT_UI.PRIMARY_BUTTON_CLASS}>Kabul Et</button>
+                    <button type="button" disabled={rescheduleDecisionLoading} onClick={() => void handleRescheduleDecision(false)} className={STUDENT_UI.SECONDARY_BUTTON_CLASS}>Reddet</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          ) : null}
           <InfoCard title={STUDENT_APPOINTMENT_MESSAGES.DETAIL_SECTION_ACADEMICIAN}>
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0">
