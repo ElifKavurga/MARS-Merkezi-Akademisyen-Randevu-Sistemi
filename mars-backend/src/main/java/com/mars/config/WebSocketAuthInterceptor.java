@@ -36,7 +36,7 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
             return message;
         }
         StompCommand command = accessor.getCommand();
-        if (command == StompCommand.MESSAGE && !hasValidSessionToken(accessor)) {
+        if (command == StompCommand.MESSAGE && hasExpiredSessionToken(accessor)) {
             return null;
         }
         if (command == StompCommand.CONNECT) {
@@ -70,11 +70,11 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                 details, token, details.getAuthorities()));
     }
 
-    private boolean hasValidSessionToken(StompHeaderAccessor accessor) {
+    private boolean hasExpiredSessionToken(StompHeaderAccessor accessor) {
         if (!(accessor.getUser() instanceof Authentication authentication)
                 || !(authentication.getCredentials() instanceof String token)) {
             return false;
         }
-        return jwtService.isTokenValid(token, authentication.getName());
+        return !jwtService.isTokenValid(token, authentication.getName());
     }
 }

@@ -51,7 +51,7 @@ export default function NotificationBell() {
       </button>
 
       {open ? (
-        <div id={panelId} role="dialog" aria-label="Bildirimler" className="fixed inset-x-4 top-[4.5rem] z-50 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-[23rem]">
+        <div id={panelId} role="dialog" aria-label="Bildirimler" className="fixed inset-x-4 top-[4.5rem] z-50 flex max-h-[calc(100dvh-5.5rem)] flex-col overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-[23rem]">
           <div className="flex items-center justify-between border-b border-outline-variant px-4 py-3">
             <p className="font-headline-md text-lg font-semibold text-primary">Bildirimler</p>
             {unreadCount > 0 ? <span className="rounded-full bg-primary-fixed px-2 py-1 font-label-sm text-[11px] text-on-primary-fixed">{unreadCount} yeni</span> : null}
@@ -64,7 +64,7 @@ export default function NotificationBell() {
               <p className="mt-2 font-body-md text-sm text-on-surface-variant">Henüz bildiriminiz bulunmuyor.</p>
             </div>
           ) : (
-            <ul className="max-h-[min(65vh,25rem)] divide-y divide-outline-variant/70 overflow-y-auto">
+            <ul className="min-h-0 flex-1 divide-y divide-outline-variant/70 overflow-y-auto sm:max-h-[min(65vh,25rem)]">
               {visibleItems.map((item) => <li key={item.notificationId}><NotificationCard notification={item} compact onRead={(notification) => void markAsRead(notification).catch(() => undefined)} onOpen={(notification) => { const target = getNotificationTarget(notification, user?.role); if (target) { setOpen(false); navigate(target); } }} /></li>)}
             </ul>
           )}

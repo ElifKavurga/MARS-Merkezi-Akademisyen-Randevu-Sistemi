@@ -5,7 +5,7 @@ export type NotificationContextValue = {
   recentNotifications: NotificationItem[];
   unreadCount: number;
   loading: boolean;
-  latestNotification: NotificationItem | null;
+  realtimeNotifications: NotificationItem[];
   markAsRead: (notification: NotificationItem) => Promise<void>;
   markAllAsRead: () => Promise<void>;
 };

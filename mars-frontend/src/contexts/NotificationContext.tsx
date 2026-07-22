@@ -56,7 +56,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const toast = useToast();
   const userId = user?.userId;
   const [recentNotifications, setRecentNotifications] = useState<NotificationItem[]>([]);
-  const [latestNotification, setLatestNotification] = useState<NotificationItem | null>(null);
+  const [realtimeNotifications, setRealtimeNotifications] = useState<NotificationItem[]>([]);
   const [toasts, setToasts] = useState<RealtimeToast[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -75,7 +75,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!token || !userId) {
       setRecentNotifications([]);
-      setLatestNotification(null);
+      setRealtimeNotifications([]);
       setToasts([]);
       setUnreadCount(0);
       receivedIdsRef.current.clear();
@@ -137,7 +137,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         receivedIdsRef.current.add(incoming.notificationId);
         setRecentNotifications((current) => mergeNotification(current, incoming));
         if (!incoming.isRead) setUnreadCount((current) => current + 1);
-        setLatestNotification(incoming);
+        setRealtimeNotifications((current) => mergeNotification(current, incoming));
         const toastKey = `notification-${incoming.notificationId}`;
         setToasts((current) => [...current, { ...incoming, toastKey }]);
         const timer = window.setTimeout(() => dismissToast(toastKey), TOAST_DURATION_MS);
@@ -199,10 +199,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     recentNotifications,
     unreadCount,
     loading,
-    latestNotification,
+    realtimeNotifications,
     markAsRead,
     markAllAsRead,
-  }), [latestNotification, loading, markAllAsRead, markAsRead, recentNotifications, unreadCount]);
+  }), [loading, markAllAsRead, markAsRead, realtimeNotifications, recentNotifications, unreadCount]);
 
   return (
     <NotificationContext.Provider value={value}>

@@ -39,6 +39,7 @@ import com.mars.enums.RoleType;
 import com.mars.enums.SlotLockStatus;
 import com.mars.mapper.DelegationMapper;
 import com.mars.repository.AppointmentRepository;
+import com.mars.repository.AppointmentRescheduleRequestRepository;
 import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.repository.CourseAssignmentRepository;
 import com.mars.repository.DelegationLogRepository;
@@ -50,6 +51,7 @@ class DelegationStudentApprovalServiceTest {
 
     @Mock private DelegationLogRepository delegationLogRepository;
     @Mock private AppointmentRepository appointmentRepository;
+    @Mock private AppointmentRescheduleRequestRepository appointmentRescheduleRequestRepository;
     @Mock private AvailabilitySlotRepository availabilitySlotRepository;
     @Mock private CourseAssignmentRepository courseAssignmentRepository;
     @Mock private UserRepository userRepository;

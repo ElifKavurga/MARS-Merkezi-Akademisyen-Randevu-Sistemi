@@ -28,7 +28,7 @@ export default function NotificationCard({ notification, compact = false, onRead
           <span className={`min-w-0 flex-1 font-label-md text-label-md text-on-surface ${notification.isRead ? 'font-medium' : 'font-bold'}`}>{notification.title}</span>
           {!notification.isRead ? <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary-container" title="Okunmadı" /> : null}
         </span>
-        <span className={`mt-1 block text-on-surface-variant ${compact ? 'line-clamp-2 font-label-sm text-label-sm' : 'font-body-md text-sm sm:text-base'}`}>{notification.message}</span>
+        <span className={`mt-1 block break-words text-on-surface-variant ${compact ? 'line-clamp-2 font-label-sm text-label-sm' : 'font-body-md text-sm sm:text-base'}`}>{notification.message}</span>
         <span className="mt-1.5 block font-label-sm text-label-sm text-outline">{formatNotificationTime(notification.createdAt)}</span>
       </span>
     </button>

@@ -2,6 +2,7 @@ package com.mars.service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -48,6 +49,8 @@ import lombok.RequiredArgsConstructor;
 public class DelegationService {
     private static final ZoneId APP_ZONE = ZoneId.of("Europe/Istanbul");
     private static final long STUDENT_APPROVAL_MINUTES = 60;
+    private static final DateTimeFormatter NOTIFICATION_DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private static final DateTimeFormatter NOTIFICATION_TIME = DateTimeFormatter.ofPattern("HH:mm");
     private static final Set<String> ACTIVE_APPOINTMENT_STATUSES = Set.of(
             AppointmentStatus.PENDING.name(), AppointmentStatus.APPROVED.name());
     private static final Set<String> TARGET_ROLES = Set.of(
@@ -147,7 +150,7 @@ public class DelegationService {
                     appointment.getStudent(),
                     "DELEGATION_STUDENT_APPROVAL",
                     "Randevu yönlendirme onayı",
-                    "Randevunuz farklı bir personele yönlendirilmek isteniyor.",
+                    withDelegationContext(saved, "Randevunuz farklı bir personele yönlendirilmek isteniyor."),
                     saved);
         } else {
             createDelegationNotification(
@@ -234,7 +237,7 @@ public class DelegationService {
                 .userId(recipient.getUserId())
                 .notificationType(type)
                 .title(title)
-                .message(message)
+                .message(withDelegationContext(delegation, message))
                 .relatedAppointmentId(delegation.getAppointment().getAppointmentId())
                 .relatedDelegationId(delegation.getDelegationId())
                 .build());
@@ -263,7 +266,7 @@ public class DelegationService {
                 log.getDelegatedByUser(),
                 "DELEGATION_STUDENT_ACCEPTED",
                 "Delegasyon kabul edildi",
-                "Öğrenci randevu yönlendirmesini kabul etti.",
+                withDelegationContext(log, "Öğrenci randevu yönlendirmesini kabul etti."),
                 log);
         return toResponse(log);
     }
@@ -281,7 +284,7 @@ public class DelegationService {
                 log.getDelegatedByUser(),
                 "DELEGATION_STUDENT_REJECTED",
                 "Delegasyon reddedildi",
-                "Öğrenci randevu yönlendirmesini reddetti.",
+                withDelegationContext(log, "Öğrenci randevu yönlendirmesini reddetti."),
                 log);
         return toResponse(log);
     }
@@ -303,10 +306,35 @@ public class DelegationService {
                     log.getDelegatedByUser(),
                     "DELEGATION_EXPIRED",
                     "Delegasyon süresi doldu",
-                    "Öğrenci bir saat içinde yanıt vermediği için delegasyon iptal edildi.",
+                    withDelegationContext(log, "Öğrenci bir saat içinde yanıt vermediği için delegasyon iptal edildi."),
                     log);
         }
         delegationLogRepository.saveAll(expired);
+    }
+
+    private String withDelegationContext(DelegationLog delegation, String message) {
+        Appointment appointment = delegation.getAppointment();
+        AvailabilitySlot fallbackSlot = delegation.getTargetSlot() != null
+                ? delegation.getTargetSlot() : appointment.getSlot();
+        var date = delegation.getTargetSlotDate() != null
+                ? delegation.getTargetSlotDate() : fallbackSlot == null ? null : fallbackSlot.getSlotDate();
+        var start = delegation.getTargetStartTime() != null
+                ? delegation.getTargetStartTime() : fallbackSlot == null ? null : fallbackSlot.getStartTime();
+        var end = delegation.getTargetEndTime() != null
+                ? delegation.getTargetEndTime() : fallbackSlot == null ? null : fallbackSlot.getEndTime();
+        String meetingType = "ONLINE".equals(appointment.getMeetingType())
+                ? "Online" : "FACE_TO_FACE".equals(appointment.getMeetingType()) ? "Yüz Yüze" : "-";
+        return "%s Gönderen: %s, hedef personel: %s, öğrenci: %s, tarih ve saat: %s %s-%s, görüşme türü: %s, kategori: %s."
+                .formatted(
+                        message,
+                        delegation.getDelegatedByUser().getFullName(),
+                        delegation.getDelegatedToUser().getFullName(),
+                        appointment.getStudent() == null ? "-" : appointment.getStudent().getFullName(),
+                        date == null ? "-" : date.format(NOTIFICATION_DATE),
+                        start == null ? "-" : start.format(NOTIFICATION_TIME),
+                        end == null ? "-" : end.format(NOTIFICATION_TIME),
+                        meetingType,
+                        appointment.getCategory() == null ? "-" : appointment.getCategory().getCategoryName());
     }
 
     private DelegationTargetResponse toTargetResponse(Appointment appointment, User target) {

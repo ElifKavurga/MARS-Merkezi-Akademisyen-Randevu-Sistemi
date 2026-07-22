@@ -231,7 +231,7 @@ public class AppointmentService {
                 appointment.getStaff(),
                 NotificationType.APPOINTMENT_CANCELLED,
                 "Randevu İptal Edildi",
-                "Öğrenci randevu talebini iptal etti.");
+                buildStudentCancellationMessage(appointment));
         return appointmentRepository.findByIdAndStudentIdWithDetails(
                         saved.getAppointmentId(), student.getUserId())
                 .map(appointmentMapper::toStudentResponse)
@@ -575,9 +575,39 @@ public class AppointmentService {
                 .userId(recipient.getUserId())
                 .notificationType(type)
                 .title(title)
-                .message(message)
+                .message(withAppointmentContext(appointment, message))
                 .relatedAppointmentId(appointment.getAppointmentId())
                 .build());
+    }
+
+    private String withAppointmentContext(Appointment appointment, String message) {
+        if (message.contains("eski zaman:") || message.contains("randevusunu iptal etti.")) {
+            return message;
+        }
+        AvailabilitySlot slot = appointment.getSlot();
+        String meetingType = MeetingType.ONLINE.name().equals(appointment.getMeetingType())
+                ? "Online" : MeetingType.FACE_TO_FACE.name().equals(appointment.getMeetingType())
+                        ? "Yüz Yüze" : "-";
+        return "%s Akademisyen: %s, öğrenci: %s, tarih ve saat: %s %s-%s, görüşme türü: %s, kategori: %s."
+                .formatted(
+                        message,
+                        appointment.getStaff() == null ? "-" : appointment.getStaff().getFullName(),
+                        appointment.getStudent() == null ? "-" : appointment.getStudent().getFullName(),
+                        slot == null || slot.getSlotDate() == null ? "-" : slot.getSlotDate().format(NOTIFICATION_DATE),
+                        slot == null || slot.getStartTime() == null ? "-" : slot.getStartTime().format(NOTIFICATION_TIME),
+                        slot == null || slot.getEndTime() == null ? "-" : slot.getEndTime().format(NOTIFICATION_TIME),
+                        meetingType,
+                        appointment.getCategory() == null ? "-" : appointment.getCategory().getCategoryName());
+    }
+
+    private String buildStudentCancellationMessage(Appointment appointment) {
+        AvailabilitySlot slot = appointment.getSlot();
+        return "%s, %s %s tarihli '%s' randevusunu iptal etti."
+                .formatted(
+                        appointment.getStudent().getFullName(),
+                        slot.getSlotDate().format(NOTIFICATION_DATE),
+                        slot.getStartTime().format(NOTIFICATION_TIME),
+                        appointment.getCategory().getCategoryName());
     }
 
     private void validatePendingStatus(String currentStatus) {

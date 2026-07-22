@@ -24,6 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
@@ -987,6 +988,43 @@ class AppointmentServiceTest {
         assertThat(result.getAppointmentStatus()).isEqualTo(AppointmentStatus.CANCELLED.name());
         assertThat(appointment.getAppointmentStatus()).isEqualTo(AppointmentStatus.CANCELLED.name());
         verify(appointmentRepository).save(appointment);
+        ArgumentCaptor<com.mars.dto.NotificationCreateRequest> notificationCaptor =
+                ArgumentCaptor.forClass(com.mars.dto.NotificationCreateRequest.class);
+        verify(notificationService).createNotification(notificationCaptor.capture());
+        assertThat(notificationCaptor.getValue().getUserId()).isEqualTo(staff.getUserId());
+        assertThat(notificationCaptor.getValue().getNotificationType())
+                .isEqualTo(com.mars.enums.NotificationType.APPOINTMENT_CANCELLED);
+        assertThat(notificationCaptor.getValue().getRelatedAppointmentId()).isEqualTo(100);
+        assertThat(notificationCaptor.getValue().getMessage())
+                .contains(student.getFullName(), category.getCategoryName(), "randevusunu iptal etti");
+    }
+
+    @Test
+    void cancelStudentAppointment_assistantOwned_notifiesCurrentAssistant() {
+        User assistant = new User();
+        assistant.setUserId(30);
+        assistant.setFullName("Asistan Test");
+        Role assistantRole = new Role();
+        assistantRole.setRoleName(RoleType.ASSISTANT.name());
+        assistant.setRole(assistantRole);
+        Appointment appointment = studentOwnedAppointment(100, AppointmentStatus.APPROVED.name());
+        appointment.setStaff(assistant);
+        appointment.getSlot().setStaff(assistant);
+        when(appointmentRepository.findByIdAndStudentIdForUpdate(100, 20))
+                .thenReturn(Optional.of(appointment));
+        when(appointmentRepository.save(appointment)).thenReturn(appointment);
+        when(appointmentRepository.findByIdAndStudentIdWithDetails(100, 20))
+                .thenReturn(Optional.of(appointment));
+        when(appointmentMapper.toStudentResponse(appointment))
+                .thenAnswer(invocation -> new AppointmentMapper().toStudentResponse(appointment));
+
+        appointmentService.cancelStudentAppointment(100);
+
+        ArgumentCaptor<com.mars.dto.NotificationCreateRequest> notificationCaptor =
+                ArgumentCaptor.forClass(com.mars.dto.NotificationCreateRequest.class);
+        verify(notificationService).createNotification(notificationCaptor.capture());
+        assertThat(notificationCaptor.getValue().getUserId()).isEqualTo(assistant.getUserId());
+        assertThat(notificationCaptor.getValue().getRelatedAppointmentId()).isEqualTo(100);
     }
 
     @Test

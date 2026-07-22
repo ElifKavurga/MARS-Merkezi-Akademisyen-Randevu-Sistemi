@@ -13,7 +13,7 @@ const PAGE_SIZE = 10;
 export default function NotificationsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { latestNotification, markAsRead, markAllAsRead, unreadCount } = useNotifications();
+  const { realtimeNotifications, markAsRead, markAllAsRead, unreadCount } = useNotifications();
   const [page, setPage] = useState(0);
   const [data, setData] = useState<NotificationPage | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,17 +35,22 @@ export default function NotificationsPage() {
   useEffect(() => { void loadPage(); }, [loadPage]);
 
   useEffect(() => {
-    if (!latestNotification || page !== 0) return;
+    if (realtimeNotifications.length === 0 || page !== 0) return;
     setData((current) => {
-      if (!current || current.content.some((item) => item.notificationId === latestNotification.notificationId)) return current;
+      if (!current) return current;
+      const currentIds = new Set(current.content.map((item) => item.notificationId));
+      const incoming = realtimeNotifications.filter((item) => !currentIds.has(item.notificationId));
+      if (incoming.length === 0) return current;
       return {
         ...current,
-        content: [latestNotification, ...current.content].slice(0, PAGE_SIZE),
-        totalElements: current.totalElements + 1,
-        totalPages: Math.ceil((current.totalElements + 1) / current.size),
+        content: [...incoming, ...current.content]
+          .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+          .slice(0, PAGE_SIZE),
+        totalElements: current.totalElements + incoming.length,
+        totalPages: Math.ceil((current.totalElements + incoming.length) / current.size),
       };
     });
-  }, [latestNotification, page]);
+  }, [page, realtimeNotifications]);
 
   const handleRead = async (notification: NotificationItem) => {
     if (notification.isRead) return;
