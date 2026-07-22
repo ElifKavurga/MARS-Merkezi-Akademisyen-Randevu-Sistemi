@@ -25,6 +25,7 @@ public interface AppointmentRescheduleRequestRepository
             join fetch r.appointment a
             join fetch a.student
             join fetch a.staff
+            join fetch a.category
             join fetch r.originalSlot
             join fetch r.proposedSlot
             where a.appointmentId = :appointmentId
@@ -42,6 +43,7 @@ public interface AppointmentRescheduleRequestRepository
             join fetch r.appointment a
             join fetch a.student
             join fetch a.staff
+            join fetch a.category
             join fetch r.originalSlot
             join fetch r.proposedSlot
             where r.rescheduleRequestId = :requestId
@@ -71,6 +73,8 @@ public interface AppointmentRescheduleRequestRepository
             join fetch r.appointment a
             join fetch a.student
             join fetch a.staff
+            join fetch a.category
+            join fetch r.originalSlot
             join fetch r.proposedSlot
             where r.requestStatus = 'PENDING' and r.expiresAt <= :now
             """)

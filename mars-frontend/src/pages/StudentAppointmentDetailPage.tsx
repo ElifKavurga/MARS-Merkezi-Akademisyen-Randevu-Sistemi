@@ -135,8 +135,8 @@ export default function StudentAppointmentDetailPage() {
     try {
       await decideRescheduleApproval(rescheduleApproval.rescheduleRequestId, accept);
       setRescheduleApproval(null);
-      toast.success(accept ? 'Yeni randevu zamanı kabul edildi.' : 'Yeniden planlama talebi reddedildi.');
-      if (accept) await loadAppointment();
+      toast.success(accept ? 'Yeni randevu zamanı kabul edildi.' : 'Yeniden planlama reddedildi ve randevu iptal edildi.');
+      await loadAppointment();
     } catch (err) {
       toast.error(resolveStudentApiError(err, 'Yeniden planlama işlemi tamamlanamadı.'));
     } finally {
@@ -226,9 +226,14 @@ export default function StudentAppointmentDetailPage() {
                 <span className="material-symbols-outlined mt-0.5 text-primary-container" aria-hidden>edit_calendar</span>
                 <div className="min-w-0 flex-1">
                   <h2 className="font-body-md text-base font-semibold text-on-surface">Akademisyen randevunuzu yeni bir tarihe taşımak istiyor.</h2>
-                  <p className="mt-2 font-body-md text-sm text-on-surface-variant">
-                    Önerilen zaman: {formatStudentAppointmentDate(rescheduleApproval.proposedDate)}, {formatStudentAppointmentTime(rescheduleApproval.proposedStartTime)} – {formatStudentAppointmentTime(rescheduleApproval.proposedEndTime)}
-                  </p>
+                  <dl className="mt-3 grid gap-x-6 gap-y-2 font-body-md text-sm text-on-surface-variant sm:grid-cols-2">
+                    <div><dt className="font-semibold text-on-surface">Akademisyen</dt><dd>{rescheduleApproval.academicianName}</dd></div>
+                    <div><dt className="font-semibold text-on-surface">Öğrenci</dt><dd>{rescheduleApproval.studentName}</dd></div>
+                    <div><dt className="font-semibold text-on-surface">Eski tarih ve saat</dt><dd>{formatStudentAppointmentDate(rescheduleApproval.originalDate)}, {formatStudentAppointmentTime(rescheduleApproval.originalStartTime)} – {formatStudentAppointmentTime(rescheduleApproval.originalEndTime)}</dd></div>
+                    <div><dt className="font-semibold text-on-surface">Yeni önerilen tarih ve saat</dt><dd>{formatStudentAppointmentDate(rescheduleApproval.proposedDate)}, {formatStudentAppointmentTime(rescheduleApproval.proposedStartTime)} – {formatStudentAppointmentTime(rescheduleApproval.proposedEndTime)}</dd></div>
+                    <div><dt className="font-semibold text-on-surface">Görüşme türü</dt><dd>{getMeetingTypeLabel(rescheduleApproval.proposedMeetingType)}</dd></div>
+                    <div><dt className="font-semibold text-on-surface">Kategori</dt><dd>{rescheduleApproval.categoryName}</dd></div>
+                  </dl>
                   <p className="mt-1 font-body-md text-xs text-outline">
                     Son yanıt zamanı: {new Date(rescheduleApproval.expiresAt).toLocaleString('tr-TR')}
                   </p>

@@ -75,9 +75,15 @@ export type AppointmentRescheduleApproval = {
   rescheduleRequestId: number;
   appointmentId: number;
   status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED';
+  academicianName: string;
+  studentName: string;
+  originalDate: string;
+  originalStartTime: string;
+  originalEndTime: string;
   proposedDate: string;
   proposedStartTime: string;
   proposedEndTime: string;
   proposedMeetingType: string;
+  categoryName: string;
   expiresAt: string;
 };

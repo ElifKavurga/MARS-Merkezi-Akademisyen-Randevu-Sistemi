@@ -874,6 +874,39 @@ class AppointmentServiceTest {
         verify(appointmentRepository).save(appointment);
     }
 
+    @Test
+    void rejectStudentReschedule_cancelsAppointmentAndReleasesBothSlots() {
+        Appointment appointment = studentOwnedAppointment(100, AppointmentStatus.APPROVED.name());
+        AvailabilitySlot originalSlot = appointment.getSlot();
+        AvailabilitySlot targetSlot = new AvailabilitySlot();
+        targetSlot.setSlotId(6);
+        targetSlot.setStaff(staff);
+        targetSlot.setSlotDate(LocalDate.now().plusDays(3));
+        targetSlot.setStartTime(LocalTime.of(13, 0));
+        targetSlot.setEndTime(LocalTime.of(13, 10));
+
+        AppointmentRescheduleApproval approval = new AppointmentRescheduleApproval();
+        approval.setRescheduleRequestId(31);
+        approval.setAppointment(appointment);
+        approval.setOriginalSlot(originalSlot);
+        approval.setProposedSlot(targetSlot);
+        approval.setProposedMeetingType(MeetingType.FACE_TO_FACE.name());
+        approval.setRequestStatus("PENDING");
+        approval.setExpiresAt(LocalDateTime.now(ZoneId.of("Europe/Istanbul")).plusHours(1));
+
+        when(appointmentRescheduleRequestRepository.findByIdForUpdate(31)).thenReturn(Optional.of(approval));
+        when(appointmentRepository.findByIdAndStudentIdForUpdate(100, 20)).thenReturn(Optional.of(appointment));
+        when(appointmentRepository.save(appointment)).thenReturn(appointment);
+        when(appointmentRescheduleRequestRepository.save(approval)).thenReturn(approval);
+
+        AppointmentRescheduleResponse result = appointmentService.rejectStudentReschedule(31);
+
+        assertThat(result.getStatus()).isEqualTo("REJECTED");
+        assertThat(appointment.getAppointmentStatus()).isEqualTo(AppointmentStatus.CANCELLED.name());
+        assertThat(appointment.getSlot()).isSameAs(originalSlot);
+        verify(appointmentRepository).save(appointment);
+    }
+
     @ParameterizedTest
     @EnumSource(value = AppointmentStatus.class, names = {"COMPLETED", "CANCELLED", "NO_SHOW"})
     void rescheduleStaffAppointment_terminalStatus_throwsConflict(AppointmentStatus status) {

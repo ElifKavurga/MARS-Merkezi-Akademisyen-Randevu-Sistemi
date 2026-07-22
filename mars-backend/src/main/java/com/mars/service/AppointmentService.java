@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -64,6 +65,8 @@ public class AppointmentService {
 
     private static final ZoneId APP_ZONE = ZoneId.of("Europe/Istanbul");
     private static final long RESCHEDULE_APPROVAL_HOURS = 2;
+    private static final DateTimeFormatter NOTIFICATION_DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private static final DateTimeFormatter NOTIFICATION_TIME = DateTimeFormatter.ofPattern("HH:mm");
 
     private static final Set<String> ACTIVE_APPOINTMENT_STATUSES = Set.of(
             AppointmentStatus.PENDING.name(),
@@ -391,8 +394,8 @@ public class AppointmentService {
                 appointment,
                 appointment.getStudent(),
                 NotificationType.APPOINTMENT_RESCHEDULE_REQUESTED,
-                "Yeniden Planlama Onayı",
-                "Akademisyen randevunuzu yeni bir tarihe taşımak istiyor.");
+                "Yeniden Planlama Talebi",
+                buildRescheduleDescription(savedApproval));
         return toRescheduleResponse(savedApproval);
     }
 
@@ -453,14 +456,21 @@ public class AppointmentService {
             appointment.setUpdatedAt(now);
             appointmentRepository.save(appointment);
             request.setRequestStatus(RescheduleRequestStatus.ACCEPTED.name());
+            String description = buildRescheduleDescription(request);
             createAppointmentNotification(appointment, appointment.getStaff(), NotificationType.APPOINTMENT_RESCHEDULED,
-                    "Yeniden Planlama Kabul Edildi", "Öğrenci yeni randevu zamanını kabul etti.");
+                    "Yeniden Planlama Kabul Edildi", description);
             createAppointmentNotification(appointment, student, NotificationType.APPOINTMENT_RESCHEDULED,
-                    "Randevu Yeniden Planlandı", "Yeni randevu zamanınız kesinleşti.");
+                    "Randevu Yeniden Planlandı", description);
         } else {
             request.setRequestStatus(RescheduleRequestStatus.REJECTED.name());
+            appointment.setAppointmentStatus(AppointmentStatus.CANCELLED.name());
+            appointment.setUpdatedAt(now);
+            appointmentRepository.save(appointment);
+            String description = buildRescheduleDescription(request);
             createAppointmentNotification(appointment, appointment.getStaff(), NotificationType.APPOINTMENT_RESCHEDULE_REJECTED,
-                    "Yeniden Planlama Reddedildi", "Öğrenci yeni randevu zamanını reddetti.");
+                    "Yeniden Planlama Reddedildi ve Randevu İptal Edildi", description);
+            createAppointmentNotification(appointment, student, NotificationType.APPOINTMENT_CANCELLED,
+                    "Randevu İptal Edildi", description);
         }
         request.setUpdatedAt(now);
         return toRescheduleResponse(appointmentRescheduleRequestRepository.save(request));
@@ -479,10 +489,11 @@ public class AppointmentService {
         request.setUpdatedAt(now);
         appointmentRescheduleRequestRepository.save(request);
         Appointment appointment = request.getAppointment();
+        String description = buildRescheduleDescription(request);
         createAppointmentNotification(appointment, appointment.getStudent(), NotificationType.APPOINTMENT_RESCHEDULE_EXPIRED,
-                "Yeniden Planlama Süresi Doldu", "Yeniden planlama talebi süresi dolduğu için iptal edildi.");
+                "Yeniden Planlama Süresi Doldu", description);
         createAppointmentNotification(appointment, appointment.getStaff(), NotificationType.APPOINTMENT_RESCHEDULE_EXPIRED,
-                "Yeniden Planlama Süresi Doldu", "Öğrenci iki saat içinde yanıt vermedi.");
+                "Yeniden Planlama Süresi Doldu", description);
     }
 
     private AppointmentRescheduleResponse toRescheduleResponse(AppointmentRescheduleApproval request) {
@@ -491,12 +502,38 @@ public class AppointmentService {
                 .rescheduleRequestId(request.getRescheduleRequestId())
                 .appointmentId(request.getAppointment().getAppointmentId())
                 .status(request.getRequestStatus())
+                .academicianName(request.getAppointment().getStaff().getFullName())
+                .studentName(request.getAppointment().getStudent().getFullName())
+                .originalDate(request.getOriginalSlot().getSlotDate())
+                .originalStartTime(request.getOriginalSlot().getStartTime())
+                .originalEndTime(request.getOriginalSlot().getEndTime())
                 .proposedDate(slot.getSlotDate())
                 .proposedStartTime(slot.getStartTime())
                 .proposedEndTime(slot.getEndTime())
                 .proposedMeetingType(request.getProposedMeetingType())
+                .categoryName(request.getAppointment().getCategory().getCategoryName())
                 .expiresAt(request.getExpiresAt())
                 .build();
+    }
+
+    private String buildRescheduleDescription(AppointmentRescheduleApproval request) {
+        Appointment appointment = request.getAppointment();
+        AvailabilitySlot original = request.getOriginalSlot();
+        AvailabilitySlot proposed = request.getProposedSlot();
+        String meetingType = MeetingType.ONLINE.name().equals(request.getProposedMeetingType())
+                ? "Online" : "Yüz Yüze";
+        return "%s ile %s arasındaki %s randevusu; eski zaman: %s %s-%s, önerilen zaman: %s %s-%s, görüşme türü: %s."
+                .formatted(
+                        appointment.getStudent().getFullName(),
+                        appointment.getStaff().getFullName(),
+                        appointment.getCategory().getCategoryName(),
+                        original.getSlotDate().format(NOTIFICATION_DATE),
+                        original.getStartTime().format(NOTIFICATION_TIME),
+                        original.getEndTime().format(NOTIFICATION_TIME),
+                        proposed.getSlotDate().format(NOTIFICATION_DATE),
+                        proposed.getStartTime().format(NOTIFICATION_TIME),
+                        proposed.getEndTime().format(NOTIFICATION_TIME),
+                        meetingType);
     }
 
     private StaffAppointmentResponseDto updateStaffAppointmentStatus(
