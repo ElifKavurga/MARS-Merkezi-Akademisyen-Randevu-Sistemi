@@ -11,7 +11,6 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +31,7 @@ import com.mars.enums.AppointmentStatus;
 import com.mars.enums.MeetingType;
 import com.mars.repository.AppointmentReminderDeliveryRepository;
 import com.mars.repository.AppointmentRepository;
+import com.mars.service.mail.PublisherMailDetails;
 
 @ExtendWith(MockitoExtension.class)
 class AppointmentReminderServiceTest {
@@ -46,7 +46,8 @@ class AppointmentReminderServiceTest {
     @BeforeEach
     void setUp() {
         service = new AppointmentReminderService(
-                appointmentRepository, deliveryRepository, mailService, preferenceService, 2);
+                appointmentRepository, deliveryRepository, mailService, preferenceService,
+                new PublisherMailDetails(), 2);
         now = LocalDateTime.of(2026, 7, 22, 12, 0);
         org.mockito.Mockito.lenient().when(preferenceService.isReminderEnabled(anyInt())).thenReturn(true);
     }
@@ -112,12 +113,26 @@ class AppointmentReminderServiceTest {
         verify(mailService, times(2)).sendTemplate(any());
     }
 
+    @Test
+    void disabledPreference_skipsClaimAndMailForThatRecipient() {
+        Appointment appointment = appointmentAt(now.plusHours(1).minusSeconds(15));
+        when(appointmentRepository.findReminderCandidates(anyString(), any(), any()))
+                .thenReturn(List.of(appointment));
+        when(preferenceService.isReminderEnabled(20)).thenReturn(false);
+        when(preferenceService.isReminderEnabled(10)).thenReturn(true);
+        when(deliveryRepository.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(mailService.sendTemplate(any())).thenReturn(true);
+
+        service.sendDueReminders(now);
+
+        verify(deliveryRepository, times(1)).saveAndFlush(any(AppointmentReminderDelivery.class));
+        verify(mailService, times(1)).sendTemplate(any());
+    }
+
     private void allowClaimsAndUpdates() {
         when(deliveryRepository.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
-        AppointmentReminderDelivery delivery = new AppointmentReminderDelivery();
-        when(deliveryRepository.findByAppointment_AppointmentIdAndRecipient_UserIdAndReminderType(
-                anyInt(), anyInt(), any(AppointmentReminderType.class))).thenReturn(Optional.of(delivery));
-        when(deliveryRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(deliveryRepository.updateDeliveryStatus(
+                anyInt(), anyInt(), any(AppointmentReminderType.class), anyString())).thenReturn(1);
     }
 
     private Appointment appointmentAt(LocalDateTime startsAt) {

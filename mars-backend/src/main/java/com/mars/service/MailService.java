@@ -110,6 +110,6 @@ public class MailService {
     }
 
     private void logFailure(Exception exception) {
-        LOGGER.error("Mail gönderilemedi.", exception);
+        LOGGER.error("Mail gönderilemedi. errorType={}", exception.getClass().getSimpleName());
     }
 }

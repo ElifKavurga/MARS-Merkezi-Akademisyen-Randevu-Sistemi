@@ -2,8 +2,6 @@ package com.mars.service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.mars.dto.mail.AppointmentReminderMailContext;
-import com.mars.dto.mail.MailDetail;
 import com.mars.dto.mail.TemplateMailRequest;
 import com.mars.entity.Appointment;
 import com.mars.entity.AppointmentReminderDelivery;
@@ -25,19 +22,18 @@ import com.mars.enums.AppointmentStatus;
 import com.mars.enums.MeetingType;
 import com.mars.repository.AppointmentReminderDeliveryRepository;
 import com.mars.repository.AppointmentRepository;
+import com.mars.service.mail.PublisherMailDetails;
 
 @Service
 public class AppointmentReminderService {
     private static final Logger LOGGER = LoggerFactory.getLogger(AppointmentReminderService.class);
     private static final Duration TWENTY_FOUR_HOURS = Duration.ofHours(24);
     private static final Duration ONE_HOUR = Duration.ofHours(1);
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
-
     private final AppointmentRepository appointmentRepository;
     private final AppointmentReminderDeliveryRepository deliveryRepository;
     private final MailService mailService;
     private final EmailNotificationPreferenceService preferenceService;
+    private final PublisherMailDetails mailDetails;
     private final Duration reminderWindow;
 
     public AppointmentReminderService(
@@ -45,11 +41,13 @@ public class AppointmentReminderService {
             AppointmentReminderDeliveryRepository deliveryRepository,
             MailService mailService,
             EmailNotificationPreferenceService preferenceService,
+            PublisherMailDetails mailDetails,
             @Value("${mars.mail.reminder-window-minutes:2}") long reminderWindowMinutes) {
         this.appointmentRepository = appointmentRepository;
         this.deliveryRepository = deliveryRepository;
         this.mailService = mailService;
         this.preferenceService = preferenceService;
+        this.mailDetails = mailDetails;
         this.reminderWindow = Duration.ofMinutes(reminderWindowMinutes);
     }
 
@@ -66,8 +64,8 @@ public class AppointmentReminderService {
         try {
             sendIfDue(appointment, recipient, now);
         } catch (RuntimeException ex) {
-            LOGGER.error("Randevu hatırlatma işlemi tamamlanamadı. appointmentId={}",
-                    appointment.getAppointmentId(), ex);
+            LOGGER.error("Randevu hatırlatma işlemi tamamlanamadı. appointmentId={}, errorType={}",
+                    appointment.getAppointmentId(), ex.getClass().getSimpleName());
         }
     }
 
@@ -122,12 +120,8 @@ public class AppointmentReminderService {
 
     private void updateDeliveryStatus(
             Appointment appointment, User recipient, AppointmentReminderType type, String status) {
-        deliveryRepository.findByAppointment_AppointmentIdAndRecipient_UserIdAndReminderType(
-                        appointment.getAppointmentId(), recipient.getUserId(), type)
-                .ifPresent(delivery -> {
-                    delivery.setDeliveryStatus(status);
-                    deliveryRepository.save(delivery);
-                });
+        deliveryRepository.updateDeliveryStatus(
+                appointment.getAppointmentId(), recipient.getUserId(), type, status);
     }
 
     private AppointmentReminderMailContext toContext(
@@ -148,18 +142,17 @@ public class AppointmentReminderService {
         String content = oneHour
                 ? "Yaklaşan randevunuz bir saat içinde başlayacaktır. Lütfen randevu saatini kaçırmamak için hazırlığınızı tamamlayınız."
                 : "Yaklaşan randevunuzu hatırlatmak isteriz. Lütfen randevu tarih ve saatini kontrol ediniz.";
-        List<MailDetail> details = new ArrayList<>();
-        add(details, "Hatırlatma Alıcısı", context.recipientName());
-        add(details, "Öğrenci", context.studentName());
-        add(details, "Akademisyen / Personel", context.staffName());
-        add(details, "Randevu Tarihi", context.appointmentDate().format(DATE_FORMAT));
-        add(details, "Başlangıç Saati", context.startTime().format(TIME_FORMAT));
-        add(details, "Bitiş Saati", context.endTime().format(TIME_FORMAT));
-        add(details, "Görüşme Türü", context.meetingType());
-        add(details, "Kategori", context.categoryName());
-        add(details, "Ders", context.course());
         Map<String, Object> parameters = new HashMap<>();
-        parameters.put("details", List.copyOf(details));
+        parameters.put("details", mailDetails.builder()
+                .add("Hatırlatma Alıcısı", context.recipientName())
+                .add("Öğrenci", context.studentName())
+                .add("Akademisyen / Personel", context.staffName())
+                .add("Randevu Tarihi", context.appointmentDate())
+                .addTimeRange("Randevu Saati", context.startTime(), context.endTime())
+                .add("Görüşme Türü", context.meetingType())
+                .add("Kategori", context.categoryName())
+                .add("Ders", context.course())
+                .build());
         parameters.put("showSubtitle", true);
         parameters.put("subtitle", oneHour ? "Randevunuz çok yakında başlayacak." : "Randevunuza 24 saat kaldı.");
         parameters.put("showStatus", true);
@@ -180,11 +173,5 @@ public class AppointmentReminderService {
             return "Online";
         }
         return MeetingType.FACE_TO_FACE.name().equals(value) ? "Yüz Yüze" : null;
-    }
-
-    private void add(List<MailDetail> details, String label, String value) {
-        if (value != null && !value.isBlank()) {
-            details.add(new MailDetail(label, value));
-        }
     }
 }
