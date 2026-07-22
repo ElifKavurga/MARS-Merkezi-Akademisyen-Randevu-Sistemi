@@ -27,6 +27,16 @@
               <h1 th:text="${title}" style="margin:0;font-size:24px;line-height:32px;color:#0d1f56;">Bildirim Başlığı</h1>
             </td>
           </tr>
+          <tr th:if="${showSubtitle}">
+            <td style="padding:0 28px 14px;">
+              <div th:text="${subtitle}" style="font-size:15px;line-height:23px;font-weight:700;color:#334155;">Süreç bilgilendirmesi</div>
+            </td>
+          </tr>
+          <tr th:if="${showStatus}">
+            <td style="padding:0 28px 18px;">
+              <span th:text="${statusText}" th:style="'display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;line-height:16px;font-weight:700;letter-spacing:.03em;color:' + ${statusColor} + ';background:' + ${statusBackground} + ';'">DURUM</span>
+            </td>
+          </tr>
           <tr>
             <td th:text="${content}" style="padding:8px 28px 24px;font-size:16px;line-height:26px;color:#4b556f;white-space:pre-line;">Bildirim içeriği</td>
           </tr>

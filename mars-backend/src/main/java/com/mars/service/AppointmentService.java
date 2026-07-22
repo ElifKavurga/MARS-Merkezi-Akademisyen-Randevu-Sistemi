@@ -395,7 +395,8 @@ public class AppointmentService {
                 appointment.getStudent(),
                 NotificationType.APPOINTMENT_RESCHEDULE_REQUESTED,
                 "Yeniden Planlama Talebi",
-                buildRescheduleDescription(savedApproval));
+                buildRescheduleDescription(savedApproval),
+                savedApproval.getRescheduleRequestId());
         return toRescheduleResponse(savedApproval);
     }
 
@@ -458,9 +459,9 @@ public class AppointmentService {
             request.setRequestStatus(RescheduleRequestStatus.ACCEPTED.name());
             String description = buildRescheduleDescription(request);
             createAppointmentNotification(appointment, appointment.getStaff(), NotificationType.APPOINTMENT_RESCHEDULED,
-                    "Yeniden Planlama Kabul Edildi", description);
+                    "Yeniden Planlama Kabul Edildi", description, request.getRescheduleRequestId());
             createAppointmentNotification(appointment, student, NotificationType.APPOINTMENT_RESCHEDULED,
-                    "Randevu Yeniden Planlandı", description);
+                    "Randevu Yeniden Planlandı", description, request.getRescheduleRequestId());
         } else {
             request.setRequestStatus(RescheduleRequestStatus.REJECTED.name());
             appointment.setAppointmentStatus(AppointmentStatus.CANCELLED.name());
@@ -468,9 +469,10 @@ public class AppointmentService {
             appointmentRepository.save(appointment);
             String description = buildRescheduleDescription(request);
             createAppointmentNotification(appointment, appointment.getStaff(), NotificationType.APPOINTMENT_RESCHEDULE_REJECTED,
-                    "Yeniden Planlama Reddedildi ve Randevu İptal Edildi", description);
+                    "Yeniden Planlama Reddedildi ve Randevu İptal Edildi", description,
+                    request.getRescheduleRequestId());
             createAppointmentNotification(appointment, student, NotificationType.APPOINTMENT_CANCELLED,
-                    "Randevu İptal Edildi", description);
+                    "Randevu İptal Edildi", description, request.getRescheduleRequestId());
         }
         request.setUpdatedAt(now);
         return toRescheduleResponse(appointmentRescheduleRequestRepository.save(request));
@@ -491,9 +493,9 @@ public class AppointmentService {
         Appointment appointment = request.getAppointment();
         String description = buildRescheduleDescription(request);
         createAppointmentNotification(appointment, appointment.getStudent(), NotificationType.APPOINTMENT_RESCHEDULE_EXPIRED,
-                "Yeniden Planlama Süresi Doldu", description);
+                "Yeniden Planlama Süresi Doldu", description, request.getRescheduleRequestId());
         createAppointmentNotification(appointment, appointment.getStaff(), NotificationType.APPOINTMENT_RESCHEDULE_EXPIRED,
-                "Yeniden Planlama Süresi Doldu", description);
+                "Yeniden Planlama Süresi Doldu", description, request.getRescheduleRequestId());
     }
 
     private AppointmentRescheduleResponse toRescheduleResponse(AppointmentRescheduleApproval request) {
@@ -571,12 +573,23 @@ public class AppointmentService {
             NotificationType type,
             String title,
             String message) {
+        createAppointmentNotification(appointment, recipient, type, title, message, null);
+    }
+
+    private void createAppointmentNotification(
+            Appointment appointment,
+            User recipient,
+            NotificationType type,
+            String title,
+            String message,
+            Integer rescheduleRequestId) {
         notificationService.createNotification(NotificationCreateRequest.builder()
                 .userId(recipient.getUserId())
                 .notificationType(type)
                 .title(title)
                 .message(withAppointmentContext(appointment, message))
                 .relatedAppointmentId(appointment.getAppointmentId())
+                .relatedRescheduleRequestId(rescheduleRequestId)
                 .build());
     }
 

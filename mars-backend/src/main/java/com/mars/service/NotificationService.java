@@ -28,6 +28,7 @@ import com.mars.enums.NotificationType;
 import com.mars.exception.ResourceNotFoundException;
 import com.mars.mapper.NotificationMapper;
 import com.mars.repository.AppointmentRepository;
+import com.mars.repository.AppointmentRescheduleRequestRepository;
 import com.mars.repository.DelegationLogRepository;
 import com.mars.repository.NotificationRepository;
 import com.mars.repository.UserRepository;
@@ -48,6 +49,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
     private final AppointmentRepository appointmentRepository;
+    private final AppointmentRescheduleRequestRepository appointmentRescheduleRequestRepository;
     private final DelegationLogRepository delegationLogRepository;
     private final NotificationMapper notificationMapper;
     private final NotificationWebSocketPublisher webSocketPublisher;
@@ -72,12 +74,15 @@ public class NotificationService {
         if (appointment == null && delegation != null) {
             appointment = delegation.getAppointment();
         }
+        var reschedule = request.getRelatedRescheduleRequestId() == null ? null
+                : appointmentRescheduleRequestRepository.findById(request.getRelatedRescheduleRequestId())
+                        .orElseThrow(() -> new ResourceNotFoundException(APPOINTMENT_NOT_FOUND));
 
         Notification notification = notificationMapper.toEntity(
                 withEventKey(request, eventKey), recipient, appointment, delegation, LocalDateTime.now(APP_ZONE));
         NotificationResponse response = notificationMapper.toResponse(notificationRepository.save(notification));
         webSocketPublisher.publishAfterCommit(recipient.getInstitutionalEmail(), response);
-        mailPublisher.publishAfterCommit(recipient.getInstitutionalEmail(), response, appointment, delegation);
+        mailPublisher.publishAfterCommit(recipient.getInstitutionalEmail(), response, appointment, delegation, reschedule);
         return response;
     }
 
@@ -163,6 +168,7 @@ public class NotificationService {
                 .notificationType(request.getNotificationType())
                 .relatedAppointmentId(request.getRelatedAppointmentId())
                 .relatedDelegationId(request.getRelatedDelegationId())
+                .relatedRescheduleRequestId(request.getRelatedRescheduleRequestId())
                 .eventKey(eventKey)
                 .build();
     }
@@ -176,6 +182,7 @@ public class NotificationService {
                 request.getNotificationType().name(),
                 String.valueOf(request.getRelatedAppointmentId()),
                 String.valueOf(request.getRelatedDelegationId()),
+                String.valueOf(request.getRelatedRescheduleRequestId()),
                 String.valueOf(request.getTitle()),
                 String.valueOf(request.getMessage()));
         try {

@@ -14,6 +14,8 @@ public class NotificationCreateRequest {
     private NotificationType notificationType;
     private Integer relatedAppointmentId;
     private Integer relatedDelegationId;
+    /** Internal mail context; it is not persisted or exposed by the REST response. */
+    private Integer relatedRescheduleRequestId;
     /** Internal idempotency key; it is never exposed by the REST response. */
     private String eventKey;
 }

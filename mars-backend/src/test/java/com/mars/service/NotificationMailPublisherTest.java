@@ -21,10 +21,12 @@ import com.mars.dto.NotificationResponse;
 import com.mars.dto.mail.TemplateMailRequest;
 import com.mars.dto.mail.MailDetail;
 import com.mars.entity.Appointment;
+import com.mars.entity.AppointmentRescheduleApproval;
 import com.mars.entity.AppointmentCategory;
 import com.mars.entity.AvailabilitySlot;
 import com.mars.entity.User;
 import com.mars.enums.MeetingType;
+import com.mars.enums.NotificationType;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationMailPublisherTest {
@@ -45,7 +47,7 @@ class NotificationMailPublisherTest {
                 .message("Randevunuz onaylandı.")
                 .build();
 
-        publisher.publishAfterCommit("student@mars.edu.tr", notification, null, null);
+        publisher.publishAfterCommit("student@mars.edu.tr", notification, null, null, null);
 
         verify(mailService).sendTemplate(argThat(request ->
                 request.recipient().equals("student@mars.edu.tr")
@@ -61,7 +63,7 @@ class NotificationMailPublisherTest {
                 .message("Yeni delegasyon talebiniz var.")
                 .build();
 
-        publisher.publishAfterCommit("assistant@mars.edu.tr", notification, null, null);
+        publisher.publishAfterCommit("assistant@mars.edu.tr", notification, null, null, null);
 
         verify(mailService, never()).sendTemplate(org.mockito.ArgumentMatchers.any(TemplateMailRequest.class));
         TransactionSynchronizationManager.getSynchronizations().forEach(
@@ -93,7 +95,7 @@ class NotificationMailPublisherTest {
                 .message("Randevunuz onaylandı.")
                 .build();
 
-        publisher.publishAfterCommit("student@mars.edu.tr", notification, appointment, null);
+        publisher.publishAfterCommit("student@mars.edu.tr", notification, appointment, null, null);
 
         ArgumentCaptor<TemplateMailRequest> captor = ArgumentCaptor.forClass(TemplateMailRequest.class);
         verify(mailService).sendTemplate(captor.capture());
@@ -106,5 +108,47 @@ class NotificationMailPublisherTest {
                 .contains(new MailDetail("Görüşme Türü", "Yüz Yüze"))
                 .contains(new MailDetail("Kategori", "Bitirme Projesi Görüşmesi"))
                 .noneMatch(detail -> detail.label().equals("Ders"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void publishRescheduleRequest_showsOldAndNewSlotsWithPendingPresentation() {
+        Appointment appointment = new Appointment();
+        appointment.setMeetingType(MeetingType.FACE_TO_FACE.name());
+        AvailabilitySlot original = slot(LocalDate.of(2026, 7, 24), LocalTime.of(14, 30), LocalTime.of(15, 0));
+        AvailabilitySlot proposed = slot(LocalDate.of(2026, 7, 25), LocalTime.of(10, 0), LocalTime.of(10, 30));
+        AppointmentRescheduleApproval reschedule = new AppointmentRescheduleApproval();
+        reschedule.setOriginalSlot(original);
+        reschedule.setProposedSlot(proposed);
+        reschedule.setProposedMeetingType(MeetingType.ONLINE.name());
+        NotificationResponse notification = NotificationResponse.builder()
+                .notificationType(NotificationType.APPOINTMENT_RESCHEDULE_REQUESTED)
+                .title("Yeniden Planlama Talebi")
+                .message("Yeni tarih teklif edildi.")
+                .build();
+
+        publisher.publishAfterCommit("student@mars.edu.tr", notification, appointment, null, reschedule);
+
+        ArgumentCaptor<TemplateMailRequest> captor = ArgumentCaptor.forClass(TemplateMailRequest.class);
+        verify(mailService).sendTemplate(captor.capture());
+        TemplateMailRequest request = captor.getValue();
+        var details = (java.util.List<MailDetail>) request.parameters().get("details");
+        assertThat(details)
+                .contains(new MailDetail("Eski Tarih", "24.07.2026"))
+                .contains(new MailDetail("Eski Saat", "14:30 - 15:00"))
+                .contains(new MailDetail("Yeni Tarih", "25.07.2026"))
+                .contains(new MailDetail("Yeni Saat", "10:00 - 10:30"))
+                .contains(new MailDetail("Görüşme Türü", "Online"));
+        assertThat(request.parameters())
+                .containsEntry("statusText", "ONAY BEKLİYOR")
+                .containsEntry("showSubtitle", true);
+    }
+
+    private AvailabilitySlot slot(LocalDate date, LocalTime start, LocalTime end) {
+        AvailabilitySlot slot = new AvailabilitySlot();
+        slot.setSlotDate(date);
+        slot.setStartTime(start);
+        slot.setEndTime(end);
+        return slot;
     }
 }
