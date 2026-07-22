@@ -60,6 +60,8 @@ mars:
   mail:
     from: ${MAIL_FROM:${MAIL_USERNAME:}}
     test-recipient: ${MAIL_TEST_RECIPIENT:}
+    reminder-scan-ms: ${MAIL_REMINDER_SCAN_MS:60000}
+    reminder-window-minutes: ${MAIL_REMINDER_WINDOW_MINUTES:2}
 
 logging:
   level:

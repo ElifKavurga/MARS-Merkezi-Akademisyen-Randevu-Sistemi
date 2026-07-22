@@ -22,6 +22,23 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
             SELECT a
             FROM Appointment a
             JOIN FETCH a.student
+            JOIN FETCH a.staff
+            JOIN FETCH a.category
+            JOIN FETCH a.slot s
+            LEFT JOIN FETCH a.course
+            WHERE a.appointmentStatus = :status
+              AND s.slotDate BETWEEN :fromDate AND :toDate
+            ORDER BY s.slotDate ASC, s.startTime ASC
+            """)
+    List<Appointment> findReminderCandidates(
+            @Param("status") String status,
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate);
+
+    @Query("""
+            SELECT a
+            FROM Appointment a
+            JOIN FETCH a.student
             JOIN FETCH a.category
             JOIN FETCH a.slot s
             LEFT JOIN FETCH a.course
