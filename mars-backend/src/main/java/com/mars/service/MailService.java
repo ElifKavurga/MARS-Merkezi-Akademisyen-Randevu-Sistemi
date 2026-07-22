@@ -70,7 +70,8 @@ public class MailService {
             context.setVariable("actionText", request.actionText());
             context.setVariable("actionUrl", request.actionUrl());
             context.setVariable("showAction", hasText(request.actionText()) && hasText(request.actionUrl()));
-            String html = templateEngine.process(MAIL_TEMPLATE, context);
+            String template = hasText(request.templateName()) ? request.templateName() : MAIL_TEMPLATE;
+            String html = templateEngine.process(template, context);
             return sendHtmlInternal(request.recipient(), request.subject(), html);
         } catch (RuntimeException ex) {
             logFailure(ex);

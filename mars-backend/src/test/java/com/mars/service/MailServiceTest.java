@@ -99,6 +99,25 @@ class MailServiceTest {
     }
 
     @Test
+    void sendTemplate_customTemplate_usesPublisherTemplate() {
+        MimeMessage mimeMessage = new MimeMessage(Session.getInstance(new Properties()));
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+        when(templateEngine.process(any(String.class), any(IContext.class))).thenReturn("<html>MARS</html>");
+
+        boolean sent = mailService.sendTemplate(TemplateMailRequest.builder()
+                .recipient("student@mars.edu.tr")
+                .subject("Bekleme Listesi")
+                .title("Sıranız Geldi")
+                .content("Rezervasyon hakkınız hazır.")
+                .templateName("mail/waitlist-notification")
+                .build());
+
+        assertThat(sent).isTrue();
+        verify(templateEngine).process(
+                org.mockito.ArgumentMatchers.eq("mail/waitlist-notification"), any(IContext.class));
+    }
+
+    @Test
     void sendPlainText_transportFailure_returnsFalseWithoutThrowing() {
         doThrow(new MailSendException("SMTP unavailable"))
                 .when(mailSender).send(any(SimpleMailMessage.class));
@@ -149,5 +168,31 @@ class MailServiceTest {
                 .contains("Randevuyu Gör")
                 .contains("width=device-width")
                 .contains("otomatik olarak oluşturulmuştur");
+    }
+
+    @Test
+    void processTemplates_reuseSharedMarsLayout() {
+        ClassLoaderTemplateResolver resolver = new ClassLoaderTemplateResolver();
+        resolver.setPrefix("templates/");
+        resolver.setSuffix(".html");
+        resolver.setTemplateMode(TemplateMode.HTML);
+        resolver.setCharacterEncoding("UTF-8");
+        SpringTemplateEngine engine = new SpringTemplateEngine();
+        engine.setTemplateResolver(resolver);
+        Context context = new Context();
+        context.setVariable("title", "Süreç Bildirimi");
+        context.setVariable("content", "Bilgilendirme içeriği");
+        context.setVariable("showAction", false);
+        context.setVariable("showSubtitle", false);
+        context.setVariable("showStatus", false);
+        context.setVariable("details", java.util.List.of());
+
+        for (String template : java.util.List.of(
+                "mail/waitlist-notification", "mail/no-show-notification", "mail/penalty-notification")) {
+            assertThat(engine.process(template, context))
+                    .contains("Modern Akademisyen Randevu Sistemi")
+                    .contains("Süreç Bildirimi")
+                    .contains("Bilgilendirme içeriği");
+        }
     }
 }

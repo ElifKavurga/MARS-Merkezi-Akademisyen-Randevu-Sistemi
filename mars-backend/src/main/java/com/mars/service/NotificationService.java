@@ -82,7 +82,8 @@ public class NotificationService {
                 withEventKey(request, eventKey), recipient, appointment, delegation, LocalDateTime.now(APP_ZONE));
         NotificationResponse response = notificationMapper.toResponse(notificationRepository.save(notification));
         webSocketPublisher.publishAfterCommit(recipient.getInstitutionalEmail(), response);
-        mailPublisher.publishAfterCommit(recipient.getInstitutionalEmail(), response, appointment, delegation, reschedule);
+        mailPublisher.publishAfterCommit(
+                recipient.getInstitutionalEmail(), response, appointment, delegation, reschedule, request);
         return response;
     }
 
@@ -169,6 +170,12 @@ public class NotificationService {
                 .relatedAppointmentId(request.getRelatedAppointmentId())
                 .relatedDelegationId(request.getRelatedDelegationId())
                 .relatedRescheduleRequestId(request.getRelatedRescheduleRequestId())
+                .mailTemplateName(request.getMailTemplateName())
+                .mailSubtitle(request.getMailSubtitle())
+                .mailStatusText(request.getMailStatusText())
+                .mailStatusColor(request.getMailStatusColor())
+                .mailStatusBackground(request.getMailStatusBackground())
+                .mailDetails(request.getMailDetails())
                 .eventKey(eventKey)
                 .build();
     }

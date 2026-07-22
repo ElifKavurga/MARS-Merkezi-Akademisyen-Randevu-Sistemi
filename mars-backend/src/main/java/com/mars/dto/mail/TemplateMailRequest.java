@@ -12,5 +12,6 @@ public record TemplateMailRequest(
         String content,
         String actionText,
         String actionUrl,
-        Map<String, Object> parameters) {
+        Map<String, Object> parameters,
+        String templateName) {
 }

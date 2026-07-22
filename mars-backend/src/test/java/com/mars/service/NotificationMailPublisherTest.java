@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.mars.dto.NotificationResponse;
+import com.mars.dto.NotificationCreateRequest;
 import com.mars.dto.mail.TemplateMailRequest;
 import com.mars.dto.mail.MailDetail;
 import com.mars.entity.Appointment;
@@ -47,7 +48,8 @@ class NotificationMailPublisherTest {
                 .message("Randevunuz onaylandı.")
                 .build();
 
-        publisher.publishAfterCommit("student@mars.edu.tr", notification, null, null, null);
+        publisher.publishAfterCommit("student@mars.edu.tr", notification, null, null, null,
+                NotificationCreateRequest.builder().build());
 
         verify(mailService).sendTemplate(argThat(request ->
                 request.recipient().equals("student@mars.edu.tr")
@@ -63,7 +65,8 @@ class NotificationMailPublisherTest {
                 .message("Yeni delegasyon talebiniz var.")
                 .build();
 
-        publisher.publishAfterCommit("assistant@mars.edu.tr", notification, null, null, null);
+        publisher.publishAfterCommit("assistant@mars.edu.tr", notification, null, null, null,
+                NotificationCreateRequest.builder().build());
 
         verify(mailService, never()).sendTemplate(org.mockito.ArgumentMatchers.any(TemplateMailRequest.class));
         TransactionSynchronizationManager.getSynchronizations().forEach(
@@ -95,7 +98,8 @@ class NotificationMailPublisherTest {
                 .message("Randevunuz onaylandı.")
                 .build();
 
-        publisher.publishAfterCommit("student@mars.edu.tr", notification, appointment, null, null);
+        publisher.publishAfterCommit("student@mars.edu.tr", notification, appointment, null, null,
+                NotificationCreateRequest.builder().build());
 
         ArgumentCaptor<TemplateMailRequest> captor = ArgumentCaptor.forClass(TemplateMailRequest.class);
         verify(mailService).sendTemplate(captor.capture());
@@ -127,7 +131,8 @@ class NotificationMailPublisherTest {
                 .message("Yeni tarih teklif edildi.")
                 .build();
 
-        publisher.publishAfterCommit("student@mars.edu.tr", notification, appointment, null, reschedule);
+        publisher.publishAfterCommit("student@mars.edu.tr", notification, appointment, null, reschedule,
+                NotificationCreateRequest.builder().build());
 
         ArgumentCaptor<TemplateMailRequest> captor = ArgumentCaptor.forClass(TemplateMailRequest.class);
         verify(mailService).sendTemplate(captor.capture());

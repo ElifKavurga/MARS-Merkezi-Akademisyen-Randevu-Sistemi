@@ -11,6 +11,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.mars.dto.NotificationResponse;
+import com.mars.dto.NotificationCreateRequest;
 import com.mars.dto.mail.MailDetail;
 import com.mars.dto.mail.TemplateMailRequest;
 import com.mars.entity.Appointment;
@@ -32,16 +33,19 @@ public class NotificationMailPublisher {
             NotificationResponse notification,
             Appointment appointment,
             DelegationLog delegation,
-            AppointmentRescheduleApproval reschedule) {
+            AppointmentRescheduleApproval reschedule,
+            NotificationCreateRequest request) {
         List<MailDetail> details = buildDetails(appointment, delegation, reschedule);
         Map<String, Object> parameters = presentation(notification, delegation, reschedule);
-        parameters.put("details", details);
+        applyCustomPresentation(parameters, request);
+        parameters.put("details", request.getMailDetails() == null ? details : request.getMailDetails());
         Runnable publish = () -> mailService.sendTemplate(TemplateMailRequest.builder()
                 .recipient(recipient)
                 .subject(notification.getTitle())
                 .title(notification.getTitle())
                 .content(notification.getMessage())
                 .parameters(parameters)
+                .templateName(request.getMailTemplateName())
                 .build());
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
             publish.run();
@@ -53,6 +57,20 @@ public class NotificationMailPublisher {
                 publish.run();
             }
         });
+    }
+
+    private void applyCustomPresentation(Map<String, Object> parameters, NotificationCreateRequest request) {
+        if (request.getMailSubtitle() != null && !request.getMailSubtitle().isBlank()) {
+            parameters.put("subtitle", request.getMailSubtitle());
+            parameters.put("showSubtitle", true);
+        }
+        if (request.getMailStatusText() != null && !request.getMailStatusText().isBlank()) {
+            parameters.put("statusText", request.getMailStatusText());
+            parameters.put("statusColor", request.getMailStatusColor() == null ? "#1d4ed8" : request.getMailStatusColor());
+            parameters.put("statusBackground", request.getMailStatusBackground() == null
+                    ? "#eff6ff" : request.getMailStatusBackground());
+            parameters.put("showStatus", true);
+        }
     }
 
     private List<MailDetail> buildDetails(
