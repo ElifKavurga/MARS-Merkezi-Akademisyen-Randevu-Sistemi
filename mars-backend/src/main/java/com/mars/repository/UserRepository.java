@@ -8,11 +8,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.repository.query.Param;
 
 import com.mars.entity.User;
+import jakarta.persistence.LockModeType;
 
 public interface UserRepository extends JpaRepository<User, Integer> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT u FROM User u WHERE u.userId = :userId")
+    Optional<User> findByIdForNotificationUpdate(@Param("userId") Integer userId);
 
     @Query("SELECT u FROM User u JOIN FETCH u.role JOIN FETCH u.department WHERE u.institutionalEmail = :institutionalEmail")
     Optional<User> findByInstitutionalEmail(@Param("institutionalEmail") String institutionalEmail);

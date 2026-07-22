@@ -2,6 +2,7 @@ package com.mars.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -16,9 +17,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.mars.dto.NotificationResponse;
+import com.mars.dto.NotificationCreateRequest;
 import com.mars.entity.Notification;
 import com.mars.entity.Role;
 import com.mars.entity.User;
+import com.mars.enums.NotificationType;
 import com.mars.mapper.NotificationMapper;
 import com.mars.repository.AppointmentRepository;
 import com.mars.repository.DelegationLogRepository;
@@ -90,6 +93,38 @@ class NotificationServiceTest {
 
         assertThat(notificationService.markAllMyNotificationsAsRead()).isEqualTo(3);
         verify(notificationRepository).markAllAsReadByUserId(7);
+    }
+
+    @Test
+    void createNotification_sameEventTwice_returnsExistingWithoutDuplicatePublish() {
+        User user = userWithId(7);
+        user.setInstitutionalEmail("student@mars.edu.tr");
+        NotificationCreateRequest request = NotificationCreateRequest.builder()
+                .userId(7)
+                .notificationType(NotificationType.APPOINTMENT_APPROVED)
+                .title("Randevu Onaylandı")
+                .message("Randevunuz onaylandı.")
+                .relatedAppointmentId(null)
+                .build();
+        Notification saved = new Notification();
+        saved.setNotificationId(12);
+        saved.setUser(user);
+        NotificationResponse response = NotificationResponse.builder().notificationId(12).build();
+
+        when(userRepository.findByIdForNotificationUpdate(7)).thenReturn(Optional.of(user));
+        when(notificationRepository.findByUser_UserIdAndEventKey(org.mockito.ArgumentMatchers.eq(7), org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(Optional.empty(), Optional.of(saved));
+        when(notificationMapper.toEntity(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(user),
+                org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.any()))
+                .thenReturn(saved);
+        when(notificationRepository.save(saved)).thenReturn(saved);
+        when(notificationMapper.toResponse(saved)).thenReturn(response);
+
+        assertThat(notificationService.createNotification(request).getNotificationId()).isEqualTo(12);
+        assertThat(notificationService.createNotification(request).getNotificationId()).isEqualTo(12);
+
+        verify(notificationRepository, times(1)).save(saved);
+        verify(webSocketPublisher, times(1)).publishAfterCommit("student@mars.edu.tr", response);
     }
 
     private User userWithId(Integer userId) {

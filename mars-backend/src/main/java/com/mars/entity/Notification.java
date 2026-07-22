@@ -64,4 +64,7 @@ public class Notification {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "event_key", length = 64)
+    private String eventKey;
 }

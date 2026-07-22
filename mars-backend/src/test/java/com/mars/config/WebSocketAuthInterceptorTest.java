@@ -63,6 +63,23 @@ class WebSocketAuthInterceptorTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
+    @Test
+    void outboundNotification_withExpiredSessionToken_isNotDelivered() {
+        String token = "expired-token";
+        UserDetails details = User.withUsername("user@mars.edu.tr")
+                .password("password")
+                .roles("STUDENT")
+                .build();
+        StompHeaderAccessor accessor = StompHeaderAccessor.create(StompCommand.MESSAGE);
+        accessor.setUser(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                details, token, details.getAuthorities()));
+        accessor.setLeaveMutable(true);
+        Message<byte[]> message = MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
+        when(jwtService.isTokenValid(token, details.getUsername())).thenReturn(false);
+
+        assertThat(interceptor.preSend(message, mock(MessageChannel.class))).isNull();
+    }
+
     private Message<byte[]> stompMessage(
             StompCommand command,
             String destination,

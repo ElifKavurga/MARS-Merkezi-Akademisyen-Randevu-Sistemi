@@ -31,6 +31,7 @@ public class NotificationMapper {
         notification.setEmailDeliveryStatus("PENDING");
         notification.setRecipientEmail(recipient.getInstitutionalEmail());
         notification.setCreatedAt(createdAt);
+        notification.setEventKey(request.getEventKey());
         return notification;
     }
 

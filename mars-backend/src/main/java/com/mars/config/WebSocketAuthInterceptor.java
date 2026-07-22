@@ -10,6 +10,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -35,6 +36,9 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
             return message;
         }
         StompCommand command = accessor.getCommand();
+        if (command == StompCommand.MESSAGE && !hasValidSessionToken(accessor)) {
+            return null;
+        }
         if (command == StompCommand.CONNECT) {
             authenticate(accessor);
         } else if (command == StompCommand.SUBSCRIBE
@@ -63,6 +67,14 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
             throw new IllegalArgumentException("Geçersiz WebSocket kimlik bilgisi.");
         }
         accessor.setUser(new UsernamePasswordAuthenticationToken(
-                details, null, details.getAuthorities()));
+                details, token, details.getAuthorities()));
+    }
+
+    private boolean hasValidSessionToken(StompHeaderAccessor accessor) {
+        if (!(accessor.getUser() instanceof Authentication authentication)
+                || !(authentication.getCredentials() instanceof String token)) {
+            return false;
+        }
+        return jwtService.isTokenValid(token, authentication.getName());
     }
 }

@@ -1,7 +1,11 @@
 package com.mars.service;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.HexFormat;
 import java.util.List;
 
 import org.springframework.security.access.AccessDeniedException;
@@ -51,17 +55,25 @@ public class NotificationService {
     /** Modules use this entry point instead of constructing Notification entities. */
     @Transactional
     public NotificationResponse createNotification(NotificationCreateRequest request) {
-        User recipient = userRepository.findById(request.getUserId())
+        String eventKey = resolveEventKey(request);
+        User recipient = userRepository.findByIdForNotificationUpdate(request.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
+        var existing = notificationRepository.findByUser_UserIdAndEventKey(recipient.getUserId(), eventKey);
+        if (existing.isPresent()) {
+            return notificationMapper.toResponse(existing.get());
+        }
         Appointment appointment = request.getRelatedAppointmentId() == null ? null
                 : appointmentRepository.findById(request.getRelatedAppointmentId())
                         .orElseThrow(() -> new ResourceNotFoundException(APPOINTMENT_NOT_FOUND));
         DelegationLog delegation = request.getRelatedDelegationId() == null ? null
                 : delegationLogRepository.findById(request.getRelatedDelegationId())
                         .orElseThrow(() -> new ResourceNotFoundException(DELEGATION_NOT_FOUND));
+        if (appointment == null && delegation != null) {
+            appointment = delegation.getAppointment();
+        }
 
         Notification notification = notificationMapper.toEntity(
-                request, recipient, appointment, delegation, LocalDateTime.now(APP_ZONE));
+                withEventKey(request, eventKey), recipient, appointment, delegation, LocalDateTime.now(APP_ZONE));
         NotificationResponse response = notificationMapper.toResponse(notificationRepository.save(notification));
         webSocketPublisher.publishAfterCommit(recipient.getInstitutionalEmail(), response);
         return response;
@@ -82,14 +94,7 @@ public class NotificationService {
                 .message(message)
                 .relatedDelegationId(delegation == null ? null : delegation.getDelegationId())
                 .build();
-        Notification notification = notificationMapper.toEntity(
-                request,
-                recipient,
-                delegation == null ? null : delegation.getAppointment(),
-                delegation,
-                LocalDateTime.now(APP_ZONE));
-        NotificationResponse response = notificationMapper.toResponse(notificationRepository.save(notification));
-        webSocketPublisher.publishAfterCommit(recipient.getInstitutionalEmail(), response);
+        createNotification(request);
     }
 
     @Transactional(readOnly = true)
@@ -146,6 +151,37 @@ public class NotificationService {
             case "DELEGATION_EXPIRED" -> NotificationType.DELEGATION_EXPIRED;
             default -> NotificationType.valueOf(type);
         };
+    }
+
+    private NotificationCreateRequest withEventKey(NotificationCreateRequest request, String eventKey) {
+        return NotificationCreateRequest.builder()
+                .userId(request.getUserId())
+                .title(request.getTitle())
+                .message(request.getMessage())
+                .notificationType(request.getNotificationType())
+                .relatedAppointmentId(request.getRelatedAppointmentId())
+                .relatedDelegationId(request.getRelatedDelegationId())
+                .eventKey(eventKey)
+                .build();
+    }
+
+    private String resolveEventKey(NotificationCreateRequest request) {
+        if (request.getEventKey() != null && !request.getEventKey().isBlank()) {
+            return request.getEventKey();
+        }
+        String event = String.join("|",
+                String.valueOf(request.getUserId()),
+                request.getNotificationType().name(),
+                String.valueOf(request.getRelatedAppointmentId()),
+                String.valueOf(request.getRelatedDelegationId()),
+                String.valueOf(request.getTitle()),
+                String.valueOf(request.getMessage()));
+        try {
+            return HexFormat.of().formatHex(
+                    MessageDigest.getInstance("SHA-256").digest(event.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException("SHA-256 kullanılamıyor.", ex);
+        }
     }
 
     private User getCurrentUser() {

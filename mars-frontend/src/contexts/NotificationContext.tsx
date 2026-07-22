@@ -3,6 +3,7 @@ import SockJS from 'sockjs-client';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { API_BASE_URL } from '../constants';
 import { useAuth } from '../hooks/useAuth';
+import { useToast } from '../hooks/useToast';
 import {
   getMyNotifications,
   getMyUnreadNotificationCount,
@@ -37,8 +38,23 @@ function mergeNotificationHistory(
   return history.reduce(mergeNotification, current);
 }
 
+function getTokenExpiry(token: string): number | null {
+  try {
+    const payload = token.split('.')[1];
+    if (!payload) return null;
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const normalized = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+    const claims = JSON.parse(window.atob(normalized)) as { exp?: number };
+    return typeof claims.exp === 'number' ? claims.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
 export function NotificationProvider({ children }: { children: ReactNode }) {
-  const { token, user } = useAuth();
+  const { token, user, clearSession } = useAuth();
+  const toast = useToast();
+  const userId = user?.userId;
   const [recentNotifications, setRecentNotifications] = useState<NotificationItem[]>([]);
   const [latestNotification, setLatestNotification] = useState<NotificationItem | null>(null);
   const [toasts, setToasts] = useState<RealtimeToast[]>([]);
@@ -47,13 +63,17 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const clientRef = useRef<Client | null>(null);
   const receivedIdsRef = useRef(new Set<number>());
   const readRequestsRef = useRef(new Set<number>());
+  const toastTimersRef = useRef(new Map<string, number>());
 
   const dismissToast = useCallback((toastKey: string) => {
+    const timer = toastTimersRef.current.get(toastKey);
+    if (timer !== undefined) window.clearTimeout(timer);
+    toastTimersRef.current.delete(toastKey);
     setToasts((current) => current.filter((toast) => toast.toastKey !== toastKey));
   }, []);
 
   useEffect(() => {
-    if (!token || !user) {
+    if (!token || !userId) {
       setRecentNotifications([]);
       setLatestNotification(null);
       setToasts([]);
@@ -76,10 +96,19 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     void Promise.allSettled([historyRequest, countRequest])
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [token, user]);
+  }, [token, userId]);
 
   useEffect(() => {
-    if (!token || !user) return;
+    if (!token || !userId) return;
+
+    let active = true;
+    let connectedOnce = false;
+    let disconnectReported = false;
+    const toastTimers = toastTimersRef.current;
+    const expiresAt = getTokenExpiry(token);
+    const expiryTimer = expiresAt === null
+      ? undefined
+      : window.setTimeout(clearSession, Math.max(0, expiresAt - Date.now()));
 
     const client = new Client({
       connectHeaders: { Authorization: `Bearer ${token}` },
@@ -90,8 +119,20 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       debug: () => undefined,
     });
     client.onConnect = () => {
+      if (!active) return;
+      if (connectedOnce && disconnectReported) {
+        toast.info('Bildirim bağlantısı yeniden kuruldu.');
+      }
+      connectedOnce = true;
+      disconnectReported = false;
       client.subscribe('/user/queue/notifications', (message: IMessage) => {
-        const incoming = JSON.parse(message.body) as NotificationItem;
+        if (!active) return;
+        let incoming: NotificationItem;
+        try {
+          incoming = JSON.parse(message.body) as NotificationItem;
+        } catch {
+          return;
+        }
         if (receivedIdsRef.current.has(incoming.notificationId)) return;
         receivedIdsRef.current.add(incoming.notificationId);
         setRecentNotifications((current) => mergeNotification(current, incoming));
@@ -99,18 +140,31 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         setLatestNotification(incoming);
         const toastKey = `notification-${incoming.notificationId}`;
         setToasts((current) => [...current, { ...incoming, toastKey }]);
-        window.setTimeout(() => dismissToast(toastKey), TOAST_DURATION_MS);
+        const timer = window.setTimeout(() => dismissToast(toastKey), TOAST_DURATION_MS);
+        toastTimers.set(toastKey, timer);
       });
+    };
+    client.onWebSocketClose = () => {
+      if (!active || !connectedOnce || disconnectReported) return;
+      disconnectReported = true;
+      toast.warning('Bildirim bağlantısı kesildi. Yeniden bağlanılıyor…');
+    };
+    client.onStompError = () => {
+      if (expiresAt !== null && expiresAt <= Date.now()) clearSession();
     };
     clientRef.current = client;
     const activationTimer = window.setTimeout(() => client.activate(), 0);
 
     return () => {
+      active = false;
       window.clearTimeout(activationTimer);
+      if (expiryTimer !== undefined) window.clearTimeout(expiryTimer);
+      toastTimers.forEach((timer) => window.clearTimeout(timer));
+      toastTimers.clear();
       clientRef.current = null;
       void client.deactivate();
     };
-  }, [dismissToast, token, user]);
+  }, [clearSession, dismissToast, toast, token, userId]);
 
   const markAsRead = useCallback(async (notification: NotificationItem) => {
     if (notification.isRead || readRequestsRef.current.has(notification.notificationId)) return;
