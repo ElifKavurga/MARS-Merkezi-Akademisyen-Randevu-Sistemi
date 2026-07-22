@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useCallback, useState, type FormEvent } from 'react';
 import { isAxiosError } from 'axios';
 import DepartmentSelect from './DepartmentSelect';
 import ModalFormFooter from './ModalFormFooter';
@@ -28,15 +28,15 @@ export default function CreateUserModal({ open, onClose, onCreated }: CreateUser
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!open) {
-    return null;
-  }
-
-  const resetAndClose = () => {
+  const resetAndClose = useCallback(() => {
     setForm(INITIAL_FORM);
     setError(null);
     onClose();
-  };
+  }, [onClose]);
+
+  if (!open) {
+    return null;
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
