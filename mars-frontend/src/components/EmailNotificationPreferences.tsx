@@ -16,7 +16,7 @@ const preferenceLabels: Array<{
   { key: 'appointmentRejection', label: 'Randevu Reddi', description: 'Reddedilen randevular' },
   { key: 'appointmentCancellation', label: 'Randevu İptali', description: 'İptal edilen randevular' },
   { key: 'reschedule', label: 'Yeniden Planlama', description: 'Tarih değişikliği süreçleri' },
-  { key: 'delegation', label: 'Delegasyon', description: 'Delegasyon ve onay süreçleri' },
+  { key: 'delegation', label: 'Randevu Devri', description: 'Randevu devri ve onay süreçleri' },
   { key: 'appointmentReminder', label: 'Randevu Hatırlatmaları', description: '24 saat ve 1 saat hatırlatmaları' },
   { key: 'waitlist', label: 'Waitlist Bildirimleri', description: 'Bekleme listesi gelişmeleri' },
   { key: 'noShow', label: 'No-Show Bildirimleri', description: 'Katılım durumu bilgilendirmeleri' },

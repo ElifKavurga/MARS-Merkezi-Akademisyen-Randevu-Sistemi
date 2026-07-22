@@ -337,7 +337,7 @@ export default function StaffAppointmentsView({
                               onClick={() => openDelegation(appointment)}
                             >
                               <span className="material-symbols-outlined text-[16px]">swap_horiz</span>
-                              Devret
+                              Randevuyu Devret
                             </button>
                           ) : null}
                           <button

@@ -1,33 +1,33 @@
 import { todayIsoDate } from './availability';
 
 export const OUT_OF_OFFICE_MESSAGES = {
-  TITLE: 'Ofis Dışında',
-  SUBTITLE: 'Tanımlı ofis dışı dönemlerinizi görüntüleyin.',
-  EMPTY: 'Henüz ofis dışı dönem tanımlanmamış.',
-  LOAD_ERROR: 'Ofis dışı dönemler yüklenemedi. Lütfen tekrar deneyin.',
+  TITLE: 'İzin Aralıkları',
+  SUBTITLE: 'Tanımlı izin aralıklarınızı görüntüleyin.',
+  EMPTY: 'Henüz izin aralığı tanımlanmamış.',
+  LOAD_ERROR: 'İzin aralıkları yüklenemedi. Lütfen tekrar deneyin.',
   ACCESS_DENIED: 'Bu sayfaya erişim yetkiniz yok.',
   NO_ACTIONS: '—',
-  CREATE_BUTTON: 'Yeni OOO',
-  CREATE_TITLE: 'Yeni Ofis Dışı Dönem',
-  CREATE_DESCRIPTION: 'Seçilen tarih aralığında ofis dışı olduğunuzu tanımlayın.',
-  CREATE_SUCCESS: 'Ofis dışı dönem başarıyla oluşturuldu.',
-  CREATE_ERROR: 'Ofis dışı dönem oluşturulamadı. Lütfen tekrar deneyin.',
-  EDIT_TITLE: 'Ofis Dışı Dönem Düzenle',
-  EDIT_DESCRIPTION: 'Ofis dışı dönem tarihlerini ve sebebini güncelleyin.',
-  UPDATE_SUCCESS: 'Ofis dışı dönem başarıyla güncellendi.',
-  UPDATE_ERROR: 'Ofis dışı dönem güncellenemedi. Lütfen tekrar deneyin.',
-  END_SUCCESS: 'Ofis dışı dönem sonlandırıldı.',
-  END_ERROR: 'Ofis dışı dönem sonlandırılamadı. Lütfen tekrar deneyin.',
-  END_CONFIRM_TITLE: 'Ofis Dışı Dönemi Sonlandır',
+  CREATE_BUTTON: 'İzin Aralığı Oluştur',
+  CREATE_TITLE: 'İzin Aralığı Oluştur',
+  CREATE_DESCRIPTION: 'İzinli olduğunuz tarih aralığını tanımlayın.',
+  CREATE_SUCCESS: 'İzin aralığı başarıyla oluşturuldu.',
+  CREATE_ERROR: 'İzin aralığı oluşturulamadı. Lütfen tekrar deneyin.',
+  EDIT_TITLE: 'İzin Aralığını Güncelle',
+  EDIT_DESCRIPTION: 'İzin aralığının tarihlerini ve sebebini güncelleyin.',
+  UPDATE_SUCCESS: 'İzin aralığı başarıyla güncellendi.',
+  UPDATE_ERROR: 'İzin aralığı güncellenemedi. Lütfen tekrar deneyin.',
+  END_SUCCESS: 'İzin aralığı sonlandırıldı.',
+  END_ERROR: 'İzin aralığı sonlandırılamadı. Lütfen tekrar deneyin.',
+  END_CONFIRM_TITLE: 'İzin Aralığını Sil',
   END_CONFIRM_DESCRIPTION:
     'Bu işlem sonrasında ilgili tarih aralığındaki uygun ofis saatleri tekrar kullanılabilir hale gelebilir. Devam etmek istediğinize emin misiniz?',
-  NOT_FOUND: 'Ofis dışı dönem bulunamadı.',
-  ALREADY_ENDED: 'Bu ofis dışı dönem daha önce sonlandırılmıştır.',
-  PAST_PERIOD_NOT_ENDABLE: 'Geçmişte tamamen bitmiş ofis dışı dönemler için işlem yapılamaz.',
-  PAST_PERIOD_NOT_UPDATABLE: 'Geçmişte tamamen bitmiş ofis dışı dönemler güncellenemez.',
-  OVERLAP: 'Bu tarih aralığında çakışan bir ofis dışı dönem bulunmaktadır.',
+  NOT_FOUND: 'İzin aralığı bulunamadı.',
+  ALREADY_ENDED: 'Bu izin aralığı daha önce sonlandırılmıştır.',
+  PAST_PERIOD_NOT_ENDABLE: 'Geçmişte tamamen bitmiş izin aralıkları için işlem yapılamaz.',
+  PAST_PERIOD_NOT_UPDATABLE: 'Geçmişte tamamen bitmiş izin aralıkları güncellenemez.',
+  OVERLAP: 'Bu tarih aralığında çakışan bir izin aralığı bulunmaktadır.',
   ACTIVE_APPOINTMENTS:
-    'Bu tarih aralığındaki ofis saatlerinde bekleyen veya onaylı randevu bulunduğu için ofis dışı dönem oluşturulamaz.',
+    'Bu tarih aralığındaki ofis saatlerinde bekleyen veya onaylı randevu bulunduğu için izin aralığı oluşturulamaz.',
   INFO_CARD:
     'Bu tarih aralığında bulunan uygun ofis saatleri otomatik olarak kullanıma kapatılacaktır.',
   UPDATE_INFO_CARD:
@@ -36,7 +36,7 @@ export const OUT_OF_OFFICE_MESSAGES = {
   END_REQUIRED: 'Bitiş tarihi zorunludur.',
   REASON_REQUIRED: 'Sebep zorunludur.',
   INVALID_DATE_RANGE: 'Başlangıç tarihi bitiş tarihinden sonra olamaz.',
-  PAST_DATE: 'Geçmiş tarih için ofis dışı dönem oluşturulamaz.',
+  PAST_DATE: 'Geçmiş tarih için izin aralığı oluşturulamaz.',
 } as const;
 
 export const REASON_CODE = {
@@ -136,4 +136,3 @@ export function isOutOfOfficePeriodFullyPast(endDate: string): boolean {
 export function canEndOutOfOfficePeriod(endDate: string): boolean {
   return endDate > todayIsoDate();
 }
-

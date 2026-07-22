@@ -205,7 +205,7 @@ export default function AdminPenaltyRulesPage() {
                         Sistem Aktif mi?
                       </label>
                       <p className="text-sm font-body-md text-body-md text-on-surface-variant">
-                        Sistemi tamamen aktif veya pasif hale getirin.
+                        Sistemi etkinleştirin veya devre dışı bırakın.
                       </p>
                     </div>
                     <div className="flex items-center gap-3">

@@ -205,7 +205,7 @@ export default function DelegationHistoryPage() {
               placeholder={DELEGATION_HISTORY_MESSAGES.SEARCH_PLACEHOLDER}
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              aria-label="Delegasyon ara"
+              aria-label="Randevu devri ara"
             />
           </div>
 

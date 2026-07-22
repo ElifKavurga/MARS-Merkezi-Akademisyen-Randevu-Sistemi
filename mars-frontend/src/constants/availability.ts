@@ -70,8 +70,8 @@ export const AVAILABILITY_MESSAGES = {
   CREATE_ERROR: 'Ofis saati oluşturulamadı. Lütfen tekrar deneyin.',
   UPDATE_SUCCESS: 'Ofis saati başarıyla güncellendi.',
   UPDATE_ERROR: 'Ofis saati güncellenemedi. Lütfen tekrar deneyin.',
-  BLOCK_SUCCESS: 'Ofis saati engellendi.',
-  UNBLOCK_SUCCESS: 'Ofis saati engeli kaldırıldı.',
+  BLOCK_SUCCESS: 'Ofis saati kullanıma kapatıldı.',
+  UNBLOCK_SUCCESS: 'Ofis saati kullanıma açıldı.',
   BLOCK_ERROR: 'Ofis saati durumu güncellenemedi. Lütfen tekrar deneyin.',
   OVERLAP: 'Bu tarih ve saat aralığında çakışan bir ofis saati bulunmaktadır.',
   DATE_REQUIRED: 'Tarih zorunludur.',
@@ -85,10 +85,10 @@ export const AVAILABILITY_MESSAGES = {
     'Saat seçimleri yalnızca 10 dakikalık aralıklarla yapılabilir (00, 10, 20, 30, 40, 50).',
   RECURRENCE_END_DATE_REQUIRED: 'Bitiş tarihi zorunludur.',
   RECURRING_BADGE: 'Tekrarlayan',
-  BLOCK_CONFIRM_TITLE: 'Ofis Saatini Engelle',
+  BLOCK_CONFIRM_TITLE: 'Ofis Saatini Kullanıma Kapat',
   BLOCK_CONFIRM_DESCRIPTION:
     'Bu ofis saatini geçici olarak kullanıma kapatmak istediğinize emin misiniz?',
-  UNBLOCK_CONFIRM_TITLE: 'Ofis Saatini Yeniden Aktif Et',
+  UNBLOCK_CONFIRM_TITLE: 'Ofis Saatini Kullanıma Aç',
   UNBLOCK_CONFIRM_DESCRIPTION:
     'Bu ofis saatini tekrar kullanılabilir hale getirmek istediğinize emin misiniz?',
 } as const;

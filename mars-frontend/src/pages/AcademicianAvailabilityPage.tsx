@@ -207,7 +207,7 @@ export default function AcademicianAvailabilityPage({
       const end = formatTimeLabel(slot.endTime).toLocaleLowerCase('tr-TR');
       const date = slot.slotDate.toLocaleLowerCase('tr-TR');
       const duration = String(getDurationMinutes(slot.startTime, slot.endTime));
-      const statusLabel = slot.isBlocked ? 'engelli' : 'uygun';
+      const statusLabel = slot.isBlocked ? 'kullanıma kapalı' : 'uygun';
 
       return (
         dayLabel.includes(query) ||
@@ -314,7 +314,7 @@ export default function AcademicianAvailabilityPage({
           value={stats.availableSlotCount}
           icon="event_available"
         />
-        <CourseStatCard label="Engellenen Slot" value={stats.blockedSlotCount} icon="event_busy" />
+        <CourseStatCard label="Kullanıma Kapalı Slot" value={stats.blockedSlotCount} icon="event_busy" />
         <CourseStatCard
           label="Bu Haftaki Slot Sayısı"
           value={stats.thisWeekSlotCount}
@@ -375,7 +375,7 @@ export default function AcademicianAvailabilityPage({
             >
               <option value={AVAILABILITY_STATUS_FILTER.ALL}>Durum: Tümü</option>
               <option value={AVAILABILITY_STATUS_FILTER.AVAILABLE}>Durum: Uygun</option>
-              <option value={AVAILABILITY_STATUS_FILTER.BLOCKED}>Durum: Engelli</option>
+              <option value={AVAILABILITY_STATUS_FILTER.BLOCKED}>Durum: Kullanıma Kapalı</option>
             </select>
 
             <div className="relative sm:col-span-2 xl:col-span-2">
@@ -543,7 +543,7 @@ export default function AcademicianAvailabilityPage({
                                   setBlockTarget(slot);
                                 }}
                               >
-                                Engelle
+                                Kullanıma Kapat
                               </AdminActionButton>
                             </>
                           ) : (
@@ -555,7 +555,7 @@ export default function AcademicianAvailabilityPage({
                                 setBlockTarget(slot);
                               }}
                             >
-                              Engeli Kaldır
+                              Kullanıma Aç
                             </AdminActionButton>
                           )}
                         </div>
@@ -630,7 +630,7 @@ export default function AcademicianAvailabilityPage({
             ? AVAILABILITY_MESSAGES.UNBLOCK_CONFIRM_DESCRIPTION
             : AVAILABILITY_MESSAGES.BLOCK_CONFIRM_DESCRIPTION
         }
-        confirmLabel={blockTarget?.isBlocked ? 'Engeli Kaldır' : 'Engelle'}
+        confirmLabel={blockTarget?.isBlocked ? 'Kullanıma Aç' : 'Kullanıma Kapat'}
         cancelLabel="İptal"
         loading={blockLoading}
         error={blockError}

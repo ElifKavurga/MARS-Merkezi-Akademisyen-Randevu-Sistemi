@@ -69,7 +69,7 @@ function EventBody({
   }
 
   const availabilityLabel = event.isBlocked
-    ? 'Engelli'
+    ? 'Kullanıma Kapalı'
     : event.recurrenceRuleId != null
       ? 'Tekrarlayan müsait'
       : 'Müsait';

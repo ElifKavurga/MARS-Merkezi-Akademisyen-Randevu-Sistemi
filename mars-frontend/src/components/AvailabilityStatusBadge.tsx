@@ -13,7 +13,7 @@ export default function AvailabilityStatusBadge({ isBlocked }: AvailabilityStatu
         className={`inline-block h-2 w-2 rounded-full ${isBlocked ? 'bg-red-500' : 'bg-emerald-500'}`}
         aria-hidden
       />
-      {isBlocked ? 'Engelli' : 'Uygun'}
+      {isBlocked ? 'Kullanıma Kapalı' : 'Uygun'}
     </span>
   );
 }

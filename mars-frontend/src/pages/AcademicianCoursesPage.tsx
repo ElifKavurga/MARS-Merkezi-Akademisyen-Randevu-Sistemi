@@ -182,8 +182,8 @@ export default function AcademicianCoursesPage() {
       await loadCourses();
     } catch (err) {
       let message = wasActive
-        ? 'Ders pasifleştirilemedi. Lütfen tekrar deneyin.'
-        : 'Ders aktifleştirilemedi. Lütfen tekrar deneyin.';
+        ? 'Ders devre dışı bırakılamadı. Lütfen tekrar deneyin.'
+        : 'Ders etkinleştirilemedi. Lütfen tekrar deneyin.';
       if (isAxiosError(err)) {
         const backendMessage = err.response?.data?.message;
         if (typeof backendMessage === 'string' && backendMessage.length > 0) {
@@ -431,7 +431,7 @@ export default function AcademicianCoursesPage() {
                               setStatusTarget(course);
                             }}
                           >
-                            {course.isActive ? 'Pasifleştir' : 'Aktifleştir'}
+                            {course.isActive ? 'Devre Dışı Bırak' : 'Etkinleştir'}
                           </AdminActionButton>
                         </div>
                       </td>
@@ -465,13 +465,13 @@ export default function AcademicianCoursesPage() {
 
       <ConfirmModal
         open={statusTarget != null}
-        title={statusTarget?.isActive ? 'Dersi Pasifleştir' : 'Dersi Aktifleştir'}
+        title={statusTarget?.isActive ? 'Dersi Devre Dışı Bırak' : 'Dersi Etkinleştir'}
         description={
           statusTarget?.isActive
-            ? 'Bu dersi pasifleştirmek istediğinize emin misiniz?'
-            : 'Bu dersi tekrar aktif hale getirmek istediğinize emin misiniz?'
+            ? 'Bu dersi devre dışı bırakmak istediğinize emin misiniz?'
+            : 'Bu dersi etkinleştirmek istediğinize emin misiniz?'
         }
-        confirmLabel={statusTarget?.isActive ? 'Pasifleştir' : 'Aktifleştir'}
+        confirmLabel={statusTarget?.isActive ? 'Devre Dışı Bırak' : 'Etkinleştir'}
         cancelLabel="İptal"
         loading={statusLoading}
         error={statusError}

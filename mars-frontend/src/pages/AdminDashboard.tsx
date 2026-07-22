@@ -79,8 +79,8 @@ export default function AdminDashboard() {
       const updated = await changeAdminUserStatus(statusTarget.userId);
       toast.success(
         updated.isActive
-          ? 'Kullanıcı aktif hale getirildi.'
-          : 'Kullanıcı pasif hale getirildi.',
+          ? 'Kullanıcı etkinleştirildi.'
+          : 'Kullanıcı devre dışı bırakıldı.',
       );
       setStatusTarget(null);
       await loadUsers();
@@ -274,9 +274,9 @@ export default function AdminDashboard() {
                             {statusBusy ? (
                               <Loading variant="inline" label={UI_LABELS.submitting} />
                             ) : user.isActive ? (
-                              'Pasif Yap'
+                              'Devre Dışı Bırak'
                             ) : (
-                              'Aktif Yap'
+                              'Etkinleştir'
                             )}
                           </AdminActionButton>
                         </div>
@@ -311,15 +311,15 @@ export default function AdminDashboard() {
       />
       <ConfirmModal
         open={statusTarget != null}
-        title={statusTarget?.isActive ? 'Kullanıcıyı Pasifleştir' : 'Kullanıcıyı Aktifleştir'}
+        title={statusTarget?.isActive ? 'Kullanıcıyı Devre Dışı Bırak' : 'Kullanıcıyı Etkinleştir'}
         description={
           statusTarget
             ? `${statusTarget.fullName} adlı kullanıcıyı ${
-                statusTarget.isActive ? 'pasif' : 'aktif'
-              } hale getirmek istediğinize emin misiniz?`
+                statusTarget.isActive ? 'devre dışı bırakmak' : 'etkinleştirmek'
+              } istediğinize emin misiniz?`
             : ''
         }
-        confirmLabel={statusTarget?.isActive ? 'Pasif Yap' : 'Aktif Yap'}
+        confirmLabel={statusTarget?.isActive ? 'Devre Dışı Bırak' : 'Etkinleştir'}
         loading={statusUpdatingId != null}
         error={statusError}
         variant={statusTarget?.isActive ? 'danger' : 'primary'}

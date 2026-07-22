@@ -101,7 +101,7 @@ export default function AssistantDashboardPage() {
           summary
             ? [
                 {
-                  label: 'Bekleyen Delegasyonlar',
+                  label: 'Bekleyen Randevu Devirleri',
                   value: summary.pendingDelegationCount,
                   to: ROUTES.ASSISTANT_INCOMING_DELEGATIONS,
                   icon: 'hourglass_top',

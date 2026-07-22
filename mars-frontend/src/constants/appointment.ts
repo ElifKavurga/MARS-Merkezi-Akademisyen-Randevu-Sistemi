@@ -83,6 +83,8 @@ export const APPOINTMENT_STATUS_LABELS: Record<string, string> = {
   COMPLETED: 'Tamamlandı',
   NO_SHOW: 'Gelmedi',
   CANCELLED: 'İptal',
+  DELEGATION_PENDING: 'Randevu Devri Bekliyor',
+  RESCHEDULE_PENDING: 'Yeniden Planlama Bekliyor',
 };
 
 export function getAppointmentStatusLabel(status: string): string {

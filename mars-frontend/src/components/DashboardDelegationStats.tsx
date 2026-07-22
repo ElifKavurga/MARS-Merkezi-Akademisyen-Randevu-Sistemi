@@ -15,7 +15,7 @@ type DashboardDelegationStatsProps = {
 };
 
 export default function DashboardDelegationStats({
-  title = 'Delegasyon Özeti',
+  title = 'Randevu Devri Özeti',
   cards,
   loading = false,
 }: DashboardDelegationStatsProps) {
@@ -28,7 +28,7 @@ export default function DashboardDelegationStats({
       <h2 className="mb-3 font-headline-md text-headline-md text-on-background">{title}</h2>
       {loading ? (
         <div className="flex justify-center rounded-xl border border-outline-variant bg-surface-container-lowest py-10">
-          <Loading label="Delegasyon özeti yükleniyor..." />
+          <Loading label="Randevu devri özeti yükleniyor..." />
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">

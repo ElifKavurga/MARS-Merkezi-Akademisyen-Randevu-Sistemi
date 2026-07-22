@@ -9,7 +9,7 @@ const commonNavItems = [
   { label: 'Derslerim', path: ROUTES.ACADEMICIAN_COURSES, icon: 'menu_book', end: false },
   { label: 'Ofis Saatleri', path: ROUTES.ACADEMICIAN_AVAILABILITY, icon: 'schedule', end: false },
   { label: 'Takvim', path: ROUTES.ACADEMICIAN_CALENDAR, icon: 'calendar_month', end: false },
-  { label: 'Ofis Dışında', path: ROUTES.ACADEMICIAN_OUT_OF_OFFICE, icon: 'event_busy', end: false },
+  { label: 'İzin Aralıkları', path: ROUTES.ACADEMICIAN_OUT_OF_OFFICE, icon: 'event_busy', end: false },
 ] as const;
 
 export default function AcademicianSidebar({ mobileOpen, onClose }: ModuleSidebarProps) {
@@ -29,7 +29,7 @@ export default function AcademicianSidebar({ mobileOpen, onClose }: ModuleSideba
           end: false,
         },
         {
-          label: 'Delegasyon Geçmişi',
+          label: 'Randevu Devri Geçmişi',
           path: ROUTES.ACADEMICIAN_DELEGATION_HISTORY,
           icon: 'history',
           end: false,

@@ -181,7 +181,7 @@ export default function OutOfOfficeEditModal({
               value={form.reasonCode}
               disabled={submitting}
               onChange={(event) => setForm((prev) => ({ ...prev, reasonCode: event.target.value }))}
-              aria-label="Ofis dışı sebep"
+              aria-label="İzin aralığı sebebi"
             >
               <option value="">Sebep Seçiniz</option>
               {REASON_CODE_OPTIONS.map((option) => (

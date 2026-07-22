@@ -31,7 +31,7 @@ export default function StudentDelegationApprovals({ onDecision }: Props) {
     try {
       setItems(await getPendingStudentDelegations());
     } catch {
-      setError('Yönlendirme onayları yüklenemedi.');
+      setError('Randevu devri onayları yüklenemedi.');
     } finally {
       setLoading(false);
     }
@@ -46,7 +46,7 @@ export default function StudentDelegationApprovals({ onDecision }: Props) {
       if (accept) await acceptStudentDelegation(item.delegationId);
       else await rejectStudentDelegation(item.delegationId);
       setItems((current) => current.filter((entry) => entry.delegationId !== item.delegationId));
-      toast.success(accept ? 'Randevu yönlendirmesi kabul edildi.' : 'Randevu yönlendirmesi reddedildi.');
+      toast.success(accept ? 'Randevu devri kabul edildi.' : 'Randevu devri reddedildi.');
       onDecision();
     } catch (err) {
       const backendMessage = isAxiosError(err) ? err.response?.data?.message : null;
@@ -58,7 +58,7 @@ export default function StudentDelegationApprovals({ onDecision }: Props) {
   };
 
   if (loading) {
-    return <div className="mb-6 rounded-xl border border-outline-variant bg-surface-container-lowest p-4"><Loading variant="inline" label="Yönlendirme onayları yükleniyor..." /></div>;
+    return <div className="mb-6 rounded-xl border border-outline-variant bg-surface-container-lowest p-4"><Loading variant="inline" label="Randevu devri onayları yükleniyor..." /></div>;
   }
   if (error) {
     return <div className="mb-6 rounded-xl border border-error/30 bg-error-container/30 p-4"><p className="text-error" role="alert">{error}</p><button type="button" className={`${STUDENT_UI.SECONDARY_BUTTON_CLASS} mt-3`} onClick={() => void load()}>Tekrar Dene</button></div>;
@@ -68,8 +68,8 @@ export default function StudentDelegationApprovals({ onDecision }: Props) {
   return (
     <section className="mb-6 space-y-3" aria-labelledby="student-delegation-approvals-title">
       <div>
-        <h2 id="student-delegation-approvals-title" className="font-headline-md text-headline-md text-on-background">Yönlendirme Onayları</h2>
-        <p className="mt-1 font-body-md text-body-md text-on-surface-variant">Randevunuz farklı bir personele yönlendirilmek isteniyor.</p>
+        <h2 id="student-delegation-approvals-title" className="font-headline-md text-headline-md text-on-background">Randevu Devri Onayları</h2>
+        <p className="mt-1 font-body-md text-body-md text-on-surface-variant">Randevunuzun farklı bir personele devredilmesi için onayınız bekleniyor.</p>
       </div>
       {items.map((item) => (
         <article key={item.delegationId} className="rounded-xl border border-secondary/30 bg-secondary-container/30 p-4 sm:p-5">

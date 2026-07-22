@@ -117,7 +117,7 @@ export default function AcademicianOutOfOfficePage() {
       <div className="rounded-xl border border-outline-variant bg-surface overflow-hidden">
         {loading ? (
           <div className="flex justify-center py-16">
-            <Loading label="Ofis dışı dönemler yükleniyor..." />
+            <Loading label="İzin aralıkları yükleniyor..." />
           </div>
         ) : error ? (
           <div className="px-6 py-12 text-center">
@@ -186,7 +186,7 @@ export default function AcademicianOutOfOfficePage() {
                               icon="edit"
                               onClick={() => setEditingPeriod(period)}
                             >
-                              Düzenle
+                              İzin Aralığını Güncelle
                             </AdminActionButton>
                             {canEnd ? (
                               <AdminActionButton
@@ -197,7 +197,7 @@ export default function AcademicianOutOfOfficePage() {
                                   setEndingPeriod(period);
                                 }}
                               >
-                                Sonlandır
+                                İzin Aralığını Sil
                               </AdminActionButton>
                             ) : null}
                           </div>
@@ -235,7 +235,7 @@ export default function AcademicianOutOfOfficePage() {
         open={endingPeriod !== null}
         title={OUT_OF_OFFICE_MESSAGES.END_CONFIRM_TITLE}
         description={OUT_OF_OFFICE_MESSAGES.END_CONFIRM_DESCRIPTION}
-        confirmLabel="Sonlandır"
+        confirmLabel="İzin Aralığını Sil"
         cancelLabel="İptal"
         loading={endLoading}
         error={endError}

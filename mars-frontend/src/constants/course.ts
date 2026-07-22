@@ -39,7 +39,7 @@ export const COURSE_MESSAGES = {
   SECTION_FUTURE: 'Gelecek Modüller',
   SECTION_OFFICE_HOURS: 'Ofis Saatleri',
   SECTION_APPOINTMENTS: 'Randevular',
-  SECTION_DELEGATION: 'Delegasyon Geçmişi',
+  SECTION_DELEGATION: 'Randevu Devri Geçmişi',
   STAT_ASSISTANTS: 'Toplam Asistan Sayısı',
   STAT_STATUS: 'Ders Durumu',
   STAT_TERM: 'Akademik Dönem',
@@ -50,8 +50,8 @@ export const COURSE_MESSAGES = {
   BACK_TO_COURSES: 'Derslerime Dön',
   CREATE_SUCCESS: 'Ders başarıyla oluşturuldu.',
   UPDATE_SUCCESS: 'Ders başarıyla güncellendi.',
-  DEACTIVATE_SUCCESS: 'Ders başarıyla pasifleştirildi.',
-  ACTIVATE_SUCCESS: 'Ders başarıyla aktifleştirildi.',
+  DEACTIVATE_SUCCESS: 'Ders başarıyla devre dışı bırakıldı.',
+  ACTIVATE_SUCCESS: 'Ders başarıyla etkinleştirildi.',
 } as const;
 
 export const COURSE_COMING_SOON_MODULES = [

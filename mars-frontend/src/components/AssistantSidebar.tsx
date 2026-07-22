@@ -28,13 +28,13 @@ const assistantNavItems = [
     end: true,
   },
   {
-    label: 'Gelen Delegasyonlar',
+    label: 'Gelen Randevu Devirleri',
     path: ROUTES.ASSISTANT_INCOMING_DELEGATIONS,
     icon: 'swap_horiz',
     end: true,
   },
   {
-    label: 'Delegasyon Geçmişi',
+    label: 'Randevu Devri Geçmişi',
     path: ROUTES.ASSISTANT_DELEGATION_HISTORY,
     icon: 'history',
     end: true,

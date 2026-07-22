@@ -155,19 +155,19 @@ export default function AcademicianDashboard() {
           summary
             ? [
                 {
-                  label: 'Bekleyen Delegasyonlar',
+                  label: 'Bekleyen Randevu Devirleri',
                   value: summary.pendingDelegationCount,
                   to: academicianDelegationHistoryPath('PENDING'),
                   icon: 'hourglass_top',
                 },
                 {
-                  label: 'Kabul Edilen Delegasyonlar',
+                  label: 'Kabul Edilen Randevu Devirleri',
                   value: summary.acceptedDelegationCount,
                   to: academicianDelegationHistoryPath('ACCEPTED'),
                   icon: 'check_circle',
                 },
                 {
-                  label: 'Reddedilen Delegasyonlar',
+                  label: 'Reddedilen Randevu Devirleri',
                   value: summary.rejectedDelegationCount,
                   to: academicianDelegationHistoryPath('REJECTED'),
                   icon: 'cancel',

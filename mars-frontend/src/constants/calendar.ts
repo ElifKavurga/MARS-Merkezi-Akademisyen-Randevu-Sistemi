@@ -17,7 +17,7 @@ export const CALENDAR_MESSAGES = {
   CLOSE: 'Kapat',
   LEGEND_AVAILABILITY: 'Müsaitlik (boş)',
   LEGEND_RECURRING: 'Tekrarlayan müsaitlik',
-  LEGEND_BLOCKED: 'Engellenmiş',
+  LEGEND_BLOCKED: 'Kullanıma Kapalı',
   LEGEND_APPOINTMENT: 'Randevu (kompakt kart)',
   LEGEND_BUSY: 'Dolu süre (arka plan)',
   VIEW_LIST: 'Liste',
@@ -38,7 +38,7 @@ export const CALENDAR_FILTER_OPTIONS = [
   { value: CALENDAR_FILTER.ALL, label: 'Tümü' },
   { value: CALENDAR_FILTER.ONE_TIME, label: 'Tek Seferlik' },
   { value: CALENDAR_FILTER.RECURRING, label: 'Tekrarlayan' },
-  { value: CALENDAR_FILTER.BLOCKED, label: 'Engellenmiş' },
+  { value: CALENDAR_FILTER.BLOCKED, label: 'Kullanıma Kapalı' },
 ] as const;
 
 export const STAFF_CALENDAR_FILTER_OPTIONS = [
@@ -47,7 +47,7 @@ export const STAFF_CALENDAR_FILTER_OPTIONS = [
   { value: CALENDAR_FILTER.APPOINTMENT, label: 'Randevular' },
   { value: CALENDAR_FILTER.ONE_TIME, label: 'Tek Seferlik' },
   { value: CALENDAR_FILTER.RECURRING, label: 'Tekrarlayan' },
-  { value: CALENDAR_FILTER.BLOCKED, label: 'Engellenmiş' },
+  { value: CALENDAR_FILTER.BLOCKED, label: 'Kullanıma Kapalı' },
 ] as const;
 
 /** Kurumsal tema ile uyumlu mevcut renkler (yeni palet değil). */
@@ -209,7 +209,7 @@ export function formatCalendarEventTooltip(event: CalendarEvent): string {
     `Saat: ${formatCalendarTimeRange(event)}`,
     `Süre: ${formatDurationLabel(duration)}`,
     `Görüşme Türü: ${getMeetingTypeLabel(event.meetingType)}`,
-    `Durum: ${event.isBlocked ? 'Ofis dışı / engellenmiş' : 'Müsait'}`,
+    `Durum: ${event.isBlocked ? 'Kullanıma Kapalı' : 'Müsait'}`,
   ].join('\n');
 }
 
