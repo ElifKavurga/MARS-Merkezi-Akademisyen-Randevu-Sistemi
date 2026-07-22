@@ -4,6 +4,7 @@ export default {
     './index.html',
     './src/pages/**/*.{tsx,ts}',
     './src/components/**/*.{tsx,ts}',
+    './src/contexts/**/*.{tsx,ts}',
     './src/layouts/**/*.{tsx,ts}',
     './src/styles/**/*.css',
   ],

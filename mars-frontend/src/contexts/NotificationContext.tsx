@@ -122,14 +122,22 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   return (
     <NotificationContext.Provider value={value}>
       {children}
-      <div className="fixed right-4 top-4 z-[110] flex w-[min(100%-2rem,23rem)] flex-col gap-2" aria-live="polite" aria-relevant="additions">
+      <div
+        className="fixed right-3 flex w-[min(100%-1.5rem,22rem)] flex-col gap-2 overflow-y-auto p-1 font-body-md sm:right-4"
+        style={{ top: '6rem', zIndex: 2147483647, maxHeight: 'calc(100dvh - 7rem)' }}
+        aria-live="polite"
+        aria-relevant="additions"
+      >
         {toasts.map((toast) => {
           const visual = getNotificationVisual(toast.notificationType);
           return (
-            <div key={toast.toastKey} role="status" className="flex animate-fade-in items-start gap-3 rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-xl">
-              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${visual.containerClass}`}><span className={`material-symbols-outlined text-[22px] ${visual.iconClass}`} aria-hidden="true">{visual.icon}</span></span>
-              <span className="min-w-0 flex-1"><strong className="block font-label-md text-sm text-on-surface">{toast.title}</strong><span className="mt-1 line-clamp-2 block font-body-md text-sm text-on-surface-variant">{toast.message}</span></span>
-              <button type="button" onClick={() => dismissToast(toast.toastKey)} className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border-0 bg-transparent p-0 text-on-surface-variant transition-colors hover:bg-surface-container" aria-label="Bildirimi kapat"><span className="material-symbols-outlined text-[18px]" aria-hidden="true">close</span></button>
+            <div key={toast.toastKey} role="status" className="flex animate-fade-in items-start gap-3 rounded-lg border border-l-4 border-outline-variant border-l-primary-container bg-surface-container-lowest p-3 shadow-lg">
+              <span className={`material-symbols-outlined shrink-0 text-[22px] ${visual.iconClass}`} aria-hidden="true">{visual.icon}</span>
+              <span className="min-w-0 flex-1 pt-0.5 font-body-md text-body-md">
+                <strong className="block font-body-md text-body-md font-semibold text-on-surface">{toast.title}</strong>
+                <span className="mt-0.5 line-clamp-2 block font-body-md text-body-md font-normal text-on-surface-variant">{toast.message}</span>
+              </span>
+              <button type="button" onClick={() => dismissToast(toast.toastKey)} className="inline-flex h-7 w-7 shrink-0 cursor-pointer appearance-none items-center justify-center rounded-md border-0 bg-transparent p-0 text-on-surface-variant/70 transition-colors hover:bg-surface-container hover:text-on-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-container/20" aria-label="Bildirimi kapat"><span className="material-symbols-outlined text-[18px] leading-none" aria-hidden="true">close</span></button>
             </div>
           );
         })}
