@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${title}">MARS Bildirimi</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f6fb;font-family:Arial,Helvetica,sans-serif;color:#17213c;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#f4f6fb;">
+    <tr>
+      <td align="center" style="padding:24px 12px;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #e2e6f0;border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(17,31,68,.08);">
+          <tr>
+            <td style="padding:24px;background:#0d1f56;color:#ffffff;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td width="52" valign="middle">
+                    <div style="width:44px;height:44px;line-height:44px;text-align:center;border-radius:12px;background:#ffffff;color:#0d1f56;font-size:22px;font-weight:700;">M</div>
+                  </td>
+                  <td valign="middle" style="padding-left:12px;font-size:18px;line-height:24px;font-weight:700;">Modern Akademisyen Randevu Sistemi</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px 28px 12px;">
+              <h1 th:text="${title}" style="margin:0;font-size:24px;line-height:32px;color:#0d1f56;">Bildirim Başlığı</h1>
+            </td>
+          </tr>
+          <tr>
+            <td th:text="${content}" style="padding:8px 28px 24px;font-size:16px;line-height:26px;color:#4b556f;white-space:pre-line;">Bildirim içeriği</td>
+          </tr>
+          <tr th:if="${showAction}">
+            <td style="padding:0 28px 32px;">
+              <a th:href="${actionUrl}" th:text="${actionText}" style="display:inline-block;padding:12px 20px;border-radius:10px;background:#0d1f56;color:#ffffff;text-decoration:none;font-size:15px;line-height:20px;font-weight:700;">Detayları Gör</a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 28px;border-top:1px solid #e2e6f0;background:#f8f9fc;font-size:12px;line-height:19px;color:#6f7890;">
+              Bu e-posta MARS tarafından otomatik olarak oluşturulmuştur. Lütfen bu e-postayı yanıtlamayın.<br>
+              © MARS · Modern Akademisyen Randevu Sistemi
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
