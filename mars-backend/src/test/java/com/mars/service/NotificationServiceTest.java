@@ -72,6 +72,35 @@ class NotificationServiceTest {
         verify(notificationRepository).findByNotificationIdAndUser_UserId(12, 7);
     }
 
+    @Test
+    void getMyUnreadCount_countsOnlyCurrentUsersUnreadNotifications() {
+        User user = userWithId(7);
+        authenticate(user);
+        when(notificationRepository.countByUser_UserIdAndIsReadFalse(7)).thenReturn(4L);
+
+        assertThat(notificationService.getMyUnreadCount()).isEqualTo(4L);
+        verify(notificationRepository).countByUser_UserIdAndIsReadFalse(7);
+    }
+
+    @Test
+    void markAllMyNotificationsAsRead_updatesOnlyCurrentUsersUnreadNotifications() {
+        User user = userWithId(7);
+        authenticate(user);
+        when(notificationRepository.markAllAsReadByUserId(7)).thenReturn(3);
+
+        assertThat(notificationService.markAllMyNotificationsAsRead()).isEqualTo(3);
+        verify(notificationRepository).markAllAsReadByUserId(7);
+    }
+
+    private User userWithId(Integer userId) {
+        User user = new User();
+        user.setUserId(userId);
+        Role role = new Role();
+        role.setRoleName("STUDENT");
+        user.setRole(role);
+        return user;
+    }
+
     private void authenticate(User user) {
         CustomUserDetails details = new CustomUserDetails(user);
         SecurityContextHolder.getContext().setAuthentication(

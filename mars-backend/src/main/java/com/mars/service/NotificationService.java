@@ -128,6 +128,16 @@ public class NotificationService {
         return notificationMapper.toResponse(notificationRepository.save(notification));
     }
 
+    @Transactional(readOnly = true)
+    public long getMyUnreadCount() {
+        return notificationRepository.countByUser_UserIdAndIsReadFalse(getCurrentUser().getUserId());
+    }
+
+    @Transactional
+    public int markAllMyNotificationsAsRead() {
+        return notificationRepository.markAllAsReadByUserId(getCurrentUser().getUserId());
+    }
+
     private NotificationType mapLegacyType(String type) {
         return switch (type) {
             case "DELEGATION_STUDENT_APPROVAL" -> NotificationType.STUDENT_APPROVAL_PENDING;

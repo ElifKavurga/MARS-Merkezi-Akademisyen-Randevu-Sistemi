@@ -8,11 +8,12 @@ import { useNotifications } from '../hooks/useNotifications';
 const PAGE_SIZE = 10;
 
 export default function NotificationsPage() {
-  const { latestNotification, markAsRead } = useNotifications();
+  const { latestNotification, markAsRead, markAllAsRead, unreadCount } = useNotifications();
   const [page, setPage] = useState(0);
   const [data, setData] = useState<NotificationPage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [markingAll, setMarkingAll] = useState(false);
 
   const loadPage = useCallback(async () => {
     setLoading(true);
@@ -51,11 +52,31 @@ export default function NotificationsPage() {
     }
   };
 
+  const handleMarkAllAsRead = async () => {
+    if (!data || unreadCount === 0 || markingAll) return;
+    const unreadIds = new Set(data.content.filter((item) => !item.isRead).map((item) => item.notificationId));
+    setMarkingAll(true);
+    setData((current) => current ? { ...current, content: current.content.map((item) => item.isRead ? item : { ...item, isRead: true }) } : current);
+    try {
+      await markAllAsRead();
+    } catch {
+      setData((current) => current ? { ...current, content: current.content.map((item) => unreadIds.has(item.notificationId) ? { ...item, isRead: false } : item) } : current);
+    } finally {
+      setMarkingAll(false);
+    }
+  };
+
   return (
     <div className="admin-page mx-auto max-w-5xl animate-fade-in">
-      <div className="mb-6 sm:mb-8">
+      <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+        <div>
         <h1 className="font-headline-lg text-2xl font-bold text-on-background sm:text-headline-lg">Bildirim Merkezi</h1>
         <p className="mt-2 font-body-md text-sm text-on-surface-variant sm:text-base">Size gönderilen güncel bildirimleri görüntüleyin.</p>
+        </div>
+        <button type="button" disabled={unreadCount === 0 || markingAll} onClick={() => void handleMarkAllAsRead()} className="inline-flex h-10 shrink-0 items-center justify-center gap-2 self-start rounded-lg border border-outline-variant bg-surface-container-lowest px-4 font-body-md text-sm font-semibold text-primary-container transition-colors hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-45 sm:self-auto">
+          <span className="material-symbols-outlined text-[18px]" aria-hidden="true">done_all</span>
+          {markingAll ? 'İşaretleniyor...' : 'Tümünü Okundu İşaretle'}
+        </button>
       </div>
 
       {loading ? <Loading variant="page" label="Bildirimler yükleniyor..." /> : null}

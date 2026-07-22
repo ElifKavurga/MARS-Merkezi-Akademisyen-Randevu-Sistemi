@@ -7,6 +7,7 @@ export type NotificationContextValue = {
   loading: boolean;
   latestNotification: NotificationItem | null;
   markAsRead: (notification: NotificationItem) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
 };
 
 export const NotificationContext = createContext<NotificationContextValue | null>(null);

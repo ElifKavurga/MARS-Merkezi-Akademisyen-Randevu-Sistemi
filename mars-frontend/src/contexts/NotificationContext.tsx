@@ -3,7 +3,12 @@ import SockJS from 'sockjs-client';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { API_BASE_URL } from '../constants';
 import { useAuth } from '../hooks/useAuth';
-import { getMyNotifications, markNotificationAsRead } from '../services/notificationService';
+import {
+  getMyNotifications,
+  getMyUnreadNotificationCount,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+} from '../services/notificationService';
 import type { NotificationItem } from '../types/notification';
 import { getNotificationVisual } from '../utils/notification';
 import { NotificationContext } from './notificationContextBase';
@@ -37,9 +42,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const [recentNotifications, setRecentNotifications] = useState<NotificationItem[]>([]);
   const [latestNotification, setLatestNotification] = useState<NotificationItem | null>(null);
   const [toasts, setToasts] = useState<RealtimeToast[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const clientRef = useRef<Client | null>(null);
   const receivedIdsRef = useRef(new Set<number>());
+  const readRequestsRef = useRef(new Set<number>());
 
   const dismissToast = useCallback((toastKey: string) => {
     setToasts((current) => current.filter((toast) => toast.toastKey !== toastKey));
@@ -50,19 +57,23 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       setRecentNotifications([]);
       setLatestNotification(null);
       setToasts([]);
+      setUnreadCount(0);
       receivedIdsRef.current.clear();
+      readRequestsRef.current.clear();
       return;
     }
     let cancelled = false;
     receivedIdsRef.current.clear();
     setLoading(true);
-    void getMyNotifications()
-      .then((notifications) => {
+    const historyRequest = getMyNotifications().then((notifications) => {
         if (cancelled) return;
         notifications.forEach((item) => receivedIdsRef.current.add(item.notificationId));
         setRecentNotifications((current) => mergeNotificationHistory(current, notifications));
-      })
-      .catch(() => undefined)
+      });
+    const countRequest = getMyUnreadNotificationCount().then((count) => {
+      if (!cancelled) setUnreadCount(count);
+    });
+    void Promise.allSettled([historyRequest, countRequest])
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [token, user]);
@@ -84,6 +95,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         if (receivedIdsRef.current.has(incoming.notificationId)) return;
         receivedIdsRef.current.add(incoming.notificationId);
         setRecentNotifications((current) => mergeNotification(current, incoming));
+        if (!incoming.isRead) setUnreadCount((current) => current + 1);
         setLatestNotification(incoming);
         const toastKey = `notification-${incoming.notificationId}`;
         setToasts((current) => [...current, { ...incoming, toastKey }]);
@@ -101,23 +113,42 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, [dismissToast, token, user]);
 
   const markAsRead = useCallback(async (notification: NotificationItem) => {
-    if (notification.isRead) return;
+    if (notification.isRead || readRequestsRef.current.has(notification.notificationId)) return;
+    readRequestsRef.current.add(notification.notificationId);
     setRecentNotifications((current) => current.map((item) => item.notificationId === notification.notificationId ? { ...item, isRead: true } : item));
+    setUnreadCount((current) => Math.max(0, current - 1));
     try {
       await markNotificationAsRead(notification.notificationId);
     } catch (error) {
       setRecentNotifications((current) => current.map((item) => item.notificationId === notification.notificationId ? { ...item, isRead: false } : item));
+      setUnreadCount((current) => current + 1);
       throw error;
+    } finally {
+      readRequestsRef.current.delete(notification.notificationId);
     }
   }, []);
 
+  const markAllAsRead = useCallback(async () => {
+    const unreadIds = new Set(recentNotifications.filter((item) => !item.isRead).map((item) => item.notificationId));
+    setRecentNotifications((current) => current.map((item) => item.isRead ? item : { ...item, isRead: true }));
+    setUnreadCount(0);
+    try {
+      await markAllNotificationsAsRead();
+    } catch (error) {
+      setRecentNotifications((current) => current.map((item) => unreadIds.has(item.notificationId) ? { ...item, isRead: false } : item));
+      void getMyUnreadNotificationCount().then(setUnreadCount).catch(() => undefined);
+      throw error;
+    }
+  }, [recentNotifications]);
+
   const value = useMemo(() => ({
     recentNotifications,
-    unreadCount: recentNotifications.filter((item) => !item.isRead).length,
+    unreadCount,
     loading,
     latestNotification,
     markAsRead,
-  }), [latestNotification, loading, markAsRead, recentNotifications]);
+    markAllAsRead,
+  }), [latestNotification, loading, markAllAsRead, markAsRead, recentNotifications, unreadCount]);
 
   return (
     <NotificationContext.Provider value={value}>

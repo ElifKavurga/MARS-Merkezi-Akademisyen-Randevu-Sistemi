@@ -13,6 +13,14 @@ export async function getMyNotificationsPage(page: number, size: number): Promis
 
 export async function markNotificationAsRead(notificationId: number): Promise<NotificationItem> {
   const { data } = await apiClient.patch<NotificationItem>(`/notifications/${notificationId}/read`);
-  window.dispatchEvent(new CustomEvent('mars:notification-read', { detail: notificationId }));
   return data;
+}
+
+export async function getMyUnreadNotificationCount(): Promise<number> {
+  const { data } = await apiClient.get<{ unreadCount: number }>('/notifications/unread-count');
+  return data.unreadCount;
+}
+
+export async function markAllNotificationsAsRead(): Promise<void> {
+  await apiClient.patch('/notifications/read-all');
 }

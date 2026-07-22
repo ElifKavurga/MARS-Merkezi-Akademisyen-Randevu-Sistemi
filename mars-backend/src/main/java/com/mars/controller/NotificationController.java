@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.mars.dto.NotificationResponse;
+import com.mars.dto.NotificationUnreadCountResponse;
 import com.mars.dto.PageResponseDto;
 import com.mars.service.NotificationService;
 
@@ -38,5 +39,16 @@ public class NotificationController {
     public ResponseEntity<NotificationResponse> markMyNotificationAsRead(
             @PathVariable Integer notificationId) {
         return ResponseEntity.ok(notificationService.markMyNotificationAsRead(notificationId));
+    }
+
+    @GetMapping("/unread-count")
+    public ResponseEntity<NotificationUnreadCountResponse> getMyUnreadCount() {
+        return ResponseEntity.ok(new NotificationUnreadCountResponse(notificationService.getMyUnreadCount()));
+    }
+
+    @PatchMapping("/read-all")
+    public ResponseEntity<NotificationUnreadCountResponse> markAllMyNotificationsAsRead() {
+        notificationService.markAllMyNotificationsAsRead();
+        return ResponseEntity.ok(new NotificationUnreadCountResponse(0));
     }
 }
