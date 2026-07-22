@@ -2,6 +2,7 @@ import { useAuth } from '../hooks/useAuth';
 import { getRoleLabel, UI_LABELS } from '../constants';
 import { getInitials } from '../utils/userDisplay';
 import Loading from '../components/Loading';
+import EmailNotificationPreferences from '../components/EmailNotificationPreferences';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -80,6 +81,7 @@ export default function ProfilePage() {
           ))}
         </dl>
       </div>
+      <EmailNotificationPreferences />
     </div>
   );
 }

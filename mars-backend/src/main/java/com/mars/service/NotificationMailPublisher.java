@@ -27,14 +27,19 @@ public class NotificationMailPublisher {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
     private final MailService mailService;
+    private final EmailNotificationPreferenceService preferenceService;
 
     public void publishAfterCommit(
             String recipient,
+            Integer recipientUserId,
             NotificationResponse notification,
             Appointment appointment,
             DelegationLog delegation,
             AppointmentRescheduleApproval reschedule,
             NotificationCreateRequest request) {
+        if (!preferenceService.isEnabled(recipientUserId, notification.getNotificationType())) {
+            return;
+        }
         List<MailDetail> details = buildDetails(appointment, delegation, reschedule);
         Map<String, Object> parameters = presentation(notification, delegation, reschedule);
         applyCustomPresentation(parameters, request);

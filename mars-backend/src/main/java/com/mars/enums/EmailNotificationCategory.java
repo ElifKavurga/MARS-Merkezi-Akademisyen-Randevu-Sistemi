@@ -1,0 +1,14 @@
+package com.mars.enums;
+
+public enum EmailNotificationCategory {
+    APPOINTMENT_REQUEST,
+    APPOINTMENT_APPROVAL,
+    APPOINTMENT_REJECTION,
+    APPOINTMENT_CANCELLATION,
+    RESCHEDULE,
+    DELEGATION,
+    APPOINTMENT_REMINDER,
+    WAITLIST,
+    NO_SHOW,
+    PENALTY
+}

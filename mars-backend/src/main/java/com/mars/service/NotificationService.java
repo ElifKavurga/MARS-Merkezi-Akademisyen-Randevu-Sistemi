@@ -83,7 +83,8 @@ public class NotificationService {
         NotificationResponse response = notificationMapper.toResponse(notificationRepository.save(notification));
         webSocketPublisher.publishAfterCommit(recipient.getInstitutionalEmail(), response);
         mailPublisher.publishAfterCommit(
-                recipient.getInstitutionalEmail(), response, appointment, delegation, reschedule, request);
+                recipient.getInstitutionalEmail(), recipient.getUserId(), response,
+                appointment, delegation, reschedule, request);
         return response;
     }
 

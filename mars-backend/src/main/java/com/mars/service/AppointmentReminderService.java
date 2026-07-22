@@ -37,16 +37,19 @@ public class AppointmentReminderService {
     private final AppointmentRepository appointmentRepository;
     private final AppointmentReminderDeliveryRepository deliveryRepository;
     private final MailService mailService;
+    private final EmailNotificationPreferenceService preferenceService;
     private final Duration reminderWindow;
 
     public AppointmentReminderService(
             AppointmentRepository appointmentRepository,
             AppointmentReminderDeliveryRepository deliveryRepository,
             MailService mailService,
+            EmailNotificationPreferenceService preferenceService,
             @Value("${mars.mail.reminder-window-minutes:2}") long reminderWindowMinutes) {
         this.appointmentRepository = appointmentRepository;
         this.deliveryRepository = deliveryRepository;
         this.mailService = mailService;
+        this.preferenceService = preferenceService;
         this.reminderWindow = Duration.ofMinutes(reminderWindowMinutes);
     }
 
@@ -73,7 +76,8 @@ public class AppointmentReminderService {
                 appointment.getSlot().getSlotDate(), appointment.getSlot().getStartTime());
         Duration remaining = Duration.between(now, startsAt);
         AppointmentReminderType type = resolveReminderType(remaining);
-        if (type == null || !claim(appointment, recipient, type, now)) {
+        if (type == null || !preferenceService.isReminderEnabled(recipient.getUserId())
+                || !claim(appointment, recipient, type, now)) {
             return;
         }
 

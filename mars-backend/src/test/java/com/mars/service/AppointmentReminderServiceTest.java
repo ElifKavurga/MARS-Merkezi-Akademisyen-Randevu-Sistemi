@@ -38,14 +38,17 @@ class AppointmentReminderServiceTest {
     @Mock private AppointmentRepository appointmentRepository;
     @Mock private AppointmentReminderDeliveryRepository deliveryRepository;
     @Mock private MailService mailService;
+    @Mock private EmailNotificationPreferenceService preferenceService;
 
     private AppointmentReminderService service;
     private LocalDateTime now;
 
     @BeforeEach
     void setUp() {
-        service = new AppointmentReminderService(appointmentRepository, deliveryRepository, mailService, 2);
+        service = new AppointmentReminderService(
+                appointmentRepository, deliveryRepository, mailService, preferenceService, 2);
         now = LocalDateTime.of(2026, 7, 22, 12, 0);
+        org.mockito.Mockito.lenient().when(preferenceService.isReminderEnabled(anyInt())).thenReturn(true);
     }
 
     @Test

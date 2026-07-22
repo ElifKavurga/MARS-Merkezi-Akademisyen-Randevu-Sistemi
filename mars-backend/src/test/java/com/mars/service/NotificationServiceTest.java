@@ -127,7 +127,7 @@ class NotificationServiceTest {
         verify(notificationRepository, times(1)).save(saved);
         verify(webSocketPublisher, times(1)).publishAfterCommit("student@mars.edu.tr", response);
         verify(mailPublisher, times(1)).publishAfterCommit(
-                "student@mars.edu.tr", response, null, null, null, request);
+                "student@mars.edu.tr", 7, response, null, null, null, request);
     }
 
     private User userWithId(Integer userId) {

@@ -4,11 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.lenient;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,7 +34,14 @@ import com.mars.enums.NotificationType;
 @ExtendWith(MockitoExtension.class)
 class NotificationMailPublisherTest {
     @Mock private MailService mailService;
+    @Mock private EmailNotificationPreferenceService preferenceService;
     @InjectMocks private NotificationMailPublisher publisher;
+
+    @BeforeEach
+    void enableEmailByDefault() {
+        lenient().when(preferenceService.isEnabled(org.mockito.ArgumentMatchers.anyInt(),
+                org.mockito.ArgumentMatchers.nullable(NotificationType.class))).thenReturn(true);
+    }
 
     @AfterEach
     void cleanupSynchronization() {
@@ -48,7 +57,7 @@ class NotificationMailPublisherTest {
                 .message("Randevunuz onaylandı.")
                 .build();
 
-        publisher.publishAfterCommit("student@mars.edu.tr", notification, null, null, null,
+        publisher.publishAfterCommit("student@mars.edu.tr", 7, notification, null, null, null,
                 NotificationCreateRequest.builder().build());
 
         verify(mailService).sendTemplate(argThat(request ->
@@ -65,13 +74,29 @@ class NotificationMailPublisherTest {
                 .message("Yeni delegasyon talebiniz var.")
                 .build();
 
-        publisher.publishAfterCommit("assistant@mars.edu.tr", notification, null, null, null,
+        publisher.publishAfterCommit("assistant@mars.edu.tr", 8, notification, null, null, null,
                 NotificationCreateRequest.builder().build());
 
         verify(mailService, never()).sendTemplate(org.mockito.ArgumentMatchers.any(TemplateMailRequest.class));
         TransactionSynchronizationManager.getSynchronizations().forEach(
                 org.springframework.transaction.support.TransactionSynchronization::afterCommit);
         verify(mailService).sendTemplate(org.mockito.ArgumentMatchers.any(TemplateMailRequest.class));
+    }
+
+    @Test
+    void disabledPreference_skipsOnlyMailPublishing() {
+        NotificationResponse notification = NotificationResponse.builder()
+                .notificationType(NotificationType.APPOINTMENT_APPROVED)
+                .title("Randevu Onaylandı")
+                .message("Randevunuz onaylandı.")
+                .build();
+        org.mockito.Mockito.when(preferenceService.isEnabled(7, NotificationType.APPOINTMENT_APPROVED))
+                .thenReturn(false);
+
+        publisher.publishAfterCommit("student@mars.edu.tr", 7, notification, null, null, null,
+                NotificationCreateRequest.builder().build());
+
+        verify(mailService, never()).sendTemplate(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -98,7 +123,7 @@ class NotificationMailPublisherTest {
                 .message("Randevunuz onaylandı.")
                 .build();
 
-        publisher.publishAfterCommit("student@mars.edu.tr", notification, appointment, null, null,
+        publisher.publishAfterCommit("student@mars.edu.tr", 7, notification, appointment, null, null,
                 NotificationCreateRequest.builder().build());
 
         ArgumentCaptor<TemplateMailRequest> captor = ArgumentCaptor.forClass(TemplateMailRequest.class);
@@ -131,7 +156,7 @@ class NotificationMailPublisherTest {
                 .message("Yeni tarih teklif edildi.")
                 .build();
 
-        publisher.publishAfterCommit("student@mars.edu.tr", notification, appointment, null, reschedule,
+        publisher.publishAfterCommit("student@mars.edu.tr", 7, notification, appointment, null, reschedule,
                 NotificationCreateRequest.builder().build());
 
         ArgumentCaptor<TemplateMailRequest> captor = ArgumentCaptor.forClass(TemplateMailRequest.class);
