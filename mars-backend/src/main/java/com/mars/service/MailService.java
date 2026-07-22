@@ -45,7 +45,7 @@ public class MailService {
             mailSender.send(message);
             return true;
         } catch (RuntimeException ex) {
-            logFailure(request.recipient(), ex);
+            logFailure(ex);
             return false;
         }
     }
@@ -73,7 +73,7 @@ public class MailService {
             String html = templateEngine.process(MAIL_TEMPLATE, context);
             return sendHtmlInternal(request.recipient(), request.subject(), html);
         } catch (RuntimeException ex) {
-            logFailure(request.recipient(), ex);
+            logFailure(ex);
             return false;
         }
     }
@@ -90,7 +90,7 @@ public class MailService {
             mailSender.send(message);
             return true;
         } catch (MessagingException | RuntimeException ex) {
-            logFailure(recipient, ex);
+            logFailure(ex);
             return false;
         }
     }
@@ -108,7 +108,7 @@ public class MailService {
         return value != null && !value.isBlank();
     }
 
-    private void logFailure(String recipient, Exception exception) {
-        LOGGER.error("Mail gönderilemedi. recipient={}", recipient, exception);
+    private void logFailure(Exception exception) {
+        LOGGER.error("Mail gönderilemedi.", exception);
     }
 }

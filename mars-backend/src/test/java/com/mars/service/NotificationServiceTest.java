@@ -38,6 +38,7 @@ class NotificationServiceTest {
     @Mock private DelegationLogRepository delegationLogRepository;
     @Mock private NotificationMapper notificationMapper;
     @Mock private NotificationWebSocketPublisher webSocketPublisher;
+    @Mock private NotificationMailPublisher mailPublisher;
     @InjectMocks private NotificationService notificationService;
 
     @AfterEach
@@ -125,6 +126,7 @@ class NotificationServiceTest {
 
         verify(notificationRepository, times(1)).save(saved);
         verify(webSocketPublisher, times(1)).publishAfterCommit("student@mars.edu.tr", response);
+        verify(mailPublisher, times(1)).publishAfterCommit("student@mars.edu.tr", response, null, null);
     }
 
     private User userWithId(Integer userId) {

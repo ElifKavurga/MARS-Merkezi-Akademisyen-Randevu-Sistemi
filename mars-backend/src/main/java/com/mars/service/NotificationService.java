@@ -51,6 +51,7 @@ public class NotificationService {
     private final DelegationLogRepository delegationLogRepository;
     private final NotificationMapper notificationMapper;
     private final NotificationWebSocketPublisher webSocketPublisher;
+    private final NotificationMailPublisher mailPublisher;
 
     /** Modules use this entry point instead of constructing Notification entities. */
     @Transactional
@@ -76,6 +77,7 @@ public class NotificationService {
                 withEventKey(request, eventKey), recipient, appointment, delegation, LocalDateTime.now(APP_ZONE));
         NotificationResponse response = notificationMapper.toResponse(notificationRepository.save(notification));
         webSocketPublisher.publishAfterCommit(recipient.getInstitutionalEmail(), response);
+        mailPublisher.publishAfterCommit(recipient.getInstitutionalEmail(), response, appointment, delegation);
         return response;
     }
 
