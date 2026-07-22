@@ -18,12 +18,14 @@ import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.CreateDelegationRequest;
 import com.mars.dto.DelegationResponse;
 import com.mars.dto.DelegationTargetResponse;
+import com.mars.dto.NotificationCreateRequest;
 import com.mars.entity.Appointment;
 import com.mars.entity.AvailabilitySlot;
 import com.mars.entity.DelegationLog;
 import com.mars.entity.User;
 import com.mars.enums.AppointmentStatus;
 import com.mars.enums.DelegationStatus;
+import com.mars.enums.NotificationType;
 import com.mars.enums.RoleType;
 import com.mars.enums.SlotLockStatus;
 import com.mars.exception.BadRequestException;
@@ -142,6 +144,13 @@ public class DelegationService {
                     "Randevu yönlendirme onayı",
                     "Randevunuz farklı bir personele yönlendirilmek isteniyor.",
                     saved);
+        } else {
+            createDelegationNotification(
+                    saved,
+                    saved.getDelegatedToUser(),
+                    NotificationType.DELEGATION_REQUEST,
+                    "Delegasyon Talebi",
+                    "Yeni bir randevu delegasyon talebiniz bulunuyor.");
         }
         return toResponse(saved);
     }
@@ -184,6 +193,12 @@ public class DelegationService {
         log.setDelegationStatus(DelegationStatus.ACCEPTED.name());
         log.setUpdatedAt(LocalDateTime.now(APP_ZONE));
         delegationLogRepository.save(log);
+        createDelegationNotification(
+                log,
+                log.getDelegatedByUser(),
+                NotificationType.DELEGATION_ACCEPTED,
+                "Delegasyon Kabul Edildi",
+                "Delegasyon talebiniz kabul edildi.");
         return toResponse(log);
     }
 
@@ -195,7 +210,29 @@ public class DelegationService {
         log.setDelegationStatus(DelegationStatus.REJECTED.name());
         log.setUpdatedAt(LocalDateTime.now(APP_ZONE));
         delegationLogRepository.save(log);
+        createDelegationNotification(
+                log,
+                log.getDelegatedByUser(),
+                NotificationType.DELEGATION_REJECTED,
+                "Delegasyon Reddedildi",
+                "Delegasyon talebiniz reddedildi.");
         return toResponse(log);
+    }
+
+    private void createDelegationNotification(
+            DelegationLog delegation,
+            User recipient,
+            NotificationType type,
+            String title,
+            String message) {
+        notificationService.createNotification(NotificationCreateRequest.builder()
+                .userId(recipient.getUserId())
+                .notificationType(type)
+                .title(title)
+                .message(message)
+                .relatedAppointmentId(delegation.getAppointment().getAppointmentId())
+                .relatedDelegationId(delegation.getDelegationId())
+                .build());
     }
 
     @Transactional

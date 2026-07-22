@@ -9,9 +9,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import com.mars.dto.NotificationCreateRequest;
 import com.mars.dto.NotificationResponse;
+import com.mars.dto.PageResponseDto;
 import com.mars.entity.Appointment;
 import com.mars.entity.DelegationLog;
 import com.mars.entity.Notification;
@@ -42,6 +46,7 @@ public class NotificationService {
     private final AppointmentRepository appointmentRepository;
     private final DelegationLogRepository delegationLogRepository;
     private final NotificationMapper notificationMapper;
+    private final NotificationWebSocketPublisher webSocketPublisher;
 
     /** Modules use this entry point instead of constructing Notification entities. */
     @Transactional
@@ -57,7 +62,9 @@ public class NotificationService {
 
         Notification notification = notificationMapper.toEntity(
                 request, recipient, appointment, delegation, LocalDateTime.now(APP_ZONE));
-        return notificationMapper.toResponse(notificationRepository.save(notification));
+        NotificationResponse response = notificationMapper.toResponse(notificationRepository.save(notification));
+        webSocketPublisher.publishAfterCommit(recipient.getInstitutionalEmail(), response);
+        return response;
     }
 
     /** Compatibility bridge for the existing delegation flow. */
@@ -81,7 +88,8 @@ public class NotificationService {
                 delegation == null ? null : delegation.getAppointment(),
                 delegation,
                 LocalDateTime.now(APP_ZONE));
-        notificationRepository.save(notification);
+        NotificationResponse response = notificationMapper.toResponse(notificationRepository.save(notification));
+        webSocketPublisher.publishAfterCommit(recipient.getInstitutionalEmail(), response);
     }
 
     @Transactional(readOnly = true)
@@ -91,6 +99,23 @@ public class NotificationService {
                 .stream()
                 .map(notificationMapper::toResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponseDto<NotificationResponse> getMyNotifications(int page, int size) {
+        User user = getCurrentUser();
+        Page<Notification> notifications = notificationRepository.findByUser_UserId(
+                user.getUserId(),
+                PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+        return PageResponseDto.<NotificationResponse>builder()
+                .content(notifications.getContent().stream().map(notificationMapper::toResponse).toList())
+                .page(notifications.getNumber())
+                .size(notifications.getSize())
+                .totalElements(notifications.getTotalElements())
+                .totalPages(notifications.getTotalPages())
+                .first(notifications.isFirst())
+                .last(notifications.isLast())
+                .build();
     }
 
     @Transactional

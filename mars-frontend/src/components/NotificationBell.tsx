@@ -1,64 +1,26 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { getMyNotifications } from '../services/notificationService';
+import { Link } from 'react-router-dom';
+import { ROUTES } from '../constants/routes';
+import { useNotifications } from '../hooks/useNotifications';
+import NotificationCard from './NotificationCard';
 
-export type NotificationPreviewItem = {
-  id: string;
-  title: string;
-  description?: string;
-  createdAtLabel?: string;
-};
+const PREVIEW_LIMIT = 5;
 
-type NotificationBellProps = {
-  items?: readonly NotificationPreviewItem[];
-  unreadCount?: number;
-};
-
-export default function NotificationBell({
-  items,
-  unreadCount,
-}: NotificationBellProps) {
+export default function NotificationBell() {
   const [open, setOpen] = useState(false);
+  const { recentNotifications, unreadCount, loading, markAsRead } = useNotifications();
   const rootRef = useRef<HTMLDivElement>(null);
   const panelId = useId();
-  const [fetchedItems, setFetchedItems] = useState<NotificationPreviewItem[]>([]);
-  const visibleItems = items ?? fetchedItems;
-  const badgeCount = unreadCount ?? visibleItems.length;
+  const visibleItems = recentNotifications.slice(0, PREVIEW_LIMIT);
 
   useEffect(() => {
-    if (items) return;
-    let cancelled = false;
-    void getMyNotifications()
-      .then((notifications) => {
-        if (cancelled) return;
-        setFetchedItems(notifications.map((notification) => ({
-          id: String(notification.notificationId),
-          title: notification.title,
-          description: notification.message,
-          createdAtLabel: new Intl.DateTimeFormat('tr-TR', {
-            day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
-          }).format(new Date(notification.createdAt)),
-        })));
-      })
-      .catch(() => undefined);
-    return () => { cancelled = true; };
-  }, [items]);
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
+    if (!open) return;
     const handlePointerDown = (event: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
     };
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setOpen(false);
-      }
+      if (event.key === 'Escape') setOpen(false);
     };
-
     document.addEventListener('mousedown', handlePointerDown);
     document.addEventListener('keydown', handleEscape);
     return () => {
@@ -72,68 +34,40 @@ export default function NotificationBell({
       <button
         type="button"
         className="relative inline-flex h-10 w-10 items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface-variant transition-colors hover:bg-surface-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim"
-        aria-label="Bildirimler"
+        aria-label={unreadCount ? `Bildirimler, ${unreadCount} okunmamış` : 'Bildirimler'}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((current) => !current)}
       >
-        <span className="material-symbols-outlined text-[22px]" aria-hidden="true">
-          notifications
-        </span>
-        {badgeCount > 0 ? (
-          <span className="absolute right-1.5 top-1.5 inline-flex min-w-4 items-center justify-center rounded-full bg-error px-1 font-label-sm text-[10px] leading-4 text-on-error">
-            {badgeCount > 9 ? '9+' : badgeCount}
-          </span>
+        <span className="material-symbols-outlined text-[22px]" aria-hidden="true">notifications</span>
+        {unreadCount > 0 ? (
+          <span className="absolute right-1 top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-error px-1 font-label-sm text-[10px] leading-4 text-on-error">{unreadCount > 9 ? '9+' : unreadCount}</span>
         ) : null}
       </button>
 
       {open ? (
-        <div
-          id={panelId}
-          role="dialog"
-          aria-label="Bildirimler"
-          className="absolute right-0 z-50 mt-2 w-[min(100vw-2rem,20rem)] overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-lg"
-        >
-          <div className="border-b border-outline-variant px-4 py-3">
-            <p className="font-label-md text-label-md font-semibold text-primary">Bildirimler</p>
+        <div id={panelId} role="dialog" aria-label="Bildirimler" className="fixed inset-x-4 top-[4.5rem] z-50 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-[23rem]">
+          <div className="flex items-center justify-between border-b border-outline-variant px-4 py-3">
+            <p className="font-headline-md text-lg font-semibold text-primary">Bildirimler</p>
+            {unreadCount > 0 ? <span className="rounded-full bg-primary-fixed px-2 py-1 font-label-sm text-[11px] text-on-primary-fixed">{unreadCount} yeni</span> : null}
           </div>
-          {visibleItems.length === 0 ? (
-            <div className="px-4 py-8 text-center">
-              <span
-                className="material-symbols-outlined text-[28px] text-on-surface-variant/50"
-                aria-hidden="true"
-              >
-                notifications_none
-              </span>
-              <p className="mt-2 font-body-md text-body-md text-on-surface-variant">
-                Yeni bildiriminiz bulunmuyor.
-              </p>
+          {loading ? (
+            <div className="px-4 py-8 text-center font-body-md text-sm text-on-surface-variant" role="status">Bildirimler yükleniyor...</div>
+          ) : visibleItems.length === 0 ? (
+            <div className="px-4 py-9 text-center">
+              <span className="material-symbols-outlined text-[34px] text-on-surface-variant/50" aria-hidden="true">notifications_none</span>
+              <p className="mt-2 font-body-md text-sm text-on-surface-variant">Henüz bildiriminiz bulunmuyor.</p>
             </div>
           ) : (
-            <ul className="max-h-72 overflow-y-auto py-1">
-              {visibleItems.map((item) => (
-                <li
-                  key={item.id}
-                  className="border-b border-outline-variant/50 px-4 py-3 last:border-b-0"
-                >
-                  <p className="font-label-md text-label-md font-semibold text-on-background">
-                    {item.title}
-                  </p>
-                  {item.description ? (
-                    <p className="mt-1 font-body-sm text-body-sm text-on-surface-variant">
-                      {item.description}
-                    </p>
-                  ) : null}
-                  {item.createdAtLabel ? (
-                    <p className="mt-1 font-label-sm text-label-sm text-outline">
-                      {item.createdAtLabel}
-                    </p>
-                  ) : null}
-                </li>
-              ))}
+            <ul className="max-h-[min(65vh,25rem)] divide-y divide-outline-variant/70 overflow-y-auto">
+              {visibleItems.map((item) => <li key={item.notificationId}><NotificationCard notification={item} compact onRead={(notification) => void markAsRead(notification).catch(() => undefined)} /></li>)}
             </ul>
           )}
+          <Link to={ROUTES.NOTIFICATIONS} onClick={() => setOpen(false)} className="flex items-center justify-center gap-1.5 border-t border-outline-variant px-4 py-3 font-label-md text-label-md font-semibold text-primary-container no-underline transition-colors hover:bg-surface-container-low">
+            Tüm Bildirimleri Gör
+            <span className="material-symbols-outlined text-[18px]" aria-hidden="true">arrow_forward</span>
+          </Link>
         </div>
       ) : null}
     </div>

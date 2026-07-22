@@ -84,6 +84,8 @@ class AppointmentServiceTest {
     private AvailabilitySlotService availabilitySlotService;
     @Mock
     private DelegationLogRepository delegationLogRepository;
+    @Mock
+    private NotificationService notificationService;
 
     @InjectMocks
     private AppointmentService appointmentService;

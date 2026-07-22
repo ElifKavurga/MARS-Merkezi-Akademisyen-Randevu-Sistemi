@@ -5,9 +5,18 @@ import { fileURLToPath, URL } from 'node:url';
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-    },
+    alias: [
+      {
+        find: 'sockjs-client',
+        replacement: fileURLToPath(
+          new URL('./node_modules/sockjs-client/dist/sockjs.min.js', import.meta.url),
+        ),
+      },
+      {
+        find: '@',
+        replacement: fileURLToPath(new URL('./src', import.meta.url)),
+      },
+    ],
   },
   server: {
     port: 5173,

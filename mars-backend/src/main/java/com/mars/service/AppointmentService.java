@@ -22,6 +22,7 @@ import com.mars.AppointmentMessages;
 import com.mars.dto.AppointmentCreateRequest;
 import com.mars.dto.AppointmentRescheduleRequest;
 import com.mars.dto.AppointmentResponseDto;
+import com.mars.dto.NotificationCreateRequest;
 import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.StaffAppointmentResponseDto;
 import com.mars.dto.StudentAppointmentResponseDto;
@@ -33,6 +34,7 @@ import com.mars.entity.StudentPenaltyStatus;
 import com.mars.entity.User;
 import com.mars.enums.AppointmentStatus;
 import com.mars.enums.MeetingType;
+import com.mars.enums.NotificationType;
 import com.mars.enums.RoleType;
 import com.mars.exception.BadRequestException;
 import com.mars.exception.ConflictException;
@@ -82,6 +84,7 @@ public class AppointmentService {
     private final AppointmentMapper appointmentMapper;
     private final AvailabilitySlotService availabilitySlotService;
     private final DelegationLogRepository delegationLogRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public AppointmentResponseDto createAppointment(AppointmentCreateRequest request) {
@@ -155,6 +158,12 @@ public class AppointmentService {
         Appointment appointment = appointmentMapper.toEntity(
                 request, student, slot, category, course, meetingType);
         Appointment saved = appointmentRepository.save(appointment);
+        createAppointmentNotification(
+                saved,
+                staff,
+                NotificationType.NEW_APPOINTMENT_REQUEST,
+                "Yeni Randevu Talebi",
+                "Yeni bir randevu talebiniz bulunuyor.");
         return appointmentMapper.toResponse(saved);
     }
 
@@ -201,6 +210,12 @@ public class AppointmentService {
         appointment.setUpdatedAt(LocalDateTime.now(APP_ZONE));
 
         Appointment saved = appointmentRepository.save(appointment);
+        createAppointmentNotification(
+                saved,
+                appointment.getStaff(),
+                NotificationType.APPOINTMENT_CANCELLED,
+                "Randevu İptal Edildi",
+                "Öğrenci randevu talebini iptal etti.");
         return appointmentRepository.findByIdAndStudentIdWithDetails(
                         saved.getAppointmentId(), student.getUserId())
                 .map(appointmentMapper::toStudentResponse)
@@ -338,7 +353,14 @@ public class AppointmentService {
         appointment.setMeetingType(meetingType);
         appointment.setUpdatedAt(LocalDateTime.now(APP_ZONE));
 
-        return appointmentMapper.toStaffResponse(appointmentRepository.save(appointment));
+        Appointment saved = appointmentRepository.save(appointment);
+        createAppointmentNotification(
+                saved,
+                appointment.getStudent(),
+                NotificationType.APPOINTMENT_RESCHEDULED,
+                "Randevu Yeniden Planlandı",
+                "Randevunuz için yeni bir zaman planlandı.");
+        return appointmentMapper.toStaffResponse(saved);
     }
 
     private StaffAppointmentResponseDto updateStaffAppointmentStatus(
@@ -356,7 +378,33 @@ public class AppointmentService {
         appointment.setUpdatedAt(LocalDateTime.now(APP_ZONE));
 
         Appointment saved = appointmentRepository.save(appointment);
+        NotificationType notificationType = targetStatus == AppointmentStatus.APPROVED
+                ? NotificationType.APPOINTMENT_APPROVED
+                : NotificationType.APPOINTMENT_REJECTED;
+        createAppointmentNotification(
+                saved,
+                appointment.getStudent(),
+                notificationType,
+                targetStatus == AppointmentStatus.APPROVED ? "Randevu Onaylandı" : "Randevu Reddedildi",
+                targetStatus == AppointmentStatus.APPROVED
+                        ? "Randevu talebiniz onaylandı."
+                        : "Randevu talebiniz reddedildi.");
         return appointmentMapper.toStaffResponse(saved);
+    }
+
+    private void createAppointmentNotification(
+            Appointment appointment,
+            User recipient,
+            NotificationType type,
+            String title,
+            String message) {
+        notificationService.createNotification(NotificationCreateRequest.builder()
+                .userId(recipient.getUserId())
+                .notificationType(type)
+                .title(title)
+                .message(message)
+                .relatedAppointmentId(appointment.getAppointmentId())
+                .build());
     }
 
     private void validatePendingStatus(String currentStatus) {

@@ -34,6 +34,7 @@ class NotificationServiceTest {
     @Mock private AppointmentRepository appointmentRepository;
     @Mock private DelegationLogRepository delegationLogRepository;
     @Mock private NotificationMapper notificationMapper;
+    @Mock private NotificationWebSocketPublisher webSocketPublisher;
     @InjectMocks private NotificationService notificationService;
 
     @AfterEach

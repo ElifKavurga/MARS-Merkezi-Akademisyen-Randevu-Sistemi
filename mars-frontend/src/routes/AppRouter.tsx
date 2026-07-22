@@ -5,6 +5,7 @@ import AdminLayout from '../layouts/AdminLayout';
 import AcademicianLayout from '../layouts/AcademicianLayout';
 import AssistantLayout from '../layouts/AssistantLayout';
 import StudentLayout from '../layouts/StudentLayout';
+import NotificationLayout from '../layouts/NotificationLayout';
 import ProtectedRoute from './ProtectedRoute';
 import { ROUTES } from '../constants/routes';
 import { ROLES } from '../constants/roles';
@@ -50,6 +51,7 @@ const StudentAppointmentDetailPage = lazy(
   () => import('../pages/StudentAppointmentDetailPage'),
 );
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
+const NotificationsPage = lazy(() => import('../pages/NotificationsPage'));
 
 function RouteFallback() {
   return (
@@ -73,6 +75,9 @@ export default function AppRouter() {
       <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage />} />
 
       <Route element={<ProtectedRoute />}>
+        <Route element={<NotificationLayout />}>
+          <Route path={ROUTES.NOTIFICATIONS} element={<NotificationsPage />} />
+        </Route>
         <Route element={<MainLayout />}>
           <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.DASHBOARD} replace />} />
           <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />

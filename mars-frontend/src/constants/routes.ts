@@ -3,6 +3,7 @@ export const ROUTES = {
   LOGIN: '/giris',
   RESET_PASSWORD: '/sifre-sifirlama',
   DASHBOARD: '/dashboard',
+  NOTIFICATIONS: '/bildirimler',
   ADMIN: '/admin',
   ADMIN_USERS: '/admin/kullanicilar',
   ADMIN_CATEGORIES: '/admin/kategoriler',

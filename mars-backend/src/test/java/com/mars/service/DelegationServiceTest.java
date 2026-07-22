@@ -57,6 +57,8 @@ class DelegationServiceTest {
     private UserRepository userRepository;
     @Mock
     private DelegationMapper delegationMapper;
+    @Mock
+    private NotificationService notificationService;
 
     @InjectMocks
     private DelegationService delegationService;

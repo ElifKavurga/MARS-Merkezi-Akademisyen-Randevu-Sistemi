@@ -7,6 +7,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import ToastViewport from './components/ToastViewport';
+import { NotificationProvider } from './contexts/NotificationContext';
 import './styles/global.css';
 
 const queryClient = new QueryClient({
@@ -26,8 +27,10 @@ createRoot(document.getElementById('root')!).render(
         <BrowserRouter>
           <AuthProvider>
             <ToastProvider>
-              <App />
-              <ToastViewport />
+              <NotificationProvider>
+                <App />
+                <ToastViewport />
+              </NotificationProvider>
             </ToastProvider>
           </AuthProvider>
         </BrowserRouter>
