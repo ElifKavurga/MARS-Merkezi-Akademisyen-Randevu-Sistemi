@@ -11,17 +11,22 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import { useDashboardDailySchedule } from '../hooks/useDashboardDailySchedule';
 import { useToast } from '../hooks/useToast';
+import { useNotificationRealtimeRefresh } from '../hooks/useNotificationRealtimeRefresh';
 import { getAcademicianDashboardSummary } from '../services/academicianDashboardService';
 import { getCourseAssistants, getMyCourses } from '../services/courseService';
 import type { CourseAssistant } from '../types/course';
 import type { AcademicianDashboardSummary } from '../types/dashboard';
+import type { NotificationItem } from '../types/notification';
 
 const PREVIEW_LIMIT = 5;
+const isDashboardNotification = (notification: NotificationItem) =>
+  notification.relatedAppointmentId != null || notification.relatedDelegationId != null;
 
 export default function AcademicianDashboard() {
   const { user } = useAuth();
   const toast = useToast();
   const dailySchedule = useDashboardDailySchedule();
+  const retryDailySchedule = dailySchedule.retry;
   const [summary, setSummary] = useState<AcademicianDashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,17 +38,19 @@ export default function AcademicianDashboard() {
   >([]);
   const [listsLoading, setListsLoading] = useState(true);
 
-  const loadSummary = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const loadSummary = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    if (!silent) setError(null);
     try {
       setSummary(await getAcademicianDashboardSummary());
     } catch {
       const message = 'Ana ekran verileri yüklenirken bir hata oluştu.';
-      setError(message);
-      toast.error(message);
+      if (!silent) {
+        setError(message);
+        toast.error(message);
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [toast]);
 
@@ -103,6 +110,11 @@ export default function AcademicianDashboard() {
   useEffect(() => {
     void loadCourseLists();
   }, [loadCourseLists]);
+
+  const refreshRealtimeDashboard = useCallback(async () => {
+    await Promise.allSettled([loadSummary(true), retryDailySchedule()]);
+  }, [loadSummary, retryDailySchedule]);
+  useNotificationRealtimeRefresh(isDashboardNotification, refreshRealtimeDashboard);
 
   if (!user) {
     return null;

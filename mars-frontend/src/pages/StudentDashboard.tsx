@@ -1,9 +1,19 @@
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import DashboardWelcomeBanner from '../components/DashboardWelcomeBanner';
 import StudentEmptyState from '../components/StudentEmptyState';
 import StudentLoadingState from '../components/StudentLoadingState';
 import StudentPageHeader from '../components/StudentPageHeader';
 import { STUDENT_UI } from '../constants/studentUi';
+import { ROUTES } from '../constants/routes';
 import { useAuth } from '../hooks/useAuth';
+import { useNotificationRealtimeRefresh } from '../hooks/useNotificationRealtimeRefresh';
+import { getStudentActiveAppointments } from '../services/studentAppointmentService';
+import type { NotificationItem } from '../types/notification';
+import { formatStudentAppointmentDate, formatStudentAppointmentTime } from '../utils/studentAppointmentFormat';
+
+const isAppointmentNotification = (notification: NotificationItem) =>
+  notification.relatedAppointmentId != null;
 
 type PlaceholderCardProps = {
   title: string;
@@ -48,7 +58,14 @@ function PlaceholderCard({
 
 export default function StudentDashboard() {
   const { user } = useAuth();
-  const loading = false;
+  const appointmentsQuery = useQuery({
+    queryKey: ['student-dashboard-appointments', user?.userId],
+    queryFn: getStudentActiveAppointments,
+    enabled: user != null,
+  });
+  const appointments = appointmentsQuery.data ?? [];
+  const loading = appointmentsQuery.isPending;
+  useNotificationRealtimeRefresh(isAppointmentNotification, appointmentsQuery.refetch);
 
   if (!user) {
     return null;
@@ -66,7 +83,13 @@ export default function StudentDashboard() {
         description={STUDENT_UI.DASHBOARD_SUBTITLE}
         loading={loading}
         loadingLabel={STUDENT_UI.DASHBOARD_LOADING}
-        stats={[]}
+        stats={[
+          {
+            label: 'Yaklaşan',
+            value: appointments.length,
+            to: ROUTES.STUDENT_APPOINTMENTS,
+          },
+        ]}
       />
 
       <section className="mb-6 rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-6">
@@ -89,14 +112,29 @@ export default function StudentDashboard() {
       </section>
 
       <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-        <PlaceholderCard
-          title={STUDENT_UI.UPCOMING_TITLE}
-          icon="event_upcoming"
-          emptyTitle={STUDENT_UI.UPCOMING_EMPTY_TITLE}
-          emptyMessage={STUDENT_UI.UPCOMING_EMPTY_DESCRIPTION}
-          loading={loading}
-          loadingLabel={STUDENT_UI.UPCOMING_LOADING}
-        />
+        <section className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest">
+          <div className="flex items-center justify-between gap-3 p-5 sm:p-6">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="material-symbols-outlined text-[22px] text-primary" aria-hidden="true">event_upcoming</span>
+              <h2 className="font-headline-md text-headline-md text-primary">{STUDENT_UI.UPCOMING_TITLE}</h2>
+            </div>
+            {!loading && appointments.length > 0 ? <span className="rounded-full bg-primary-fixed px-2.5 py-1 font-label-sm text-label-sm text-on-primary-fixed">{appointments.length}</span> : null}
+          </div>
+          <div className="px-4 pb-4 sm:px-6 sm:pb-6">
+            {loading ? <StudentLoadingState label={STUDENT_UI.UPCOMING_LOADING} compact /> : appointments.length === 0 ? (
+              <StudentEmptyState icon="event_upcoming" title={STUDENT_UI.UPCOMING_EMPTY_TITLE} description={STUDENT_UI.UPCOMING_EMPTY_DESCRIPTION} className="border-0 bg-surface px-4 py-8" />
+            ) : (
+              <div className="space-y-2">
+                {appointments.slice(0, 3).map((appointment) => (
+                  <Link key={appointment.appointmentId} to={`${ROUTES.STUDENT_APPOINTMENTS}/${appointment.appointmentId}`} className="block rounded-lg border border-outline-variant bg-surface p-3 no-underline transition-colors hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim">
+                    <span className="block truncate font-label-md text-label-md font-semibold text-on-surface">{appointment.categoryName}</span>
+                    <span className="mt-1 block font-body-md text-sm text-on-surface-variant">{formatStudentAppointmentDate(appointment.appointmentDate)} · {formatStudentAppointmentTime(appointment.startTime)}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
         <PlaceholderCard
           title={STUDENT_UI.WAITLIST_TITLE}
           icon="format_list_numbered"

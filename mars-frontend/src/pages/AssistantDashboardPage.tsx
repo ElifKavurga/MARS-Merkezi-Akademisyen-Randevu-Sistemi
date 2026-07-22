@@ -13,20 +13,26 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import { useDashboardDailySchedule } from '../hooks/useDashboardDailySchedule';
 import { useToast } from '../hooks/useToast';
+import { useNotificationRealtimeRefresh } from '../hooks/useNotificationRealtimeRefresh';
 import { getAssistantDashboard } from '../services/assistantCourseService';
 import type { AssistantDashboardSummary } from '../types/assistantCourse';
+import type { NotificationItem } from '../types/notification';
+
+const isDashboardNotification = (notification: NotificationItem) =>
+  notification.relatedAppointmentId != null || notification.relatedDelegationId != null;
 
 export default function AssistantDashboardPage() {
   const { user } = useAuth();
   const toast = useToast();
   const dailySchedule = useDashboardDailySchedule();
+  const retryDailySchedule = dailySchedule.retry;
   const [summary, setSummary] = useState<AssistantDashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadDashboard = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const loadDashboard = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    if (!silent) setError(null);
     try {
       setSummary(await getAssistantDashboard());
     } catch (err) {
@@ -34,16 +40,23 @@ export default function AssistantDashboardPage() {
         isAxiosError(err) && err.response?.status === 403
           ? ASSISTANT_DASHBOARD_MESSAGES.ACCESS_DENIED
           : ASSISTANT_DASHBOARD_MESSAGES.LOAD_ERROR;
-      setError(message);
-      toast.error(message);
+      if (!silent) {
+        setError(message);
+        toast.error(message);
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [toast]);
 
   useEffect(() => {
     void loadDashboard();
   }, [loadDashboard]);
+
+  const refreshRealtimeDashboard = useCallback(async () => {
+    await Promise.allSettled([loadDashboard(true), retryDailySchedule()]);
+  }, [loadDashboard, retryDailySchedule]);
+  useNotificationRealtimeRefresh(isDashboardNotification, refreshRealtimeDashboard);
 
   const courseItems =
     summary?.assignedCoursesPreview.slice(0, 5).map((course) => ({
