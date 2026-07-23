@@ -94,6 +94,7 @@ class DelegationServiceTest {
 
         appointment = new Appointment();
         appointment.setAppointmentId(100);
+        appointment.setStudent(user(30, "Öğrenci", role(3, RoleType.STUDENT.name())));
         appointment.setStaff(academician);
         appointment.setCourse(course);
         appointment.setAppointmentStatus(AppointmentStatus.PENDING.name());
@@ -211,6 +212,7 @@ class DelegationServiceTest {
     void acceptDelegation_rejectsNonPendingStatus() {
         authenticate(assistant);
         DelegationLog log = pendingDelegation(1, academician, assistant);
+        log.setApprovalRequired(false);
         log.setDelegationStatus(DelegationStatus.ACCEPTED.name());
         when(delegationLogRepository.findByIdForUpdate(1)).thenReturn(Optional.of(log));
 
@@ -269,7 +271,7 @@ class DelegationServiceTest {
     void acceptDelegation_rechecksAppointmentStatusUnderLock() {
         authenticate(assistant);
         DelegationLog log = pendingDelegation(1, academician, assistant);
-        appointment.setAppointmentStatus(AppointmentStatus.APPROVED.name());
+        appointment.setAppointmentStatus(AppointmentStatus.CANCELLED.name());
         when(delegationLogRepository.findByIdForUpdate(1)).thenReturn(Optional.of(log));
         when(appointmentRepository.findByIdForUpdate(100)).thenReturn(Optional.of(appointment));
 

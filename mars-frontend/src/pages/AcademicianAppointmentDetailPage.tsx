@@ -1,4 +1,4 @@
-import { useCallback, useEffect, type ReactNode, useState } from 'react';
+import { useCallback, useEffect, useId, type ReactNode, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import { useQueryClient } from '@tanstack/react-query';
@@ -17,10 +17,12 @@ import { STUDENT_UI } from '../constants/studentUi';
 import { useToast } from '../hooks/useToast';
 import { useAuth } from '../hooks/useAuth';
 import { approveStaffAppointment, getStaffAppointment, rejectStaffAppointment } from '../services/appointmentService';
+import { getSentDelegations } from '../services/delegationService';
 import type { StaffAppointment } from '../types/appointment';
 import {
   canDecideStaffAppointment,
   canRescheduleAcademicianAppointment,
+  getDelegationUnavailableReason,
   isOwnedStaffAppointment,
 } from '../utils/staffAppointmentPermissions';
 
@@ -96,9 +98,12 @@ export default function AcademicianAppointmentDetailPage() {
   const [rejectionError, setRejectionError] = useState<string | null>(null);
   const [showReschedule, setShowReschedule] = useState(false);
   const [showDelegation, setShowDelegation] = useState(false);
+  const [hasActiveDelegation, setHasActiveDelegation] = useState(false);
+  const [checkingDelegation, setCheckingDelegation] = useState(false);
   const { user } = useAuth();
   const toast = useToast();
   const queryClient = useQueryClient();
+  const delegationTooltipId = useId();
 
   const refreshRelatedViews = useCallback(async () => {
     await queryClient.invalidateQueries({
@@ -137,6 +142,32 @@ export default function AcademicianAppointmentDetailPage() {
   useEffect(() => {
     void loadAppointment();
   }, [loadAppointment]);
+
+  useEffect(() => {
+    if (!appointment || user?.role !== 'ACADEMICIAN') {
+      setHasActiveDelegation(false);
+      return;
+    }
+    let cancelled = false;
+    setCheckingDelegation(true);
+    void getSentDelegations()
+      .then((delegations) => {
+        if (cancelled) return;
+        setHasActiveDelegation(delegations.some((delegation) =>
+          delegation.appointmentId === appointment.appointmentId
+          && ['PENDING', 'PENDING_ACADEMICIAN_APPROVAL', 'PENDING_STUDENT_APPROVAL']
+            .includes(delegation.delegationStatus)));
+      })
+      .catch(() => {
+        if (!cancelled) setHasActiveDelegation(false);
+      })
+      .finally(() => {
+        if (!cancelled) setCheckingDelegation(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [appointment, user?.role]);
 
   const handleApproveClick = () => {
     if (!appointment || !canDecideStaffAppointment(appointment, 'academician', user) || isApproving || isRejecting) {
@@ -230,11 +261,21 @@ export default function AcademicianAppointmentDetailPage() {
     && canDecideStaffAppointment(appointment, 'academician', user);
   const canReschedule = appointment !== null
     && canRescheduleAcademicianAppointment(appointment, user);
+  const delegationUnavailableReason = appointment
+    ? checkingDelegation
+      ? 'Randevunun devredilebilirlik durumu kontrol ediliyor.'
+      : getDelegationUnavailableReason(
+          appointment,
+          'academician',
+          user,
+          hasActiveDelegation,
+        )
+    : null;
   const canDelegate = appointment !== null
+    && delegationUnavailableReason === null
     && canDelegateAppointment(appointment, 'academician', user);
   const showDelegateAction = appointment !== null
-    && isOwnedStaffAppointment(appointment, 'academician', user)
-    && appointment.appointmentStatus === 'PENDING';
+    && isOwnedStaffAppointment(appointment, 'academician', user);
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
@@ -278,13 +319,13 @@ export default function AcademicianAppointmentDetailPage() {
             {showDelegateAction ? (
               <span
                 className="group relative inline-flex"
-                title={!canDelegate ? 'Yalnızca ders ilişkili randevular devredilebilir.' : undefined}
               >
                 <button
                   type="button"
                   className={`${STUDENT_UI.SECONDARY_BUTTON_CLASS} ${!canDelegate ? 'cursor-not-allowed opacity-50' : ''}`}
                   disabled={isApproving || isRejecting}
                   aria-disabled={!canDelegate}
+                  aria-describedby={!canDelegate ? delegationTooltipId : undefined}
                   onClick={() => {
                     if (canDelegate) setShowDelegation(true);
                   }}
@@ -294,10 +335,11 @@ export default function AcademicianAppointmentDetailPage() {
                 </button>
                 {!canDelegate ? (
                   <span
+                    id={delegationTooltipId}
                     role="tooltip"
-                    className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden w-64 rounded-lg bg-inverse-surface px-3 py-2 text-xs text-inverse-on-surface shadow-lg group-hover:block group-focus-within:block"
+                    className="pointer-events-none absolute right-0 top-full z-30 mt-2 hidden w-max max-w-[min(20rem,calc(100vw-2rem))] whitespace-normal break-words rounded-lg bg-inverse-surface px-3 py-2 text-left text-xs leading-5 text-inverse-on-surface shadow-lg group-hover:block group-focus-within:block"
                   >
-                    Yalnızca ders ilişkili randevular devredilebilir.
+                    {delegationUnavailableReason}
                   </span>
                 ) : null}
               </span>

@@ -23,7 +23,8 @@ public enum DelegationStatus {
 
     private Set<DelegationStatus> allowedTargets() {
         return switch (this) {
-            case PENDING -> EnumSet.of(ACCEPTED, REJECTED, EXPIRED, CANCELLED);
+            case PENDING -> EnumSet.of(
+                    PENDING_STUDENT_APPROVAL, ACCEPTED, REJECTED, EXPIRED, CANCELLED);
             case PENDING_ACADEMICIAN_APPROVAL ->
                     EnumSet.of(PENDING_STUDENT_APPROVAL, REJECTED, EXPIRED, CANCELLED);
             case PENDING_STUDENT_APPROVAL ->

@@ -14,7 +14,7 @@ export const DELEGATION_MESSAGES = {
   ASSISTANT_LABEL: 'Hedef Personel',
   SUMMARY_LABEL: 'Randevu Devri Özeti',
   SUMMARY_TEXT:
-    'Dersin asistanına yönlendirme normal randevu devri akışına girer. Diğer personeller için öğrencinin iki saat içinde onayı gerekir.',
+    'Hedef kişi talebi kabul ettikten sonra yalnızca ilgili dersin yetkili asistanına yapılan devir doğrudan tamamlanır. Diğer tüm devirlerde öğrencinin iki saat içinde onayı gerekir.',
   SELECT_ASSISTANT: 'Personel seçin',
   SINGLE_ASSISTANT_HINT: 'Derse atanmış tek asistan otomatik seçildi.',
   NO_ASSISTANTS: 'Bu tarih ve saatte uygun hedef personel bulunamadı.',

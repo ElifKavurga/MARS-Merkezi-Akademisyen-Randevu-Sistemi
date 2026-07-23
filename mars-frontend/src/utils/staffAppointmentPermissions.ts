@@ -38,8 +38,29 @@ export function canDelegateAcademicianAppointment(
   scope: StaffAppointmentScope,
   user: AuthUser | null | undefined,
 ): boolean {
-  return isOwnedStaffAppointment(appointment, scope, user)
-    && scope === 'academician'
-    && appointment.appointmentStatus === 'PENDING'
-    && appointment.courseId != null;
+  return getDelegationUnavailableReason(appointment, scope, user) === null;
+}
+
+export function getDelegationUnavailableReason(
+  appointment: StaffAppointment,
+  scope: StaffAppointmentScope,
+  user: AuthUser | null | undefined,
+  hasActiveDelegation = false,
+): string | null {
+  if (scope !== 'academician' || !isOwnedStaffAppointment(appointment, scope, user)) {
+    return 'Yalnızca randevunun ilgili akademisyeni bu işlemi yapabilir.';
+  }
+  if (appointment.appointmentStatus === 'COMPLETED') {
+    return 'Tamamlanmış randevular devredilemez.';
+  }
+  if (appointment.appointmentStatus === 'CANCELLED') {
+    return 'İptal edilmiş randevular devredilemez.';
+  }
+  if (hasActiveDelegation) {
+    return 'Bu randevu için devir süreci zaten başlatılmış.';
+  }
+  if (!['PENDING', 'APPROVED'].includes(appointment.appointmentStatus)) {
+    return 'Bu randevu mevcut durumunda devredilemez.';
+  }
+  return null;
 }

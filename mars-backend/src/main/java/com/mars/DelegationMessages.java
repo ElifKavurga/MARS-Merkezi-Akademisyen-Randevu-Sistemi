@@ -25,12 +25,6 @@ public final class DelegationMessages {
     public static final String ACCESS_DENIED = "Bu delegasyon kaydına erişim yetkiniz yok.";
     public static final String OWNERSHIP_DENIED =
             "Yalnızca kendi randevularınız için delegasyon başlatabilirsiniz.";
-    public static final String APPROVED_NOT_ALLOWED =
-            "Onaylanmış randevular devredilemez.";
-    public static final String TERMINAL_STATUS_NOT_ALLOWED =
-            "İptal edilmiş, tamamlanmış veya no-show işaretli randevular devredilemez.";
-    public static final String COURSE_REQUIRED =
-            "Randevu devri yalnızca ders bağlı randevular için yapılabilir.";
     public static final String ASSISTANT_NOT_FOUND = "Asistan bulunamadı.";
     public static final String ASSISTANT_INACTIVE = "Pasif kullanıcıya delegasyon yapılamaz.";
     public static final String ASSISTANT_ROLE_REQUIRED =
@@ -44,7 +38,7 @@ public final class DelegationMessages {
     public static final String NOT_PENDING =
             "Yalnızca bekleyen randevu devirleri üzerinde işlem yapılabilir.";
     public static final String APPOINTMENT_NOT_PROCESSABLE =
-            "Yalnızca bekleyen randevu talepleri için delegasyon işlemi yapılabilir.";
+            "Yalnızca aktif randevular için randevu devri işlemi yapılabilir.";
     public static final String STUDENT_DECISION_ACCESS_DENIED =
             "Bu randevu devri üzerinde yalnızca randevu sahibi öğrenci işlem yapabilir.";
     public static final String NOT_PENDING_STUDENT_APPROVAL =

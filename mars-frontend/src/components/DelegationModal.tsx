@@ -257,7 +257,9 @@ export default function DelegationModal({
                         {target.institutionalEmail}{target.departmentName ? ` · ${target.departmentName}` : ''}
                       </span>
                       <span className="mt-1 block text-xs font-medium text-on-surface-variant">
-                        {target.requiresStudentApproval ? 'Öğrenci onayı gerekli' : 'Ders asistanı'}
+                        {target.requiresStudentApproval
+                          ? 'Hedef kabulünden sonra öğrenci onayı gerekli'
+                          : 'İlgili dersin yetkili asistanı · Öğrenci onayı gerektirmez'}
                       </span>
                     </span>
                   </label>
@@ -272,7 +274,8 @@ export default function DelegationModal({
           )}
           {selectedTarget?.requiresStudentApproval ? (
             <p className="rounded-lg border border-secondary/30 bg-secondary-container/40 px-3 py-2 font-label-sm text-label-sm text-on-secondary-container">
-              Öğrencinin 2 saat içinde onayı beklenecek. Bu sürede hedef slot kilitlenecektir.
+              Hedef kişi kabul ettikten sonra öğrencinin 2 saat içinde onayı beklenecek.
+              Bu sürede hedef slot kilitli kalacaktır.
             </p>
           ) : null}
           {!loadingOptions && targets.length === 0 && !error ? (
