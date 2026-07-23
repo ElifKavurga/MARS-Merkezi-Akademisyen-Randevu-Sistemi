@@ -19,13 +19,16 @@ public class AppointmentStatusUpdateScheduler {
     private static final List<String> ACTIVE_STATUSES = List.of("APPROVED", "RESCHEDULED_APPROVED");
 
     private final AppointmentStatusUpdateService statusUpdateService;
+    private final SchedulerRegistry schedulerRegistry;
     private final long toleranceMinutes;
 
     public AppointmentStatusUpdateScheduler(
             AppointmentStatusUpdateService statusUpdateService,
+            SchedulerRegistry schedulerRegistry,
             @Value("${mars.appointment.status-update-tolerance-minutes:15}") long toleranceMinutes) {
         this.statusUpdateService = statusUpdateService;
-        this.toleranceMinutes = toleranceMinutes;
+        this.schedulerRegistry   = schedulerRegistry;
+        this.toleranceMinutes    = toleranceMinutes;
     }
 
     @Scheduled(cron = "${mars.appointment.status-update-cron:0 */5 * * * *}")
@@ -33,7 +36,8 @@ public class AppointmentStatusUpdateScheduler {
         LocalDateTime now = LocalDateTime.now(APP_ZONE);
         LocalDateTime cutoffDateTime = now.minusMinutes(toleranceMinutes);
 
-        SchedulerMonitor.SchedulerRunContext ctx = SchedulerMonitor.start(LOGGER, SCHEDULER_NAME);
+        SchedulerMonitor.SchedulerRunContext ctx =
+                SchedulerMonitor.start(LOGGER, SCHEDULER_NAME, schedulerRegistry);
         try {
             List<Integer> candidateIds = statusUpdateService.findCandidates(cutoffDateTime, ACTIVE_STATUSES, 100);
             ctx.addProcessed(candidateIds.size());

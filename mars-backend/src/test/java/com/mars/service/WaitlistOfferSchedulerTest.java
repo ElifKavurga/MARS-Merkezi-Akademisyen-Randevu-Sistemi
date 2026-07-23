@@ -33,7 +33,8 @@ class WaitlistOfferSchedulerTest {
 
     @BeforeEach
     void setUp() {
-        scheduler = new WaitlistOfferScheduler(waitlistEntryRepository, waitlistService);
+        scheduler = new WaitlistOfferScheduler(waitlistEntryRepository, waitlistService, null);
+
         // Inject the @Value field (offer-duration-minutes default = 60)
         org.springframework.test.util.ReflectionTestUtils.setField(scheduler, "offerDurationMinutes", 60L);
     }

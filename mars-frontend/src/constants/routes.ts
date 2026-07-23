@@ -8,6 +8,7 @@ export const ROUTES = {
   ADMIN_USERS: '/admin/kullanicilar',
   ADMIN_CATEGORIES: '/admin/kategoriler',
   ADMIN_PENALTY_RULES: '/admin/ceza-kurallari',
+  ADMIN_SCHEDULER_STATUS: '/admin/scheduler-durumu',
   ADMIN_PROFILE: '/admin/profil',
   HOD: '/bolum-baskani',
   ACADEMICIAN: '/akademisyen',

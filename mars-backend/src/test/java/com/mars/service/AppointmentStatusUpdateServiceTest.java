@@ -40,7 +40,8 @@ class AppointmentStatusUpdateServiceTest {
     @BeforeEach
     void setUp() {
         service = new AppointmentStatusUpdateService(appointmentRepository);
-        scheduler = new AppointmentStatusUpdateScheduler(service, 15);
+        scheduler = new AppointmentStatusUpdateScheduler(service, null, 15);
+
         now = LocalDateTime.of(2026, 7, 23, 13, 0);
     }
 

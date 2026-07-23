@@ -17,6 +17,8 @@ const AdminHomePage = lazy(() => import('../pages/AdminHomePage'));
 const AdminDashboard = lazy(() => import('../pages/AdminDashboard'));
 const AdminCategoriesPage = lazy(() => import('../pages/AdminCategoriesPage'));
 const AdminPenaltyRulesPage = lazy(() => import('../pages/AdminPenaltyRulesPage'));
+const AdminSchedulerStatusPage = lazy(() => import('../pages/AdminSchedulerStatusPage'));
+
 const HodDashboard = lazy(() => import('../pages/HodDashboard'));
 const AcademicianDashboard = lazy(() => import('../pages/AcademicianDashboard'));
 const AcademicianCoursesPage = lazy(() => import('../pages/AcademicianCoursesPage'));
@@ -206,7 +208,9 @@ export default function AppRouter() {
             <Route path={ROUTES.ADMIN_USERS} element={<AdminDashboard />} />
             <Route path={ROUTES.ADMIN_CATEGORIES} element={<AdminCategoriesPage />} />
             <Route path={ROUTES.ADMIN_PENALTY_RULES} element={<AdminPenaltyRulesPage />} />
+            <Route path={ROUTES.ADMIN_SCHEDULER_STATUS} element={<AdminSchedulerStatusPage />} />
             <Route path={ROUTES.ADMIN_PROFILE} element={<ProfilePage />} />
+
           </Route>
         </Route>
       </Route>

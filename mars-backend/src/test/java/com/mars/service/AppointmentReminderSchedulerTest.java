@@ -18,7 +18,7 @@ class AppointmentReminderSchedulerTest {
 
     @Test
     void scheduledScan_delegatesToReminderService() {
-        AppointmentReminderScheduler scheduler = new AppointmentReminderScheduler(reminderService);
+        AppointmentReminderScheduler scheduler = new AppointmentReminderScheduler(reminderService, null);
 
         scheduler.sendAppointmentReminders();
 
@@ -27,10 +27,11 @@ class AppointmentReminderSchedulerTest {
 
     @Test
     void unexpectedScanFailure_doesNotEscapeSchedulerCycle() {
-        AppointmentReminderScheduler scheduler = new AppointmentReminderScheduler(reminderService);
+        AppointmentReminderScheduler scheduler = new AppointmentReminderScheduler(reminderService, null);
         doThrow(new IllegalStateException("database unavailable"))
                 .when(reminderService).sendDueReminders(any(LocalDateTime.class));
 
         assertThatCode(scheduler::sendAppointmentReminders).doesNotThrowAnyException();
     }
 }
+

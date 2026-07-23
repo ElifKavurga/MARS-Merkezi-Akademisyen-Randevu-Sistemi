@@ -24,7 +24,8 @@ class NoShowPenaltySchedulerTest {
 
     @BeforeEach
     void setUp() {
-        scheduler = new NoShowPenaltyScheduler(noShowPenaltyService);
+        scheduler = new NoShowPenaltyScheduler(noShowPenaltyService, null);
+
     }
 
     // ── NoShow detection ──────────────────────────────────────────────────────

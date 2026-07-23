@@ -10,10 +10,6 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 
-/**
- * Scheduler for delegation lifecycle automation.
- * Delegates all business logic to {@link DelegationService}.
- */
 @Component
 @RequiredArgsConstructor
 public class DelegationScheduler {
@@ -24,10 +20,12 @@ public class DelegationScheduler {
     private static final String SYNC_SCHEDULER_NAME   = "DelegationSync";
 
     private final DelegationService delegationService;
+    private final SchedulerRegistry schedulerRegistry;
 
     @Scheduled(fixedDelay = 60_000)
     public void expireStudentApprovals() {
-        SchedulerMonitor.SchedulerRunContext ctx = SchedulerMonitor.start(LOGGER, EXPIRE_SCHEDULER_NAME);
+        SchedulerMonitor.SchedulerRunContext ctx =
+                SchedulerMonitor.start(LOGGER, EXPIRE_SCHEDULER_NAME, schedulerRegistry);
         try {
             int expired = delegationService.expireStudentApprovals(LocalDateTime.now(APP_ZONE));
             ctx.addProcessed(expired);
@@ -43,7 +41,8 @@ public class DelegationScheduler {
 
     @Scheduled(fixedDelay = 60_000)
     public void synchronizeAcceptedDelegations() {
-        SchedulerMonitor.SchedulerRunContext ctx = SchedulerMonitor.start(LOGGER, SYNC_SCHEDULER_NAME);
+        SchedulerMonitor.SchedulerRunContext ctx =
+                SchedulerMonitor.start(LOGGER, SYNC_SCHEDULER_NAME, schedulerRegistry);
         try {
             int synced = delegationService.synchronizeAcceptedDelegations(LocalDateTime.now(APP_ZONE));
             ctx.addProcessed(synced);

@@ -21,10 +21,12 @@ public class NoShowPenaltyScheduler {
     private static final String LIFT_SCHEDULER_NAME    = "PenaltyLift";
 
     private final NoShowPenaltyService noShowPenaltyService;
+    private final SchedulerRegistry schedulerRegistry;
 
     @Scheduled(cron = "${mars.penalty.no-show-cron:0 */5 * * * *}")
     public void runNoShowDetection() {
-        SchedulerMonitor.SchedulerRunContext ctx = SchedulerMonitor.start(LOGGER, NO_SHOW_SCHEDULER_NAME);
+        SchedulerMonitor.SchedulerRunContext ctx =
+                SchedulerMonitor.start(LOGGER, NO_SHOW_SCHEDULER_NAME, schedulerRegistry);
         try {
             LocalDateTime now = LocalDateTime.now(APP_ZONE);
             int processedCount = noShowPenaltyService.processNoShows(now);
@@ -41,7 +43,8 @@ public class NoShowPenaltyScheduler {
 
     @Scheduled(cron = "${mars.penalty.lift-cron:0 0 * * * *}")
     public void runLiftExpiredPenalties() {
-        SchedulerMonitor.SchedulerRunContext ctx = SchedulerMonitor.start(LOGGER, LIFT_SCHEDULER_NAME);
+        SchedulerMonitor.SchedulerRunContext ctx =
+                SchedulerMonitor.start(LOGGER, LIFT_SCHEDULER_NAME, schedulerRegistry);
         try {
             LocalDate today = LocalDate.now(APP_ZONE);
             int liftedCount = noShowPenaltyService.liftExpiredPenalties(today);

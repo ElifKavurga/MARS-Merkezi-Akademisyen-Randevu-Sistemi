@@ -19,10 +19,12 @@ public class AppointmentReminderScheduler {
     private static final String SCHEDULER_NAME = "AppointmentReminder";
 
     private final AppointmentReminderService reminderService;
+    private final SchedulerRegistry schedulerRegistry;
 
     @Scheduled(fixedDelayString = "${mars.mail.reminder-scan-ms:60000}")
     public void sendAppointmentReminders() {
-        SchedulerMonitor.SchedulerRunContext ctx = SchedulerMonitor.start(LOGGER, SCHEDULER_NAME);
+        SchedulerMonitor.SchedulerRunContext ctx =
+                SchedulerMonitor.start(LOGGER, SCHEDULER_NAME, schedulerRegistry);
         try {
             reminderService.sendDueReminders(LocalDateTime.now(APP_ZONE));
             ctx.incrementProcessed();

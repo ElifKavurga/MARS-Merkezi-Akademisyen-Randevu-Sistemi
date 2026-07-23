@@ -17,7 +17,6 @@ import com.mars.repository.WaitlistEntryRepository;
 import lombok.RequiredArgsConstructor;
 
 @Component
-@RequiredArgsConstructor
 public class WaitlistOfferScheduler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WaitlistOfferScheduler.class);
@@ -26,16 +25,25 @@ public class WaitlistOfferScheduler {
 
     private final WaitlistEntryRepository waitlistEntryRepository;
     private final WaitlistService waitlistService;
+    private final SchedulerRegistry schedulerRegistry;
 
     @Value("${mars.waitlist.offer-duration-minutes:60}")
     private long offerDurationMinutes;
+
+    public WaitlistOfferScheduler(WaitlistEntryRepository waitlistEntryRepository,
+            WaitlistService waitlistService, SchedulerRegistry schedulerRegistry) {
+        this.waitlistEntryRepository = waitlistEntryRepository;
+        this.waitlistService         = waitlistService;
+        this.schedulerRegistry       = schedulerRegistry;
+    }
 
     @Scheduled(cron = "${mars.waitlist.offer-check-cron:0 */1 * * * *}")
     public void checkExpiredOffers() {
         LocalDateTime now = LocalDateTime.now(APP_ZONE);
         LocalDateTime cutoff = now.minusMinutes(offerDurationMinutes);
 
-        SchedulerMonitor.SchedulerRunContext ctx = SchedulerMonitor.start(LOGGER, SCHEDULER_NAME);
+        SchedulerMonitor.SchedulerRunContext ctx =
+                SchedulerMonitor.start(LOGGER, SCHEDULER_NAME, schedulerRegistry);
         try {
             List<WaitlistEntry> expiredOffers = waitlistEntryRepository.findExpiredOffers(
                     WaitlistStatus.NOTIFIED.name(), cutoff);

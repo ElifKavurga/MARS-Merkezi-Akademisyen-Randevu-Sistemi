@@ -65,7 +65,8 @@ class WaitlistServiceTest {
             waitlistNotificationPublisher,
             mapper
         );
-        scheduler = new WaitlistOfferScheduler(waitlistEntryRepository, service);
+        scheduler = new WaitlistOfferScheduler(waitlistEntryRepository, service, null);
+
         now = LocalDateTime.of(2026, 7, 23, 14, 0);
     }
 

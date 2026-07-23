@@ -7,6 +7,8 @@ const adminNavItems = [
   { label: 'Kullanıcı Yönetimi', path: ROUTES.ADMIN_USERS, icon: 'group', end: false },
   { label: 'Kategori Yönetimi', path: ROUTES.ADMIN_CATEGORIES, icon: 'category', end: false },
   { label: 'Ceza Kuralları', path: ROUTES.ADMIN_PENALTY_RULES, icon: 'gavel', end: false },
+  { label: 'Sistem Durumu', path: ROUTES.ADMIN_SCHEDULER_STATUS, icon: 'monitor_heart', end: false },
+
 ] as const;
 
 export default function AdminSidebar({ mobileOpen, onClose }: ModuleSidebarProps) {

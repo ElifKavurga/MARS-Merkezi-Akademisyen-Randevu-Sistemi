@@ -54,6 +54,8 @@ public class SecurityConfig {
                         .requestMatchers("/admin/users", "/admin/users/**").hasRole("ADMIN")
                         .requestMatchers("/admin/categories", "/admin/categories/**").hasRole("ADMIN")
                         .requestMatchers("/admin/penalty-rule", "/admin/penalty-rule/**").hasRole("ADMIN")
+                        .requestMatchers("/admin/scheduler-status", "/admin/scheduler-status/**").hasRole("ADMIN")
+
                         .requestMatchers("/assistant/appointments", "/assistant/appointments/**")
                                 .hasRole("ASSISTANT")
                         .requestMatchers("/academician/appointments", "/academician/appointments/**")
