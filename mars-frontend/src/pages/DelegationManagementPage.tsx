@@ -85,9 +85,21 @@ export default function DelegationManagementPage() {
   useEffect(() => {
     const next = new URLSearchParams(params);
     next.set('tab', tab);
-    search ? next.set('q', search) : next.delete('q');
-    status ? next.set('status', status) : next.delete('status');
-    date ? next.set('date', date) : next.delete('date');
+    if (search) {
+      next.set('q', search);
+    } else {
+      next.delete('q');
+    }
+    if (status) {
+      next.set('status', status);
+    } else {
+      next.delete('status');
+    }
+    if (date) {
+      next.set('date', date);
+    } else {
+      next.delete('date');
+    }
     if (next.toString() !== params.toString()) setParams(next, { replace: true });
   }, [date, params, search, setParams, status, tab]);
 
