@@ -63,6 +63,9 @@ mars:
     test-recipient: ${MAIL_TEST_RECIPIENT:}
     reminder-scan-ms: ${MAIL_REMINDER_SCAN_MS:60000}
     reminder-window-minutes: ${MAIL_REMINDER_WINDOW_MINUTES:2}
+  appointment:
+    status-update-cron: ${MARS_APPOINTMENT_STATUS_UPDATE_CRON:0 */5 * * * *}
+    status-update-tolerance-minutes: ${MARS_APPOINTMENT_STATUS_UPDATE_TOLERANCE_MINUTES:15}
 
 logging:
   level:

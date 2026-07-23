@@ -372,4 +372,17 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
             @Param("from") LocalDate from,
             @Param("to") LocalDate to,
             @Param("statuses") Collection<String> statuses);
+
+    @Query("""
+            SELECT a.appointmentId
+            FROM Appointment a
+            JOIN a.slot s
+            WHERE a.appointmentStatus IN :statuses
+              AND (s.slotDate < :cutoffDate OR (s.slotDate = :cutoffDate AND s.endTime <= :cutoffTime))
+            """)
+    List<Integer> findStatusUpdateCandidateIds(
+            @Param("statuses") Collection<String> statuses,
+            @Param("cutoffDate") LocalDate cutoffDate,
+            @Param("cutoffTime") LocalTime cutoffTime,
+            Pageable pageable);
 }
