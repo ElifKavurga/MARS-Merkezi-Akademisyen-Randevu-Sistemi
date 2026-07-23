@@ -1,6 +1,7 @@
 import { useCallback, useEffect, type ReactNode, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { isAxiosError } from 'axios';
+import { useQueryClient } from '@tanstack/react-query';
 import AppointmentStatusBadge from '../components/AppointmentStatusBadge';
 import AppointmentRescheduleModal from '../components/AppointmentRescheduleModal';
 import ConfirmModal from '../components/ConfirmModal';
@@ -10,7 +11,7 @@ import StudentErrorState from '../components/StudentErrorState';
 import StudentLoadingState from '../components/StudentLoadingState';
 import StudentPageHeader from '../components/StudentPageHeader';
 import { STAFF_APPOINTMENT_MESSAGES, getMeetingTypeLabel } from '../constants/appointment';
-import { canDelegateAppointment, DELEGATION_MESSAGES } from '../constants/delegation';
+import { canDelegateAppointment } from '../constants/delegation';
 import { ROUTES } from '../constants/routes';
 import { STUDENT_UI } from '../constants/studentUi';
 import { useToast } from '../hooks/useToast';
@@ -20,6 +21,7 @@ import type { StaffAppointment } from '../types/appointment';
 import {
   canDecideStaffAppointment,
   canRescheduleAcademicianAppointment,
+  isOwnedStaffAppointment,
 } from '../utils/staffAppointmentPermissions';
 
 function formatDate(date: string): string {
@@ -96,6 +98,15 @@ export default function AcademicianAppointmentDetailPage() {
   const [showDelegation, setShowDelegation] = useState(false);
   const { user } = useAuth();
   const toast = useToast();
+  const queryClient = useQueryClient();
+
+  const refreshRelatedViews = useCallback(async () => {
+    await queryClient.invalidateQueries({
+      predicate: ({ queryKey }) => queryKey.some((key) =>
+        typeof key === 'string'
+        && (key.includes('appointment') || key.includes('calendar') || key.includes('delegation'))),
+    });
+  }, [queryClient]);
 
   const loadAppointment = useCallback(async () => {
     if (!isValidId) {
@@ -221,6 +232,9 @@ export default function AcademicianAppointmentDetailPage() {
     && canRescheduleAcademicianAppointment(appointment, user);
   const canDelegate = appointment !== null
     && canDelegateAppointment(appointment, 'academician', user);
+  const showDelegateAction = appointment !== null
+    && isOwnedStaffAppointment(appointment, 'academician', user)
+    && appointment.appointmentStatus === 'PENDING';
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
@@ -237,7 +251,7 @@ export default function AcademicianAppointmentDetailPage() {
                   onClick={handleApproveClick}
                 >
                   <span className="material-symbols-outlined text-[18px]" aria-hidden="true">check</span>
-                  {isApproving ? 'Onaylanıyor...' : 'Randevuyu Onayla'}
+                  {isApproving ? 'Onaylanıyor...' : 'Kabul Et'}
                 </button>
                 <button
                   type="button"
@@ -246,7 +260,7 @@ export default function AcademicianAppointmentDetailPage() {
                   onClick={handleRejectClick}
                 >
                   <span className="material-symbols-outlined text-[18px]" aria-hidden="true">close</span>
-                  {isRejecting ? 'Reddediliyor...' : 'Randevuyu Reddet'}
+                  {isRejecting ? 'Reddediliyor...' : 'Reddet'}
                 </button>
               </>
             ) : null}
@@ -261,16 +275,32 @@ export default function AcademicianAppointmentDetailPage() {
                 Yeniden Planla
               </button>
             ) : null}
-            {canDelegate ? (
-              <button
-                type="button"
-                className={STUDENT_UI.SECONDARY_BUTTON_CLASS}
-                disabled={isApproving || isRejecting}
-                onClick={() => setShowDelegation(true)}
+            {showDelegateAction ? (
+              <span
+                className="group relative inline-flex"
+                title={!canDelegate ? 'Yalnızca ders ilişkili randevular devredilebilir.' : undefined}
               >
-                <span className="material-symbols-outlined text-[18px]" aria-hidden>swap_horiz</span>
-                {DELEGATION_MESSAGES.ACTION_LABEL}
-              </button>
+                <button
+                  type="button"
+                  className={`${STUDENT_UI.SECONDARY_BUTTON_CLASS} ${!canDelegate ? 'cursor-not-allowed opacity-50' : ''}`}
+                  disabled={isApproving || isRejecting}
+                  aria-disabled={!canDelegate}
+                  onClick={() => {
+                    if (canDelegate) setShowDelegation(true);
+                  }}
+                >
+                  <span className="material-symbols-outlined text-[18px]" aria-hidden>swap_horiz</span>
+                  Devret
+                </button>
+                {!canDelegate ? (
+                  <span
+                    role="tooltip"
+                    className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden w-64 rounded-lg bg-inverse-surface px-3 py-2 text-xs text-inverse-on-surface shadow-lg group-hover:block group-focus-within:block"
+                  >
+                    Yalnızca ders ilişkili randevular devredilebilir.
+                  </span>
+                ) : null}
+              </span>
             ) : null}
           </div>
         ) : null}
@@ -407,6 +437,8 @@ export default function AcademicianAppointmentDetailPage() {
         onSuccess={() => {
           setShowReschedule(false);
           toast.success('Yeniden planlama talebi öğrenci onayına gönderildi.');
+          void loadAppointment();
+          void refreshRelatedViews();
         }}
       />
 
@@ -417,6 +449,7 @@ export default function AcademicianAppointmentDetailPage() {
           setShowDelegation(false);
           toast.success(message);
           void loadAppointment();
+          void refreshRelatedViews();
         }}
       />
     </div>

@@ -5,6 +5,7 @@ export type CreateDelegationPayload = {
   targetSlotDate: string;
   targetStartTime: string;
   targetEndTime: string;
+  description?: string;
 };
 
 export type DelegationStatus =

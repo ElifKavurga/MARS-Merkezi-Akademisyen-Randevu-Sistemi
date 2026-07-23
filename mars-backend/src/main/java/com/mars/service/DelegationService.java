@@ -156,19 +156,24 @@ public class DelegationService {
 
         DelegationLog saved = delegationLogRepository.save(log);
         recordStatus(saved, DelegationStatus.valueOf(saved.getDelegationStatus()), saved.getDelegatedAt());
+        String requestDescription = appendOptionalDescription(
+                "Yeni bir randevu devri talebiniz bulunuyor.",
+                request.getDescription());
         if (DelegationStatus.PENDING_ACADEMICIAN_APPROVAL.name().equals(saved.getDelegationStatus())) {
             createDelegationNotification(
                     saved,
                     saved.getDelegatedToUser(),
                     NotificationType.DELEGATION_REQUEST,
                     "Randevu Devri Talebi",
-                    "Yeni bir randevu devri talebiniz bulunuyor.");
+                    requestDescription);
         } else if (approvalRequired) {
             notificationService.createPreparedEmailNotification(
                     appointment.getStudent(),
                     "DELEGATION_STUDENT_APPROVAL",
                     "Randevu yönlendirme onayı",
-                    withDelegationContext(saved, "Randevunuz farklı bir personele yönlendirilmek isteniyor."),
+                    withDelegationContext(saved, appendOptionalDescription(
+                            "Randevunuz farklı bir personele yönlendirilmek isteniyor.",
+                            request.getDescription())),
                     saved);
         } else {
             createDelegationNotification(
@@ -176,7 +181,7 @@ public class DelegationService {
                     saved.getDelegatedToUser(),
                     NotificationType.DELEGATION_REQUEST,
                     "Randevu Devri Talebi",
-                    "Yeni bir randevu devri talebiniz bulunuyor.");
+                    requestDescription);
         }
         return toResponse(saved);
     }
@@ -417,6 +422,13 @@ public class DelegationService {
                         end == null ? "-" : end.format(NOTIFICATION_TIME),
                         meetingType,
                         appointment.getCategory() == null ? "-" : appointment.getCategory().getCategoryName());
+    }
+
+    private String appendOptionalDescription(String message, String description) {
+        if (description == null || description.isBlank()) {
+            return message;
+        }
+        return message + " Açıklama: " + description.trim();
     }
 
     private DelegationTargetResponse toTargetResponse(Appointment appointment, User target) {

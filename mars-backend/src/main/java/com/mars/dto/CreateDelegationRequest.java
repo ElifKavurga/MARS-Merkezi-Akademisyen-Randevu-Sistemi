@@ -2,6 +2,7 @@ package com.mars.dto;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,6 +36,9 @@ public class CreateDelegationRequest {
 
     @NotNull(message = "Hedef bitiş saati zorunludur.")
     private java.time.LocalTime targetEndTime;
+
+    @Size(max = 500, message = "Açıklama en fazla 500 karakter olabilir.")
+    private String description;
 
     public Integer resolveTargetUserId() {
         return targetUserId != null ? targetUserId : assistantId;
