@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import org.springframework.scheduling.annotation.Scheduled;
+
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -306,11 +306,12 @@ public class DelegationService {
     @Transactional
     public List<DelegationResponse> getPendingStudentApprovals() {
         User student = getCurrentStudent();
-        expirePendingApprovals(LocalDateTime.now(APP_ZONE));
+        expireStudentApprovals(LocalDateTime.now(APP_ZONE));
         return delegationLogRepository.findStudentApprovals(
                         student.getUserId(), DelegationStatus.PENDING_STUDENT_APPROVAL.name())
                 .stream().map(delegationMapper::toResponse).toList();
     }
+
 
     @Transactional(noRollbackFor = ConflictException.class)
     public DelegationResponse acceptStudentApproval(Integer delegationId) {
@@ -357,13 +358,8 @@ public class DelegationService {
         return toResponse(log);
     }
 
-    @Scheduled(fixedDelay = 60_000)
     @Transactional
-    public void expireStudentApprovals() {
-        expirePendingApprovals(LocalDateTime.now(APP_ZONE));
-    }
-
-    private void expirePendingApprovals(LocalDateTime now) {
+    public int expireStudentApprovals(LocalDateTime now) {
         List<DelegationLog> expired = delegationLogRepository.findExpiredStudentApprovals(
                 DelegationStatus.PENDING_STUDENT_APPROVAL.name(), now);
         for (DelegationLog log : expired) {
@@ -377,15 +373,14 @@ public class DelegationService {
                     log);
         }
         delegationLogRepository.saveAll(expired);
+        return expired.size();
     }
 
-    @Scheduled(fixedDelay = 60_000)
     @Transactional
-    public void synchronizeAcceptedDelegations() {
+    public int synchronizeAcceptedDelegations(LocalDateTime now) {
         List<DelegationLog> terminal = delegationLogRepository.findAcceptedWithTerminalAppointmentStatus(
                 DelegationStatus.ACCEPTED.name(),
                 Set.of(AppointmentStatus.CANCELLED.name(), AppointmentStatus.COMPLETED.name()));
-        LocalDateTime now = LocalDateTime.now(APP_ZONE);
         for (DelegationLog log : terminal) {
             DelegationStatus target = AppointmentStatus.CANCELLED.name()
                     .equals(log.getAppointment().getAppointmentStatus())
@@ -394,6 +389,7 @@ public class DelegationService {
             transitionStatus(log, target, now);
         }
         delegationLogRepository.saveAll(terminal);
+        return terminal.size();
     }
 
     private String withDelegationContext(DelegationLog delegation, String message) {

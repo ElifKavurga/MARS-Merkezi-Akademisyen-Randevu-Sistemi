@@ -13,17 +13,26 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class AppointmentReminderScheduler {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AppointmentReminderScheduler.class);
     private static final ZoneId APP_ZONE = ZoneId.of("Europe/Istanbul");
+    private static final String SCHEDULER_NAME = "AppointmentReminder";
+
     private final AppointmentReminderService reminderService;
 
     @Scheduled(fixedDelayString = "${mars.mail.reminder-scan-ms:60000}")
     public void sendAppointmentReminders() {
+        SchedulerMonitor.SchedulerRunContext ctx = SchedulerMonitor.start(LOGGER, SCHEDULER_NAME);
         try {
             reminderService.sendDueReminders(LocalDateTime.now(APP_ZONE));
+            ctx.incrementProcessed();
+            ctx.incrementUpdated();
         } catch (RuntimeException ex) {
-            LOGGER.error("Randevu hatırlatma taraması tamamlanamadı. errorType={}",
-                    ex.getClass().getSimpleName());
+            ctx.incrementErrors();
+            LOGGER.error("[{}] Randevu hatırlatma taraması tamamlanamadı. errorType={}",
+                    SCHEDULER_NAME, ex.getClass().getSimpleName());
+        } finally {
+            ctx.finish();
         }
     }
 }

@@ -17,34 +17,42 @@ public class NoShowPenaltyScheduler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NoShowPenaltyScheduler.class);
     private static final ZoneId APP_ZONE = ZoneId.of("Europe/Istanbul");
+    private static final String NO_SHOW_SCHEDULER_NAME = "NoShowDetection";
+    private static final String LIFT_SCHEDULER_NAME    = "PenaltyLift";
 
     private final NoShowPenaltyService noShowPenaltyService;
 
     @Scheduled(cron = "${mars.penalty.no-show-cron:0 */5 * * * *}")
     public void runNoShowDetection() {
-        LOGGER.info("Starting automated No-Show detection...");
+        SchedulerMonitor.SchedulerRunContext ctx = SchedulerMonitor.start(LOGGER, NO_SHOW_SCHEDULER_NAME);
         try {
             LocalDateTime now = LocalDateTime.now(APP_ZONE);
             int processedCount = noShowPenaltyService.processNoShows(now);
-            if (processedCount > 0) {
-                LOGGER.info("No-Show detection finished. Processed {} appointments.", processedCount);
-            }
+            ctx.addProcessed(processedCount);
+            ctx.addUpdated(processedCount);
         } catch (Exception e) {
-            LOGGER.error("Error during automated No-Show detection: {}", e.getMessage(), e);
+            ctx.incrementErrors();
+            LOGGER.error("[{}] Fatal error during No-Show detection. errorType={}",
+                    NO_SHOW_SCHEDULER_NAME, e.getClass().getSimpleName(), e);
+        } finally {
+            ctx.finish();
         }
     }
 
     @Scheduled(cron = "${mars.penalty.lift-cron:0 0 * * * *}")
     public void runLiftExpiredPenalties() {
-        LOGGER.info("Starting automated lifting of expired penalties...");
+        SchedulerMonitor.SchedulerRunContext ctx = SchedulerMonitor.start(LOGGER, LIFT_SCHEDULER_NAME);
         try {
             LocalDate today = LocalDate.now(APP_ZONE);
             int liftedCount = noShowPenaltyService.liftExpiredPenalties(today);
-            if (liftedCount > 0) {
-                LOGGER.info("Penalty lifting finished. Lifted penalties for {} students.", liftedCount);
-            }
+            ctx.addProcessed(liftedCount);
+            ctx.addUpdated(liftedCount);
         } catch (Exception e) {
-            LOGGER.error("Error during automated lifting of expired penalties: {}", e.getMessage(), e);
+            ctx.incrementErrors();
+            LOGGER.error("[{}] Fatal error during penalty lift. errorType={}",
+                    LIFT_SCHEDULER_NAME, e.getClass().getSimpleName(), e);
+        } finally {
+            ctx.finish();
         }
     }
 }

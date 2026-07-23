@@ -15,6 +15,7 @@ public class AppointmentStatusUpdateScheduler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AppointmentStatusUpdateScheduler.class);
     private static final ZoneId APP_ZONE = ZoneId.of("Europe/Istanbul");
+    private static final String SCHEDULER_NAME = "AppointmentStatusUpdate";
     private static final List<String> ACTIVE_STATUSES = List.of("APPROVED", "RESCHEDULED_APPROVED");
 
     private final AppointmentStatusUpdateService statusUpdateService;
@@ -32,36 +33,31 @@ public class AppointmentStatusUpdateScheduler {
         LocalDateTime now = LocalDateTime.now(APP_ZONE);
         LocalDateTime cutoffDateTime = now.minusMinutes(toleranceMinutes);
 
-        LOGGER.info("Starting automatic appointment status update scheduler run. Cutoff: {}", cutoffDateTime);
-
-        int updatedCount = 0;
-        int skippedCount = 0;
-        int errorCount = 0;
-
+        SchedulerMonitor.SchedulerRunContext ctx = SchedulerMonitor.start(LOGGER, SCHEDULER_NAME);
         try {
             List<Integer> candidateIds = statusUpdateService.findCandidates(cutoffDateTime, ACTIVE_STATUSES, 100);
-            
+            ctx.addProcessed(candidateIds.size());
+
             for (Integer id : candidateIds) {
                 try {
                     boolean updated = statusUpdateService.completeAppointment(id, now);
                     if (updated) {
-                        updatedCount++;
+                        ctx.incrementUpdated();
                     } else {
-                        skippedCount++;
+                        ctx.incrementSkipped();
                     }
                 } catch (RuntimeException ex) {
-                    errorCount++;
-                    LOGGER.error("Failed to complete appointment automatically. appointmentId={}, errorType={}",
-                            id, ex.getClass().getSimpleName());
+                    ctx.incrementErrors();
+                    LOGGER.error("[{}] Failed to complete appointment. appointmentId={}, errorType={}",
+                            SCHEDULER_NAME, id, ex.getClass().getSimpleName());
                 }
             }
-
-            int processedCount = candidateIds.size();
-            LOGGER.info("Automatic appointment status update completed. Processed: {}, Updated: {}, Skipped: {}, Errors: {}",
-                    processedCount, updatedCount, skippedCount, errorCount);
-
         } catch (RuntimeException ex) {
-            LOGGER.error("Error occurred during status update scan. errorType={}", ex.getClass().getSimpleName());
+            ctx.incrementErrors();
+            LOGGER.error("[{}] Fatal error during status update scan. errorType={}",
+                    SCHEDULER_NAME, ex.getClass().getSimpleName());
+        } finally {
+            ctx.finish();
         }
     }
 }

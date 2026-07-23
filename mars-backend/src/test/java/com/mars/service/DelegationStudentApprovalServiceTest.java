@@ -344,7 +344,8 @@ class DelegationStudentApprovalServiceTest {
         when(delegationLogRepository.findExpiredStudentApprovals(
                 eq(DelegationStatus.PENDING_STUDENT_APPROVAL.name()), any())).thenReturn(List.of(log));
 
-        delegationService.expireStudentApprovals();
+        delegationService.expireStudentApprovals(LocalDateTime.now());
+
 
         assertThat(log.getDelegationStatus()).isEqualTo(DelegationStatus.EXPIRED.name());
         assertThat(log.getSlotLockStatus()).isEqualTo(SlotLockStatus.RELEASED.name());

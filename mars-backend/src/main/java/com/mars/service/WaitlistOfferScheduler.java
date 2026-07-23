@@ -22,6 +22,7 @@ public class WaitlistOfferScheduler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WaitlistOfferScheduler.class);
     private static final ZoneId APP_ZONE = ZoneId.of("Europe/Istanbul");
+    private static final String SCHEDULER_NAME = "WaitlistOfferExpiry";
 
     private final WaitlistEntryRepository waitlistEntryRepository;
     private final WaitlistService waitlistService;
@@ -34,22 +35,29 @@ public class WaitlistOfferScheduler {
         LocalDateTime now = LocalDateTime.now(APP_ZONE);
         LocalDateTime cutoff = now.minusMinutes(offerDurationMinutes);
 
-        List<WaitlistEntry> expiredOffers = waitlistEntryRepository.findExpiredOffers(
-            WaitlistStatus.NOTIFIED.name(),
-            cutoff
-        );
+        SchedulerMonitor.SchedulerRunContext ctx = SchedulerMonitor.start(LOGGER, SCHEDULER_NAME);
+        try {
+            List<WaitlistEntry> expiredOffers = waitlistEntryRepository.findExpiredOffers(
+                    WaitlistStatus.NOTIFIED.name(), cutoff);
 
-        if (!expiredOffers.isEmpty()) {
-            LOGGER.info("Found {} expired waitlist offers. Processing expirations...", expiredOffers.size());
-        }
+            ctx.addProcessed(expiredOffers.size());
 
-        for (WaitlistEntry entry : expiredOffers) {
-            try {
-                waitlistService.expireOffer(entry.getWaitlistEntryId(), now);
-            } catch (RuntimeException ex) {
-                LOGGER.error("Failed to expire waitlist offer. waitlistEntryId={}, errorType={}",
-                    entry.getWaitlistEntryId(), ex.getClass().getSimpleName());
+            for (WaitlistEntry entry : expiredOffers) {
+                try {
+                    waitlistService.expireOffer(entry.getWaitlistEntryId(), now);
+                    ctx.incrementUpdated();
+                } catch (RuntimeException ex) {
+                    ctx.incrementErrors();
+                    LOGGER.error("[{}] Failed to expire waitlist offer. waitlistEntryId={}, errorType={}",
+                            SCHEDULER_NAME, entry.getWaitlistEntryId(), ex.getClass().getSimpleName());
+                }
             }
+        } catch (RuntimeException ex) {
+            ctx.incrementErrors();
+            LOGGER.error("[{}] Fatal error during offer expiry scan. errorType={}",
+                    SCHEDULER_NAME, ex.getClass().getSimpleName());
+        } finally {
+            ctx.finish();
         }
     }
 }
