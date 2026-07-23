@@ -58,6 +58,7 @@ mars:
     secret: ${MARS_JWT_SECRET:MARS_DEV_JWT_SECRET_KEY_CHANGE_ME_32CHARS_MIN}
     expiration-ms: ${MARS_JWT_EXPIRATION_MS:86400000}
   mail:
+    enabled: ${MAIL_ENABLED:true}
     from: ${MAIL_FROM:${MAIL_USERNAME:}}
     test-recipient: ${MAIL_TEST_RECIPIENT:}
     reminder-scan-ms: ${MAIL_REMINDER_SCAN_MS:60000}

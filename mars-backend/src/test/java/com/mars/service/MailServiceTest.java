@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Map;
@@ -43,7 +44,7 @@ class MailServiceTest {
     @BeforeEach
     void setUp() {
         mailService = new MailService(
-                mailSender, templateEngine, new MarsMailProperties("no-reply@mars.edu.tr"));
+                mailSender, templateEngine, new MarsMailProperties(true, "no-reply@mars.edu.tr"));
     }
 
     @Test
@@ -131,7 +132,7 @@ class MailServiceTest {
     @Test
     void sendTemplate_missingFromAddress_returnsFalse() {
         MailService unconfiguredService = new MailService(
-                mailSender, templateEngine, new MarsMailProperties(""));
+                mailSender, templateEngine, new MarsMailProperties(true, ""));
 
         boolean sent = unconfiguredService.sendTemplate(TemplateMailRequest.builder()
                 .recipient("student@mars.edu.tr")
@@ -141,6 +142,29 @@ class MailServiceTest {
                 .build());
 
         assertThat(sent).isFalse();
+    }
+
+    @Test
+    void mailDisabled_skipsSmtpAndTemplateProcessing() {
+        MailService disabledService = new MailService(
+                mailSender, templateEngine,
+                new MarsMailProperties(false, "no-reply@mars.edu.tr"));
+
+        boolean plainTextHandled = disabledService.sendPlainText(new PlainTextMailRequest(
+                "student@mars.edu.tr", "Konu", "İçerik"));
+        boolean htmlHandled = disabledService.sendHtml(new HtmlMailRequest(
+                "student@mars.edu.tr", "Konu", "<strong>İçerik</strong>"));
+        boolean templateHandled = disabledService.sendTemplate(TemplateMailRequest.builder()
+                .recipient("student@mars.edu.tr")
+                .subject("Konu")
+                .title("Başlık")
+                .content("İçerik")
+                .build());
+
+        assertThat(plainTextHandled).isTrue();
+        assertThat(htmlHandled).isTrue();
+        assertThat(templateHandled).isTrue();
+        verifyNoInteractions(mailSender, templateEngine);
     }
 
     @Test

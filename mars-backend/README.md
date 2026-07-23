@@ -88,6 +88,7 @@ docker compose up -d
 | `SPRING_DATASOURCE_PASSWORD` | DB şifre |
 | `MARS_CORS_ALLOWED_ORIGINS` | CORS origin listesi (virgülle ayrılmış) |
 | `SERVER_PORT` | Sunucu portu (varsayılan `8080`) |
+| `MAIL_ENABLED` | Tüm SMTP gönderimini açar/kapatır (varsayılan `true`) |
 
 ## Notlar
 

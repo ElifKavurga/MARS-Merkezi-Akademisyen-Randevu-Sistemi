@@ -33,6 +33,9 @@ public class MailService {
     private final MarsMailProperties mailProperties;
 
     public boolean sendPlainText(PlainTextMailRequest request) {
+        if (isDisabled()) {
+            return true;
+        }
         if (request == null || !isValid(request.recipient(), request.subject(), request.content())) {
             return false;
         }
@@ -51,6 +54,9 @@ public class MailService {
     }
 
     public boolean sendHtml(HtmlMailRequest request) {
+        if (isDisabled()) {
+            return true;
+        }
         if (request == null || !isValid(request.recipient(), request.subject(), request.htmlContent())) {
             return false;
         }
@@ -58,6 +64,9 @@ public class MailService {
     }
 
     public boolean sendTemplate(TemplateMailRequest request) {
+        if (isDisabled()) {
+            return true;
+        }
         if (request == null || !isValid(request.recipient(), request.subject(), request.content())
                 || request.title() == null || request.title().isBlank()) {
             return false;
@@ -107,6 +116,14 @@ public class MailService {
 
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
+    }
+
+    private boolean isDisabled() {
+        if (mailProperties.enabled()) {
+            return false;
+        }
+        LOGGER.debug("Mail gönderimi devre dışı bırakıldığı için e-posta gönderilmedi.");
+        return true;
     }
 
     private void logFailure(Exception exception) {
