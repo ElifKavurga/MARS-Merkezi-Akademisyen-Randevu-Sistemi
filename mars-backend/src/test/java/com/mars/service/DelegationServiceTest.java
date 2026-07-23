@@ -43,6 +43,7 @@ import com.mars.repository.AppointmentRepository;
 import com.mars.repository.AppointmentRescheduleRequestRepository;
 import com.mars.repository.CourseAssignmentRepository;
 import com.mars.repository.DelegationLogRepository;
+import com.mars.repository.DelegationStatusHistoryRepository;
 import com.mars.repository.UserRepository;
 import com.mars.security.CustomUserDetails;
 
@@ -51,6 +52,8 @@ class DelegationServiceTest {
 
     @Mock
     private DelegationLogRepository delegationLogRepository;
+    @Mock
+    private DelegationStatusHistoryRepository delegationStatusHistoryRepository;
     @Mock
     private AppointmentRepository appointmentRepository;
     @Mock
@@ -164,13 +167,32 @@ class DelegationServiceTest {
     }
 
     @Test
+    void getDelegation_allowsTargetAcademicianToViewDetail() {
+        authenticate(academician);
+        User sender = user(11, "Gönderen Akademisyen", academicianRole);
+        DelegationLog log = pendingDelegation(2, sender, academician);
+        DelegationResponse mapped = DelegationResponse.builder().delegationId(2).build();
+        when(delegationLogRepository.findByIdWithDetails(2)).thenReturn(Optional.of(log));
+        when(delegationMapper.toResponse(log)).thenReturn(mapped);
+        when(delegationStatusHistoryRepository
+                .findByDelegation_DelegationIdOrderByChangedAtAsc(2)).thenReturn(List.of());
+
+        DelegationResponse result = delegationService.getDelegation(2);
+
+        assertThat(result).isSameAs(mapped);
+        assertThat(result.getStatusHistory()).isEmpty();
+    }
+
+    @Test
     void getIncomingDelegations_supportsAcademicianApprovalQueue() {
         authenticate(academician);
 
         assertThat(delegationService.getIncomingDelegations()).isEmpty();
         verify(delegationLogRepository).findIncomingByTargetIdAndStatuses(
                 academician.getUserId(),
-                Set.of(DelegationStatus.PENDING_ACADEMICIAN_APPROVAL.name()));
+                Set.of(
+                        DelegationStatus.PENDING_ACADEMICIAN_APPROVAL.name(),
+                        DelegationStatus.PENDING_STUDENT_APPROVAL.name()));
     }
 
     @Test

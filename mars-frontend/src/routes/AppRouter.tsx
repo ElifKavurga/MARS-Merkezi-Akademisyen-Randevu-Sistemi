@@ -35,6 +35,9 @@ const AssistantAppointmentsPage = lazy(() => import('../pages/AssistantAppointme
 const AssistantIncomingDelegationsPage = lazy(
   () => import('../pages/AssistantIncomingDelegationsPage'),
 );
+const AcademicianIncomingDelegationDetailPage = lazy(
+  () => import('../pages/AcademicianIncomingDelegationDetailPage'),
+);
 const DelegationHistoryPage = lazy(() => import('../pages/DelegationHistoryPage'));
 const AssistantCalendarPage = lazy(() => import('../pages/AssistantCalendarPage'));
 const ProfilePage = lazy(() => import('../pages/ProfilePage'));
@@ -167,6 +170,10 @@ export default function AppRouter() {
               <Route
                 path={ROUTES.ACADEMICIAN_INCOMING_DELEGATIONS}
                 element={<AssistantIncomingDelegationsPage />}
+              />
+              <Route
+                path={ROUTES.ACADEMICIAN_INCOMING_DELEGATION_DETAIL}
+                element={<AcademicianIncomingDelegationDetailPage />}
               />
             </Route>
             <Route

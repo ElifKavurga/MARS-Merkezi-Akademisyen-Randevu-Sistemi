@@ -18,6 +18,7 @@ export const ROUTES = {
   ACADEMICIAN_APPOINTMENT_DETAIL: '/academician/appointments/:appointmentId',
   ACADEMICIAN_DELEGATION_HISTORY: '/academician/delegations/history',
   ACADEMICIAN_INCOMING_DELEGATIONS: '/academician/delegations/incoming',
+  ACADEMICIAN_INCOMING_DELEGATION_DETAIL: '/academician/delegations/incoming/:delegationId',
   ACADEMICIAN_CALENDAR: '/academician/calendar',
   ACADEMICIAN_OUT_OF_OFFICE: '/academician/out-of-office',
   ACADEMICIAN_PROFILE: '/academician/profile',
@@ -64,6 +65,12 @@ export function academicianDelegationHistoryPath(status?: string): string {
     return ROUTES.ACADEMICIAN_DELEGATION_HISTORY;
   }
   return `${ROUTES.ACADEMICIAN_DELEGATION_HISTORY}?status=${encodeURIComponent(status)}`;
+}
+
+export function academicianIncomingDelegationDetailPath(
+  delegationId: number | string,
+): string {
+  return `/academician/delegations/incoming/${delegationId}`;
 }
 
 export function assistantDelegationHistoryPath(status?: string): string {

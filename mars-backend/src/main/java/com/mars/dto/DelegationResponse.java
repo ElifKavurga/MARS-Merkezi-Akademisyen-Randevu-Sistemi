@@ -3,6 +3,7 @@ package com.mars.dto;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,4 +38,9 @@ public class DelegationResponse {
     private Boolean approvalRequired;
     private LocalDateTime studentApprovalExpiresAt;
     private String slotLockStatus;
+    private Integer studentId;
+    private String studentName;
+    private String studentEmail;
+    private Integer durationMinutes;
+    private List<DelegationStatusHistoryResponse> statusHistory;
 }

@@ -1,10 +1,15 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
+import { useNavigate } from 'react-router-dom';
 import AdminActionButton from '../components/AdminActionButton';
+import ConfirmModal from '../components/ConfirmModal';
+import DelegationStatusBadge from '../components/DelegationStatusBadge';
 import Loading from '../components/Loading';
 import { getMeetingTypeLabel } from '../constants/appointment';
 import { INCOMING_DELEGATION_MESSAGES } from '../constants/delegation';
+import { academicianIncomingDelegationDetailPath } from '../constants/routes';
+import { FORM_FIELD_CLASS, FORM_SELECT_CLASS } from '../constants/ui';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 import {
@@ -15,75 +20,49 @@ import {
 import type { DelegationResponse } from '../types/delegation';
 
 type DecisionAction = 'accept' | 'reject';
+type PendingDecision = { delegation: DelegationResponse; action: DecisionAction } | null;
 
-function formatDate(date: string | null): string {
-  if (!date) {
-    return '-';
-  }
-  return new Intl.DateTimeFormat('tr-TR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(new Date(`${date}T00:00:00`));
-}
+const formatDate = (value: string | null) => value
+  ? new Intl.DateTimeFormat('tr-TR').format(new Date(`${value}T00:00:00`))
+  : '-';
+const formatDateTime = (value: string) => new Intl.DateTimeFormat('tr-TR', {
+  dateStyle: 'short',
+  timeStyle: 'short',
+}).format(new Date(value));
+const formatTime = (value: string | null) => value?.slice(0, 5) ?? '-';
+const formatCourse = (item: DelegationResponse) =>
+  `${item.courseCode ?? ''} ${item.courseName ?? ''}`.trim() || '-';
 
-function formatDateTime(value: string): string {
-  return new Intl.DateTimeFormat('tr-TR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value));
-}
-
-function formatTime(time: string | null): string {
-  if (!time) {
-    return '-';
-  }
-  return time.slice(0, 5);
-}
-
-function formatCourse(delegation: DelegationResponse): string {
-  if (!delegation.courseName) {
-    return '-';
-  }
-  return `${delegation.courseCode ?? ''} ${delegation.courseName}`.trim();
-}
-
-function getBackendErrorMessage(err: unknown, fallback: string): string {
-  if (!isAxiosError(err)) {
-    return fallback;
-  }
-  if (err.response?.status === 403) {
-    return INCOMING_DELEGATION_MESSAGES.ACCESS_DENIED;
-  }
-  const backendMessage = err.response?.data?.message;
-  if (typeof backendMessage === 'string' && backendMessage.length > 0) {
-    return backendMessage;
-  }
-  return fallback;
+function backendMessage(error: unknown, fallback: string): string {
+  if (!isAxiosError(error)) return fallback;
+  const message = error.response?.data?.message;
+  return typeof message === 'string' && message ? message : fallback;
 }
 
 export default function AssistantIncomingDelegationsPage() {
   const { user } = useAuth();
   const toast = useToast();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [delegations, setDelegations] = useState<DelegationResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [actionDelegationId, setActionDelegationId] = useState<number | null>(null);
+  const [decision, setDecision] = useState<PendingDecision>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [search, setSearch] = useState('');
+  const [studentFilter, setStudentFilter] = useState('');
+  const [academicianFilter, setAcademicianFilter] = useState('');
+  const [courseFilter, setCourseFilter] = useState('');
+  const [status, setStatus] = useState('');
+  const [date, setDate] = useState('');
 
-  const loadDelegations = useCallback(async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       setDelegations(await getIncomingDelegations());
-    } catch (err) {
-      const message = getBackendErrorMessage(
-        err,
-        INCOMING_DELEGATION_MESSAGES.LOAD_ERROR,
-      );
+    } catch (loadError) {
+      const message = backendMessage(loadError, INCOMING_DELEGATION_MESSAGES.LOAD_ERROR);
       setError(message);
       toast.error(message);
     } finally {
@@ -97,170 +76,170 @@ export default function AssistantIncomingDelegationsPage() {
       setError(INCOMING_DELEGATION_MESSAGES.ACCESS_DENIED);
       return;
     }
+    void load();
+  }, [load, user]);
 
-    void loadDelegations();
-  }, [loadDelegations, user]);
+  const filtered = useMemo(() => {
+    const query = search.trim().toLocaleLowerCase('tr-TR');
+    const student = studentFilter.trim().toLocaleLowerCase('tr-TR');
+    const academician = academicianFilter.trim().toLocaleLowerCase('tr-TR');
+    const course = courseFilter.trim().toLocaleLowerCase('tr-TR');
+    return delegations.filter((item) => {
+      if (status && item.delegationStatus !== status) return false;
+      if (date && item.appointmentDate !== date) return false;
+      if (student && !item.studentName?.toLocaleLowerCase('tr-TR').includes(student)) return false;
+      if (academician
+        && !item.delegatedByUserName?.toLocaleLowerCase('tr-TR').includes(academician)) return false;
+      if (course && !formatCourse(item).toLocaleLowerCase('tr-TR').includes(course)) return false;
+      if (!query) return true;
+      return [
+        item.studentName,
+        item.delegatedByUserName,
+        item.courseCode,
+        item.courseName,
+      ].some((value) => value?.toLocaleLowerCase('tr-TR').includes(query));
+    });
+  }, [academicianFilter, courseFilter, date, delegations, search, status, studentFilter]);
 
-  const handleDecision = async (
-    delegationId: number,
-    action: DecisionAction,
-  ) => {
-    if (actionDelegationId !== null) {
-      return;
-    }
-
-    setActionDelegationId(delegationId);
+  const submitDecision = async () => {
+    if (!decision) return;
+    setSubmitting(true);
     try {
-      if (action === 'accept') {
-        const result = await acceptDelegation(delegationId);
-        toast.success(
-          result.delegationStatus === 'PENDING_STUDENT_APPROVAL'
-            ? INCOMING_DELEGATION_MESSAGES.ACADEMICIAN_ACCEPT_SUCCESS
-            : INCOMING_DELEGATION_MESSAGES.ACCEPT_SUCCESS,
-        );
-      } else {
-        await rejectDelegation(delegationId);
-        toast.success(INCOMING_DELEGATION_MESSAGES.REJECT_SUCCESS);
-      }
+      const result = decision.action === 'accept'
+        ? await acceptDelegation(decision.delegation.delegationId)
+        : await rejectDelegation(decision.delegation.delegationId);
+      setDelegations((current) => current
+        .map((item) => item.delegationId === result.delegationId ? result : item)
+        .filter((item) => item.delegationStatus === 'PENDING_ACADEMICIAN_APPROVAL'
+          || item.delegationStatus === 'PENDING_STUDENT_APPROVAL'));
+      toast.success(decision.action === 'accept'
+        ? INCOMING_DELEGATION_MESSAGES.ACADEMICIAN_ACCEPT_SUCCESS
+        : INCOMING_DELEGATION_MESSAGES.REJECT_SUCCESS);
+      setDecision(null);
       await queryClient.invalidateQueries({ queryKey: ['dashboard-daily-schedule'] });
-      await loadDelegations();
-    } catch (err) {
-      toast.error(getBackendErrorMessage(err, INCOMING_DELEGATION_MESSAGES.ACTION_ERROR));
+    } catch (actionError) {
+      toast.error(backendMessage(actionError, INCOMING_DELEGATION_MESSAGES.ACTION_ERROR));
     } finally {
-      setActionDelegationId(null);
+      setSubmitting(false);
     }
   };
 
   return (
     <div className="admin-page animate-fade-in">
-      <div className="mb-8">
+      <header className="mb-7">
         <h1 className="font-headline-lg text-headline-lg text-on-background">
-          {INCOMING_DELEGATION_MESSAGES.TITLE}
+          Kendime Gelen Randevu Devri Talepleri
         </h1>
-        <p className="mt-2 max-w-2xl font-body-lg text-body-lg text-on-surface-variant">
-          {INCOMING_DELEGATION_MESSAGES.SUBTITLE}
+        <p className="mt-2 text-on-surface-variant">
+          Size gönderilen aktif talepleri inceleyin, kabul edin veya reddedin.
         </p>
-      </div>
+      </header>
 
       <section className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest">
+        <div className="grid gap-3 border-b border-outline-variant p-4 md:grid-cols-2 xl:grid-cols-3">
+          <input
+            className={FORM_FIELD_CLASS}
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Tüm alanlarda ara"
+            aria-label="Randevu devri taleplerinde ara"
+          />
+          <select
+            className={FORM_SELECT_CLASS}
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
+            aria-label="Durum filtresi"
+          >
+            <option value="">Tüm aktif durumlar</option>
+            <option value="PENDING_ACADEMICIAN_APPROVAL">Akademisyen Onayı Bekliyor</option>
+            <option value="PENDING_STUDENT_APPROVAL">Öğrenci Onayı Bekliyor</option>
+          </select>
+          <input
+            className={FORM_FIELD_CLASS}
+            type="date"
+            value={date}
+            onChange={(event) => setDate(event.target.value)}
+            aria-label="Randevu tarihi filtresi"
+          />
+          <input
+            className={FORM_FIELD_CLASS}
+            value={studentFilter}
+            onChange={(event) => setStudentFilter(event.target.value)}
+            placeholder="Öğrenciye göre filtrele"
+            aria-label="Öğrenci filtresi"
+          />
+          <input
+            className={FORM_FIELD_CLASS}
+            value={academicianFilter}
+            onChange={(event) => setAcademicianFilter(event.target.value)}
+            placeholder="Akademisyene göre filtrele"
+            aria-label="Akademisyen filtresi"
+          />
+          <input
+            className={FORM_FIELD_CLASS}
+            value={courseFilter}
+            onChange={(event) => setCourseFilter(event.target.value)}
+            placeholder="Derse göre filtrele"
+            aria-label="Ders filtresi"
+          />
+        </div>
+
         {loading ? (
-          <div className="flex justify-center py-16">
-            <Loading label={INCOMING_DELEGATION_MESSAGES.LOADING} />
-          </div>
+          <div className="flex justify-center py-16"><Loading label="Talepler yükleniyor..." /></div>
         ) : error ? (
-          <div className="px-6 py-12 text-center">
-            <p className="font-body-md text-body-md text-error" role="alert">
-              {error}
-            </p>
-          </div>
-        ) : delegations.length === 0 ? (
-          <div className="px-6 py-16 text-center">
-            <span
-              className="material-symbols-outlined text-[42px] text-on-surface-variant/50"
-              aria-hidden="true"
-            >
-              swap_horiz
-            </span>
-            <h2 className="mt-3 font-headline-md text-headline-md text-on-background">
-              {INCOMING_DELEGATION_MESSAGES.EMPTY_TITLE}
-            </h2>
-            <p className="mt-2 font-body-md text-body-md text-on-surface-variant">
-              {INCOMING_DELEGATION_MESSAGES.EMPTY_DESCRIPTION}
-            </p>
-          </div>
+          <p className="px-6 py-12 text-center text-error" role="alert">{error}</p>
+        ) : filtered.length === 0 ? (
+          <p className="px-6 py-14 text-center text-on-surface-variant">
+            Filtrelere uygun aktif randevu devri talebi bulunamadı.
+          </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1100px] border-collapse">
-              <thead>
-                <tr className="border-b border-outline-variant bg-surface-container/40">
-                  {[
-                    'Akademisyen',
-                    'Ders',
-                    'Kategori',
-                    'Tarih',
-                    'Saat',
-                    'Görüşme Türü',
-                    'Oluşturulma',
-                    'Durum',
-                    '',
-                  ].map((label) => (
-                    <th
-                      key={label || 'actions'}
-                      className="px-5 py-4 text-left font-label-md text-label-md font-semibold text-on-surface-variant"
-                    >
+            <table className="w-full min-w-[1380px] border-collapse">
+              <thead className="bg-surface-container/40">
+                <tr>
+                  {['Öğrenci', 'Tarih', 'Saat', 'Süre', 'Ders', 'Kategori', 'Görüşme Türü',
+                    'Gönderen Akademisyen', 'Oluşturulma', 'Durum', 'İşlemler'].map((label) => (
+                    <th key={label} className="border-b border-outline-variant px-4 py-3 text-left text-sm font-semibold text-on-surface-variant">
                       {label}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {delegations.map((delegation) => {
-                  const isActing = actionDelegationId === delegation.delegationId;
-                  const actionsDisabled = actionDelegationId !== null;
+                {filtered.map((item) => {
+                  const actionable = item.delegationStatus === 'PENDING_ACADEMICIAN_APPROVAL';
                   return (
                     <tr
-                      key={delegation.delegationId}
-                      className="border-b border-outline-variant/40 transition-colors hover:bg-surface-container/30"
+                      key={item.delegationId}
+                      className={`${user?.role === 'ACADEMICIAN' ? 'cursor-pointer' : ''} border-b border-outline-variant/40 hover:bg-surface-container/30`}
+                      onClick={() => {
+                        if (user?.role === 'ACADEMICIAN') {
+                          navigate(academicianIncomingDelegationDetailPath(item.delegationId));
+                        }
+                      }}
                     >
-                      <td className="px-5 py-4 font-label-md text-label-md font-semibold text-on-background">
-                        {delegation.delegatedByUserName ?? '-'}
-                      </td>
-                      <td className="px-5 py-4 font-body-md text-body-md text-on-background">
-                        {formatCourse(delegation)}
-                      </td>
-                      <td className="px-5 py-4 font-body-md text-body-md text-on-background">
-                        {delegation.categoryName ?? '-'}
-                      </td>
-                      <td className="px-5 py-4 font-body-md text-body-md text-on-background">
-                        {formatDate(delegation.appointmentDate)}
-                      </td>
-                      <td className="whitespace-nowrap px-5 py-4 font-body-md text-body-md text-on-background">
-                        {formatTime(delegation.startTime)} - {formatTime(delegation.endTime)}
-                      </td>
-                      <td className="px-5 py-4 font-body-md text-body-md text-on-background">
-                        {delegation.meetingType
-                          ? getMeetingTypeLabel(delegation.meetingType)
-                          : '-'}
-                      </td>
-                      <td className="px-5 py-4 font-body-md text-body-md text-on-background">
-                        {formatDateTime(delegation.delegatedAt)}
-                      </td>
-                      <td className="px-5 py-4">
-                        <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-100 px-2 py-0.5 font-label-sm text-label-sm text-amber-800">
-                          <span
-                            className="inline-block h-2 w-2 rounded-full bg-amber-500"
-                            aria-hidden
-                          />
-                          {INCOMING_DELEGATION_MESSAGES.STATUS_PENDING}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 text-right">
-                        <div className="flex flex-wrap items-center justify-end gap-2">
-                          <AdminActionButton
-                            variant="primary"
-                            icon="check"
-                            disabled={actionsDisabled}
-                            onClick={() =>
-                              void handleDecision(delegation.delegationId, 'accept')
-                            }
-                          >
-                            {isActing
-                              ? 'İşleniyor...'
-                              : INCOMING_DELEGATION_MESSAGES.ACCEPT_LABEL}
-                          </AdminActionButton>
-                          <AdminActionButton
-                            variant="danger"
-                            icon="close"
-                            disabled={actionsDisabled}
-                            onClick={() =>
-                              void handleDecision(delegation.delegationId, 'reject')
-                            }
-                          >
-                            {isActing
-                              ? 'İşleniyor...'
-                              : INCOMING_DELEGATION_MESSAGES.REJECT_LABEL}
-                          </AdminActionButton>
-                        </div>
+                      <td className="px-4 py-4 font-semibold">{item.studentName ?? '-'}</td>
+                      <td className="px-4 py-4">{formatDate(item.appointmentDate)}</td>
+                      <td className="whitespace-nowrap px-4 py-4">{formatTime(item.startTime)}–{formatTime(item.endTime)}</td>
+                      <td className="px-4 py-4">{item.durationMinutes ? `${item.durationMinutes} dk` : '-'}</td>
+                      <td className="px-4 py-4">{formatCourse(item)}</td>
+                      <td className="px-4 py-4">{item.categoryName ?? '-'}</td>
+                      <td className="px-4 py-4">{item.meetingType ? getMeetingTypeLabel(item.meetingType) : '-'}</td>
+                      <td className="px-4 py-4">{item.delegatedByUserName ?? '-'}</td>
+                      <td className="whitespace-nowrap px-4 py-4">{formatDateTime(item.delegatedAt)}</td>
+                      <td className="px-4 py-4"><DelegationStatusBadge status={item.delegationStatus} /></td>
+                      <td className="px-4 py-4" onClick={(event) => event.stopPropagation()}>
+                        {actionable ? (
+                          <div className="flex gap-2">
+                            <AdminActionButton variant="primary" icon="check" onClick={() => setDecision({ delegation: item, action: 'accept' })}>
+                              Kabul Et
+                            </AdminActionButton>
+                            <AdminActionButton variant="danger" icon="close" onClick={() => setDecision({ delegation: item, action: 'reject' })}>
+                              Reddet
+                            </AdminActionButton>
+                          </div>
+                        ) : <span className="text-sm text-on-surface-variant">Öğrenci yanıtı bekleniyor</span>}
                       </td>
                     </tr>
                   );
@@ -270,6 +249,19 @@ export default function AssistantIncomingDelegationsPage() {
           </div>
         )}
       </section>
+
+      <ConfirmModal
+        open={decision !== null}
+        title={decision?.action === 'accept' ? 'Randevuyu Devral' : 'Randevu Devrini Reddet'}
+        description={decision?.action === 'accept'
+          ? 'Bu randevuyu devralmak istediğinize emin misiniz? Kabulün ardından öğrenci onayı istenecektir.'
+          : 'Bu randevu devri talebini reddetmek istediğinize emin misiniz? Talep doğrudan reddedilecektir.'}
+        confirmLabel={decision?.action === 'accept' ? 'Kabul Et' : 'Reddet'}
+        variant={decision?.action === 'accept' ? 'primary' : 'danger'}
+        loading={submitting}
+        onClose={() => !submitting && setDecision(null)}
+        onConfirm={() => void submitDecision()}
+      />
     </div>
   );
 }

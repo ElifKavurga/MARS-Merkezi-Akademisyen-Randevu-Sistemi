@@ -53,4 +53,12 @@ export type DelegationResponse = {
   approvalRequired: boolean;
   studentApprovalExpiresAt: string | null;
   slotLockStatus: string | null;
+  studentId?: number | null;
+  studentName?: string | null;
+  studentEmail?: string | null;
+  durationMinutes?: number | null;
+  statusHistory?: Array<{
+    status: string;
+    changedAt: string;
+  }>;
 };

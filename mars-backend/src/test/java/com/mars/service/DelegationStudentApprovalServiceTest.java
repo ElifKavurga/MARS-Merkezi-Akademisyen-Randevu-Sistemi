@@ -43,6 +43,7 @@ import com.mars.repository.AppointmentRescheduleRequestRepository;
 import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.repository.CourseAssignmentRepository;
 import com.mars.repository.DelegationLogRepository;
+import com.mars.repository.DelegationStatusHistoryRepository;
 import com.mars.repository.UserRepository;
 import com.mars.security.CustomUserDetails;
 
@@ -50,6 +51,7 @@ import com.mars.security.CustomUserDetails;
 class DelegationStudentApprovalServiceTest {
 
     @Mock private DelegationLogRepository delegationLogRepository;
+    @Mock private DelegationStatusHistoryRepository delegationStatusHistoryRepository;
     @Mock private AppointmentRepository appointmentRepository;
     @Mock private AppointmentRescheduleRequestRepository appointmentRescheduleRequestRepository;
     @Mock private AvailabilitySlotRepository availabilitySlotRepository;

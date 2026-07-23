@@ -18,11 +18,13 @@ import com.mars.DelegationMessages;
 import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.CreateDelegationRequest;
 import com.mars.dto.DelegationResponse;
+import com.mars.dto.DelegationStatusHistoryResponse;
 import com.mars.dto.DelegationTargetResponse;
 import com.mars.dto.NotificationCreateRequest;
 import com.mars.entity.Appointment;
 import com.mars.entity.AvailabilitySlot;
 import com.mars.entity.DelegationLog;
+import com.mars.entity.DelegationStatusHistory;
 import com.mars.entity.User;
 import com.mars.enums.AppointmentStatus;
 import com.mars.enums.DelegationStatus;
@@ -38,6 +40,7 @@ import com.mars.repository.AppointmentRescheduleRequestRepository;
 import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.repository.CourseAssignmentRepository;
 import com.mars.repository.DelegationLogRepository;
+import com.mars.repository.DelegationStatusHistoryRepository;
 import com.mars.repository.UserRepository;
 import com.mars.security.CustomUserDetails;
 import com.mars.security.SecurityMessages;
@@ -57,6 +60,7 @@ public class DelegationService {
             RoleType.ACADEMICIAN.name(), RoleType.ASSISTANT.name());
 
     private final DelegationLogRepository delegationLogRepository;
+    private final DelegationStatusHistoryRepository delegationStatusHistoryRepository;
     private final AppointmentRepository appointmentRepository;
     private final AppointmentRescheduleRequestRepository appointmentRescheduleRequestRepository;
     private final AvailabilitySlotRepository availabilitySlotRepository;
@@ -151,6 +155,7 @@ public class DelegationService {
         }
 
         DelegationLog saved = delegationLogRepository.save(log);
+        recordStatus(saved, DelegationStatus.valueOf(saved.getDelegationStatus()), saved.getDelegatedAt());
         if (DelegationStatus.PENDING_ACADEMICIAN_APPROVAL.name().equals(saved.getDelegationStatus())) {
             createDelegationNotification(
                     saved,
@@ -180,7 +185,9 @@ public class DelegationService {
     public List<DelegationResponse> getIncomingDelegations() {
         User target = getCurrentDecisionUser();
         Set<String> statuses = RoleType.ACADEMICIAN.name().equals(target.getRole().getRoleName())
-                ? Set.of(DelegationStatus.PENDING_ACADEMICIAN_APPROVAL.name())
+                ? Set.of(
+                        DelegationStatus.PENDING_ACADEMICIAN_APPROVAL.name(),
+                        DelegationStatus.PENDING_STUDENT_APPROVAL.name())
                 : Set.of(DelegationStatus.PENDING.name());
         return delegationLogRepository.findIncomingByTargetIdAndStatuses(
                         target.getUserId(), statuses)
@@ -203,10 +210,20 @@ public class DelegationService {
         User academician = getCurrentAcademician();
         DelegationLog log = delegationLogRepository.findByIdWithDetails(delegationId)
                 .orElseThrow(() -> new ResourceNotFoundException(DelegationMessages.DELEGATION_NOT_FOUND));
-        if (!Objects.equals(log.getDelegatedByUser().getUserId(), academician.getUserId())) {
+        if (!Objects.equals(log.getDelegatedByUser().getUserId(), academician.getUserId())
+                && !Objects.equals(log.getDelegatedToUser().getUserId(), academician.getUserId())) {
             throw new AccessDeniedException(DelegationMessages.ACCESS_DENIED);
         }
-        return delegationMapper.toResponse(log);
+        DelegationResponse response = delegationMapper.toResponse(log);
+        response.setStatusHistory(delegationStatusHistoryRepository
+                .findByDelegation_DelegationIdOrderByChangedAtAsc(delegationId)
+                .stream()
+                .map(item -> DelegationStatusHistoryResponse.builder()
+                        .status(item.getStatus())
+                        .changedAt(item.getChangedAt())
+                        .build())
+                .toList());
+        return response;
     }
 
     @Transactional
@@ -663,6 +680,18 @@ public class DelegationService {
         }
         log.setDelegationStatus(target.name());
         log.setUpdatedAt(changedAt);
+        recordStatus(log, target, changedAt);
+    }
+
+    private void recordStatus(
+            DelegationLog delegation,
+            DelegationStatus status,
+            LocalDateTime changedAt) {
+        DelegationStatusHistory history = new DelegationStatusHistory();
+        history.setDelegation(delegation);
+        history.setStatus(status.name());
+        history.setChangedAt(changedAt);
+        delegationStatusHistoryRepository.save(history);
     }
 
     private User getCurrentStudent() {

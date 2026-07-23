@@ -44,6 +44,11 @@ export async function getDelegationHistory(): Promise<DelegationResponse[]> {
   return data;
 }
 
+export async function getDelegation(delegationId: number): Promise<DelegationResponse> {
+  const { data } = await apiClient.get<DelegationResponse>(`/delegations/${delegationId}`);
+  return data;
+}
+
 export async function acceptDelegation(
   delegationId: number,
 ): Promise<DelegationResponse> {

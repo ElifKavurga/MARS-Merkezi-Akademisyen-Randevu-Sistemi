@@ -68,6 +68,14 @@ public class DelegationMapper {
                 .approvalRequired(Boolean.TRUE.equals(delegationLog.getApprovalRequired()))
                 .studentApprovalExpiresAt(delegationLog.getStudentApprovalExpiresAt())
                 .slotLockStatus(delegationLog.getSlotLockStatus())
+                .studentId(appointment != null && appointment.getStudent() != null
+                        ? appointment.getStudent().getUserId() : null)
+                .studentName(appointment != null && appointment.getStudent() != null
+                        ? appointment.getStudent().getFullName() : null)
+                .studentEmail(appointment != null && appointment.getStudent() != null
+                        ? appointment.getStudent().getInstitutionalEmail() : null)
+                .durationMinutes(appointment != null && appointment.getCategory() != null
+                        ? appointment.getCategory().getDurationMinutes() : null)
                 .build();
     }
 }
