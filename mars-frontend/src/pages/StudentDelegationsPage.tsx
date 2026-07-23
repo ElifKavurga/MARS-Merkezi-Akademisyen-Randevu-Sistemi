@@ -151,7 +151,7 @@ export default function StudentDelegationsPage() {
                   <p><span className="block text-xs text-on-surface-variant">Kategori</span>{item.categoryName ?? '-'}</p>
                   <p><span className="block text-xs text-on-surface-variant">Görüşme</span>{item.meetingType ? getMeetingTypeLabel(item.meetingType) : '-'}</p>
                 </div>
-                <div className="flex flex-wrap gap-2 border-t border-outline-variant/60 pt-4">
+                <div className="flex flex-wrap items-center gap-2 border-t border-outline-variant/60 pt-4">
                   {pending ? <>
                     <AdminActionButton variant="primary" icon="check" onClick={() => setDecision({ item, action: 'accept' })}>Kabul Et</AdminActionButton>
                     <AdminActionButton variant="danger" icon="close" onClick={() => setDecision({ item, action: 'reject' })}>Reddet</AdminActionButton>

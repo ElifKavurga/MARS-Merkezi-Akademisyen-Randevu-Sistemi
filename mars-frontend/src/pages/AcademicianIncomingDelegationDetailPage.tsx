@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { isAxiosError } from 'axios';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import AdminActionButton from '../components/AdminActionButton';
 import ConfirmModal from '../components/ConfirmModal';
 import DelegationStatusBadge from '../components/DelegationStatusBadge';
 import Loading from '../components/Loading';
+import StudentBackLink from '../components/StudentBackLink';
+import StudentPageHeader from '../components/StudentPageHeader';
 import { getMeetingTypeLabel } from '../constants/appointment';
 import { getDelegationStatusLabel } from '../constants/delegation';
 import { ROUTES } from '../constants/routes';
@@ -33,6 +35,44 @@ function errorMessage(error: unknown): string {
     if (typeof message === 'string' && message) return message;
   }
   return 'Randevu devri detayı yüklenemedi.';
+}
+
+function MetaRow({
+  icon,
+  label,
+  value,
+}: {
+  icon: string;
+  label: string;
+  value: ReactNode;
+}) {
+  return (
+    <div className="flex min-w-0 items-start gap-1.5">
+      <span
+        className="material-symbols-outlined mt-0.5 text-[16px] text-on-surface-variant"
+        aria-hidden
+      >
+        {icon}
+      </span>
+      <div className="min-w-0">
+        <p className="font-label-sm text-label-sm text-on-surface-variant">{label}</p>
+        <div className="mt-0.5 break-words font-body-md text-[13px] leading-5 text-on-surface">
+          {value}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InfoCard({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-3.5 sm:p-4">
+      <h2 className="mb-3 font-headline-md text-[16px] font-semibold leading-5 text-on-background">
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
 }
 
 export default function AcademicianIncomingDelegationDetailPage() {
@@ -84,20 +124,8 @@ export default function AcademicianIncomingDelegationDetailPage() {
   };
 
   if (loading) return <div className="flex justify-center py-20"><Loading label="Detay yükleniyor..." /></div>;
-  if (error || !item) return <div className="admin-page"><p className="rounded-xl border border-error/20 bg-error-container p-5 text-error">{error}</p></div>;
+  if (error || !item) return <div className="w-full min-w-0"><p className="rounded-xl border border-error/20 bg-error-container p-5 text-error">{error}</p></div>;
 
-  const details = [
-    ['Öğrenci', item.studentName ?? '-'],
-    ['Öğrenci E-postası', item.studentEmail ?? '-'],
-    ['Randevu Tarihi', date(item.appointmentDate)],
-    ['Saat', `${time(item.startTime)}–${time(item.endTime)}`],
-    ['Süre', item.durationMinutes ? `${item.durationMinutes} dakika` : '-'],
-    ['Ders', `${item.courseCode ?? ''} ${item.courseName ?? ''}`.trim() || '-'],
-    ['Randevu Kategorisi', item.categoryName ?? '-'],
-    ['Görüşme Türü', item.meetingType ? getMeetingTypeLabel(item.meetingType) : '-'],
-    ['Talebi Gönderen Akademisyen', item.delegatedByUserName ?? '-'],
-    ['Talep Oluşturulma Zamanı', dateTime(item.delegatedAt)],
-  ];
   const isTargetUser = item.delegatedToUserId === user?.userId;
   const actionable = isTargetUser && (user?.role === 'ASSISTANT'
     ? item.delegationStatus === 'PENDING'
@@ -107,50 +135,65 @@ export default function AcademicianIncomingDelegationDetailPage() {
     : ROUTES.ACADEMICIAN_DELEGATION_HISTORY;
 
   return (
-    <div className="admin-page animate-fade-in">
-      <Link className="mb-5 inline-flex items-center gap-1 text-primary hover:underline" to={`${backRoute}?tab=incoming`}>
-        <span className="material-symbols-outlined text-[18px]" aria-hidden>arrow_back</span>
-        Gelen taleplere dön
-      </Link>
-      <div className="mb-7 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="font-headline-lg text-headline-lg text-on-background">Randevu Devri Detayı</h1>
-          <p className="mt-2 text-on-surface-variant">Talep #{item.delegationId}</p>
-        </div>
-        <DelegationStatusBadge status={item.delegationStatus} />
+    <div className="w-full min-w-0 animate-fade-in flex flex-col gap-3 md:gap-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <StudentBackLink to={`${backRoute}?tab=incoming`} label="Gelen taleplere dön" />
+        {actionable ? (
+          <div className="flex flex-wrap gap-2">
+            <AdminActionButton variant="primary" icon="check" onClick={() => setAction('accept')}>Kabul Et</AdminActionButton>
+            <AdminActionButton variant="danger" icon="close" onClick={() => setAction('reject')}>Reddet</AdminActionButton>
+          </div>
+        ) : null}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
-        <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-6">
-          <h2 className="mb-5 text-lg font-semibold">Randevu ve öğrenci bilgileri</h2>
-          <dl className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
-            {details.map(([label, value]) => (
-              <div key={label}>
-                <dt className="text-sm text-on-surface-variant">{label}</dt>
-                <dd className="mt-1 font-medium text-on-background">{value}</dd>
-              </div>
-            ))}
-          </dl>
-          {actionable ? (
-            <div className="mt-7 flex flex-wrap gap-3 border-t border-outline-variant pt-5">
-              <AdminActionButton variant="primary" icon="check" onClick={() => setAction('accept')}>Kabul Et</AdminActionButton>
-              <AdminActionButton variant="danger" icon="close" onClick={() => setAction('reject')}>Reddet</AdminActionButton>
-            </div>
-          ) : null}
-        </section>
+      <StudentPageHeader
+        title="Randevu Devri Detayı"
+        description={`Talep #${item.delegationId}`}
+        actions={<DelegationStatusBadge status={item.delegationStatus} />}
+      />
 
-        <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-6">
-          <h2 className="mb-5 text-lg font-semibold">Durum geçmişi</h2>
-          <ol className="space-y-4">
-            {(item.statusHistory ?? []).map((history, index) => (
-              <li key={`${history.status}-${history.changedAt}-${index}`} className="relative border-l-2 border-outline-variant pl-5">
-                <span className="absolute -left-[7px] top-1 h-3 w-3 rounded-full bg-primary" aria-hidden />
-                <p className="font-medium">{getDelegationStatusLabel(history.status)}</p>
-                <time className="text-sm text-on-surface-variant">{dateTime(history.changedAt)}</time>
-              </li>
-            ))}
-          </ol>
-        </section>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+        <div className="flex flex-col gap-3 md:gap-4">
+          <InfoCard title="Öğrenci Bilgileri">
+            <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+              <MetaRow icon="person" label="Öğrenci" value={item.studentName ?? '-'} />
+              <MetaRow icon="mail" label="Öğrenci E-postası" value={item.studentEmail ?? '-'} />
+            </div>
+          </InfoCard>
+
+          <InfoCard title="Randevu Bilgileri">
+            <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+              <MetaRow icon="menu_book" label="Ders" value={`${item.courseCode ?? ''} ${item.courseName ?? ''}`.trim() || '-'} />
+              <MetaRow icon="category" label="Randevu Kategorisi" value={item.categoryName ?? '-'} />
+              <MetaRow icon="event" label="Randevu Tarihi" value={date(item.appointmentDate)} />
+              <MetaRow icon="schedule" label="Saat" value={`${time(item.startTime)}–${time(item.endTime)}`} />
+              <MetaRow icon="timer" label="Süre" value={item.durationMinutes ? `${item.durationMinutes} dakika` : '-'} />
+              <MetaRow icon="videocam" label="Görüşme Türü" value={item.meetingType ? getMeetingTypeLabel(item.meetingType) : '-'} />
+            </div>
+          </InfoCard>
+
+          <InfoCard title="Devir Bilgileri">
+            <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+              <MetaRow icon="person" label="Talebi Gönderen Akademisyen" value={item.delegatedByUserName ?? '-'} />
+              <MetaRow icon="event" label="Talep Oluşturulma Zamanı" value={dateTime(item.delegatedAt)} />
+              <MetaRow icon="flag" label="Durum" value={<DelegationStatusBadge status={item.delegationStatus} />} />
+            </div>
+          </InfoCard>
+        </div>
+
+        <div className="flex flex-col gap-3 md:gap-4">
+          <InfoCard title="Durum Geçmişi">
+            <ol className="space-y-4">
+              {(item.statusHistory ?? []).map((history, index) => (
+                <li key={`${history.status}-${history.changedAt}-${index}`} className="relative border-l-2 border-outline-variant pl-5">
+                  <span className="absolute -left-[7px] top-1 h-3 w-3 rounded-full bg-primary" aria-hidden />
+                  <p className="font-medium">{getDelegationStatusLabel(history.status)}</p>
+                  <time className="text-sm text-on-surface-variant">{dateTime(history.changedAt)}</time>
+                </li>
+              ))}
+            </ol>
+          </InfoCard>
+        </div>
       </div>
 
       <ConfirmModal

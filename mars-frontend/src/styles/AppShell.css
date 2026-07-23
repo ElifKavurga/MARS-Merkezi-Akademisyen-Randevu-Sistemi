@@ -824,3 +824,14 @@
     padding: 0.35rem 0.55rem;
   }
 }
+
+.mars-back-link {
+  text-decoration: none !important;
+}
+
+.mars-back-link:hover,
+.mars-back-link:focus,
+.mars-back-link:active {
+  text-decoration: none !important;
+}
+

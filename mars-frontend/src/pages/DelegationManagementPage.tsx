@@ -5,6 +5,7 @@ import AdminActionButton from '../components/AdminActionButton';
 import ConfirmModal from '../components/ConfirmModal';
 import DelegationStatusBadge from '../components/DelegationStatusBadge';
 import Loading from '../components/Loading';
+import StudentSegmentedTabs from '../components/StudentSegmentedTabs';
 import {
   academicianIncomingDelegationDetailPath,
   assistantDelegationDetailPath,
@@ -148,29 +149,19 @@ export default function DelegationManagementPage() {
         </p>
       </header>
 
-      <div className="mb-4 flex gap-2 border-b border-outline-variant" role="tablist" aria-label="Randevu devri talepleri">
-        {([
-          ['incoming', 'Gelen Talepler', incoming.length],
-          ['sent', 'Gönderilen Talepler', sent.length],
-        ] as const).map(([value, label, count]) => (
-          <button
-            key={value}
-            type="button"
-            role="tab"
-            aria-selected={tab === value}
-            onClick={() => changeTab(value)}
-            className={`border-b-2 px-4 py-3 font-semibold transition-colors ${
-              tab === value
-                ? 'border-primary text-primary'
-                : 'border-transparent text-on-surface-variant hover:text-on-surface'
-            }`}
-          >
-            {label} <span className="ml-1 rounded-full bg-surface-container px-2 py-0.5 text-xs">{count}</span>
-          </button>
-        ))}
-      </div>
-
       <section className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest">
+        <div className="flex border-b border-outline-variant p-4" role="tablist" aria-label="Randevu devri talepleri">
+          <StudentSegmentedTabs
+            value={tab}
+            options={[
+              { value: 'incoming', label: `Gelen Talepler (${incoming.length})` },
+              { value: 'sent', label: `Gönderilen Talepler (${sent.length})` },
+            ] as const}
+            ariaLabel="Randevu devri talepleri"
+            onChange={(val) => changeTab(val as Tab)}
+          />
+        </div>
+
         <div className="grid gap-3 border-b border-outline-variant p-4 md:grid-cols-3">
           <input className={FORM_FIELD_CLASS} type="search" value={search}
             onChange={(event) => setSearch(event.target.value)}
@@ -218,7 +209,7 @@ export default function DelegationManagementPage() {
                   const course = `${item.courseCode ?? ''} ${item.courseName ?? ''}`.trim() || '-';
                   return tab === 'incoming' ? (
                     <tr key={item.delegationId}
-                      className={`${actionable ? 'bg-primary/[0.04]' : ''} border-b border-outline-variant/40 hover:bg-surface-container/30`}>
+                      className={`${actionable ? 'bg-primary-fixed/35' : ''} border-b border-outline-variant/40 hover:bg-surface-container/30`}>
                       <td className="px-4 py-4">{item.delegatedByUserName ?? '-'}</td>
                       <td className="px-4 py-4 font-semibold">{item.studentName ?? '-'}</td>
                       <td className="px-4 py-4">{course}</td>
@@ -226,7 +217,7 @@ export default function DelegationManagementPage() {
                       <td className="whitespace-nowrap px-4 py-4">{formatTime(item.startTime)}–{formatTime(item.endTime)}</td>
                       <td className="px-4 py-4"><DelegationStatusBadge status={item.delegationStatus} /></td>
                       <td className="px-4 py-4">
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           {actionable ? <>
                             <AdminActionButton variant="primary" icon="check" onClick={() => setDecision({ item, action: 'accept' })}>Kabul Et</AdminActionButton>
                             <AdminActionButton variant="danger" icon="close" onClick={() => setDecision({ item, action: 'reject' })}>Reddet</AdminActionButton>

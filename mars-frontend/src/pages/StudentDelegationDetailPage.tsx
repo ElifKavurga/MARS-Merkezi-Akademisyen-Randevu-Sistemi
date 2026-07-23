@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { isAxiosError } from 'axios';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import AdminActionButton from '../components/AdminActionButton';
 import ConfirmModal from '../components/ConfirmModal';
 import DelegationStatusBadge from '../components/DelegationStatusBadge';
 import Loading from '../components/Loading';
+import StudentBackLink from '../components/StudentBackLink';
+import StudentPageHeader from '../components/StudentPageHeader';
 import { getMeetingTypeLabel } from '../constants/appointment';
 import { ROUTES } from '../constants/routes';
 import { useToast } from '../hooks/useToast';
@@ -40,6 +42,44 @@ function errorMessage(error: unknown): string {
     if (typeof backend === 'string' && backend) return backend;
   }
   return 'Randevu devri detayı yüklenemedi.';
+}
+
+function MetaRow({
+  icon,
+  label,
+  value,
+}: {
+  icon: string;
+  label: string;
+  value: ReactNode;
+}) {
+  return (
+    <div className="flex min-w-0 items-start gap-1.5">
+      <span
+        className="material-symbols-outlined mt-0.5 text-[16px] text-on-surface-variant"
+        aria-hidden
+      >
+        {icon}
+      </span>
+      <div className="min-w-0">
+        <p className="font-label-sm text-label-sm text-on-surface-variant">{label}</p>
+        <div className="mt-0.5 break-words font-body-md text-[13px] leading-5 text-on-surface">
+          {value}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InfoCard({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-3.5 sm:p-4">
+      <h2 className="mb-3 font-headline-md text-[16px] font-semibold leading-5 text-on-background">
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
 }
 
 export default function StudentDelegationDetailPage() {
@@ -95,60 +135,56 @@ export default function StudentDelegationDetailPage() {
   };
 
   if (loading) return <div className="flex justify-center py-20"><Loading label="Detay yükleniyor..." /></div>;
-  if (error || !item) return <div className="admin-page"><p className="rounded-xl border border-error/30 bg-error-container p-5 text-error">{error}</p></div>;
+  if (error || !item) return <div className="w-full min-w-0"><p className="rounded-xl border border-error/30 bg-error-container p-5 text-error">{error}</p></div>;
 
-  const details = [
-    ['Mevcut Akademisyen', item.delegatedByUserName ?? '-'],
-    ['Devredilecek Akademisyen veya Asistan', item.delegatedToUserName ?? '-'],
-    ['Ders', `${item.courseCode ?? ''} ${item.courseName ?? ''}`.trim() || '-'],
-    ['Randevu Kategorisi', item.categoryName ?? '-'],
-    ['Görüşme Türü', item.meetingType ? getMeetingTypeLabel(item.meetingType) : '-'],
-    ['Tarih', date(item.appointmentDate)],
-    ['Saat', `${time(item.startTime)}–${time(item.endTime)}`],
-    ['Süre', item.durationMinutes ? `${item.durationMinutes} dakika` : '-'],
-    ['Talep Oluşturulma Zamanı', dateTime(item.delegatedAt)],
-    ['Kalan Onay Süresi', remaining(item.studentApprovalExpiresAt, now)],
-  ];
   const pending = item.delegationStatus === 'PENDING_STUDENT_APPROVAL';
 
   return (
-    <div className="admin-page animate-fade-in">
-      <Link className="mb-5 inline-flex items-center gap-1 text-primary hover:underline" to={ROUTES.STUDENT_DELEGATIONS}>
-        <span className="material-symbols-outlined text-[18px]" aria-hidden>arrow_back</span>
-        Randevu devri taleplerine dön
-      </Link>
-      <div className="mb-7 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="font-headline-lg text-headline-lg text-on-background">Randevu Devri Detayı</h1>
-          <p className="mt-2 text-on-surface-variant">Karar vermeden önce değişiklikleri inceleyin.</p>
-        </div>
-        <DelegationStatusBadge status={item.delegationStatus} />
-      </div>
-
-      <section className={`rounded-xl border bg-surface-container-lowest p-6 ${
-        pending ? 'border-primary/50 shadow-sm ring-1 ring-primary/15' : 'border-outline-variant'
-      }`}>
+    <div className="w-full min-w-0 animate-fade-in flex flex-col gap-3 md:gap-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <StudentBackLink to={ROUTES.STUDENT_DELEGATIONS} label="Randevu devri taleplerine dön" />
         {pending ? (
-          <div className="mb-6 flex items-center gap-3 rounded-lg border border-primary/20 bg-primary-container/35 px-4 py-3 text-sm font-semibold text-on-primary-container">
-            <span className="material-symbols-outlined text-[20px]" aria-hidden>schedule</span>
-            <span>Bu talep onayınızı bekliyor · {remaining(item.studentApprovalExpiresAt, now)}</span>
-          </div>
-        ) : null}
-        <dl className="grid gap-x-10 gap-y-5 sm:grid-cols-2">
-          {details.map(([label, value]) => (
-            <div key={label}>
-              <dt className="text-sm text-on-surface-variant">{label}</dt>
-              <dd className="mt-1 font-medium text-on-background">{value}</dd>
-            </div>
-          ))}
-        </dl>
-        {pending ? (
-          <div className="mt-7 flex flex-wrap gap-3 border-t border-outline-variant pt-5">
+          <div className="flex flex-wrap gap-2">
             <AdminActionButton variant="primary" icon="check" onClick={() => setAction('accept')}>Kabul Et</AdminActionButton>
             <AdminActionButton variant="danger" icon="close" onClick={() => setAction('reject')}>Reddet</AdminActionButton>
           </div>
         ) : null}
-      </section>
+      </div>
+
+      <StudentPageHeader
+        title="Randevu Devri Detayı"
+        description="Karar vermeden önce değişiklikleri inceleyin."
+        actions={<DelegationStatusBadge status={item.delegationStatus} />}
+      />
+
+      {pending ? (
+        <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary-container/35 px-4 py-3 text-sm font-semibold text-on-primary-container">
+          <span className="material-symbols-outlined text-[20px]" aria-hidden>schedule</span>
+          <span>Bu talep onayınızı bekliyor · {remaining(item.studentApprovalExpiresAt, now)}</span>
+        </div>
+      ) : null}
+
+      <div className="flex flex-col gap-3 md:gap-4">
+        <InfoCard title="Devir Bilgileri">
+          <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+            <MetaRow icon="person" label="Mevcut Akademisyen" value={item.delegatedByUserName ?? '-'} />
+            <MetaRow icon="person" label="Devredilecek Akademisyen veya Asistan" value={item.delegatedToUserName ?? '-'} />
+            <MetaRow icon="event" label="Talep Oluşturulma Zamanı" value={dateTime(item.delegatedAt)} />
+            <MetaRow icon="timer" label="Kalan Onay Süresi" value={remaining(item.studentApprovalExpiresAt, now)} />
+          </div>
+        </InfoCard>
+
+        <InfoCard title="Randevu Bilgileri">
+          <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+            <MetaRow icon="menu_book" label="Ders" value={`${item.courseCode ?? ''} ${item.courseName ?? ''}`.trim() || '-'} />
+            <MetaRow icon="category" label="Randevu Kategorisi" value={item.categoryName ?? '-'} />
+            <MetaRow icon="event" label="Tarih" value={date(item.appointmentDate)} />
+            <MetaRow icon="schedule" label="Saat" value={`${time(item.startTime)}–${time(item.endTime)}`} />
+            <MetaRow icon="timer" label="Süre" value={item.durationMinutes ? `${item.durationMinutes} dakika` : '-'} />
+            <MetaRow icon="videocam" label="Görüşme Türü" value={item.meetingType ? getMeetingTypeLabel(item.meetingType) : '-'} />
+          </div>
+        </InfoCard>
+      </div>
 
       <ConfirmModal
         open={action !== null}
