@@ -125,10 +125,13 @@ export default function StudentDelegationDetailPage() {
         <DelegationStatusBadge status={item.delegationStatus} />
       </div>
 
-      <section className={`rounded-xl border bg-surface-container-lowest p-6 ${pending ? 'border-amber-400 ring-2 ring-amber-200' : 'border-outline-variant'}`}>
+      <section className={`rounded-xl border bg-surface-container-lowest p-6 ${
+        pending ? 'border-primary/50 shadow-sm ring-1 ring-primary/15' : 'border-outline-variant'
+      }`}>
         {pending ? (
-          <div className="mb-6 rounded-lg bg-amber-100 px-4 py-3 text-sm font-semibold text-amber-900">
-            Bu talep onayınızı bekliyor · {remaining(item.studentApprovalExpiresAt, now)}
+          <div className="mb-6 flex items-center gap-3 rounded-lg border border-primary/20 bg-primary-container/35 px-4 py-3 text-sm font-semibold text-on-primary-container">
+            <span className="material-symbols-outlined text-[20px]" aria-hidden>schedule</span>
+            <span>Bu talep onayınızı bekliyor · {remaining(item.studentApprovalExpiresAt, now)}</span>
           </div>
         ) : null}
         <dl className="grid gap-x-10 gap-y-5 sm:grid-cols-2">

@@ -29,6 +29,7 @@ export const ROUTES = {
   ASSISTANT_APPOINTMENTS: '/assistant/appointments',
   ASSISTANT_INCOMING_DELEGATIONS: '/assistant/delegations/incoming',
   ASSISTANT_DELEGATION_HISTORY: '/assistant/delegations/history',
+  ASSISTANT_DELEGATION_DETAIL: '/assistant/delegations/:delegationId',
   ASSISTANT_CALENDAR: '/assistant/calendar',
   ASSISTANT_PROFILE: '/assistant/profile',
   STUDENT: '/ogrenci',
@@ -77,6 +78,10 @@ export function academicianIncomingDelegationDetailPath(
   delegationId: number | string,
 ): string {
   return `/academician/delegations/incoming/${delegationId}`;
+}
+
+export function assistantDelegationDetailPath(delegationId: number | string): string {
+  return `/assistant/delegations/${delegationId}`;
 }
 
 export function assistantDelegationHistoryPath(status?: string): string {

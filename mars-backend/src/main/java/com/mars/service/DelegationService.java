@@ -193,6 +193,20 @@ public class DelegationService {
     }
 
     @Transactional(readOnly = true)
+    public List<DelegationResponse> getReceivedDelegations() {
+        User currentUser = getCurrentHistoryUser();
+        return delegationLogRepository.findHistoryByDelegatedToUserId(currentUser.getUserId())
+                .stream().map(delegationMapper::toResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<DelegationResponse> getStudentDelegations() {
+        User student = getCurrentStudent();
+        return delegationLogRepository.findHistoryByStudentId(student.getUserId())
+                .stream().map(delegationMapper::toResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
     public DelegationResponse getDelegation(Integer delegationId) {
         requireValidDelegationId(delegationId);
         User currentUser = getAuthenticatedUser();

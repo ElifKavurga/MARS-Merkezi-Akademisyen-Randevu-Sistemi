@@ -3,13 +3,14 @@ import { isAxiosError } from 'axios';
 import { useNavigate } from 'react-router-dom';
 import AdminActionButton from '../components/AdminActionButton';
 import ConfirmModal from '../components/ConfirmModal';
+import DelegationStatusBadge from '../components/DelegationStatusBadge';
 import Loading from '../components/Loading';
 import { getMeetingTypeLabel } from '../constants/appointment';
 import { studentDelegationDetailPath } from '../constants/routes';
 import { useToast } from '../hooks/useToast';
 import {
   acceptStudentDelegation,
-  getPendingStudentDelegations,
+  getStudentDelegations,
   rejectStudentDelegation,
 } from '../services/delegationService';
 import type { DelegationResponse } from '../types/delegation';
@@ -54,7 +55,7 @@ export default function StudentDelegationsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      setItems(await getPendingStudentDelegations());
+      setItems(await getStudentDelegations());
       setError(null);
     } catch (loadError) {
       setError(message(loadError));
@@ -73,15 +74,16 @@ export default function StudentDelegationsPage() {
     if (!decision) return;
     setSubmitting(true);
     try {
+      const updated = decision.action === 'accept'
+        ? await acceptStudentDelegation(decision.item.delegationId)
+        : await rejectStudentDelegation(decision.item.delegationId);
       if (decision.action === 'accept') {
-        await acceptStudentDelegation(decision.item.delegationId);
         toast.success('Randevu devri kabul edildi.');
       } else {
-        await rejectStudentDelegation(decision.item.delegationId);
         toast.success('Randevu devri reddedildi. Randevunuz mevcut personelde kaldı.');
       }
-      setItems((current) => current.filter(
-        (item) => item.delegationId !== decision.item.delegationId,
+      setItems((current) => current.map(
+        (item) => item.delegationId === updated.delegationId ? updated : item,
       ));
       setDecision(null);
     } catch (submitError) {
@@ -96,7 +98,7 @@ export default function StudentDelegationsPage() {
       <header className="mb-7">
         <h1 className="font-headline-lg text-headline-lg text-on-background">Randevu Devri Talepleri</h1>
         <p className="mt-2 text-on-surface-variant">
-          Onayınızı bekleyen randevu devri taleplerini inceleyin.
+          Bekleyen ve geçmiş randevu devri taleplerinizi inceleyin.
         </p>
       </header>
 
@@ -104,61 +106,64 @@ export default function StudentDelegationsPage() {
       {!loading && error ? (
         <div className="rounded-xl border border-error/30 bg-error-container/40 p-6 text-center">
           <p className="text-error" role="alert">{error}</p>
-          <button className="mt-4 rounded-lg border border-outline-variant px-4 py-2" type="button" onClick={() => void load()}>
+          <AdminActionButton className="mt-4" variant="neutral" icon="refresh" onClick={() => void load()}>
             Tekrar Dene
-          </button>
+          </AdminActionButton>
         </div>
       ) : null}
       {!loading && !error && items.length === 0 ? (
         <div className="rounded-xl border border-outline-variant bg-surface-container-lowest px-6 py-16 text-center">
           <span className="material-symbols-outlined text-[46px] text-on-surface-variant/50" aria-hidden>swap_horiz</span>
-          <h2 className="mt-3 text-lg font-semibold">Bekleyen randevu devri talebiniz yok</h2>
-          <p className="mt-2 text-on-surface-variant">Yeni bir talep geldiğinde burada görüntülenecektir.</p>
+          <h2 className="mt-3 text-lg font-semibold">Randevu devri kaydınız yok</h2>
+          <p className="mt-2 text-on-surface-variant">Yeni bir talep oluştuğunda burada görüntülenecektir.</p>
         </div>
       ) : null}
 
       {!loading && !error && items.length > 0 ? (
         <div className="space-y-4">
-          {items.map((item) => (
+          {items.map((item) => {
+            const pending = item.delegationStatus === 'PENDING_STUDENT_APPROVAL';
+            return (
             <article
               key={item.delegationId}
-              className="rounded-xl border-2 border-amber-300 bg-amber-50/60 p-5 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:bg-amber-950/10"
+              className={`rounded-xl border bg-surface-container-lowest p-5 transition hover:-translate-y-0.5 hover:shadow-md ${
+                pending ? 'border-primary/50 shadow-sm ring-1 ring-primary/15' : 'border-outline-variant'
+              }`}
             >
-              <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                <button
-                  type="button"
-                  className="min-w-0 flex-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  onClick={() => navigate(studentDelegationDetailPath(item.delegationId))}
-                >
-                  <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-amber-200 px-3 py-1 text-sm font-semibold text-amber-900">
-                      Onayınız bekleniyor
-                    </span>
-                    <span className="text-sm font-semibold text-amber-800">
-                      {remaining(item.studentApprovalExpiresAt, now)}
-                    </span>
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm text-on-surface-variant">Devredilecek kişi</p>
+                    <h2 className="mt-1 text-lg font-semibold text-on-background">
+                      {item.delegatedToUserName ?? 'Hedef personel'}
+                    </h2>
                   </div>
-                  <h2 className="text-lg font-semibold text-on-background">
-                    {item.delegatedToUserName ?? 'Hedef personel'} kişisine randevu devri
-                  </h2>
-                  <p className="mt-2 text-on-surface-variant">
-                    {course(item)} · {date(item.appointmentDate)} · {time(item.startTime)}–{time(item.endTime)}
-                  </p>
-                  <p className="mt-1 text-sm text-on-surface-variant">
-                    {item.categoryName ?? '-'} · {item.meetingType ? getMeetingTypeLabel(item.meetingType) : '-'}
-                  </p>
-                </button>
-                <div className="flex shrink-0 flex-wrap gap-2">
-                  <AdminActionButton variant="primary" icon="check" onClick={() => setDecision({ item, action: 'accept' })}>
-                    Kabul Et
-                  </AdminActionButton>
-                  <AdminActionButton variant="danger" icon="close" onClick={() => setDecision({ item, action: 'reject' })}>
-                    Reddet
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <DelegationStatusBadge status={item.delegationStatus} />
+                    {pending ? <span className="text-sm font-semibold text-primary">
+                      {remaining(item.studentApprovalExpiresAt, now)}
+                    </span> : null}
+                  </div>
+                </div>
+                <div className="grid gap-3 rounded-lg bg-surface-container/55 p-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                  <p><span className="block text-xs text-on-surface-variant">Ders</span>{course(item)}</p>
+                  <p><span className="block text-xs text-on-surface-variant">Tarih ve saat</span>{date(item.appointmentDate)} · {time(item.startTime)}–{time(item.endTime)}</p>
+                  <p><span className="block text-xs text-on-surface-variant">Kategori</span>{item.categoryName ?? '-'}</p>
+                  <p><span className="block text-xs text-on-surface-variant">Görüşme</span>{item.meetingType ? getMeetingTypeLabel(item.meetingType) : '-'}</p>
+                </div>
+                <div className="flex flex-wrap gap-2 border-t border-outline-variant/60 pt-4">
+                  {pending ? <>
+                    <AdminActionButton variant="primary" icon="check" onClick={() => setDecision({ item, action: 'accept' })}>Kabul Et</AdminActionButton>
+                    <AdminActionButton variant="danger" icon="close" onClick={() => setDecision({ item, action: 'reject' })}>Reddet</AdminActionButton>
+                  </> : null}
+                  <AdminActionButton variant="neutral" icon="visibility"
+                    onClick={() => navigate(studentDelegationDetailPath(item.delegationId))}>
+                    Detayı Gör
                   </AdminActionButton>
                 </div>
               </div>
             </article>
-          ))}
+          );})}
         </div>
       ) : null}
 

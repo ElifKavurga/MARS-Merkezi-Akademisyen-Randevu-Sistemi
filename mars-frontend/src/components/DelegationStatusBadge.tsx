@@ -1,19 +1,19 @@
 import { getDelegationStatusLabel } from '../constants/delegation';
 
 const STATUS_CLASSES: Record<string, string> = {
-  PENDING: 'bg-amber-100 text-amber-800',
-  PENDING_ACADEMICIAN_APPROVAL: 'bg-violet-100 text-violet-800',
-  ACCEPTED: 'bg-emerald-100 text-emerald-800',
-  REJECTED: 'bg-red-100 text-red-800',
-  PENDING_STUDENT_APPROVAL: 'bg-blue-100 text-blue-800',
-  STUDENT_REJECTED: 'bg-red-100 text-red-800',
-  EXPIRED: 'bg-neutral-200 text-neutral-700',
-  CANCELLED: 'bg-slate-200 text-slate-700',
-  COMPLETED: 'bg-teal-100 text-teal-800',
+  PENDING: 'border border-primary/25 bg-primary-container/55 text-on-primary-container',
+  PENDING_ACADEMICIAN_APPROVAL: 'border border-violet-300 bg-violet-50 text-violet-900',
+  ACCEPTED: 'border border-emerald-300 bg-emerald-50 text-emerald-900',
+  REJECTED: 'border border-error/25 bg-error-container/55 text-on-error-container',
+  PENDING_STUDENT_APPROVAL: 'border border-blue-300 bg-blue-50 text-blue-900',
+  STUDENT_REJECTED: 'border border-error/25 bg-error-container/55 text-on-error-container',
+  EXPIRED: 'border border-outline-variant bg-surface-container text-on-surface',
+  CANCELLED: 'border border-outline-variant bg-surface-container-high text-on-surface',
+  COMPLETED: 'border border-teal-300 bg-teal-50 text-teal-900',
 };
 
 const STATUS_DOT_CLASSES: Record<string, string> = {
-  PENDING: 'bg-amber-500',
+  PENDING: 'bg-primary',
   PENDING_ACADEMICIAN_APPROVAL: 'bg-violet-500',
   ACCEPTED: 'bg-emerald-500',
   REJECTED: 'bg-red-500',
@@ -31,7 +31,7 @@ type DelegationStatusBadgeProps = {
 export default function DelegationStatusBadge({ status }: DelegationStatusBadgeProps) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 font-label-sm text-label-sm ${
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-label-sm text-label-sm font-semibold ${
         STATUS_CLASSES[status] ?? 'bg-surface-container text-on-surface-variant'
       }`}
     >

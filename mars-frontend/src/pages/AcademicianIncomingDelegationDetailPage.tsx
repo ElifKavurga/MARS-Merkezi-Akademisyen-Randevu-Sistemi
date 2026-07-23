@@ -9,6 +9,7 @@ import { getMeetingTypeLabel } from '../constants/appointment';
 import { getDelegationStatusLabel } from '../constants/delegation';
 import { ROUTES } from '../constants/routes';
 import { useToast } from '../hooks/useToast';
+import { useAuth } from '../hooks/useAuth';
 import {
   acceptDelegation,
   getDelegation,
@@ -37,6 +38,7 @@ function errorMessage(error: unknown): string {
 export default function AcademicianIncomingDelegationDetailPage() {
   const { delegationId } = useParams();
   const toast = useToast();
+  const { user } = useAuth();
   const [item, setItem] = useState<DelegationResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +72,7 @@ export default function AcademicianIncomingDelegationDetailPage() {
       if (action === 'accept') await acceptDelegation(item.delegationId);
       else await rejectDelegation(item.delegationId);
       toast.success(action === 'accept'
-        ? 'Randevu devri kabul edildi ve öğrenci onayına gönderildi.'
+        ? 'Randevu devri talebi kabul edildi.'
         : 'Randevu devri reddedildi.');
       setAction(null);
       await load();
@@ -96,11 +98,17 @@ export default function AcademicianIncomingDelegationDetailPage() {
     ['Talebi Gönderen Akademisyen', item.delegatedByUserName ?? '-'],
     ['Talep Oluşturulma Zamanı', dateTime(item.delegatedAt)],
   ];
-  const actionable = item.delegationStatus === 'PENDING_ACADEMICIAN_APPROVAL';
+  const isTargetUser = item.delegatedToUserId === user?.userId;
+  const actionable = isTargetUser && (user?.role === 'ASSISTANT'
+    ? item.delegationStatus === 'PENDING'
+    : item.delegationStatus === 'PENDING_ACADEMICIAN_APPROVAL');
+  const backRoute = user?.role === 'ASSISTANT'
+    ? ROUTES.ASSISTANT_DELEGATION_HISTORY
+    : ROUTES.ACADEMICIAN_DELEGATION_HISTORY;
 
   return (
     <div className="admin-page animate-fade-in">
-      <Link className="mb-5 inline-flex items-center gap-1 text-primary hover:underline" to={ROUTES.ACADEMICIAN_INCOMING_DELEGATIONS}>
+      <Link className="mb-5 inline-flex items-center gap-1 text-primary hover:underline" to={`${backRoute}?tab=incoming`}>
         <span className="material-symbols-outlined text-[18px]" aria-hidden>arrow_back</span>
         Gelen taleplere dön
       </Link>

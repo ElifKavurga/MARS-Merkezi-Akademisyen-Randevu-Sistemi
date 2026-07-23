@@ -111,6 +111,21 @@ public interface DelegationLogRepository extends JpaRepository<DelegationLog, In
             """)
     List<DelegationLog> findHistoryByDelegatedToUserId(@Param("userId") Integer userId);
 
+    @Query("""
+            SELECT d
+            FROM DelegationLog d
+            JOIN FETCH d.appointment a
+            JOIN FETCH a.slot
+            JOIN FETCH a.category
+            JOIN FETCH a.staff
+            LEFT JOIN FETCH a.course
+            JOIN FETCH d.delegatedByUser
+            JOIN FETCH d.delegatedToUser
+            WHERE a.student.userId = :studentId
+            ORDER BY d.delegatedAt DESC
+            """)
+    List<DelegationLog> findHistoryByStudentId(@Param("studentId") Integer studentId);
+
     long countByDelegatedByUser_UserIdAndDelegationStatus(Integer userId, String delegationStatus);
 
     long countByDelegatedToUser_UserIdAndDelegationStatus(Integer userId, String delegationStatus);

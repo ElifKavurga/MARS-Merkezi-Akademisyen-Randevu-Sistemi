@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { isAxiosError } from 'axios';
 import {
   DELEGATION_MESSAGES,
@@ -30,6 +30,15 @@ function getBackendErrorMessage(err: unknown, fallback: string): string {
   return fallback;
 }
 
+function normalizeTargets(targets: DelegationTarget[]): DelegationTarget[] {
+  const uniqueTargets = new Map<number, DelegationTarget>();
+  targets.forEach((target) => {
+    if (!uniqueTargets.has(target.userId)) uniqueTargets.set(target.userId, target);
+  });
+  return [...uniqueTargets.values()].sort((left, right) =>
+    left.fullName.localeCompare(right.fullName, 'tr-TR', { sensitivity: 'base' }));
+}
+
 export default function DelegationModal({
   appointment,
   onClose,
@@ -43,10 +52,12 @@ export default function DelegationModal({
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const open = appointment !== null;
+  const appointmentId = appointment?.appointmentId;
   useEffect(() => {
-    if (!open || !appointment) {
+    if (!open || !appointmentId) {
       return;
     }
 
@@ -60,7 +71,7 @@ export default function DelegationModal({
 
     void (async () => {
       try {
-        const data = await getDelegationTargets(appointment.appointmentId);
+        const data = normalizeTargets(await getDelegationTargets(appointmentId));
         if (cancelled) {
           return;
         }
@@ -84,7 +95,7 @@ export default function DelegationModal({
     return () => {
       cancelled = true;
     };
-  }, [open, appointment]);
+  }, [open, appointmentId]);
 
   const filteredTargets = useMemo(() => {
     const query = search.trim().toLocaleLowerCase('tr-TR');
@@ -150,6 +161,10 @@ export default function DelegationModal({
 
   const selectedTarget = targets.find((item) => item.userId === targetUserId);
   const courseLabel = formatCourseLabel(appointment);
+  const handleRoleFilterChange = (value: 'ALL' | 'ACADEMICIAN' | 'ASSISTANT') => {
+    setRoleFilter(value);
+    window.requestAnimationFrame(() => searchInputRef.current?.focus());
+  };
 
   return (
     <ModalShell
@@ -213,7 +228,7 @@ export default function DelegationModal({
               ['ACADEMICIAN', 'Akademisyen'],
               ['ASSISTANT', 'Asistan'],
             ] as const).map(([value, label]) => (
-              <button key={value} type="button" onClick={() => setRoleFilter(value)}
+              <button key={value} type="button" onClick={() => handleRoleFilterChange(value)}
                 aria-pressed={roleFilter === value}
                 className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
                   roleFilter === value
@@ -227,7 +242,7 @@ export default function DelegationModal({
           <label htmlFor="delegation-target-search" className="sr-only">Kişi ara</label>
           <div className="relative">
             <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant" aria-hidden>search</span>
-            <input id="delegation-target-search" type="search" className={`${FORM_FIELD_CLASS} pl-10`}
+            <input ref={searchInputRef} id="delegation-target-search" type="search" className={`${FORM_FIELD_CLASS} pl-10`}
               value={search} onChange={(event) => setSearch(event.target.value)}
               placeholder="Ad, e-posta veya bölüm ile ara" disabled={submitting || loadingOptions} />
           </div>

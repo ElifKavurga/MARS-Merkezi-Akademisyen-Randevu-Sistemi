@@ -5,13 +5,16 @@ import AdminActionButton from '../components/AdminActionButton';
 import ConfirmModal from '../components/ConfirmModal';
 import DelegationStatusBadge from '../components/DelegationStatusBadge';
 import Loading from '../components/Loading';
-import { academicianIncomingDelegationDetailPath } from '../constants/routes';
+import {
+  academicianIncomingDelegationDetailPath,
+  assistantDelegationDetailPath,
+} from '../constants/routes';
 import { FORM_FIELD_CLASS, FORM_SELECT_CLASS } from '../constants/ui';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 import {
   acceptDelegation,
-  getIncomingDelegations,
+  getReceivedDelegations,
   getSentDelegations,
   rejectDelegation,
 } from '../services/delegationService';
@@ -60,7 +63,7 @@ export default function DelegationManagementPage() {
     setError(null);
     try {
       const [incomingData, sentData] = await Promise.all([
-        getIncomingDelegations(),
+        getReceivedDelegations(),
         getSentDelegations(),
       ]);
       setIncoming(incomingData);
@@ -112,9 +115,7 @@ export default function DelegationManagementPage() {
         ? await acceptDelegation(decision.item.delegationId)
         : await rejectDelegation(decision.item.delegationId);
       setIncoming((current) => current
-        .map((item) => item.delegationId === result.delegationId ? result : item)
-        .filter((item) => ['PENDING', 'PENDING_ACADEMICIAN_APPROVAL', 'PENDING_STUDENT_APPROVAL']
-          .includes(item.delegationStatus)));
+        .map((item) => item.delegationId === result.delegationId ? result : item));
       toast.success(decision.action === 'accept'
         ? 'Randevu devri talebi kabul edildi.'
         : 'Randevu devri talebi reddedildi.');
@@ -130,6 +131,12 @@ export default function DelegationManagementPage() {
     setTab(nextTab);
     setStatus('');
     setDate('');
+  };
+
+  const openDetail = (delegationId: number) => {
+    navigate(user?.role === 'ASSISTANT'
+      ? assistantDelegationDetailPath(delegationId)
+      : academicianIncomingDelegationDetailPath(delegationId));
   };
 
   return (
@@ -199,7 +206,7 @@ export default function DelegationManagementPage() {
                 <tr>
                   {(tab === 'incoming'
                     ? ['Gönderen', 'Öğrenci', 'Ders', 'Tarih', 'Saat', 'Durum', 'İşlemler']
-                    : ['Hedef Kişi', 'Öğrenci', 'Tarih', 'Saat', 'Durum', 'Oluşturulma']
+                    : ['Hedef Kişi', 'Öğrenci', 'Tarih', 'Saat', 'Durum', 'Oluşturulma', 'İşlemler']
                   ).map((label) => (
                     <th key={label} className="border-b border-outline-variant px-4 py-3 text-left text-sm font-semibold text-on-surface-variant">{label}</th>
                   ))}
@@ -219,13 +226,13 @@ export default function DelegationManagementPage() {
                       <td className="whitespace-nowrap px-4 py-4">{formatTime(item.startTime)}–{formatTime(item.endTime)}</td>
                       <td className="px-4 py-4"><DelegationStatusBadge status={item.delegationStatus} /></td>
                       <td className="px-4 py-4">
-                        {actionable ? <div className="flex gap-2">
-                          <AdminActionButton variant="primary" icon="check" onClick={() => setDecision({ item, action: 'accept' })}>Kabul Et</AdminActionButton>
-                          <AdminActionButton variant="danger" icon="close" onClick={() => setDecision({ item, action: 'reject' })}>Reddet</AdminActionButton>
-                        </div> : <button type="button" className="text-sm font-semibold text-primary hover:underline"
-                          onClick={() => user?.role === 'ACADEMICIAN' && navigate(academicianIncomingDelegationDetailPath(item.delegationId))}>
-                          Detayı Gör
-                        </button>}
+                        <div className="flex flex-wrap gap-2">
+                          {actionable ? <>
+                            <AdminActionButton variant="primary" icon="check" onClick={() => setDecision({ item, action: 'accept' })}>Kabul Et</AdminActionButton>
+                            <AdminActionButton variant="danger" icon="close" onClick={() => setDecision({ item, action: 'reject' })}>Reddet</AdminActionButton>
+                          </> : null}
+                          <AdminActionButton variant="neutral" icon="visibility" onClick={() => openDetail(item.delegationId)}>Detayı Gör</AdminActionButton>
+                        </div>
                       </td>
                     </tr>
                   ) : (
@@ -236,6 +243,9 @@ export default function DelegationManagementPage() {
                       <td className="whitespace-nowrap px-4 py-4">{formatTime(item.startTime)}–{formatTime(item.endTime)}</td>
                       <td className="px-4 py-4"><DelegationStatusBadge status={item.delegationStatus} /></td>
                       <td className="whitespace-nowrap px-4 py-4">{formatDateTime(item.delegatedAt)}</td>
+                      <td className="px-4 py-4">
+                        <AdminActionButton variant="neutral" icon="visibility" onClick={() => openDetail(item.delegationId)}>Detayı Gör</AdminActionButton>
+                      </td>
                     </tr>
                   );
                 })}

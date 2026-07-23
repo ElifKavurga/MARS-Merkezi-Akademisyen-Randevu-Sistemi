@@ -2,6 +2,8 @@ import { ROLES } from '../constants/roles';
 import {
   ROUTES,
   academicianAppointmentDetailPath,
+  academicianIncomingDelegationDetailPath,
+  assistantDelegationDetailPath,
   studentAppointmentDetailPath,
   studentDelegationDetailPath,
 } from '../constants/routes';
@@ -13,8 +15,12 @@ export function getNotificationTarget(notification: NotificationItem, role?: str
     || notification.notificationType === 'STUDENT_APPROVAL_PENDING';
 
   if (delegationType) {
-    if (role === ROLES.ASSISTANT) return ROUTES.ASSISTANT_INCOMING_DELEGATIONS;
-    if (role === ROLES.ACADEMICIAN) return ROUTES.ACADEMICIAN_DELEGATION_HISTORY;
+    if (role === ROLES.ASSISTANT && notification.relatedDelegationId) {
+      return assistantDelegationDetailPath(notification.relatedDelegationId);
+    }
+    if (role === ROLES.ACADEMICIAN && notification.relatedDelegationId) {
+      return academicianIncomingDelegationDetailPath(notification.relatedDelegationId);
+    }
     if (role === ROLES.STUDENT && notification.relatedDelegationId) {
       return studentDelegationDetailPath(notification.relatedDelegationId);
     }

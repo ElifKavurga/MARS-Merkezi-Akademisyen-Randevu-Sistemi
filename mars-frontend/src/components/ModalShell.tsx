@@ -33,6 +33,11 @@ export default function ModalShell({
 }: ModalShellProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+  const disableBackdropCloseRef = useRef(disableBackdropClose);
+
+  onCloseRef.current = onClose;
+  disableBackdropCloseRef.current = disableBackdropClose;
 
   useEffect(() => {
     if (!open) {
@@ -57,9 +62,9 @@ export default function ModalShell({
     const frame = window.requestAnimationFrame(focusFirst);
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !disableBackdropClose) {
+      if (event.key === 'Escape' && !disableBackdropCloseRef.current) {
         event.preventDefault();
-        onClose();
+        onCloseRef.current();
       }
     };
 
@@ -69,7 +74,7 @@ export default function ModalShell({
       document.removeEventListener('keydown', onKeyDown);
       previouslyFocusedRef.current?.focus?.();
     };
-  }, [open, disableBackdropClose, onClose]);
+  }, [open]);
 
   if (!open) {
     return null;

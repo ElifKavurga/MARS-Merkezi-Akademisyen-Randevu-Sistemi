@@ -147,6 +147,10 @@ export default function AppRouter() {
               path={ROUTES.ASSISTANT_DELEGATION_HISTORY}
               element={<DelegationManagementPage />}
             />
+            <Route
+              path={ROUTES.ASSISTANT_DELEGATION_DETAIL}
+              element={<AcademicianIncomingDelegationDetailPage />}
+            />
             <Route path={ROUTES.ASSISTANT_CALENDAR} element={<AssistantCalendarPage />} />
             <Route path={ROUTES.ASSISTANT_PROFILE} element={<ProfilePage />} />
           </Route>

@@ -49,6 +49,16 @@ export async function getSentDelegations(): Promise<DelegationResponse[]> {
   return Array.isArray(data) ? data : [];
 }
 
+export async function getReceivedDelegations(): Promise<DelegationResponse[]> {
+  const { data } = await apiClient.get<DelegationResponse[]>('/delegations/received');
+  return Array.isArray(data) ? data : [];
+}
+
+export async function getStudentDelegations(): Promise<DelegationResponse[]> {
+  const { data } = await apiClient.get<DelegationResponse[]>('/delegations/student/history');
+  return Array.isArray(data) ? data : [];
+}
+
 export async function getDelegation(delegationId: number): Promise<DelegationResponse> {
   const { data } = await apiClient.get<DelegationResponse>(`/delegations/${delegationId}`);
   return data;
