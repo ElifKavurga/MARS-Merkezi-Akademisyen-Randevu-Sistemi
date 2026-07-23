@@ -9,11 +9,14 @@ import { ROUTES } from '../constants/routes';
 import { useAuth } from '../hooks/useAuth';
 import { useNotificationRealtimeRefresh } from '../hooks/useNotificationRealtimeRefresh';
 import { getStudentActiveAppointments } from '../services/studentAppointmentService';
+import { getPendingStudentDelegations } from '../services/delegationService';
 import type { NotificationItem } from '../types/notification';
 import { formatStudentAppointmentDate, formatStudentAppointmentTime } from '../utils/studentAppointmentFormat';
 
 const isAppointmentNotification = (notification: NotificationItem) =>
   notification.relatedAppointmentId != null;
+const isStudentDelegationNotification = (notification: NotificationItem) =>
+  notification.notificationType === 'STUDENT_APPROVAL_PENDING';
 
 type PlaceholderCardProps = {
   title: string;
@@ -64,8 +67,15 @@ export default function StudentDashboard() {
     enabled: user != null,
   });
   const appointments = appointmentsQuery.data ?? [];
+  const delegationsQuery = useQuery({
+    queryKey: ['student-pending-delegations', user?.userId],
+    queryFn: getPendingStudentDelegations,
+    enabled: user != null,
+  });
+  const pendingDelegations = delegationsQuery.data ?? [];
   const loading = appointmentsQuery.isPending;
   useNotificationRealtimeRefresh(isAppointmentNotification, appointmentsQuery.refetch);
+  useNotificationRealtimeRefresh(isStudentDelegationNotification, delegationsQuery.refetch);
 
   if (!user) {
     return null;
@@ -91,6 +101,26 @@ export default function StudentDashboard() {
           },
         ]}
       />
+
+      {pendingDelegations.length > 0 ? (
+        <Link
+          to={ROUTES.STUDENT_DELEGATIONS}
+          className="mb-6 flex items-center justify-between gap-4 rounded-xl border-2 border-amber-300 bg-amber-50 p-5 no-underline shadow-sm transition hover:border-amber-400 hover:shadow-md"
+        >
+          <div className="flex min-w-0 items-center gap-4">
+            <span className="material-symbols-outlined rounded-full bg-amber-200 p-2 text-amber-900" aria-hidden>
+              swap_horiz
+            </span>
+            <div>
+              <h2 className="font-semibold text-amber-950">
+                {pendingDelegations.length} randevu devri talebi onayınızı bekliyor
+              </h2>
+              <p className="mt-1 text-sm text-amber-800">Detayları incelemek ve karar vermek için açın.</p>
+            </div>
+          </div>
+          <span className="material-symbols-outlined text-amber-900" aria-hidden>chevron_right</span>
+        </Link>
+      ) : null}
 
       <section className="mb-6 rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-6">
         <div className="flex items-start gap-4">

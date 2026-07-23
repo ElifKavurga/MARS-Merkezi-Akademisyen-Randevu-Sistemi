@@ -18,6 +18,12 @@ const studentNavItems = [
     // Detail route (/randevularim/:id) should keep this nav item active.
     end: false,
   },
+  {
+    label: 'Randevu Devri',
+    path: ROUTES.STUDENT_DELEGATIONS,
+    icon: 'swap_horiz',
+    end: false,
+  },
 ] as const;
 
 export default function StudentSidebar({ mobileOpen, onClose }: ModuleSidebarProps) {

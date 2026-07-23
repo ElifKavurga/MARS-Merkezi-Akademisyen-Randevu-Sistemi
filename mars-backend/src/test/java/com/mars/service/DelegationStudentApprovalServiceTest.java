@@ -1,6 +1,7 @@
 package com.mars.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -21,6 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.mars.dto.AvailableSlotResponseDto;
@@ -184,6 +186,23 @@ class DelegationStudentApprovalServiceTest {
         assertThat(log.getSlotLockStatus()).isEqualTo(SlotLockStatus.RELEASED.name());
         assertThat(appointment.getStaff()).isEqualTo(academician);
         verify(notificationService, never()).createPreparedEmailNotification(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void studentCanViewOnlyOwnDelegationDetail() {
+        DelegationLog log = studentApprovalLog(9, targetAcademician);
+        when(delegationLogRepository.findByIdWithDetails(9)).thenReturn(Optional.of(log));
+        when(delegationMapper.toResponse(log)).thenReturn(
+                DelegationResponse.builder().delegationId(9).build());
+        when(delegationStatusHistoryRepository
+                .findByDelegation_DelegationIdOrderByChangedAtAsc(9)).thenReturn(List.of());
+
+        authenticate(student);
+        assertThat(delegationService.getDelegation(9).getDelegationId()).isEqualTo(9);
+
+        authenticate(user(31, "Başka Öğrenci", RoleType.STUDENT));
+        assertThatThrownBy(() -> delegationService.getDelegation(9))
+                .isInstanceOf(AccessDeniedException.class);
     }
 
     @Test

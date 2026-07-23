@@ -34,6 +34,8 @@ export const ROUTES = {
   STUDENT: '/ogrenci',
   STUDENT_APPOINTMENTS: '/ogrenci/randevularim',
   STUDENT_APPOINTMENT_DETAIL: '/ogrenci/randevularim/:appointmentId',
+  STUDENT_DELEGATIONS: '/ogrenci/randevu-devri',
+  STUDENT_DELEGATION_DETAIL: '/ogrenci/randevu-devri/:delegationId',
   STUDENT_APPOINTMENT_CREATE: '/ogrenci/randevu-olustur/:academicianId',
   STUDENT_ACADEMICIAN_SEARCH: '/ogrenci/akademisyen-ara',
   STUDENT_ACADEMICIAN_PROFILE: '/ogrenci/akademisyen/:userId',
@@ -58,6 +60,10 @@ export function studentAppointmentCreatePath(academicianId: number | string): st
 
 export function studentAppointmentDetailPath(appointmentId: number | string): string {
   return `/ogrenci/randevularim/${appointmentId}`;
+}
+
+export function studentDelegationDetailPath(delegationId: number | string): string {
+  return `/ogrenci/randevu-devri/${delegationId}`;
 }
 
 export function academicianDelegationHistoryPath(status?: string): string {

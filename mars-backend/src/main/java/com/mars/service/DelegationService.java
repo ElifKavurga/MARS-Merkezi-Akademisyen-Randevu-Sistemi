@@ -207,11 +207,17 @@ public class DelegationService {
     @Transactional(readOnly = true)
     public DelegationResponse getDelegation(Integer delegationId) {
         requireValidDelegationId(delegationId);
-        User academician = getCurrentAcademician();
+        User currentUser = getAuthenticatedUser();
         DelegationLog log = delegationLogRepository.findByIdWithDetails(delegationId)
                 .orElseThrow(() -> new ResourceNotFoundException(DelegationMessages.DELEGATION_NOT_FOUND));
-        if (!Objects.equals(log.getDelegatedByUser().getUserId(), academician.getUserId())
-                && !Objects.equals(log.getDelegatedToUser().getUserId(), academician.getUserId())) {
+        boolean participantStaff =
+                Objects.equals(log.getDelegatedByUser().getUserId(), currentUser.getUserId())
+                || Objects.equals(log.getDelegatedToUser().getUserId(), currentUser.getUserId());
+        boolean appointmentStudent = log.getAppointment().getStudent() != null
+                && Objects.equals(
+                        log.getAppointment().getStudent().getUserId(),
+                        currentUser.getUserId());
+        if (!participantStaff && !appointmentStudent) {
             throw new AccessDeniedException(DelegationMessages.ACCESS_DENIED);
         }
         DelegationResponse response = delegationMapper.toResponse(log);
@@ -311,6 +317,12 @@ public class DelegationService {
                 "Randevu devri kabul edildi",
                 withDelegationContext(log, "Öğrenci randevu yönlendirmesini kabul etti."),
                 log);
+        createDelegationNotification(
+                log,
+                log.getDelegatedToUser(),
+                NotificationType.DELEGATION_ACCEPTED,
+                "Randevu Devri Kabul Edildi",
+                "Öğrenci randevu devrini kabul etti.");
         return toResponse(log);
     }
 
@@ -327,6 +339,12 @@ public class DelegationService {
                 "Randevu devri reddedildi",
                 withDelegationContext(log, "Öğrenci randevu yönlendirmesini reddetti."),
                 log);
+        createDelegationNotification(
+                log,
+                log.getDelegatedToUser(),
+                NotificationType.DELEGATION_REJECTED,
+                "Randevu Devri Reddedildi",
+                "Öğrenci randevu devrini reddetti.");
         return toResponse(log);
     }
 
