@@ -62,6 +62,7 @@ class DelegationStudentApprovalServiceTest {
     @Mock private DelegationMapper delegationMapper;
     @Mock private AvailabilitySlotService availabilitySlotService;
     @Mock private NotificationService notificationService;
+    @Mock private WaitlistService waitlistService;
     @InjectMocks private DelegationService delegationService;
 
     private User academician;

@@ -60,6 +60,7 @@ import com.mars.repository.AppointmentRepository;
 import com.mars.repository.AppointmentRescheduleRequestRepository;
 import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.repository.DelegationLogRepository;
+import com.mars.repository.WaitlistEntryRepository;
 import com.mars.security.CustomUserDetails;
 import com.mars.util.AcademicTermCalendar;
 import com.mars.util.AvailabilityTimeRules;
@@ -91,6 +92,12 @@ class AvailabilitySlotServiceTest {
 
     @Mock
     private com.mars.repository.OutOfOfficePeriodRepository outOfOfficePeriodRepository;
+
+    @Mock
+    private WaitlistEntryRepository waitlistEntryRepository;
+
+    @Mock
+    private WaitlistService waitlistService;
 
     @InjectMocks
     private AvailabilitySlotService availabilitySlotService;

@@ -147,9 +147,14 @@ class WaitlistServiceTest {
         category.setCategoryName("Category 5");
         category.setDurationMinutes(30);
 
+        User staff = new User();
+        staff.setUserId(10);
+        staff.setFullName("Staff Member");
+
         WaitlistEntry entry = new WaitlistEntry();
         entry.setWaitlistEntryId(id);
         entry.setStudent(student);
+        entry.setStaff(staff);
         entry.setCategory(category);
         entry.setWaitlistStatus(status);
         entry.setRequestedAt(requestedAt);
