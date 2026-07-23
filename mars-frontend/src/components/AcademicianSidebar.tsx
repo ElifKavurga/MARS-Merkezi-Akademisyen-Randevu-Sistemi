@@ -29,15 +29,9 @@ export default function AcademicianSidebar({ mobileOpen, onClose }: ModuleSideba
           end: false,
         },
         {
-          label: 'Gelen Randevu Devirleri',
-          path: ROUTES.ACADEMICIAN_INCOMING_DELEGATIONS,
-          icon: 'move_item',
-          end: false,
-        },
-        {
           label: 'Randevu Devri',
           path: ROUTES.ACADEMICIAN_DELEGATION_HISTORY,
-          icon: 'history',
+          icon: 'swap_horiz',
           end: false,
         },
         ...roleNavItems.slice(3),

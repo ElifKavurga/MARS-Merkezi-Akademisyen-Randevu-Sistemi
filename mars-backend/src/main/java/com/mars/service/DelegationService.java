@@ -51,7 +51,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DelegationService {
     private static final ZoneId APP_ZONE = ZoneId.of("Europe/Istanbul");
-    private static final long STUDENT_APPROVAL_MINUTES = 60;
+    private static final long STUDENT_APPROVAL_MINUTES = 120;
     private static final DateTimeFormatter NOTIFICATION_DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final DateTimeFormatter NOTIFICATION_TIME = DateTimeFormatter.ofPattern("HH:mm");
     private static final Set<String> ACTIVE_APPOINTMENT_STATUSES = Set.of(
@@ -202,6 +202,13 @@ public class DelegationService {
                 ? delegationLogRepository.findHistoryByDelegatedByUserId(currentUser.getUserId())
                 : delegationLogRepository.findHistoryByDelegatedToUserId(currentUser.getUserId());
         return history.stream().map(delegationMapper::toResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<DelegationResponse> getSentDelegations() {
+        User currentUser = getCurrentHistoryUser();
+        return delegationLogRepository.findHistoryByDelegatedByUserId(currentUser.getUserId())
+                .stream().map(delegationMapper::toResponse).toList();
     }
 
     @Transactional(readOnly = true)
@@ -364,7 +371,7 @@ public class DelegationService {
                     log.getDelegatedByUser(),
                     "DELEGATION_EXPIRED",
                     "Randevu devri süresi doldu",
-                    withDelegationContext(log, "Öğrenci bir saat içinde yanıt vermediği için delegasyon iptal edildi."),
+                    withDelegationContext(log, "Öğrenci iki saat içinde yanıt vermediği için randevu devri sonlandırıldı."),
                     log);
         }
         delegationLogRepository.saveAll(expired);

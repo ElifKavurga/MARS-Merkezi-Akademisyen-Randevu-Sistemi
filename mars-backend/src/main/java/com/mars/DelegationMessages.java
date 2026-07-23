@@ -50,7 +50,7 @@ public final class DelegationMessages {
     public static final String NOT_PENDING_STUDENT_APPROVAL =
             "Yalnızca öğrenci onayı bekleyen randevu devirleri üzerinde işlem yapılabilir.";
     public static final String STUDENT_APPROVAL_EXPIRED =
-            "Randevu devri için bir saatlik öğrenci onay süresi dolmuştur.";
+            "Randevu devri için iki saatlik öğrenci onay süresi dolmuştur.";
     public static final String INVALID_STATUS_TRANSITION =
             "Randevu devri için geçersiz durum geçişi.";
 

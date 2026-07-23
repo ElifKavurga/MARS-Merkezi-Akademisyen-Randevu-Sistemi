@@ -129,7 +129,7 @@ class DelegationStudentApprovalServiceTest {
         assertThat(result.getDelegationStatus()).isEqualTo(DelegationStatus.PENDING_STUDENT_APPROVAL.name());
         assertThat(log.getApprovalRequired()).isTrue();
         assertThat(log.getSlotLockStatus()).isEqualTo(SlotLockStatus.LOCKED.name());
-        assertThat(log.getStudentApprovalExpiresAt()).isAfter(LocalDateTime.now().plusMinutes(59));
+        assertThat(log.getStudentApprovalExpiresAt()).isAfter(LocalDateTime.now().plusMinutes(119));
         verify(notificationService).createPreparedEmailNotification(
                 eq(student), eq("DELEGATION_STUDENT_APPROVAL"), any(), any(), eq(log));
     }
@@ -163,7 +163,7 @@ class DelegationStudentApprovalServiceTest {
 
         assertThat(result.getDelegationStatus())
                 .isEqualTo(DelegationStatus.PENDING_STUDENT_APPROVAL.name());
-        assertThat(log.getStudentApprovalExpiresAt()).isAfter(LocalDateTime.now().plusMinutes(59));
+        assertThat(log.getStudentApprovalExpiresAt()).isAfter(LocalDateTime.now().plusMinutes(119));
         assertThat(appointment.getStaff()).isEqualTo(academician);
         verify(appointmentRepository, never()).save(any());
         verify(notificationService).createPreparedEmailNotification(

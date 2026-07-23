@@ -32,13 +32,10 @@ const AssistantDashboardPage = lazy(() => import('../pages/AssistantDashboardPag
 const AssistantCoursesPage = lazy(() => import('../pages/AssistantCoursesPage'));
 const AssistantAvailabilityPage = lazy(() => import('../pages/AssistantAvailabilityPage'));
 const AssistantAppointmentsPage = lazy(() => import('../pages/AssistantAppointmentsPage'));
-const AssistantIncomingDelegationsPage = lazy(
-  () => import('../pages/AssistantIncomingDelegationsPage'),
-);
+const DelegationManagementPage = lazy(() => import('../pages/DelegationManagementPage'));
 const AcademicianIncomingDelegationDetailPage = lazy(
   () => import('../pages/AcademicianIncomingDelegationDetailPage'),
 );
-const DelegationHistoryPage = lazy(() => import('../pages/DelegationHistoryPage'));
 const AssistantCalendarPage = lazy(() => import('../pages/AssistantCalendarPage'));
 const ProfilePage = lazy(() => import('../pages/ProfilePage'));
 const StudentDashboard = lazy(() => import('../pages/StudentDashboard'));
@@ -144,11 +141,11 @@ export default function AppRouter() {
             />
             <Route
               path={ROUTES.ASSISTANT_INCOMING_DELEGATIONS}
-              element={<AssistantIncomingDelegationsPage />}
+              element={<DelegationManagementPage />}
             />
             <Route
               path={ROUTES.ASSISTANT_DELEGATION_HISTORY}
-              element={<DelegationHistoryPage />}
+              element={<DelegationManagementPage />}
             />
             <Route path={ROUTES.ASSISTANT_CALENDAR} element={<AssistantCalendarPage />} />
             <Route path={ROUTES.ASSISTANT_PROFILE} element={<ProfilePage />} />
@@ -174,11 +171,11 @@ export default function AppRouter() {
               />
               <Route
                 path={ROUTES.ACADEMICIAN_DELEGATION_HISTORY}
-                element={<DelegationHistoryPage />}
+                element={<DelegationManagementPage />}
               />
               <Route
                 path={ROUTES.ACADEMICIAN_INCOMING_DELEGATIONS}
-                element={<AssistantIncomingDelegationsPage />}
+                element={<DelegationManagementPage />}
               />
               <Route
                 path={ROUTES.ACADEMICIAN_INCOMING_DELEGATION_DETAIL}

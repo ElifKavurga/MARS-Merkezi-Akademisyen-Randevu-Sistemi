@@ -65,6 +65,11 @@ public class DelegationController {
         return ResponseEntity.ok(delegationService.getDelegationHistory());
     }
 
+    @GetMapping("/sent")
+    public ResponseEntity<List<DelegationResponse>> getSentDelegations() {
+        return ResponseEntity.ok(delegationService.getSentDelegations());
+    }
+
     @PostMapping("/{id}/accept")
     public ResponseEntity<DelegationResponse> acceptDelegation(@PathVariable("id") Integer id) {
         return ResponseEntity.ok(delegationService.acceptDelegation(id));

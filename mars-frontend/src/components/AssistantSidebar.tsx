@@ -28,15 +28,9 @@ const assistantNavItems = [
     end: true,
   },
   {
-    label: 'Gelen Randevu Devirleri',
-    path: ROUTES.ASSISTANT_INCOMING_DELEGATIONS,
-    icon: 'swap_horiz',
-    end: true,
-  },
-  {
     label: 'Randevu Devri',
     path: ROUTES.ASSISTANT_DELEGATION_HISTORY,
-    icon: 'history',
+    icon: 'swap_horiz',
     end: true,
   },
   {
