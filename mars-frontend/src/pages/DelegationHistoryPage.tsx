@@ -12,7 +12,8 @@ import { getDelegationHistory } from '../services/delegationService';
 import type { DelegationResponse } from '../types/delegation';
 
 const VALID_STATUS_FILTERS = new Set([
-  'PENDING', 'PENDING_STUDENT_APPROVAL', 'ACCEPTED', 'REJECTED', 'STUDENT_REJECTED', 'EXPIRED',
+  'PENDING', 'PENDING_ACADEMICIAN_APPROVAL', 'PENDING_STUDENT_APPROVAL',
+  'ACCEPTED', 'REJECTED', 'EXPIRED', 'CANCELLED', 'COMPLETED',
 ]);
 
 function resolveStatusFilter(raw: string | null): string {
@@ -152,7 +153,11 @@ export default function DelegationHistoryPage() {
   const filteredDelegations = useMemo(() => {
     const query = searchQuery.trim().toLocaleLowerCase('tr-TR');
     return delegations.filter((delegation) => {
-      if (statusFilter && delegation.delegationStatus !== statusFilter) {
+      const matchesStatus = statusFilter === 'REJECTED'
+        ? delegation.delegationStatus === 'REJECTED'
+          || delegation.delegationStatus === 'STUDENT_REJECTED'
+        : delegation.delegationStatus === statusFilter;
+      if (statusFilter && !matchesStatus) {
         return false;
       }
 
@@ -217,11 +222,13 @@ export default function DelegationHistoryPage() {
           >
             <option value="">{DELEGATION_HISTORY_MESSAGES.STATUS_FILTER_ALL}</option>
             <option value="PENDING">Bekliyor</option>
-            <option value="PENDING_STUDENT_APPROVAL">Öğrenci Onayı Bekleniyor</option>
+            <option value="PENDING_ACADEMICIAN_APPROVAL">Akademisyen Onayı Bekliyor</option>
+            <option value="PENDING_STUDENT_APPROVAL">Öğrenci Onayı Bekliyor</option>
             <option value="ACCEPTED">Kabul Edildi</option>
             <option value="REJECTED">Reddedildi</option>
-            <option value="STUDENT_REJECTED">Öğrenci Reddetti</option>
             <option value="EXPIRED">Süresi Doldu</option>
+            <option value="CANCELLED">İptal Edildi</option>
+            <option value="COMPLETED">Tamamlandı</option>
           </select>
 
           <input

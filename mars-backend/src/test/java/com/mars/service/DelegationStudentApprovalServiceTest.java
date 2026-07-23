@@ -63,6 +63,7 @@ class DelegationStudentApprovalServiceTest {
     private User academician;
     private User assistant;
     private User unrelatedAssistant;
+    private User targetAcademician;
     private User student;
     private Appointment appointment;
     private AvailabilitySlot targetSlot;
@@ -72,6 +73,7 @@ class DelegationStudentApprovalServiceTest {
         academician = user(10, "Akademisyen", RoleType.ACADEMICIAN);
         assistant = user(20, "Ders Asistanı", RoleType.ASSISTANT);
         unrelatedAssistant = user(21, "Diğer Asistan", RoleType.ASSISTANT);
+        targetAcademician = user(22, "Hedef Akademisyen", RoleType.ACADEMICIAN);
         student = user(30, "Öğrenci", RoleType.STUDENT);
 
         Course course = new Course();
@@ -129,6 +131,60 @@ class DelegationStudentApprovalServiceTest {
     }
 
     @Test
+    void academicianTargetRequiresAcademicianApprovalBeforeStudentApproval() {
+        authenticate(academician);
+        targetSlot.setStaff(targetAcademician);
+        stubCreate(targetAcademician, false);
+        DelegationLog log = mappedLog(6, targetAcademician);
+
+        DelegationResponse result = delegationService.createDelegation(requestFor(targetAcademician));
+
+        assertThat(result.getDelegationStatus())
+                .isEqualTo(DelegationStatus.PENDING_ACADEMICIAN_APPROVAL.name());
+        assertThat(log.getStudentApprovalExpiresAt()).isNull();
+        verify(notificationService, never()).createPreparedEmailNotification(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void academicianAcceptanceSendsRequestToStudentWithoutTransferringAppointment() {
+        authenticate(targetAcademician);
+        DelegationLog log = studentApprovalLog(7, targetAcademician);
+        log.setDelegationStatus(DelegationStatus.PENDING_ACADEMICIAN_APPROVAL.name());
+        log.setStudentApprovalExpiresAt(null);
+        when(delegationLogRepository.findByIdForUpdate(7)).thenReturn(Optional.of(log));
+        when(delegationLogRepository.save(log)).thenReturn(log);
+        stubResponse(log);
+
+        DelegationResponse result = delegationService.acceptDelegation(7);
+
+        assertThat(result.getDelegationStatus())
+                .isEqualTo(DelegationStatus.PENDING_STUDENT_APPROVAL.name());
+        assertThat(log.getStudentApprovalExpiresAt()).isAfter(LocalDateTime.now().plusMinutes(59));
+        assertThat(appointment.getStaff()).isEqualTo(academician);
+        verify(appointmentRepository, never()).save(any());
+        verify(notificationService).createPreparedEmailNotification(
+                eq(student), eq("DELEGATION_STUDENT_APPROVAL"), any(), any(), eq(log));
+    }
+
+    @Test
+    void academicianRejectionClosesRequestWithoutStudentApproval() {
+        authenticate(targetAcademician);
+        DelegationLog log = studentApprovalLog(8, targetAcademician);
+        log.setDelegationStatus(DelegationStatus.PENDING_ACADEMICIAN_APPROVAL.name());
+        log.setStudentApprovalExpiresAt(null);
+        when(delegationLogRepository.findByIdForUpdate(8)).thenReturn(Optional.of(log));
+        when(delegationLogRepository.save(log)).thenReturn(log);
+        stubResponse(log);
+
+        DelegationResponse result = delegationService.rejectDelegation(8);
+
+        assertThat(result.getDelegationStatus()).isEqualTo(DelegationStatus.REJECTED.name());
+        assertThat(log.getSlotLockStatus()).isEqualTo(SlotLockStatus.RELEASED.name());
+        assertThat(appointment.getStaff()).isEqualTo(academician);
+        verify(notificationService, never()).createPreparedEmailNotification(any(), any(), any(), any(), any());
+    }
+
+    @Test
     void studentRejectionKeepsOwnerAndReleasesSlot() {
         authenticate(student);
         DelegationLog log = studentApprovalLog(3, unrelatedAssistant);
@@ -138,7 +194,7 @@ class DelegationStudentApprovalServiceTest {
 
         DelegationResponse result = delegationService.rejectStudentApproval(3);
 
-        assertThat(result.getDelegationStatus()).isEqualTo(DelegationStatus.STUDENT_REJECTED.name());
+        assertThat(result.getDelegationStatus()).isEqualTo(DelegationStatus.REJECTED.name());
         assertThat(log.getSlotLockStatus()).isEqualTo(SlotLockStatus.RELEASED.name());
         assertThat(appointment.getStaff()).isEqualTo(academician);
         verify(appointmentRepository, never()).save(any());
@@ -190,8 +246,10 @@ class DelegationStudentApprovalServiceTest {
     private void stubCreate(User target, boolean relatedAssistant) {
         when(appointmentRepository.findByIdForUpdate(100)).thenReturn(Optional.of(appointment));
         when(userRepository.findByIdWithRoleAndDepartment(target.getUserId())).thenReturn(Optional.of(target));
-        when(courseAssignmentRepository.existsByCourse_CourseIdAndAssistant_UserId(5, target.getUserId()))
-                .thenReturn(relatedAssistant);
+        if (RoleType.ASSISTANT.name().equals(target.getRole().getRoleName())) {
+            when(courseAssignmentRepository.existsByCourse_CourseIdAndAssistant_UserId(5, target.getUserId()))
+                    .thenReturn(relatedAssistant);
+        }
         when(availabilitySlotService.getBookableAvailableSlotsForStaff(target.getUserId(), 30))
                 .thenReturn(List.of(availableSlot()));
         when(availabilitySlotRepository.findByIdWithStaffForUpdate(41)).thenReturn(Optional.of(targetSlot));

@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -60,6 +61,23 @@ public interface DelegationLogRepository extends JpaRepository<DelegationLog, In
             @Param("assistantId") Integer assistantId,
             @Param("status") String status);
 
+    @Query("""
+            SELECT d
+            FROM DelegationLog d
+            JOIN FETCH d.appointment a
+            JOIN FETCH a.slot
+            JOIN FETCH a.category
+            LEFT JOIN FETCH a.course
+            JOIN FETCH d.delegatedByUser
+            JOIN FETCH d.delegatedToUser
+            WHERE d.delegatedToUser.userId = :targetId
+              AND d.delegationStatus IN :statuses
+            ORDER BY d.delegatedAt DESC
+            """)
+    List<DelegationLog> findIncomingByTargetIdAndStatuses(
+            @Param("targetId") Integer targetId,
+            @Param("statuses") Set<String> statuses);
+
     List<DelegationLog> findByAppointment_AppointmentIdAndDelegationStatusAndDelegationIdNot(
             Integer appointmentId,
             String delegationStatus,
@@ -105,7 +123,10 @@ public interface DelegationLogRepository extends JpaRepository<DelegationLog, In
               AND d.targetStartTime < :endTime
               AND d.targetEndTime > :startTime
               AND d.slotLockStatus = 'LOCKED'
-              AND d.studentApprovalExpiresAt > :now
+              AND (
+                    d.delegationStatus = 'PENDING_ACADEMICIAN_APPROVAL'
+                    OR d.studentApprovalExpiresAt > :now
+              )
               AND (:excludedDelegationId IS NULL OR d.delegationId <> :excludedDelegationId)
             """)
     boolean existsActiveSlotLock(
@@ -145,4 +166,15 @@ public interface DelegationLogRepository extends JpaRepository<DelegationLog, In
     List<DelegationLog> findStudentApprovals(
             @Param("studentId") Integer studentId,
             @Param("status") String status);
+
+    @Query("""
+            SELECT d
+            FROM DelegationLog d
+            JOIN FETCH d.appointment a
+            WHERE d.delegationStatus = :delegationStatus
+              AND a.appointmentStatus IN :appointmentStatuses
+            """)
+    List<DelegationLog> findAcceptedWithTerminalAppointmentStatus(
+            @Param("delegationStatus") String delegationStatus,
+            @Param("appointmentStatuses") Set<String> appointmentStatuses);
 }

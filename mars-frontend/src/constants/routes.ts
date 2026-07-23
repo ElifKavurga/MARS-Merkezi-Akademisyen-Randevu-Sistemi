@@ -17,6 +17,7 @@ export const ROUTES = {
   ACADEMICIAN_APPOINTMENTS: '/academician/appointments',
   ACADEMICIAN_APPOINTMENT_DETAIL: '/academician/appointments/:appointmentId',
   ACADEMICIAN_DELEGATION_HISTORY: '/academician/delegations/history',
+  ACADEMICIAN_INCOMING_DELEGATIONS: '/academician/delegations/incoming',
   ACADEMICIAN_CALENDAR: '/academician/calendar',
   ACADEMICIAN_OUT_OF_OFFICE: '/academician/out-of-office',
   ACADEMICIAN_PROFILE: '/academician/profile',

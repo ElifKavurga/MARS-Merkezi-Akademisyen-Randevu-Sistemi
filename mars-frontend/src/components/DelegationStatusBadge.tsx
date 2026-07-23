@@ -2,20 +2,26 @@ import { getDelegationStatusLabel } from '../constants/delegation';
 
 const STATUS_CLASSES: Record<string, string> = {
   PENDING: 'bg-amber-100 text-amber-800',
+  PENDING_ACADEMICIAN_APPROVAL: 'bg-violet-100 text-violet-800',
   ACCEPTED: 'bg-emerald-100 text-emerald-800',
   REJECTED: 'bg-red-100 text-red-800',
   PENDING_STUDENT_APPROVAL: 'bg-blue-100 text-blue-800',
   STUDENT_REJECTED: 'bg-red-100 text-red-800',
   EXPIRED: 'bg-neutral-200 text-neutral-700',
+  CANCELLED: 'bg-slate-200 text-slate-700',
+  COMPLETED: 'bg-teal-100 text-teal-800',
 };
 
 const STATUS_DOT_CLASSES: Record<string, string> = {
   PENDING: 'bg-amber-500',
+  PENDING_ACADEMICIAN_APPROVAL: 'bg-violet-500',
   ACCEPTED: 'bg-emerald-500',
   REJECTED: 'bg-red-500',
   PENDING_STUDENT_APPROVAL: 'bg-blue-500',
   STUDENT_REJECTED: 'bg-red-500',
   EXPIRED: 'bg-neutral-500',
+  CANCELLED: 'bg-slate-500',
+  COMPLETED: 'bg-teal-500',
 };
 
 type DelegationStatusBadgeProps = {

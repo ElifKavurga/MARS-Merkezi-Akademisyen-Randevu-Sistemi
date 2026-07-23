@@ -139,13 +139,26 @@ public class DelegationService {
         log.setTargetEndTime(selectedSlot.getEndTime());
         log.setApprovalRequired(approvalRequired);
         if (approvalRequired) {
-            log.setDelegationStatus(DelegationStatus.PENDING_STUDENT_APPROVAL.name());
-            log.setStudentApprovalExpiresAt(now.plusMinutes(STUDENT_APPROVAL_MINUTES));
+            boolean academicianTarget =
+                    RoleType.ACADEMICIAN.name().equals(target.getRole().getRoleName());
+            log.setDelegationStatus(academicianTarget
+                    ? DelegationStatus.PENDING_ACADEMICIAN_APPROVAL.name()
+                    : DelegationStatus.PENDING_STUDENT_APPROVAL.name());
+            if (!academicianTarget) {
+                log.setStudentApprovalExpiresAt(now.plusMinutes(STUDENT_APPROVAL_MINUTES));
+            }
             log.setSlotLockStatus(SlotLockStatus.LOCKED.name());
         }
 
         DelegationLog saved = delegationLogRepository.save(log);
-        if (approvalRequired) {
+        if (DelegationStatus.PENDING_ACADEMICIAN_APPROVAL.name().equals(saved.getDelegationStatus())) {
+            createDelegationNotification(
+                    saved,
+                    saved.getDelegatedToUser(),
+                    NotificationType.DELEGATION_REQUEST,
+                    "Randevu Devri Talebi",
+                    "Yeni bir randevu devri talebiniz bulunuyor.");
+        } else if (approvalRequired) {
             notificationService.createPreparedEmailNotification(
                     appointment.getStudent(),
                     "DELEGATION_STUDENT_APPROVAL",
@@ -157,17 +170,20 @@ public class DelegationService {
                     saved,
                     saved.getDelegatedToUser(),
                     NotificationType.DELEGATION_REQUEST,
-                    "Delegasyon Talebi",
-                    "Yeni bir randevu delegasyon talebiniz bulunuyor.");
+                    "Randevu Devri Talebi",
+                    "Yeni bir randevu devri talebiniz bulunuyor.");
         }
         return toResponse(saved);
     }
 
     @Transactional(readOnly = true)
     public List<DelegationResponse> getIncomingDelegations() {
-        User assistant = getCurrentAssistant();
-        return delegationLogRepository.findIncomingByAssistantIdAndStatus(
-                        assistant.getUserId(), DelegationStatus.PENDING.name())
+        User target = getCurrentDecisionUser();
+        Set<String> statuses = RoleType.ACADEMICIAN.name().equals(target.getRole().getRoleName())
+                ? Set.of(DelegationStatus.PENDING_ACADEMICIAN_APPROVAL.name())
+                : Set.of(DelegationStatus.PENDING.name());
+        return delegationLogRepository.findIncomingByTargetIdAndStatuses(
+                        target.getUserId(), statuses)
                 .stream().map(delegationMapper::toResponse).toList();
     }
 
@@ -195,35 +211,47 @@ public class DelegationService {
 
     @Transactional
     public DelegationResponse acceptDelegation(Integer delegationId) {
-        User assistant = getCurrentAssistant();
-        DelegationLog log = getOwnedPendingDelegationForDecision(delegationId, assistant);
-        completeTransfer(log, assistant);
-        log.setDelegationStatus(DelegationStatus.ACCEPTED.name());
-        log.setUpdatedAt(LocalDateTime.now(APP_ZONE));
+        User target = getCurrentDecisionUser();
+        DelegationLog log = getOwnedPendingDelegationForDecision(delegationId, target);
+        if (DelegationStatus.PENDING_ACADEMICIAN_APPROVAL.name().equals(log.getDelegationStatus())) {
+            transitionStatus(log, DelegationStatus.PENDING_STUDENT_APPROVAL);
+            log.setStudentApprovalExpiresAt(LocalDateTime.now(APP_ZONE).plusMinutes(STUDENT_APPROVAL_MINUTES));
+            delegationLogRepository.save(log);
+            notificationService.createPreparedEmailNotification(
+                    log.getAppointment().getStudent(),
+                    "DELEGATION_STUDENT_APPROVAL",
+                    "Randevu devri onayı",
+                    withDelegationContext(log, "Hedef akademisyen randevu devrini kabul etti. Onayınız bekleniyor."),
+                    log);
+            return toResponse(log);
+        }
+        completeTransfer(log, target);
+        transitionStatus(log, DelegationStatus.ACCEPTED);
+        log.setSlotLockStatus(SlotLockStatus.CONSUMED.name());
         delegationLogRepository.save(log);
         createDelegationNotification(
                 log,
                 log.getDelegatedByUser(),
                 NotificationType.DELEGATION_ACCEPTED,
-                "Delegasyon Kabul Edildi",
-                "Delegasyon talebiniz kabul edildi.");
+                "Randevu Devri Kabul Edildi",
+                "Randevu devri talebiniz kabul edildi.");
         return toResponse(log);
     }
 
     @Transactional
     public DelegationResponse rejectDelegation(Integer delegationId) {
-        User assistant = getCurrentAssistant();
-        DelegationLog log = getOwnedPendingDelegationForDecision(delegationId, assistant);
+        User target = getCurrentDecisionUser();
+        DelegationLog log = getOwnedPendingDelegationForDecision(delegationId, target);
         validateAppointmentProcessable(log.getAppointment().getAppointmentStatus());
-        log.setDelegationStatus(DelegationStatus.REJECTED.name());
-        log.setUpdatedAt(LocalDateTime.now(APP_ZONE));
+        transitionStatus(log, DelegationStatus.REJECTED);
+        log.setSlotLockStatus(SlotLockStatus.RELEASED.name());
         delegationLogRepository.save(log);
         createDelegationNotification(
                 log,
                 log.getDelegatedByUser(),
                 NotificationType.DELEGATION_REJECTED,
-                "Delegasyon Reddedildi",
-                "Delegasyon talebiniz reddedildi.");
+                "Randevu Devri Reddedildi",
+                "Randevu devri talebiniz reddedildi.");
         return toResponse(log);
     }
 
@@ -257,15 +285,13 @@ public class DelegationService {
         User student = getCurrentStudent();
         DelegationLog log = getStudentApprovalForDecision(delegationId, student);
         completeTransfer(log, log.getDelegatedToUser());
-        LocalDateTime now = LocalDateTime.now(APP_ZONE);
-        log.setDelegationStatus(DelegationStatus.ACCEPTED.name());
+        transitionStatus(log, DelegationStatus.ACCEPTED);
         log.setSlotLockStatus(SlotLockStatus.CONSUMED.name());
-        log.setUpdatedAt(now);
         delegationLogRepository.save(log);
         notificationService.createPreparedEmailNotification(
                 log.getDelegatedByUser(),
                 "DELEGATION_STUDENT_ACCEPTED",
-                "Delegasyon kabul edildi",
+                "Randevu devri kabul edildi",
                 withDelegationContext(log, "Öğrenci randevu yönlendirmesini kabul etti."),
                 log);
         return toResponse(log);
@@ -275,15 +301,13 @@ public class DelegationService {
     public DelegationResponse rejectStudentApproval(Integer delegationId) {
         User student = getCurrentStudent();
         DelegationLog log = getStudentApprovalForDecision(delegationId, student);
-        LocalDateTime now = LocalDateTime.now(APP_ZONE);
-        log.setDelegationStatus(DelegationStatus.STUDENT_REJECTED.name());
+        transitionStatus(log, DelegationStatus.REJECTED);
         log.setSlotLockStatus(SlotLockStatus.RELEASED.name());
-        log.setUpdatedAt(now);
         delegationLogRepository.save(log);
         notificationService.createPreparedEmailNotification(
                 log.getDelegatedByUser(),
                 "DELEGATION_STUDENT_REJECTED",
-                "Delegasyon reddedildi",
+                "Randevu devri reddedildi",
                 withDelegationContext(log, "Öğrenci randevu yönlendirmesini reddetti."),
                 log);
         return toResponse(log);
@@ -299,17 +323,33 @@ public class DelegationService {
         List<DelegationLog> expired = delegationLogRepository.findExpiredStudentApprovals(
                 DelegationStatus.PENDING_STUDENT_APPROVAL.name(), now);
         for (DelegationLog log : expired) {
-            log.setDelegationStatus(DelegationStatus.EXPIRED.name());
+            transitionStatus(log, DelegationStatus.EXPIRED, now);
             log.setSlotLockStatus(SlotLockStatus.RELEASED.name());
-            log.setUpdatedAt(now);
             notificationService.createPreparedEmailNotification(
                     log.getDelegatedByUser(),
                     "DELEGATION_EXPIRED",
-                    "Delegasyon süresi doldu",
+                    "Randevu devri süresi doldu",
                     withDelegationContext(log, "Öğrenci bir saat içinde yanıt vermediği için delegasyon iptal edildi."),
                     log);
         }
         delegationLogRepository.saveAll(expired);
+    }
+
+    @Scheduled(fixedDelay = 60_000)
+    @Transactional
+    public void synchronizeAcceptedDelegations() {
+        List<DelegationLog> terminal = delegationLogRepository.findAcceptedWithTerminalAppointmentStatus(
+                DelegationStatus.ACCEPTED.name(),
+                Set.of(AppointmentStatus.CANCELLED.name(), AppointmentStatus.COMPLETED.name()));
+        LocalDateTime now = LocalDateTime.now(APP_ZONE);
+        for (DelegationLog log : terminal) {
+            DelegationStatus target = AppointmentStatus.CANCELLED.name()
+                    .equals(log.getAppointment().getAppointmentStatus())
+                    ? DelegationStatus.CANCELLED
+                    : DelegationStatus.COMPLETED;
+            transitionStatus(log, target, now);
+        }
+        delegationLogRepository.saveAll(terminal);
     }
 
     private String withDelegationContext(DelegationLog delegation, String message) {
@@ -399,9 +439,8 @@ public class DelegationService {
         LocalDateTime now = LocalDateTime.now(APP_ZONE);
         if (log.getStudentApprovalExpiresAt() != null
                 && !now.isBefore(log.getStudentApprovalExpiresAt())) {
-            log.setDelegationStatus(DelegationStatus.EXPIRED.name());
+            transitionStatus(log, DelegationStatus.EXPIRED, now);
             log.setSlotLockStatus(SlotLockStatus.RELEASED.name());
-            log.setUpdatedAt(now);
             delegationLogRepository.save(log);
             throw new ConflictException(DelegationMessages.STUDENT_APPROVAL_EXPIRED);
         }
@@ -483,23 +522,25 @@ public class DelegationService {
             throw new ConflictException(DelegationMessages.NOT_PENDING_STUDENT_APPROVAL);
         }
         if (!LocalDateTime.now(APP_ZONE).isBefore(log.getStudentApprovalExpiresAt())) {
-            log.setDelegationStatus(DelegationStatus.EXPIRED.name());
+            transitionStatus(log, DelegationStatus.EXPIRED);
             log.setSlotLockStatus(SlotLockStatus.RELEASED.name());
-            log.setUpdatedAt(LocalDateTime.now(APP_ZONE));
             delegationLogRepository.save(log);
             throw new ConflictException(DelegationMessages.STUDENT_APPROVAL_EXPIRED);
         }
         return log;
     }
 
-    private DelegationLog getOwnedPendingDelegationForDecision(Integer delegationId, User assistant) {
+    private DelegationLog getOwnedPendingDelegationForDecision(Integer delegationId, User target) {
         requireValidDelegationId(delegationId);
         DelegationLog log = delegationLogRepository.findByIdForUpdate(delegationId)
                 .orElseThrow(() -> new ResourceNotFoundException(DelegationMessages.DELEGATION_NOT_FOUND));
-        if (!Objects.equals(log.getDelegatedToUser().getUserId(), assistant.getUserId())) {
+        if (!Objects.equals(log.getDelegatedToUser().getUserId(), target.getUserId())) {
             throw new AccessDeniedException(DelegationMessages.DECISION_ACCESS_DENIED);
         }
-        if (!DelegationStatus.PENDING.name().equals(log.getDelegationStatus())) {
+        DelegationStatus expected = RoleType.ACADEMICIAN.name().equals(target.getRole().getRoleName())
+                ? DelegationStatus.PENDING_ACADEMICIAN_APPROVAL
+                : DelegationStatus.PENDING;
+        if (!expected.name().equals(log.getDelegationStatus())) {
             throw new ConflictException(DelegationMessages.NOT_PENDING);
         }
         return log;
@@ -543,7 +584,9 @@ public class DelegationService {
         if (delegationLogRepository.existsByAppointment_AppointmentIdAndDelegationStatus(
                 appointmentId, DelegationStatus.PENDING.name())
                 || delegationLogRepository.existsByAppointment_AppointmentIdAndDelegationStatus(
-                        appointmentId, DelegationStatus.PENDING_STUDENT_APPROVAL.name())) {
+                        appointmentId, DelegationStatus.PENDING_STUDENT_APPROVAL.name())
+                || delegationLogRepository.existsByAppointment_AppointmentIdAndDelegationStatus(
+                        appointmentId, DelegationStatus.PENDING_ACADEMICIAN_APPROVAL.name())) {
             throw new ConflictException(DelegationMessages.PENDING_EXISTS);
         }
     }
@@ -559,8 +602,7 @@ public class DelegationService {
                 .findByAppointment_AppointmentIdAndDelegationStatusAndDelegationIdNot(
                         appointmentId, DelegationStatus.PENDING.name(), acceptedId);
         for (DelegationLog other : others) {
-            other.setDelegationStatus(DelegationStatus.REJECTED.name());
-            other.setUpdatedAt(now);
+            transitionStatus(other, DelegationStatus.REJECTED, now);
         }
         delegationLogRepository.saveAll(others);
     }
@@ -594,6 +636,33 @@ public class DelegationService {
 
     private User getCurrentAssistant() {
         return getCurrentUserWithRole(RoleType.ASSISTANT, DelegationMessages.ONLY_ASSISTANT);
+    }
+
+    private User getCurrentDecisionUser() {
+        User user = getAuthenticatedUser();
+        String role = user.getRole() == null ? null : user.getRole().getRoleName();
+        if (!RoleType.ACADEMICIAN.name().equals(role) && !RoleType.ASSISTANT.name().equals(role)) {
+            throw new AccessDeniedException(DelegationMessages.ONLY_TARGET_STAFF);
+        }
+        return user;
+    }
+
+    private void transitionStatus(DelegationLog log, DelegationStatus target) {
+        transitionStatus(log, target, LocalDateTime.now(APP_ZONE));
+    }
+
+    private void transitionStatus(DelegationLog log, DelegationStatus target, LocalDateTime changedAt) {
+        final DelegationStatus current;
+        try {
+            current = DelegationStatus.valueOf(log.getDelegationStatus());
+        } catch (IllegalArgumentException | NullPointerException exception) {
+            throw new ConflictException(DelegationMessages.INVALID_STATUS_TRANSITION);
+        }
+        if (!current.canTransitionTo(target)) {
+            throw new ConflictException(DelegationMessages.INVALID_STATUS_TRANSITION);
+        }
+        log.setDelegationStatus(target.name());
+        log.setUpdatedAt(changedAt);
     }
 
     private User getCurrentStudent() {

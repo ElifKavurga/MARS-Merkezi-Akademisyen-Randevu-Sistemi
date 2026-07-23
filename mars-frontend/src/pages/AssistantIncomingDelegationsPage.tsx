@@ -92,7 +92,7 @@ export default function AssistantIncomingDelegationsPage() {
   }, [toast]);
 
   useEffect(() => {
-    if (!user || user.role !== 'ASSISTANT') {
+    if (!user || (user.role !== 'ASSISTANT' && user.role !== 'ACADEMICIAN')) {
       setLoading(false);
       setError(INCOMING_DELEGATION_MESSAGES.ACCESS_DENIED);
       return;
@@ -112,8 +112,12 @@ export default function AssistantIncomingDelegationsPage() {
     setActionDelegationId(delegationId);
     try {
       if (action === 'accept') {
-        await acceptDelegation(delegationId);
-        toast.success(INCOMING_DELEGATION_MESSAGES.ACCEPT_SUCCESS);
+        const result = await acceptDelegation(delegationId);
+        toast.success(
+          result.delegationStatus === 'PENDING_STUDENT_APPROVAL'
+            ? INCOMING_DELEGATION_MESSAGES.ACADEMICIAN_ACCEPT_SUCCESS
+            : INCOMING_DELEGATION_MESSAGES.ACCEPT_SUCCESS,
+        );
       } else {
         await rejectDelegation(delegationId);
         toast.success(INCOMING_DELEGATION_MESSAGES.REJECT_SUCCESS);

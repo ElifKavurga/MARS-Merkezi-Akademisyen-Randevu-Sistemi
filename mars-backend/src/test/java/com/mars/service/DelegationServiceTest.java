@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -163,12 +164,13 @@ class DelegationServiceTest {
     }
 
     @Test
-    void getIncomingDelegations_requiresAssistantRole() {
+    void getIncomingDelegations_supportsAcademicianApprovalQueue() {
         authenticate(academician);
 
-        assertThatThrownBy(() -> delegationService.getIncomingDelegations())
-                .isInstanceOf(AccessDeniedException.class)
-                .hasMessage(DelegationMessages.ONLY_ASSISTANT);
+        assertThat(delegationService.getIncomingDelegations()).isEmpty();
+        verify(delegationLogRepository).findIncomingByTargetIdAndStatuses(
+                academician.getUserId(),
+                Set.of(DelegationStatus.PENDING_ACADEMICIAN_APPROVAL.name()));
     }
 
     @Test

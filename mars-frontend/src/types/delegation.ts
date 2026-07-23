@@ -9,11 +9,14 @@ export type CreateDelegationPayload = {
 
 export type DelegationStatus =
   | 'PENDING'
+  | 'PENDING_ACADEMICIAN_APPROVAL'
   | 'PENDING_STUDENT_APPROVAL'
   | 'ACCEPTED'
   | 'REJECTED'
   | 'STUDENT_REJECTED'
-  | 'EXPIRED';
+  | 'EXPIRED'
+  | 'CANCELLED'
+  | 'COMPLETED';
 
 export type DelegationTarget = {
   userId: number;

@@ -37,6 +37,8 @@ export const INCOMING_DELEGATION_MESSAGES = {
   ACCEPT_LABEL: 'Kabul Et',
   REJECT_LABEL: 'Reddet',
   ACCEPT_SUCCESS: 'Randevu devri kabul edildi. Randevu size aktarıldı.',
+  ACADEMICIAN_ACCEPT_SUCCESS:
+    'Randevu devri kabul edildi. Talep öğrenci onayına gönderildi.',
   REJECT_SUCCESS: 'Randevu devri reddedildi.',
   ACTION_ERROR: 'İşlem sırasında bir hata oluştu.',
   STATUS_PENDING: 'Bekliyor',
@@ -59,11 +61,14 @@ export const DELEGATION_HISTORY_MESSAGES = {
 
 export const DELEGATION_STATUS_LABELS: Record<string, string> = {
   PENDING: 'Bekliyor',
+  PENDING_ACADEMICIAN_APPROVAL: 'Akademisyen Onayı Bekliyor',
   ACCEPTED: 'Kabul Edildi',
   REJECTED: 'Reddedildi',
   PENDING_STUDENT_APPROVAL: 'Öğrenci Onayı Bekliyor',
-  STUDENT_REJECTED: 'Öğrenci Reddetti',
+  STUDENT_REJECTED: 'Reddedildi',
   EXPIRED: 'Süresi Doldu',
+  CANCELLED: 'İptal Edildi',
+  COMPLETED: 'Tamamlandı',
 };
 
 export function getDelegationStatusLabel(status: string): string {

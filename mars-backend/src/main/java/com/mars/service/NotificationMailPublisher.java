@@ -113,11 +113,11 @@ public class NotificationMailPublisher {
                     appointment.getCourse().getCourseCode(), appointment.getCourse().getCourseName()));
         }
         if (delegation != null) {
-            add(details, "Delegasyonu Atayan", delegation.getDelegatedByUser() == null
+            add(details, "Randevuyu Devreden", delegation.getDelegatedByUser() == null
                     ? null : delegation.getDelegatedByUser().getFullName());
             add(details, "Atanan Personel", delegation.getDelegatedToUser() == null
                     ? null : delegation.getDelegatedToUser().getFullName());
-            add(details, "Delegasyon Durumu", delegationStatus(delegation.getDelegationStatus()));
+            add(details, "Randevu Devri Durumu", delegationStatus(delegation.getDelegationStatus()));
         }
         return List.copyOf(details);
     }
@@ -143,13 +143,13 @@ public class NotificationMailPublisher {
         } else if (delegation != null) {
             switch (notification.getNotificationType()) {
                 case DELEGATION_REQUEST, STUDENT_APPROVAL_PENDING -> putPresentation(values,
-                        "Delegasyon işlemi için onay bekleniyor.", "ONAY BEKLİYOR", "#b45309", "#fffbeb");
+                        "Randevu devri işlemi için onay bekleniyor.", "ONAY BEKLİYOR", "#b45309", "#fffbeb");
                 case DELEGATION_ACCEPTED -> putPresentation(values,
-                        "Delegasyon işlemi başarıyla kabul edildi.", "KABUL EDİLDİ", "#047857", "#ecfdf5");
+                        "Randevu devri işlemi başarıyla kabul edildi.", "KABUL EDİLDİ", "#047857", "#ecfdf5");
                 case DELEGATION_REJECTED -> putPresentation(values,
-                        "Delegasyon işlemi reddedildi.", "REDDEDİLDİ", "#b91c1c", "#fef2f2");
+                        "Randevu devri işlemi reddedildi.", "REDDEDİLDİ", "#b91c1c", "#fef2f2");
                 case DELEGATION_EXPIRED -> putPresentation(values,
-                        "Yanıt süresi dolduğu için delegasyon kapatıldı.", "SÜRESİ DOLDU", "#6b7280", "#f3f4f6");
+                        "Yanıt süresi dolduğu için randevu devri kapatıldı.", "SÜRESİ DOLDU", "#6b7280", "#f3f4f6");
                 default -> { }
             }
         }
@@ -183,10 +183,14 @@ public class NotificationMailPublisher {
             return null;
         }
         return switch (status) {
-            case "PENDING", "PENDING_STUDENT_APPROVAL" -> "Onay Bekliyor";
+            case "PENDING" -> "Bekliyor";
+            case "PENDING_ACADEMICIAN_APPROVAL" -> "Akademisyen Onayı Bekliyor";
+            case "PENDING_STUDENT_APPROVAL" -> "Öğrenci Onayı Bekliyor";
             case "ACCEPTED" -> "Kabul Edildi";
             case "REJECTED", "STUDENT_REJECTED" -> "Reddedildi";
             case "EXPIRED" -> "Süresi Doldu";
+            case "CANCELLED" -> "İptal Edildi";
+            case "COMPLETED" -> "Tamamlandı";
             default -> status;
         };
     }
