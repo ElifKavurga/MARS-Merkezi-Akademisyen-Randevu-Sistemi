@@ -43,7 +43,7 @@ export const INCOMING_DELEGATION_MESSAGES = {
 } as const;
 
 export const DELEGATION_HISTORY_MESSAGES = {
-  TITLE: 'Randevu Devri Geçmişi',
+  TITLE: 'Randevu Devri',
   SUBTITLE: 'Geçmişte gerçekleşen randevu devri işlemlerini görüntüleyin.',
   LOADING: 'Randevu devri geçmişi yükleniyor...',
   LOAD_ERROR: 'Randevu devri geçmişi yüklenirken bir hata oluştu.',

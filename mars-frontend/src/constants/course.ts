@@ -39,7 +39,7 @@ export const COURSE_MESSAGES = {
   SECTION_FUTURE: 'Gelecek Modüller',
   SECTION_OFFICE_HOURS: 'Ofis Saatleri',
   SECTION_APPOINTMENTS: 'Randevular',
-  SECTION_DELEGATION: 'Randevu Devri Geçmişi',
+  SECTION_DELEGATION: 'Randevu Devri',
   STAT_ASSISTANTS: 'Toplam Asistan Sayısı',
   STAT_STATUS: 'Ders Durumu',
   STAT_TERM: 'Akademik Dönem',

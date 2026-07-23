@@ -4,6 +4,7 @@ import ModalFormFooter from './ModalFormFooter';
 import ModalHeader from './ModalHeader';
 import ModalShell from './ModalShell';
 import Loading from './Loading';
+import ConfirmModal from './ConfirmModal';
 import {
   RECURRENCE_MESSAGES,
   REPEAT_TYPE,
@@ -13,7 +14,11 @@ import {
 } from '../constants/recurrence';
 import { FORM_FIELD_CLASS } from '../constants/ui';
 import { getDayOfWeekLabel } from '../constants/availability';
-import { getRecurrenceRule, updateRecurrenceRule } from '../services/recurrenceService';
+import {
+  endRecurrenceRule,
+  getRecurrenceRule,
+  updateRecurrenceRule,
+} from '../services/recurrenceService';
 import type { AvailabilitySlot } from '../types/availability';
 
 type RecurrenceRuleEditModalProps = {
@@ -59,6 +64,9 @@ export default function RecurrenceRuleEditModal({
   const [endDate, setEndDate] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [endConfirmOpen, setEndConfirmOpen] = useState(false);
+  const [ending, setEnding] = useState(false);
+  const [endError, setEndError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -69,6 +77,8 @@ export default function RecurrenceRuleEditModal({
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setEndConfirmOpen(false);
+    setEndError(null);
 
     void getRecurrenceRule(recurrenceRuleId)
       .then((rule) => {
@@ -103,7 +113,7 @@ export default function RecurrenceRuleEditModal({
     : 'Haftalık tekrar';
 
   const handleClose = () => {
-    if (submitting || loading) {
+    if (submitting || loading || ending) {
       return;
     }
     setError(null);
@@ -144,85 +154,153 @@ export default function RecurrenceRuleEditModal({
     }
   };
 
-  return (
-    <ModalShell
-      open={open}
-      titleId="recurrence-rule-edit-modal-title"
-      onClose={handleClose}
-      onSubmit={(event) => void handleSubmit(event)}
-      disableBackdropClose={submitting || loading}
-      footer={
-        <ModalFormFooter
-          submitting={submitting || loading}
-          onCancel={handleClose}
-          submitLabel="Kaydet"
-        />
+  const handleEndRecurrence = async () => {
+    if (ending) {
+      return;
+    }
+    setEnding(true);
+    setEndError(null);
+    try {
+      await endRecurrenceRule(recurrenceRuleId);
+      setEndConfirmOpen(false);
+      onUpdated(RECURRENCE_MESSAGES.END_SUCCESS);
+      onClose();
+    } catch (err) {
+      if (isAxiosError(err)) {
+        const backendMessage = err.response?.data?.message;
+        if (typeof backendMessage === 'string' && backendMessage.length > 0) {
+          setEndError(backendMessage);
+        } else if (err.response?.status === 404) {
+          setEndError(RECURRENCE_MESSAGES.NOT_FOUND);
+        } else if (err.response?.status === 403) {
+          setEndError(RECURRENCE_MESSAGES.ACCESS_DENIED);
+        } else {
+          setEndError(RECURRENCE_MESSAGES.END_ERROR);
+        }
+      } else {
+        setEndError(RECURRENCE_MESSAGES.END_ERROR);
       }
-    >
-      <div className="bg-surface px-4 pb-4 pt-5 sm:p-6">
-        <ModalHeader
-          titleId="recurrence-rule-edit-modal-title"
-          icon="edit_calendar"
-          title="Haftalık Tekrarı Düzenle"
-          description={`${dayLabel} için tarih aralığını güncelleyin.`}
-        />
+    } finally {
+      setEnding(false);
+    }
+  };
 
-        {loading ? (
-          <div className="mt-6">
-            <Loading label="Tekrar kuralı yükleniyor..." />
-          </div>
-        ) : (
-          <div className="mt-4 space-y-4 text-left">
-            <div className="rounded-lg border border-outline-variant bg-surface-container/40 px-3 py-2">
-              <p className="font-label-sm text-label-sm text-on-surface-variant">Tekrar günü</p>
-              <p className="mt-0.5 font-body-md text-body-md text-on-background">{dayLabel}</p>
+  return (
+    <>
+      <ModalShell
+        open={open}
+        titleId="recurrence-rule-edit-modal-title"
+        onClose={handleClose}
+        onSubmit={(event) => void handleSubmit(event)}
+        disableBackdropClose={submitting || loading || ending}
+        footer={
+          <ModalFormFooter
+            submitting={submitting || loading || ending}
+            onCancel={handleClose}
+            submitLabel="Kaydet"
+          />
+        }
+      >
+        <div className="bg-surface px-4 pb-4 pt-5 sm:p-6">
+          <ModalHeader
+            titleId="recurrence-rule-edit-modal-title"
+            icon="edit_calendar"
+            title="Tekrarlayan Ofis Saatlerini Düzenle"
+            description={`${dayLabel} için tarih aralığını güncelleyin veya tekrarı sonlandırın.`}
+          />
+
+          {loading ? (
+            <div className="mt-6">
+              <Loading label="Tekrar kuralı yükleniyor..." />
             </div>
+          ) : (
+            <div className="mt-4 space-y-4 text-left">
+              <div className="rounded-lg border border-outline-variant bg-surface-container/40 px-3 py-2">
+                <p className="font-label-sm text-label-sm text-on-surface-variant">Tekrar günü</p>
+                <p className="mt-0.5 font-body-md text-body-md text-on-background">{dayLabel}</p>
+              </div>
 
-            <div className="space-y-1.5">
-              <label
-                htmlFor="recurrence-edit-start-date"
-                className="block font-label-md text-label-md text-on-surface-variant"
-              >
-                Başlangıç Tarihi
-              </label>
-              <input
-                id="recurrence-edit-start-date"
-                type="date"
-                className={FORM_FIELD_CLASS}
-                required
-                min={todayIsoDate()}
-                value={startDate}
-                disabled={submitting}
-                onChange={(event) => setStartDate(event.target.value)}
-              />
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="recurrence-edit-start-date"
+                  className="block font-label-md text-label-md text-on-surface-variant"
+                >
+                  Başlangıç Tarihi
+                </label>
+                <input
+                  id="recurrence-edit-start-date"
+                  type="date"
+                  className={FORM_FIELD_CLASS}
+                  required
+                  min={todayIsoDate()}
+                  value={startDate}
+                  disabled={submitting || ending}
+                  onChange={(event) => setStartDate(event.target.value)}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="recurrence-edit-end-date"
+                  className="block font-label-md text-label-md text-on-surface-variant"
+                >
+                  Bitiş Tarihi
+                </label>
+                <input
+                  id="recurrence-edit-end-date"
+                  type="date"
+                  className={FORM_FIELD_CLASS}
+                  required
+                  value={endDate}
+                  disabled={submitting || ending}
+                  onChange={(event) => setEndDate(event.target.value)}
+                />
+              </div>
+
+              <div className="border-t border-outline-variant pt-4">
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-lg border border-error px-4 py-2 font-label-md text-label-md text-error transition-colors hover:bg-error-container/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/40"
+                  disabled={submitting || ending}
+                  onClick={() => {
+                    setEndError(null);
+                    setEndConfirmOpen(true);
+                  }}
+                >
+                  <span className="material-symbols-outlined text-[18px]" aria-hidden>
+                    event_busy
+                  </span>
+                  Tekrarı Sonlandır
+                </button>
+              </div>
+
+              {error ? (
+                <p className="font-label-sm text-label-sm text-error" role="alert">
+                  {error}
+                </p>
+              ) : null}
             </div>
+          )}
+        </div>
+      </ModalShell>
 
-            <div className="space-y-1.5">
-              <label
-                htmlFor="recurrence-edit-end-date"
-                className="block font-label-md text-label-md text-on-surface-variant"
-              >
-                Bitiş Tarihi
-              </label>
-              <input
-                id="recurrence-edit-end-date"
-                type="date"
-                className={FORM_FIELD_CLASS}
-                required
-                value={endDate}
-                disabled={submitting}
-                onChange={(event) => setEndDate(event.target.value)}
-              />
-            </div>
-
-            {error ? (
-              <p className="font-label-sm text-label-sm text-error" role="alert">
-                {error}
-              </p>
-            ) : null}
-          </div>
-        )}
-      </div>
-    </ModalShell>
+      <ConfirmModal
+        open={endConfirmOpen}
+        title={RECURRENCE_MESSAGES.END_CONFIRM_TITLE}
+        description={RECURRENCE_MESSAGES.END_CONFIRM_DESCRIPTION}
+        confirmLabel="Tekrarı Sonlandır"
+        loading={ending}
+        error={endError}
+        variant="danger"
+        zIndexClass="z-[60]"
+        onConfirm={() => void handleEndRecurrence()}
+        onClose={() => {
+          if (!ending) {
+            setEndConfirmOpen(false);
+            setEndError(null);
+          }
+        }}
+      />
+    </>
   );
 }

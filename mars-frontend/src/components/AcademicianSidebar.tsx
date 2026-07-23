@@ -29,7 +29,7 @@ export default function AcademicianSidebar({ mobileOpen, onClose }: ModuleSideba
           end: false,
         },
         {
-          label: 'Randevu Devri Geçmişi',
+          label: 'Randevu Devri',
           path: ROUTES.ACADEMICIAN_DELEGATION_HISTORY,
           icon: 'history',
           end: false,

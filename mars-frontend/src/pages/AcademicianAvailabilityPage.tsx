@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { isAxiosError } from 'axios';
 import AdminActionButton from '../components/AdminActionButton';
 import AvailabilityCreateModal from '../components/AvailabilityCreateModal';
+import AvailabilityEditScopeModal from '../components/AvailabilityEditScopeModal';
 import AvailabilityEditModal from '../components/AvailabilityEditModal';
 import AvailabilityStatusBadge from '../components/AvailabilityStatusBadge';
 import ConfirmModal from '../components/ConfirmModal';
@@ -20,14 +21,12 @@ import {
   getDurationMinutes,
   type AvailabilitySortField,
 } from '../constants/availability';
-import { RECURRENCE_MESSAGES } from '../constants/recurrence';
 import { useToast } from '../hooks/useToast';
 import {
   getMyAvailabilitySlots,
   getMyAvailabilityStats,
   updateAvailabilitySlotBlocked,
 } from '../services/availabilityService';
-import { endRecurrenceRule } from '../services/recurrenceService';
 import type {
   AvailabilitySlot,
   AvailabilitySlotStats,
@@ -144,11 +143,9 @@ export default function AcademicianAvailabilityPage({
   );
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [createOpen, setCreateOpen] = useState(false);
+  const [editScopeSlot, setEditScopeSlot] = useState<AvailabilitySlot | null>(null);
   const [editingSlot, setEditingSlot] = useState<AvailabilitySlot | null>(null);
   const [editingRecurrenceSlot, setEditingRecurrenceSlot] = useState<AvailabilitySlot | null>(null);
-  const [endingRecurrenceSlot, setEndingRecurrenceSlot] = useState<AvailabilitySlot | null>(null);
-  const [endLoading, setEndLoading] = useState(false);
-  const [endError, setEndError] = useState<string | null>(null);
   const [blockTarget, setBlockTarget] = useState<AvailabilitySlot | null>(null);
   const [blockLoading, setBlockLoading] = useState(false);
   const [blockError, setBlockError] = useState<string | null>(null);
@@ -229,38 +226,6 @@ export default function AcademicianAvailabilityPage({
     }
     setSortField(field);
     setSortDirection('asc');
-  };
-
-  const handleConfirmEndRecurrence = async () => {
-    if (!endingRecurrenceSlot?.recurrenceRuleId || endLoading) {
-      return;
-    }
-
-    setEndLoading(true);
-    setEndError(null);
-    try {
-      await endRecurrenceRule(endingRecurrenceSlot.recurrenceRuleId);
-      toast.success(RECURRENCE_MESSAGES.END_SUCCESS);
-      setEndingRecurrenceSlot(null);
-      await loadPageData();
-    } catch (err) {
-      if (isAxiosError(err)) {
-        const backendMessage = err.response?.data?.message;
-        if (typeof backendMessage === 'string' && backendMessage.length > 0) {
-          setEndError(backendMessage);
-        } else if (err.response?.status === 403) {
-          setEndError(RECURRENCE_MESSAGES.ACCESS_DENIED);
-        } else if (err.response?.status === 404) {
-          setEndError(RECURRENCE_MESSAGES.NOT_FOUND);
-        } else {
-          setEndError(RECURRENCE_MESSAGES.END_ERROR);
-        }
-      } else {
-        setEndError(RECURRENCE_MESSAGES.END_ERROR);
-      }
-    } finally {
-      setEndLoading(false);
-    }
   };
 
   const handleConfirmBlockChange = async () => {
@@ -505,59 +470,29 @@ export default function AcademicianAvailabilityPage({
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex flex-wrap justify-end gap-2">
-                          {!slot.isBlocked ? (
-                            <>
-                              <AdminActionButton
-                                variant="primary"
-                                icon="edit"
-                                onClick={() => setEditingSlot(slot)}
-                              >
-                                Düzenle
-                              </AdminActionButton>
-                              {slot.recurrenceRuleId != null ? (
-                                <>
-                                  <AdminActionButton
-                                    variant="neutral"
-                                    icon="edit_calendar"
-                                    onClick={() => setEditingRecurrenceSlot(slot)}
-                                  >
-                                    Tekrarı Düzenle
-                                  </AdminActionButton>
-                                  <AdminActionButton
-                                    variant="danger"
-                                    icon="event_busy"
-                                    onClick={() => {
-                                      setEndError(null);
-                                      setEndingRecurrenceSlot(slot);
-                                    }}
-                                  >
-                                    Tekrarı Sonlandır
-                                  </AdminActionButton>
-                                </>
-                              ) : null}
-                              <AdminActionButton
-                                variant="danger"
-                                icon="block"
-                                onClick={() => {
-                                  setBlockError(null);
-                                  setBlockTarget(slot);
-                                }}
-                              >
-                                Kullanıma Kapat
-                              </AdminActionButton>
-                            </>
-                          ) : (
-                            <AdminActionButton
-                              variant="primary"
-                              icon="check_circle"
-                              onClick={() => {
-                                setBlockError(null);
-                                setBlockTarget(slot);
-                              }}
-                            >
-                              Kullanıma Aç
-                            </AdminActionButton>
-                          )}
+                          <AdminActionButton
+                            variant="primary"
+                            icon="edit"
+                            onClick={() => {
+                              if (slot.recurrenceRuleId != null) {
+                                setEditScopeSlot(slot);
+                              } else {
+                                setEditingSlot(slot);
+                              }
+                            }}
+                          >
+                            Düzenle
+                          </AdminActionButton>
+                          <AdminActionButton
+                            variant={slot.isBlocked ? 'primary' : 'danger'}
+                            icon={slot.isBlocked ? 'check_circle' : 'block'}
+                            onClick={() => {
+                              setBlockError(null);
+                              setBlockTarget(slot);
+                            }}
+                          >
+                            {slot.isBlocked ? 'Kullanıma Aç' : 'Kullanıma Kapat'}
+                          </AdminActionButton>
                         </div>
                       </td>
                     </tr>
@@ -588,6 +523,23 @@ export default function AcademicianAvailabilityPage({
         }}
       />
 
+      <AvailabilityEditScopeModal
+        open={editScopeSlot !== null}
+        onClose={() => setEditScopeSlot(null)}
+        onSelect={(scope) => {
+          const slot = editScopeSlot;
+          setEditScopeSlot(null);
+          if (!slot) {
+            return;
+          }
+          if (scope === 'series') {
+            setEditingRecurrenceSlot(slot);
+          } else {
+            setEditingSlot(slot);
+          }
+        }}
+      />
+
       <RecurrenceRuleEditModal
         open={editingRecurrenceSlot !== null}
         recurrenceRuleId={editingRecurrenceSlot?.recurrenceRuleId ?? null}
@@ -596,25 +548,6 @@ export default function AcademicianAvailabilityPage({
         onUpdated={(message) => {
           toast.success(message);
           void loadPageData();
-        }}
-      />
-
-      <ConfirmModal
-        open={endingRecurrenceSlot !== null}
-        title={RECURRENCE_MESSAGES.END_CONFIRM_TITLE}
-        description={RECURRENCE_MESSAGES.END_CONFIRM_DESCRIPTION}
-        confirmLabel="Sonlandır"
-        cancelLabel="İptal"
-        loading={endLoading}
-        error={endError}
-        variant="danger"
-        onConfirm={() => void handleConfirmEndRecurrence()}
-        onClose={() => {
-          if (endLoading) {
-            return;
-          }
-          setEndError(null);
-          setEndingRecurrenceSlot(null);
         }}
       />
 

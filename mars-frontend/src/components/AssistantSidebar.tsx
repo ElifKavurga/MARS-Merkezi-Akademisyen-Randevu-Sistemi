@@ -34,7 +34,7 @@ const assistantNavItems = [
     end: true,
   },
   {
-    label: 'Randevu Devri Geçmişi',
+    label: 'Randevu Devri',
     path: ROUTES.ASSISTANT_DELEGATION_HISTORY,
     icon: 'history',
     end: true,
