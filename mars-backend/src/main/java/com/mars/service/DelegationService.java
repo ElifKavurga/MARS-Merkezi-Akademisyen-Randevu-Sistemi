@@ -69,6 +69,7 @@ public class DelegationService {
     private final DelegationMapper delegationMapper;
     private final AvailabilitySlotService availabilitySlotService;
     private final NotificationService notificationService;
+    private final WaitlistService waitlistService;
 
     @Transactional(readOnly = true)
     public List<DelegationTargetResponse> getDelegationTargets(Integer appointmentId) {
@@ -710,6 +711,10 @@ public class DelegationService {
         log.setDelegationStatus(target.name());
         log.setUpdatedAt(changedAt);
         recordStatus(log, target, changedAt);
+
+        if (target == DelegationStatus.REJECTED || target == DelegationStatus.EXPIRED) {
+            waitlistService.processWaitlistForSlot(log.getAppointment().getSlot(), changedAt);
+        }
     }
 
     private void recordStatus(

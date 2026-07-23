@@ -95,6 +95,7 @@ public class AppointmentService {
     private final AvailabilitySlotService availabilitySlotService;
     private final DelegationLogRepository delegationLogRepository;
     private final NotificationService notificationService;
+    private final WaitlistService waitlistService;
 
     @Transactional
     public AppointmentResponseDto createAppointment(AppointmentCreateRequest request) {
@@ -232,6 +233,7 @@ public class AppointmentService {
                 NotificationType.APPOINTMENT_CANCELLED,
                 "Randevu İptal Edildi",
                 buildStudentCancellationMessage(appointment));
+        waitlistService.processWaitlistForSlot(saved.getSlot(), LocalDateTime.now(APP_ZONE));
         return appointmentRepository.findByIdAndStudentIdWithDetails(
                         saved.getAppointmentId(), student.getUserId())
                 .map(appointmentMapper::toStudentResponse)
@@ -564,6 +566,9 @@ public class AppointmentService {
                 targetStatus == AppointmentStatus.APPROVED
                         ? "Randevu talebiniz onaylandı."
                         : "Randevu talebiniz reddedildi.");
+        if (targetStatus == AppointmentStatus.REJECTED) {
+            waitlistService.processWaitlistForSlot(saved.getSlot(), LocalDateTime.now(APP_ZONE));
+        }
         return appointmentMapper.toStaffResponse(saved);
     }
 

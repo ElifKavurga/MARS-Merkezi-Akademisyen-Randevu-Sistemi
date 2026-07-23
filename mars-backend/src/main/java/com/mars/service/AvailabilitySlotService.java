@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -44,6 +45,7 @@ import com.mars.repository.AppointmentRescheduleRequestRepository;
 import com.mars.repository.DelegationLogRepository;
 import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.repository.OutOfOfficePeriodRepository;
+import com.mars.repository.WaitlistEntryRepository;
 import com.mars.security.CustomUserDetails;
 import com.mars.security.SecurityMessages;
 import com.mars.util.AcademicTermCalendar;
@@ -70,6 +72,11 @@ public class AvailabilitySlotService {
     private final OutOfOfficePeriodRepository outOfOfficePeriodRepository;
     private final AvailabilitySlotMapper availabilitySlotMapper;
     private final RecurrenceRuleService recurrenceRuleService;
+    private final WaitlistEntryRepository waitlistEntryRepository;
+    private final WaitlistService waitlistService;
+
+    @Value("${mars.waitlist.offer-duration-minutes:60}")
+    private long offerDurationMinutes;
 
     @Transactional(readOnly = true)
     public List<AvailabilitySlotResponseDto> getMySlots() {
@@ -233,7 +240,8 @@ public class AvailabilitySlotService {
                     || hasActiveDelegationLock(
                             staffId, c.occurrenceDate(), c.windowStart(), c.windowEnd(), now)
                     || hasActiveRescheduleLock(
-                            staffId, c.occurrenceDate(), c.windowStart(), c.windowEnd(), now));
+                            staffId, c.occurrenceDate(), c.windowStart(), c.windowEnd(), now)
+                    || hasActiveWaitlistOffer(c.slot().getSlotId(), now));
             log.info("After Appointment filter={}", candidates.size());
         }
 
@@ -252,7 +260,8 @@ public class AvailabilitySlotService {
                             candidate.occurrenceDate(),
                             candidate.windowStart(),
                             candidate.windowEnd(),
-                            now);
+                            now)
+                    || hasActiveWaitlistOffer(candidate.slot().getSlotId(), now);
             AvailableSlotResponseDto dto = availabilitySlotMapper.toAvailableResponse(
                     candidate.slot(),
                     candidate.occurrenceDate(),
@@ -603,6 +612,13 @@ public class AvailabilitySlotService {
         }
 
         return slot;
+    }
+
+    private boolean hasActiveWaitlistOffer(Integer slotId, LocalDateTime now) {
+        return waitlistEntryRepository.existsActiveOfferForSlot(
+                slotId,
+                now.minusMinutes(offerDurationMinutes)
+        );
     }
 
     private User getCurrentUser() {

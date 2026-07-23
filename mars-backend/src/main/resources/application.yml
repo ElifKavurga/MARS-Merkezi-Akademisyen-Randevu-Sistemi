@@ -66,6 +66,9 @@ mars:
   appointment:
     status-update-cron: ${MARS_APPOINTMENT_STATUS_UPDATE_CRON:0 */5 * * * *}
     status-update-tolerance-minutes: ${MARS_APPOINTMENT_STATUS_UPDATE_TOLERANCE_MINUTES:15}
+  waitlist:
+    offer-duration-minutes: ${MARS_WAITLIST_OFFER_DURATION_MINUTES:60}
+    offer-check-cron: ${MARS_WAITLIST_OFFER_CHECK_CRON:0 */1 * * * *}
 
 logging:
   level:

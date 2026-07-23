@@ -45,6 +45,13 @@ public class WaitlistEntry {
     @JoinColumn(name = "course_id")
     private Course course;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "slot_id")
+    private AvailabilitySlot slot;
+
+    @Column(name = "offered_at")
+    private LocalDateTime offeredAt;
+
     @Column(name = "requested_at", nullable = false)
     private LocalDateTime requestedAt;
 

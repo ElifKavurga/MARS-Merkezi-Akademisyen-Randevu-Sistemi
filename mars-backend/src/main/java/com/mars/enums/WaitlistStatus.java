@@ -4,5 +4,6 @@ public enum WaitlistStatus {
     WAITING,
     NOTIFIED,
     CONVERTED,
-    EXPIRED
+    EXPIRED,
+    REJECTED
 }
