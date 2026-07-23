@@ -40,6 +40,7 @@ import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.StaffAppointmentResponseDto;
 import com.mars.dto.StudentAppointmentResponseDto;
 import com.mars.entity.Appointment;
+import com.mars.entity.DelegationLog;
 import com.mars.entity.AppointmentRescheduleApproval;
 import com.mars.entity.AppointmentCategory;
 import com.mars.entity.AvailabilitySlot;
@@ -990,6 +991,56 @@ class AppointmentServiceTest {
         assertThatThrownBy(() -> appointmentService.getStudentAppointment(404))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage(AppointmentMessages.APPOINTMENT_NOT_FOUND);
+    }
+
+    @Test
+    void getStudentAppointment_delegated_returnsDtoWithDelegationInfo() {
+        Appointment appointment = studentOwnedAppointment(100, AppointmentStatus.APPROVED.name());
+        when(appointmentRepository.findByIdAndStudentIdWithDetails(100, 20))
+                .thenReturn(Optional.of(appointment));
+
+        StudentAppointmentResponseDto baseDto = new AppointmentMapper().toStudentResponse(appointment);
+        when(appointmentMapper.toStudentResponse(appointment)).thenReturn(baseDto);
+
+        User fromUser = new User();
+        fromUser.setFullName("Dr. Ahmet Yılmaz");
+        User toUser = new User();
+        toUser.setFullName("Doç. Ayşe Demir");
+
+        DelegationLog log = new DelegationLog();
+        log.setDelegatedByUser(fromUser);
+        log.setDelegatedToUser(toUser);
+        log.setUpdatedAt(LocalDateTime.of(2026, 7, 15, 14, 35));
+
+        when(delegationLogRepository.findByAppointment_AppointmentIdAndDelegationStatusOrderByUpdatedAtDesc(100, "ACCEPTED"))
+                .thenReturn(List.of(log));
+
+        StudentAppointmentResponseDto result = appointmentService.getStudentAppointment(100);
+
+        assertThat(result.getIsDelegated()).isTrue();
+        assertThat(result.getDelegatedFromStaffName()).isEqualTo("Dr. Ahmet Yılmaz");
+        assertThat(result.getDelegatedToStaffName()).isEqualTo("Doç. Ayşe Demir");
+        assertThat(result.getDelegationDate()).isEqualTo(LocalDateTime.of(2026, 7, 15, 14, 35));
+    }
+
+    @Test
+    void getStudentAppointment_notDelegated_returnsDtoWithoutDelegationInfo() {
+        Appointment appointment = studentOwnedAppointment(100, AppointmentStatus.APPROVED.name());
+        when(appointmentRepository.findByIdAndStudentIdWithDetails(100, 20))
+                .thenReturn(Optional.of(appointment));
+
+        StudentAppointmentResponseDto baseDto = new AppointmentMapper().toStudentResponse(appointment);
+        when(appointmentMapper.toStudentResponse(appointment)).thenReturn(baseDto);
+
+        when(delegationLogRepository.findByAppointment_AppointmentIdAndDelegationStatusOrderByUpdatedAtDesc(100, "ACCEPTED"))
+                .thenReturn(List.of());
+
+        StudentAppointmentResponseDto result = appointmentService.getStudentAppointment(100);
+
+        assertThat(result.getIsDelegated()).isFalse();
+        assertThat(result.getDelegatedFromStaffName()).isNull();
+        assertThat(result.getDelegatedToStaffName()).isNull();
+        assertThat(result.getDelegationDate()).isNull();
     }
 
     @Test

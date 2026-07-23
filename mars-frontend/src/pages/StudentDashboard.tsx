@@ -104,7 +104,7 @@ export default function StudentDashboard() {
 
       {pendingDelegations.length > 0 ? (
         <Link
-          to={ROUTES.STUDENT_DELEGATIONS}
+          to={ROUTES.NOTIFICATIONS}
           className="mb-6 flex items-center justify-between gap-4 rounded-xl border-2 border-amber-300 bg-amber-50 p-5 no-underline shadow-sm transition hover:border-amber-400 hover:shadow-md"
         >
           <div className="flex min-w-0 items-center gap-4">
@@ -115,7 +115,7 @@ export default function StudentDashboard() {
               <h2 className="font-semibold text-amber-950">
                 {pendingDelegations.length} randevu devri talebi onayınızı bekliyor
               </h2>
-              <p className="mt-1 text-sm text-amber-800">Detayları incelemek ve karar vermek için açın.</p>
+              <p className="mt-1 text-sm text-amber-800">Detayları incelemek ve karar vermek için Bildirim Merkezi'ne gidin.</p>
             </div>
           </div>
           <span className="material-symbols-outlined text-amber-900" aria-hidden>chevron_right</span>

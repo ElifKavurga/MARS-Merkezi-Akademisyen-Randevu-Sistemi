@@ -192,4 +192,8 @@ public interface DelegationLogRepository extends JpaRepository<DelegationLog, In
     List<DelegationLog> findAcceptedWithTerminalAppointmentStatus(
             @Param("delegationStatus") String delegationStatus,
             @Param("appointmentStatuses") Set<String> appointmentStatuses);
+
+    List<DelegationLog> findByAppointment_AppointmentIdAndDelegationStatusOrderByUpdatedAtDesc(
+            Integer appointmentId,
+            String delegationStatus);
 }

@@ -110,7 +110,19 @@ export default function NotificationsPage() {
         <>
           <section className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm" aria-label="Bildirim listesi">
             <ul className="m-0 divide-y divide-outline-variant p-0">
-              {data.content.map((notification) => <li key={notification.notificationId} className="list-none"><NotificationCard notification={notification} onRead={handleRead} onOpen={(item) => { const target = getNotificationTarget(item, user?.role); if (target) navigate(target); }} /></li>)}
+              {data.content.map((notification) => (
+                <li key={notification.notificationId} className="list-none">
+                  <NotificationCard
+                    notification={notification}
+                    onRead={handleRead}
+                    onOpen={(item) => {
+                      const target = getNotificationTarget(item, user?.role);
+                      if (target) navigate(target);
+                    }}
+                    onActionComplete={() => void loadPage()}
+                  />
+                </li>
+              ))}
             </ul>
           </section>
 

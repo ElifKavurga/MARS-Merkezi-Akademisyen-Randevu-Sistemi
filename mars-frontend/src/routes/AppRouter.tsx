@@ -52,10 +52,7 @@ const StudentAppointmentsPage = lazy(() => import('../pages/StudentAppointmentsP
 const StudentAppointmentDetailPage = lazy(
   () => import('../pages/StudentAppointmentDetailPage'),
 );
-const StudentDelegationsPage = lazy(() => import('../pages/StudentDelegationsPage'));
-const StudentDelegationDetailPage = lazy(
-  () => import('../pages/StudentDelegationDetailPage'),
-);
+
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 const NotificationsPage = lazy(() => import('../pages/NotificationsPage'));
 
@@ -113,11 +110,7 @@ export default function AppRouter() {
               path={ROUTES.STUDENT_APPOINTMENT_DETAIL}
               element={<StudentAppointmentDetailPage />}
             />
-            <Route path={ROUTES.STUDENT_DELEGATIONS} element={<StudentDelegationsPage />} />
-            <Route
-              path={ROUTES.STUDENT_DELEGATION_DETAIL}
-              element={<StudentDelegationDetailPage />}
-            />
+
             <Route path={ROUTES.STUDENT_PROFILE} element={<ProfilePage />} />
           </Route>
         </Route>

@@ -220,6 +220,42 @@ export default function StudentAppointmentDetailPage() {
         />
       ) : appointment ? (
         <div className="flex flex-col gap-3 md:gap-4">
+          {appointment.isDelegated && (
+            <section className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 sm:p-5" aria-label="Randevu devri bilgisi">
+              <div className="flex items-start gap-3">
+                <span className="material-symbols-outlined mt-0.5 text-emerald-600 font-bold" aria-hidden>
+                  check_circle
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h2 className="font-headline-md text-[16px] leading-5 font-semibold text-emerald-800">Randevu Devri</h2>
+                  <p className="mt-1 font-body-md text-sm text-emerald-700 font-medium">✓ Bu randevu devir işlemi sonucunda yeni akademisyene atanmıştır.</p>
+                  
+                  <dl className="mt-3 grid gap-x-6 gap-y-2 font-body-md text-sm text-on-surface-variant sm:grid-cols-2">
+                    <div>
+                      <dt className="font-semibold text-on-surface">Eski Akademisyen</dt>
+                      <dd>{appointment.delegatedFromStaffName}</dd>
+                    </div>
+                    <div>
+                      <dt className="font-semibold text-on-surface">Yeni Akademisyen</dt>
+                      <dd>{appointment.delegatedToStaffName}</dd>
+                    </div>
+                    {appointment.delegationDate && (
+                      <div className="sm:col-span-2">
+                        <dt className="font-semibold text-on-surface">Devir Tarihi</dt>
+                        <dd>
+                          {new Intl.DateTimeFormat('tr-TR', {
+                            dateStyle: 'medium',
+                            timeStyle: 'short',
+                          }).format(new Date(appointment.delegationDate))}
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                </div>
+              </div>
+            </section>
+          )}
+
           {rescheduleApproval ? (
             <section className="rounded-xl border border-primary-container/30 bg-primary-fixed/35 p-4 sm:p-5" aria-label="Yeniden planlama onayı">
               <div className="flex items-start gap-3">

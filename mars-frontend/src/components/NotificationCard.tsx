@@ -1,6 +1,7 @@
 import type { NotificationItem } from '../types/notification';
 import { formatNotificationTime, getNotificationVisual } from '../utils/notification';
 import { acceptWaitlistOffer, rejectWaitlistOffer } from '../services/waitlistService';
+import { acceptStudentDelegation, rejectStudentDelegation } from '../services/delegationService';
 import { useState } from 'react';
 
 type NotificationCardProps = {
@@ -60,6 +61,38 @@ export default function NotificationCard({ notification, compact = false, onRead
     }
   };
 
+  const handleDelegationAccept = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!notification.relatedDelegationId || actionLoading) return;
+    setActionLoading(true);
+    try {
+      await acceptStudentDelegation(notification.relatedDelegationId);
+      setActionResult('accepted');
+      onRead?.(notification);
+      if (onActionComplete) onActionComplete();
+    } catch (err: any) {
+      alert(err?.response?.data?.message || 'Randevu devri kabul edilirken bir hata oluştu.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDelegationReject = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!notification.relatedDelegationId || actionLoading) return;
+    setActionLoading(true);
+    try {
+      await rejectStudentDelegation(notification.relatedDelegationId);
+      setActionResult('rejected');
+      onRead?.(notification);
+      if (onActionComplete) onActionComplete();
+    } catch (err: any) {
+      alert(err?.response?.data?.message || 'Randevu devri reddedilirken bir hata oluştu.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   return (
     <button
       type="button"
@@ -101,11 +134,36 @@ export default function NotificationCard({ notification, compact = false, onRead
           </div>
         )}
 
+        {notification.notificationType === 'STUDENT_APPROVAL_PENDING' && notification.relatedDelegationId && !notification.isRead && !actionResult && (
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              disabled={actionLoading}
+              onClick={handleDelegationAccept}
+              className="inline-flex h-8 items-center justify-center rounded-lg bg-emerald-600 px-3 font-label-sm text-xs font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+            >
+              Kabul Et
+            </button>
+            <button
+              type="button"
+              disabled={actionLoading}
+              onClick={handleDelegationReject}
+              className="inline-flex h-8 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest px-3 font-label-sm text-xs font-semibold text-error transition-colors hover:bg-surface-container-low disabled:opacity-50"
+            >
+              Reddet
+            </button>
+          </div>
+        )}
+
         {actionResult === 'accepted' && (
-          <span className="mt-2 block font-label-sm text-xs font-semibold text-emerald-600">Teklif kabul edildi, randevunuz oluşturuldu.</span>
+          <span className="mt-2 block font-label-sm text-xs font-semibold text-emerald-600">
+            {notification.notificationType === 'STUDENT_APPROVAL_PENDING' ? 'Randevu devri kabul edildi.' : 'Teklif kabul edildi, randevunuz oluşturuldu.'}
+          </span>
         )}
         {actionResult === 'rejected' && (
-          <span className="mt-2 block font-label-sm text-xs font-semibold text-error">Teklif reddedildi.</span>
+          <span className="mt-2 block font-label-sm text-xs font-semibold text-error">
+            {notification.notificationType === 'STUDENT_APPROVAL_PENDING' ? 'Randevu devri reddedildi. Randevunuz mevcut personelde kaldı.' : 'Teklif reddedildi.'}
+          </span>
         )}
 
         <span className="mt-1.5 block font-label-sm text-label-sm text-outline">{formatNotificationTime(notification.createdAt)}</span>

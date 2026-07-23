@@ -36,4 +36,8 @@ public class StudentAppointmentResponseDto {
     private String officeName;
     /** Yüz yüze görüşmede bina/konum bilgisi (henüz User’da yoksa null). */
     private String officeLocation;
+    private Boolean isDelegated;
+    private String delegatedFromStaffName;
+    private String delegatedToStaffName;
+    private LocalDateTime delegationDate;
 }

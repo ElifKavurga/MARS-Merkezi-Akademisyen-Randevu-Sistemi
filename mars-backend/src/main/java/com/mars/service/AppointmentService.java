@@ -34,6 +34,7 @@ import com.mars.entity.AppointmentRescheduleApproval;
 import com.mars.entity.AppointmentCategory;
 import com.mars.entity.AvailabilitySlot;
 import com.mars.entity.Course;
+import com.mars.entity.DelegationLog;
 import com.mars.entity.StudentPenaltyStatus;
 import com.mars.entity.User;
 import com.mars.enums.AppointmentStatus;
@@ -211,7 +212,22 @@ public class AppointmentService {
                         appointmentId, student.getUserId())
                 .orElseThrow(() -> ownershipException(
                         appointmentId, AppointmentMessages.STUDENT_APPOINTMENT_ACCESS_DENIED));
-        return appointmentMapper.toStudentResponse(appointment);
+        StudentAppointmentResponseDto dto = appointmentMapper.toStudentResponse(appointment);
+
+        List<DelegationLog> delegations = delegationLogRepository
+                .findByAppointment_AppointmentIdAndDelegationStatusOrderByUpdatedAtDesc(
+                        appointmentId, "ACCEPTED");
+        if (!delegations.isEmpty()) {
+            DelegationLog latest = delegations.get(0);
+            dto.setIsDelegated(true);
+            dto.setDelegatedFromStaffName(latest.getDelegatedByUser().getFullName());
+            dto.setDelegatedToStaffName(latest.getDelegatedToUser().getFullName());
+            dto.setDelegationDate(latest.getUpdatedAt());
+        } else {
+            dto.setIsDelegated(false);
+        }
+
+        return dto;
     }
 
     @Transactional

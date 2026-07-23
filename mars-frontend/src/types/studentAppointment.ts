@@ -63,4 +63,8 @@ export type StudentAppointmentListItem = {
   createdAt?: string | null;
   officeName?: string | null;
   officeLocation?: string | null;
+  isDelegated?: boolean;
+  delegatedFromStaffName?: string | null;
+  delegatedToStaffName?: string | null;
+  delegationDate?: string | null;
 };

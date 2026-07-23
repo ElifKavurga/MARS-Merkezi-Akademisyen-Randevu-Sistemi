@@ -5,7 +5,7 @@ import {
   academicianIncomingDelegationDetailPath,
   assistantDelegationDetailPath,
   studentAppointmentDetailPath,
-  studentDelegationDetailPath,
+
 } from '../constants/routes';
 import type { NotificationItem } from '../types/notification';
 
@@ -22,7 +22,7 @@ export function getNotificationTarget(notification: NotificationItem, role?: str
       return academicianIncomingDelegationDetailPath(notification.relatedDelegationId);
     }
     if (role === ROLES.STUDENT && notification.relatedDelegationId) {
-      return studentDelegationDetailPath(notification.relatedDelegationId);
+      return null;
     }
     return null;
   }
