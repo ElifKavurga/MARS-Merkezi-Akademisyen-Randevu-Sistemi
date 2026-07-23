@@ -58,6 +58,7 @@ import com.mars.repository.AppointmentRepository;
 import com.mars.repository.AppointmentRescheduleRequestRepository;
 import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.repository.CourseRepository;
+import com.mars.repository.CourseAssignmentRepository;
 import com.mars.repository.DelegationLogRepository;
 import com.mars.repository.OutOfOfficePeriodRepository;
 import com.mars.repository.StudentPenaltyStatusRepository;
@@ -91,9 +92,12 @@ class AppointmentServiceTest {
     @Mock
     private DelegationLogRepository delegationLogRepository;
     @Mock
+    private CourseAssignmentRepository courseAssignmentRepository;
+    @Mock
+    private WaitlistService waitlistService;
+    @Mock
     private NotificationService notificationService;
 
-    @InjectMocks
     private AppointmentService appointmentService;
 
     private User student;
@@ -144,6 +148,22 @@ class AppointmentServiceTest {
 
         lenient().when(outOfOfficePeriodRepository.existsOverlappingPeriod(any(), any(), any()))
                 .thenReturn(false);
+
+        appointmentService = new AppointmentService(
+                appointmentRepository,
+                appointmentRescheduleRequestRepository,
+                availabilitySlotRepository,
+                appointmentCategoryRepository,
+                courseRepository,
+                courseAssignmentRepository,
+                studentPenaltyStatusRepository,
+                outOfOfficePeriodRepository,
+                appointmentMapper,
+                availabilitySlotService,
+                delegationLogRepository,
+                notificationService,
+                waitlistService
+        );
     }
 
     @AfterEach

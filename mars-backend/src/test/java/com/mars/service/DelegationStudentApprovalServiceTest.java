@@ -63,7 +63,7 @@ class DelegationStudentApprovalServiceTest {
     @Mock private AvailabilitySlotService availabilitySlotService;
     @Mock private NotificationService notificationService;
     @Mock private WaitlistService waitlistService;
-    @InjectMocks private DelegationService delegationService;
+    private DelegationService delegationService;
 
     private User academician;
     private User assistant;
@@ -97,6 +97,20 @@ class DelegationStudentApprovalServiceTest {
         appointment.setAppointmentStatus(AppointmentStatus.PENDING.name());
         appointment.setSlot(slot(40, academician, date));
         targetSlot = slot(41, assistant, date);
+
+        delegationService = new DelegationService(
+                delegationLogRepository,
+                delegationStatusHistoryRepository,
+                appointmentRepository,
+                appointmentRescheduleRequestRepository,
+                availabilitySlotRepository,
+                courseAssignmentRepository,
+                userRepository,
+                delegationMapper,
+                availabilitySlotService,
+                notificationService,
+                waitlistService
+        );
     }
 
     @AfterEach

@@ -25,6 +25,15 @@ export function getNotificationVisual(type: NotificationType): NotificationVisua
   if (type === 'APPOINTMENT_RESCHEDULED' || type === 'APPOINTMENT_RESCHEDULE_REQUESTED') {
     return { icon: 'event_repeat', iconClass: 'text-primary-container', containerClass: 'bg-primary-fixed' };
   }
+  if (type === 'WAITLIST_TURN_AVAILABLE') {
+    return { icon: 'event_available', iconClass: 'text-amber-700', containerClass: 'bg-amber-50' };
+  }
+  if (type === 'WAITLIST_ADDED') {
+    return { icon: 'playlist_add', iconClass: 'text-primary-container', containerClass: 'bg-primary-fixed' };
+  }
+  if (type === 'WAITLIST_REMOVED' || type === 'WAITLIST_CANCELLED') {
+    return { icon: 'playlist_remove', iconClass: 'text-error', containerClass: 'bg-error-container/60' };
+  }
   if (type === 'STUDENT_APPROVAL_PENDING') {
     return { icon: 'hourglass_top', iconClass: 'text-primary-container', containerClass: 'bg-primary-fixed' };
   }

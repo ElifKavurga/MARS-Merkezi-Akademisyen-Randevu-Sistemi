@@ -11,7 +11,11 @@ export type NotificationType =
   | 'DELEGATION_ACCEPTED'
   | 'DELEGATION_REJECTED'
   | 'STUDENT_APPROVAL_PENDING'
-  | 'DELEGATION_EXPIRED';
+  | 'DELEGATION_EXPIRED'
+  | 'WAITLIST_ADDED'
+  | 'WAITLIST_TURN_AVAILABLE'
+  | 'WAITLIST_REMOVED'
+  | 'WAITLIST_CANCELLED';
 
 export type NotificationItem = {
   notificationId: number;
@@ -21,6 +25,7 @@ export type NotificationItem = {
   message: string;
   relatedAppointmentId: number | null;
   relatedDelegationId: number | null;
+  eventKey: string | null;
   isRead: boolean;
   createdAt: string;
 };

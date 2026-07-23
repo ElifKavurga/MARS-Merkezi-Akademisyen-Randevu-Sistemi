@@ -42,6 +42,7 @@ import com.mars.mapper.DelegationMapper;
 import com.mars.repository.AppointmentRepository;
 import com.mars.repository.AppointmentRescheduleRequestRepository;
 import com.mars.repository.CourseAssignmentRepository;
+import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.repository.DelegationLogRepository;
 import com.mars.repository.DelegationStatusHistoryRepository;
 import com.mars.repository.UserRepository;
@@ -59,7 +60,11 @@ class DelegationServiceTest {
     @Mock
     private AppointmentRescheduleRequestRepository appointmentRescheduleRequestRepository;
     @Mock
+    private AvailabilitySlotRepository availabilitySlotRepository;
+    @Mock
     private CourseAssignmentRepository courseAssignmentRepository;
+    @Mock
+    private AvailabilitySlotService availabilitySlotService;
     @Mock
     private UserRepository userRepository;
     @Mock
@@ -69,7 +74,6 @@ class DelegationServiceTest {
     @Mock
     private WaitlistService waitlistService;
 
-    @InjectMocks
     private DelegationService delegationService;
 
     private User academician;
@@ -100,6 +104,20 @@ class DelegationServiceTest {
         appointment.setStaff(academician);
         appointment.setCourse(course);
         appointment.setAppointmentStatus(AppointmentStatus.PENDING.name());
+
+        delegationService = new DelegationService(
+                delegationLogRepository,
+                delegationStatusHistoryRepository,
+                appointmentRepository,
+                appointmentRescheduleRequestRepository,
+                availabilitySlotRepository,
+                courseAssignmentRepository,
+                userRepository,
+                delegationMapper,
+                availabilitySlotService,
+                notificationService,
+                waitlistService
+        );
     }
 
     @AfterEach
