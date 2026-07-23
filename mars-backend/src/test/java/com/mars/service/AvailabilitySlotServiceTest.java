@@ -1112,6 +1112,9 @@ class AvailabilitySlotServiceTest {
         LocalDate rangeEnd = AcademicTermCalendar.resolveBookableHorizonEnd(today);
         LocalDate firstThursday = LocalDate.of(2026, 7, 23);
         LocalDate afterOooThursday = LocalDate.of(2026, 8, 6);
+        while (!afterOooThursday.isAfter(today.plusDays(14))) {
+            afterOooThursday = afterOooThursday.plusWeeks(1);
+        }
         if (afterOooThursday.isAfter(rangeEnd) || afterOooThursday.isBefore(today)) {
             return;
         }

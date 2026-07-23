@@ -4,7 +4,7 @@ Modern Akademisyen Randevu Sistemi — Spring Boot API katmanı.
 
 ## Teknoloji Yığını
 
-- Java 25
+- Java 21 (LTS)
 - Spring Boot 3.5.x
 - Spring Web, Data JPA, Security, Validation, Actuator
 - PostgreSQL (dev/prod) · H2 (local/test)
@@ -42,6 +42,16 @@ com.mars
 | `test` | H2 in-memory | Otomatik testler |
 
 ## Çalıştırma
+
+### Gereksinim
+
+Backend geliştirme ve test işlemleri için Java 21 JDK kullanılmalıdır.
+`JAVA_HOME` değişkeninin Java 21 kurulumunu gösterdiğini aşağıdaki komutla doğrulayabilirsiniz:
+
+```bash
+java -version
+./mvnw -version
+```
 
 ### Local (H2 — varsayılan)
 
