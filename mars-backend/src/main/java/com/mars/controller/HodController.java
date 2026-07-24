@@ -17,12 +17,18 @@ import com.mars.dto.HodAcademicianStatsDto;
 import com.mars.security.CustomUserDetails;
 import com.mars.service.HodService;
 
-import lombok.RequiredArgsConstructor;
+import com.mars.dto.CalendarEventResponseDto;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.format.annotation.DateTimeFormat;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/hod")
-@RequiredArgsConstructor
+
 public class HodController {
+    public HodController(HodService hodService) {
+        this.hodService = hodService;
+    }
 
     private final HodService hodService;
 
@@ -44,14 +50,18 @@ public class HodController {
         return ResponseEntity.ok(academician);
     }
 
-    @GetMapping("/academicians/{userId}/stats")
+    @GetMapping("/academicians/{userId}/calendar")
     @PreAuthorize("hasRole('HOD')")
-    public ResponseEntity<HodAcademicianStatsDto> getDepartmentAcademicianStats(
+    public ResponseEntity<List<CalendarEventResponseDto>> getDepartmentAcademicianCalendar(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Integer userId) {
-        HodAcademicianStatsDto stats = hodService.getDepartmentAcademicianStats(
-                userDetails.getUser().getUserId(), userId);
-        return ResponseEntity.ok(stats);
+            @PathVariable Integer userId,
+            @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate from,
+            @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate to,
+            @RequestParam(defaultValue = "false") boolean includeAppointments) {
+        List<CalendarEventResponseDto> events = hodService.getDepartmentAcademicianCalendar(
+                userDetails.getUser().getUserId(), userId, from, to, includeAppointments);
+        return ResponseEntity.ok(events);
     }
-}
 
+
+}

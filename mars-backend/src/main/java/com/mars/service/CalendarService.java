@@ -71,6 +71,27 @@ public class CalendarService {
                 .thenComparing(CalendarEventResponseDto::getStartTime));
         return events;
     }
+@Transactional(readOnly = true)
+    public List<CalendarEventResponseDto> getEventsForStaff(Integer staffUserId, LocalDate from, LocalDate to, boolean includeAppointments) {
+        validateRange(from, to);
+        List<AvailabilitySlot> slots = availabilitySlotRepository.findCalendarSlotsForStaffInRange(
+                staffUserId, from, to);
+        List<CalendarEventResponseDto> events = new ArrayList<>();
+        for (AvailabilitySlot slot : slots) {
+            events.addAll(expandSlotOccurrences(slot, from, to));
+        }
+        if (includeAppointments) {
+            List<Appointment> appointments = appointmentRepository.findCalendarAppointmentsForStaffInRange(
+                    staffUserId, from, to);
+            appointments.stream()
+                    .map(calendarMapper::toEvent)
+                    .forEach(events::add);
+        }
+        events.sort(Comparator.comparing(CalendarEventResponseDto::getSlotDate)
+                .thenComparing(CalendarEventResponseDto::getStartTime));
+        return events;
+    }
+
 
     private List<CalendarEventResponseDto> expandSlotOccurrences(
             AvailabilitySlot slot, LocalDate from, LocalDate to) {

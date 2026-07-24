@@ -17,6 +17,7 @@ import com.mars.repository.AppointmentRepository;
 import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.repository.UserRepository;
 
+import com.mars.dto.CalendarEventResponseDto;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -27,7 +28,8 @@ public class HodServiceImpl implements HodService {
 
     private final UserRepository userRepository;
     private final AppointmentRepository appointmentRepository;
-    private final AvailabilitySlotRepository availabilitySlotRepository;
+        private final AvailabilitySlotRepository availabilitySlotRepository;
+    private final CalendarService calendarService;
 
     @Override
     @Transactional(readOnly = true)
@@ -201,5 +203,16 @@ public class HodServiceImpl implements HodService {
                 .pendingAppointmentsCount(pendingAppointmentsCount)
                 .totalAppointmentsCount(totalAppointmentsCount)
                 .build();
+    }
+@Override
+    @Transactional(readOnly = true)
+    public List<CalendarEventResponseDto> getDepartmentAcademicianCalendar(Integer hodUserId, Integer targetUserId, LocalDate from, LocalDate to, boolean includeAppointments) {
+        // Validate that the HOD exists
+        User hodUser = userRepository.findByIdWithRoleAndDepartment(hodUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı"));
+        // Validate target academician belongs to same department and has proper role
+        validateSameDepartmentAcademician(hodUser, targetUserId);
+        // Fetch calendar events for the academician
+        return calendarService.getEventsForStaff(targetUserId, from, to, includeAppointments);
     }
 }

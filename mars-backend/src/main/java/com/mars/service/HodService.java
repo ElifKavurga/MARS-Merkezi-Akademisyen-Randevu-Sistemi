@@ -1,10 +1,11 @@
 package com.mars.service;
 
 import java.util.List;
-
-import com.mars.dto.HodAcademicianDetailDto;
+import java.time.LocalDate;
 import com.mars.dto.HodAcademicianListDto;
+import com.mars.dto.HodAcademicianDetailDto;
 import com.mars.dto.HodAcademicianStatsDto;
+import com.mars.dto.CalendarEventResponseDto;
 
 public interface HodService {
 
@@ -27,11 +28,12 @@ public interface HodService {
     HodAcademicianDetailDto getDepartmentAcademicianDetail(Integer hodUserId, Integer targetUserId);
 
     /**
-     * Get appointment statistics charts data for a specific academician in the same department.
+     * Get statistics charts data for a specific academician in the same department.
      *
      * @param hodUserId    The user ID of the HOD
      * @param targetUserId The user ID of the target academician
      * @return Chart stats data
      */
     HodAcademicianStatsDto getDepartmentAcademicianStats(Integer hodUserId, Integer targetUserId);
+    List<CalendarEventResponseDto> getDepartmentAcademicianCalendar(Integer hodUserId, Integer targetUserId, LocalDate from, LocalDate to, boolean includeAppointments);
 }
