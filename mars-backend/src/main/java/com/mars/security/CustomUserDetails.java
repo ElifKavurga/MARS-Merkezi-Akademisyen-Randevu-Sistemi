@@ -23,6 +23,11 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
+        if ("HOD".equals(user.getRole().getRoleName())) {
+            return List.of(
+                    new SimpleGrantedAuthority("ROLE_HOD"),
+                    new SimpleGrantedAuthority("ROLE_ACADEMICIAN"));
+        }
         return List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().getRoleName()));
     }
 

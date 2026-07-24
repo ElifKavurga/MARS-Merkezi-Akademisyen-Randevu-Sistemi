@@ -149,11 +149,9 @@ export default function AppRouter() {
           </Route>
         </Route>
 
-        <Route element={<ProtectedRoute allowedRoles={[ROLES.ACADEMICIAN, ROLES.HOD]} />}>
+        <Route element={<ProtectedRoute allowedRoles={[ROLES.ACADEMICIAN]} />}>
           <Route element={<AcademicianLayout />}>
-            <Route element={<ProtectedRoute allowedRoles={[ROLES.ACADEMICIAN, ROLES.HOD]} />}>
-              <Route path={ROUTES.ACADEMICIAN} element={<AcademicianDashboard />} />
-            </Route>
+            <Route path={ROUTES.ACADEMICIAN} element={<AcademicianDashboard />} />
             <Route element={<ProtectedRoute allowedRoles={[ROLES.HOD]} />}>
               <Route path={ROUTES.HOD_ACADEMICIANS} element={<HodAcademiciansPage />} />
               <Route path={ROUTES.HOD_ACADEMICIAN_DETAIL} element={<HodAcademicianDetailPage />} />

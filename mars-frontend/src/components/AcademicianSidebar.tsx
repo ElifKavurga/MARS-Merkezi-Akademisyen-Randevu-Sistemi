@@ -21,24 +21,22 @@ export default function AcademicianSidebar({ mobileOpen, onClose }: ModuleSideba
   const { user } = useAuth();
   const isHod = user?.role === ROLES.HOD;
 
-  const navItems = user?.role === ROLES.ACADEMICIAN || isHod
-    ? [
-        ...commonNavItems.slice(0, 3),
-        {
-          label: 'Randevularım',
-          path: ROUTES.ACADEMICIAN_APPOINTMENTS,
-          icon: 'event_note',
-          end: false,
-        },
-        {
-          label: 'Randevu Devri',
-          path: ROUTES.ACADEMICIAN_DELEGATION_HISTORY,
-          icon: 'swap_horiz',
-          end: false,
-        },
-        ...commonNavItems.slice(3),
-      ]
-    : commonNavItems;
+  const navItems = [
+    ...commonNavItems.slice(0, 3),
+    {
+      label: 'Randevularım',
+      path: ROUTES.ACADEMICIAN_APPOINTMENTS,
+      icon: 'event_note',
+      end: false,
+    },
+    {
+      label: 'Randevu Devri',
+      path: ROUTES.ACADEMICIAN_DELEGATION_HISTORY,
+      icon: 'swap_horiz',
+      end: false,
+    },
+    ...commonNavItems.slice(3),
+  ];
 
   return (
     <ModuleSidebar

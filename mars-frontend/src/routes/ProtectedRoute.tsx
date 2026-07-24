@@ -1,7 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { ROUTES } from '../constants/routes';
-import { getHomePathForRole, type Role } from '../constants/roles';
+import { getHomePathForRole, ROLES, type Role } from '../constants/roles';
 
 type ProtectedRouteProps = {
   allowedRoles?: readonly Role[];
@@ -16,7 +16,10 @@ export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role as Role)) {
-    return <Navigate to={getHomePathForRole(user.role)} replace />;
+    const isHodActingAsAcademician = user.role === ROLES.HOD && allowedRoles.includes(ROLES.ACADEMICIAN);
+    if (!isHodActingAsAcademician) {
+      return <Navigate to={getHomePathForRole(user.role)} replace />;
+    }
   }
 
   return <Outlet />;
