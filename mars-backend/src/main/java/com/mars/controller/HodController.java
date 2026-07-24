@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.web.bind.annotation.PathVariable;
+
+import com.mars.dto.HodAcademicianDetailDto;
 import com.mars.dto.HodAcademicianListDto;
 import com.mars.security.CustomUserDetails;
 import com.mars.service.HodService;
@@ -29,5 +32,16 @@ public class HodController {
         
         List<HodAcademicianListDto> academicians = hodService.getDepartmentAcademicians(userDetails.getUser().getUserId());
         return ResponseEntity.ok(academicians);
+    }
+
+    @GetMapping("/academicians/{userId}")
+    @PreAuthorize("hasRole('HOD')")
+    public ResponseEntity<HodAcademicianDetailDto> getDepartmentAcademicianDetail(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Integer userId) {
+        
+        HodAcademicianDetailDto academician = hodService.getDepartmentAcademicianDetail(
+                userDetails.getUser().getUserId(), userId);
+        return ResponseEntity.ok(academician);
     }
 }

@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mars.dto.HodAcademicianDetailDto;
 import com.mars.dto.HodAcademicianListDto;
 import com.mars.entity.User;
 import com.mars.exception.ResourceNotFoundException;
@@ -43,6 +44,54 @@ public class HodServiceImpl implements HodService {
         return academicians.stream()
                 .map(user -> buildHodAcademicianListDto(user, today))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public HodAcademicianDetailDto getDepartmentAcademicianDetail(Integer hodUserId, Integer targetUserId) {
+        User hodUser = userRepository.findByIdWithRoleAndDepartment(hodUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı"));
+
+        User targetUser = userRepository.findByIdWithRoleAndDepartment(targetUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Akademisyen bulunamadı"));
+
+        // Validate that target user belongs to the same department and is active
+        if (!targetUser.getDepartment().getDepartmentId().equals(hodUser.getDepartment().getDepartmentId())) {
+            throw new ResourceNotFoundException("Akademisyen bulunamadı");
+        }
+
+        // Validate role matches
+        String roleName = targetUser.getRole().getRoleName();
+        if (!"ACADEMICIAN".equals(roleName) && !"HOD".equals(roleName)) {
+            throw new ResourceNotFoundException("Akademisyen bulunamadı");
+        }
+
+        if (Boolean.FALSE.equals(targetUser.getIsActive())) {
+            throw new ResourceNotFoundException("Akademisyen bulunamadı");
+        }
+
+        LocalDate today = LocalDate.now();
+
+        long activeOfficeHoursCount = availabilitySlotRepository
+                .countByStaff_UserIdAndIsBlockedFalseAndSlotDateGreaterThanEqual(targetUserId, today);
+        long todayAppointmentsCount = appointmentRepository
+                .countByStaff_UserIdAndSlot_SlotDate(targetUserId, today);
+        long pendingAppointmentsCount = appointmentRepository
+                .countByStaff_UserIdAndAppointmentStatus(targetUserId, "PENDING");
+        long totalAppointmentsCount = appointmentRepository
+                .countByStaff_UserId(targetUserId);
+
+        return HodAcademicianDetailDto.builder()
+                .userId(targetUserId)
+                .fullName(targetUser.getFullName())
+                .academicTitle(targetUser.getAcademicTitle())
+                .departmentName(targetUser.getDepartment().getDepartmentName())
+                .institutionalEmail(targetUser.getInstitutionalEmail())
+                .activeOfficeHoursCount(activeOfficeHoursCount)
+                .todayAppointmentsCount(todayAppointmentsCount)
+                .pendingAppointmentsCount(pendingAppointmentsCount)
+                .totalAppointmentsCount(totalAppointmentsCount)
+                .build();
     }
 
     private HodAcademicianListDto buildHodAcademicianListDto(User user, LocalDate today) {

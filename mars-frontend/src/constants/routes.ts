@@ -12,6 +12,7 @@ export const ROUTES = {
   ADMIN_PROFILE: '/admin/profil',
   HOD: '/bolum-baskani',
   HOD_ACADEMICIANS: '/hod/academicians',
+  HOD_ACADEMICIAN_DETAIL: '/hod/academicians/:userId',
   HOD_STATISTICS: '/hod/statistics',
   HOD_PROFILE: '/bolum-baskani/profil',
   ACADEMICIAN: '/akademisyen',
@@ -57,6 +58,10 @@ export function academicianAppointmentDetailPath(appointmentId: number | string)
 
 export function studentAcademicianProfilePath(userId: number | string): string {
   return `/ogrenci/akademisyen/${userId}`;
+}
+
+export function hodAcademicianDetailPath(userId: number | string): string {
+  return `/hod/academicians/${userId}`;
 }
 
 export function studentAppointmentCreatePath(academicianId: number | string): string {
