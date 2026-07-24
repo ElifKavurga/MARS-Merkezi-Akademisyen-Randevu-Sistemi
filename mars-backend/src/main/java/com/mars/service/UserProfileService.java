@@ -3,7 +3,6 @@ package com.mars.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.mars.dto.user.UpdateProfileRequestDto;
 import com.mars.dto.user.UserProfileResponseDto;
 import com.mars.entity.User;
 import com.mars.exception.ResourceNotFoundException;
@@ -24,23 +23,11 @@ public class UserProfileService {
         return mapToDto(user);
     }
 
-    @Transactional
-    public UserProfileResponseDto updateMyProfile(Integer userId, UpdateProfileRequestDto request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı."));
-        
-        user.setPhone(request.getPhone());
-        userRepository.save(user);
-        
-        return mapToDto(user);
-    }
-
     private UserProfileResponseDto mapToDto(User user) {
         return UserProfileResponseDto.builder()
                 .userId(user.getUserId())
                 .fullName(user.getFullName())
                 .institutionalEmail(user.getInstitutionalEmail())
-                .phone(user.getPhone())
                 .role(user.getRole().getRoleName())
                 .department(user.getDepartment().getDepartmentName())
                 .academicTitle(user.getAcademicTitle())

@@ -3,28 +3,18 @@ import { getRoleLabel, UI_LABELS } from '../constants';
 import { getInitials } from '../utils/userDisplay';
 import Loading from '../components/Loading';
 import EmailNotificationPreferences from '../components/EmailNotificationPreferences';
-import { getMyProfile, updateMyProfile, type UserProfile } from '../services/profileService';
-import { useToast } from '../hooks/useToast';
-import { isAxiosError } from 'axios';
-import AdminActionButton from '../components/AdminActionButton';
-import { FORM_FIELD_CLASS } from '../constants/ui';
+import { getMyProfile, type UserProfile } from '../services/profileService';
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  const [isEditingPhone, setIsEditingPhone] = useState(false);
-  const [phoneInput, setPhoneInput] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
-  const toast = useToast();
 
   useEffect(() => {
     const loadProfile = async () => {
       try {
         const data = await getMyProfile();
         setProfile(data);
-        setPhoneInput(data.phone || '');
       } catch (err) {
         setError('Profil bilgileri yüklenemedi.');
       } finally {
@@ -33,25 +23,6 @@ export default function ProfilePage() {
     };
     void loadProfile();
   }, []);
-
-  const handlePhoneSave = async () => {
-    if (!profile) return;
-    setIsSaving(true);
-    try {
-      const updated = await updateMyProfile({ phone: phoneInput });
-      setProfile(updated);
-      setIsEditingPhone(false);
-      toast.success('Telefon numarası başarıyla güncellendi.');
-    } catch (err) {
-      if (isAxiosError(err) && err.response?.data?.message) {
-        toast.error(err.response.data.message);
-      } else {
-        toast.error('Telefon numarası güncellenirken bir hata oluştu.');
-      }
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   if (loading) {
     return <Loading variant="page" label={UI_LABELS.loading} />;
@@ -82,7 +53,7 @@ export default function ProfilePage() {
       <div className="mb-8">
         <h1 className="font-headline-lg text-headline-lg text-on-background">Profil Bilgileri</h1>
         <p className="mt-2 max-w-2xl font-body-lg text-body-lg text-on-surface-variant">
-          Kişisel bilgilerinizi görüntüleyebilir, gerekli alanları düzenleyebilirsiniz.
+          Kişisel bilgilerinizi görüntüleyebilirsiniz. Bu sayfada düzenleme yapılamaz.
         </p>
       </div>
 
@@ -118,66 +89,6 @@ export default function ProfilePage() {
         <dl className="divide-y divide-outline-variant/40">
           {renderReadOnlyField('Ad Soyad', profile.fullName, 'person')}
           {renderReadOnlyField('Kurumsal E-Posta', profile.institutionalEmail, 'mail')}
-          
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 px-6 py-5 bg-surface-container-low/30">
-            <dt className="w-48 font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
-              <span className="material-symbols-outlined text-[20px] text-primary" aria-hidden="true">phone_iphone</span>
-              Telefon Numarası
-            </dt>
-            <dd className="flex-1">
-              {isEditingPhone ? (
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                  <div className="relative flex-1">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant opacity-70 text-[20px]" aria-hidden="true">
-                      call
-                    </span>
-                    <input
-                      type="tel"
-                      className={`${FORM_FIELD_CLASS} pl-10 bg-surface-container-lowest`}
-                      value={phoneInput}
-                      onChange={(e) => setPhoneInput(e.target.value)}
-                      placeholder="Örn: 05xxxxxxxxx"
-                      disabled={isSaving}
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <AdminActionButton
-                      variant="primary"
-                      icon="save"
-                      onClick={handlePhoneSave}
-                      disabled={isSaving}
-                    >
-                      {isSaving ? 'Kaydediliyor' : 'Kaydet'}
-                    </AdminActionButton>
-                    <AdminActionButton
-                      variant="neutral"
-                      icon="close"
-                      onClick={() => {
-                        setIsEditingPhone(false);
-                        setPhoneInput(profile.phone || '');
-                      }}
-                      disabled={isSaving}
-                    >
-                      İptal
-                    </AdminActionButton>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between bg-surface-container-lowest border border-outline-variant px-4 py-2.5 rounded-lg shadow-sm">
-                  <span className="font-body-md text-on-background font-medium">
-                    {profile.phone || <span className="italic text-on-surface-variant font-normal">Belirtilmemiş</span>}
-                  </span>
-                  <AdminActionButton
-                    variant="neutral"
-                    icon="edit"
-                    onClick={() => setIsEditingPhone(true)}
-                  >
-                    Düzenle
-                  </AdminActionButton>
-                </div>
-              )}
-            </dd>
-          </div>
           
           {profile.department && profile.department.trim() !== '' && 
             renderReadOnlyField('Bölüm', profile.department, 'domain')

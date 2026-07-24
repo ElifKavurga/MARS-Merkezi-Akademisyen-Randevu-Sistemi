@@ -15,7 +15,6 @@ public class UserProfileResponseDto {
     private Integer userId;
     private String fullName;
     private String institutionalEmail;
-    private String phone;
     private String role;
     private String department;
     private String academicTitle;
