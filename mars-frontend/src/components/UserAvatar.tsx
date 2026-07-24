@@ -6,7 +6,7 @@ export default function UserAvatar({
   tone = 'light',
 }: {
   fullName: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   tone?: 'light' | 'dark';
 }) {
   const initials = getInitials(fullName) || '?';
@@ -15,7 +15,9 @@ export default function UserAvatar({
       ? 'h-8 w-8 text-xs'
       : size === 'lg'
         ? 'h-11 w-11 text-sm'
-        : 'h-10 w-10 text-sm';
+        : size === 'xl'
+          ? 'h-16 w-16 text-xl'
+          : 'h-10 w-10 text-sm';
   const toneClass =
     tone === 'dark'
       ? 'border-white/20 bg-white/15 text-white'

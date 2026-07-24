@@ -3,8 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import type { HodAcademicianListDto } from '../types/hod';
 import { hodService } from '../services/hodService';
 import { hodAcademicianDetailPath } from '../constants/routes';
-import { getInitials } from '../utils/userDisplay';
+
 import Loading from '../components/Loading';
+import ErrorState from '../components/ErrorState';
+import EmptyState from '../components/EmptyState';
+import HodPageHeader from '../components/HodPageHeader';
+import UserAvatar from '../components/UserAvatar';
 
 export default function HodAcademiciansPage() {
   const [academicians, setAcademicians] = useState<HodAcademicianListDto[]>([]);
@@ -37,27 +41,15 @@ export default function HodAcademiciansPage() {
   }
 
   if (error) {
-    return (
-      <div className="w-full min-w-0 animate-fade-in">
-        <div className="rounded-xl border border-error/30 bg-error-container/10 p-8 text-center">
-          <span className="material-symbols-outlined mb-2 text-4xl text-error">error</span>
-          <p className="font-body-lg text-error">{error}</p>
-        </div>
-      </div>
-    );
+    return <ErrorState message={error} onRetry={() => void navigate(0)} />;
   }
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
-      {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="font-headline-lg text-headline-lg text-primary tracking-tight">
-          Akademisyenler
-        </h1>
-        <p className="mt-1 font-body-md text-body-md text-on-surface-variant">
-          Bölümünüzdeki akademisyenleri ve güncel randevu istatistiklerini görüntüleyin.
-        </p>
-      </div>
+      <HodPageHeader 
+        title="Akademisyenler" 
+        description="Bölümünüzdeki akademisyenleri ve güncel randevu istatistiklerini görüntüleyin."
+      />
 
       <div className="rounded-xl border border-outline-variant/40 bg-surface-container-lowest overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
@@ -90,13 +82,12 @@ export default function HodAcademiciansPage() {
             <tbody>
               {academicians.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-16 text-center">
-                    <span className="material-symbols-outlined mb-2 block text-4xl text-on-surface-variant">
-                      group
-                    </span>
-                    <p className="font-body-md text-body-md text-on-surface-variant">
-                      Bölümünüzde akademisyen bulunmamaktadır.
-                    </p>
+                  <td colSpan={7} className="p-0">
+                    <EmptyState 
+                      icon="group"
+                      title="Akademisyen Bulunamadı"
+                      message="Bölümünüzde henüz bir akademisyen kaydı bulunmamaktadır."
+                    />
                   </td>
                 </tr>
               ) : (
@@ -108,12 +99,7 @@ export default function HodAcademiciansPage() {
                     {/* Avatar + Name */}
                     <td className="py-4 px-5">
                       <div className="flex items-center gap-3">
-                        <div
-                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-outline-variant/40 bg-surface-container font-label-md text-label-md font-semibold text-primary"
-                          aria-hidden="true"
-                        >
-                          {getInitials(academician.fullName) || '?'}
-                        </div>
+                        <UserAvatar fullName={academician.fullName} size="sm" />
                         <span className="font-body-md text-body-md font-medium text-on-surface">
                           {academician.fullName}
                         </span>

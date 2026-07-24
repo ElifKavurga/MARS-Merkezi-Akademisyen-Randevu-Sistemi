@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { HodDepartmentKpiDto, HodDepartmentStatsDto, HodDepartmentAnalysisDto } from '../types/hod';
 import { hodService } from '../services/hodService';
 import Loading from '../components/Loading';
+import ErrorState from '../components/ErrorState';
+import HodPageHeader from '../components/HodPageHeader';
 
 // ─── KPI Card ────────────────────────────────────────────────────────────────
 function KpiCard({
@@ -16,13 +18,13 @@ function KpiCard({
   accent?: string;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-sm">
-      <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${accent ?? 'bg-surface-container'}`}>
-        <span className="material-symbols-outlined text-[22px] text-primary">{icon}</span>
+    <div className="flex h-full min-h-[120px] flex-col gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-sm transition-shadow hover:shadow-md">
+      <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${accent ?? 'bg-surface-container'}`}>
+        <span className="material-symbols-outlined text-[24px] text-primary">{icon}</span>
       </div>
-      <div>
+      <div className="mt-auto">
         <p className="font-label-md text-label-md text-on-surface-variant">{label}</p>
-        <p className="mt-0.5 font-headline-md text-headline-md text-on-surface">{value}</p>
+        <p className="mt-1 font-headline-md text-headline-md text-on-surface leading-tight">{value}</p>
       </div>
     </div>
   );
@@ -31,12 +33,14 @@ function KpiCard({
 // ─── Chart Card wrapper ───────────────────────────────────────────────────────
 function ChartCard({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-sm flex flex-col gap-4">
+    <div className="flex h-full flex-col gap-4 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-sm">
       <div className="flex items-center gap-2">
         <span className="material-symbols-outlined text-[20px] text-primary" aria-hidden="true">{icon}</span>
         <h3 className="font-title-md text-title-md text-on-surface">{title}</h3>
       </div>
-      {children}
+      <div className="mt-auto">
+        {children}
+      </div>
     </div>
   );
 }
@@ -240,23 +244,7 @@ export default function HodStatisticsPage() {
   }
 
   if (error || !kpi || !stats || !analysis) {
-    return (
-      <div className="w-full min-w-0 animate-fade-in">
-        <div className="rounded-xl border border-error/30 bg-error-container/10 p-8 text-center">
-          <span className="material-symbols-outlined mb-3 text-5xl text-error">error</span>
-          <p className="font-headline-md text-headline-md text-error">Hata</p>
-          <p className="mt-2 font-body-md text-body-md text-on-surface-variant">{error}</p>
-          <button
-            type="button"
-            onClick={() => void loadData()}
-            className="mt-6 inline-flex items-center gap-2 rounded-full border border-outline-variant px-5 py-2.5 font-label-md text-label-md text-primary transition-colors hover:bg-primary/5 hover:border-primary/40"
-          >
-            <span className="material-symbols-outlined text-[18px]">refresh</span>
-            Tekrar Dene
-          </button>
-        </div>
-      </div>
-    );
+    return <ErrorState message={error ?? 'Veriler yüklenemedi.'} onRetry={() => void loadData()} />;
   }
 
   // Prepare chart data
@@ -270,16 +258,11 @@ export default function HodStatisticsPage() {
   }));
 
   return (
-    <div className="w-full min-w-0 animate-fade-in">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="font-headline-lg text-headline-lg text-primary tracking-tight">
-          Bölüm İstatistikleri
-        </h1>
-        <p className="font-body-md text-body-md text-on-surface-variant mt-1">
-          Bölümünüze ait genel KPI ve randevu istatistiklerini inceleyin.
-        </p>
-      </div>
+    <div className="w-full min-w-0 animate-fade-in pb-12">
+      <HodPageHeader 
+        title="Bölüm İstatistikleri" 
+        description="Bölümünüze ait genel KPI ve randevu istatistiklerini inceleyin."
+      />
 
       {/* KPI – Academicians */}
       <section className="mb-6">
