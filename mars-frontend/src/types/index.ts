@@ -30,3 +30,4 @@ export type {
   ResetPasswordResponse,
   AuthUser,
 } from './auth';
+export type { HodAcademicianListDto } from './hod';

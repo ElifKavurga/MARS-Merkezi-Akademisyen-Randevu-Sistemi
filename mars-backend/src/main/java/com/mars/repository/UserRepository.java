@@ -121,4 +121,16 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     Optional<User> findActiveAcademicianById(
             @Param("userId") Integer userId,
             @Param("roleNames") Collection<String> roleNames);
+    @Query("""
+            SELECT u FROM User u
+            JOIN FETCH u.role r
+            JOIN FETCH u.department d
+            WHERE d.departmentId = :departmentId
+              AND r.roleName IN :roleNames
+              AND u.isActive = true
+            ORDER BY u.fullName ASC
+            """)
+    List<User> findActiveUsersByDepartmentIdAndRoleNames(
+            @Param("departmentId") Integer departmentId,
+            @Param("roleNames") Collection<String> roleNames);
 }

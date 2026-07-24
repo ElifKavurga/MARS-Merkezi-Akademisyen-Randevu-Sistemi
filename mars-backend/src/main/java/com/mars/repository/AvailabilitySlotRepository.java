@@ -167,4 +167,6 @@ public interface AvailabilitySlotRepository extends JpaRepository<AvailabilitySl
             @Param("slotDate") LocalDate slotDate,
             @Param("startTime") LocalTime startTime,
             @Param("endTime") LocalTime endTime);
+
+    long countByStaff_UserIdAndIsBlockedFalseAndSlotDateGreaterThanEqual(Integer staffId, LocalDate date);
 }

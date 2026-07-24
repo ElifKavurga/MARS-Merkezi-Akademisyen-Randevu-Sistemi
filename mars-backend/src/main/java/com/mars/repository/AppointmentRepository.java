@@ -385,4 +385,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
             @Param("cutoffDate") LocalDate cutoffDate,
             @Param("cutoffTime") LocalTime cutoffTime,
             Pageable pageable);
+
+    long countByStaff_UserId(Integer staffId);
+
+    long countByStaff_UserIdAndSlot_SlotDate(Integer staffId, LocalDate slotDate);
 }
