@@ -142,7 +142,8 @@ public class DelegationService {
         log.setTargetEndTime(selectedSlot.getEndTime());
         log.setApprovalRequired(approvalRequired);
         boolean academicianTarget =
-                RoleType.ACADEMICIAN.name().equals(target.getRole().getRoleName());
+                RoleType.ACADEMICIAN.name().equals(target.getRole().getRoleName())
+                || RoleType.HOD.name().equals(target.getRole().getRoleName());
         log.setDelegationStatus(academicianTarget
                 ? DelegationStatus.PENDING_ACADEMICIAN_APPROVAL.name()
                 : DelegationStatus.PENDING.name());
@@ -166,7 +167,7 @@ public class DelegationService {
     @Transactional(readOnly = true)
     public List<DelegationResponse> getIncomingDelegations() {
         User target = getCurrentDecisionUser();
-        Set<String> statuses = RoleType.ACADEMICIAN.name().equals(target.getRole().getRoleName())
+        Set<String> statuses = (RoleType.ACADEMICIAN.name().equals(target.getRole().getRoleName()) || RoleType.HOD.name().equals(target.getRole().getRoleName()))
                 ? Set.of(
                         DelegationStatus.PENDING_ACADEMICIAN_APPROVAL.name(),
                         DelegationStatus.PENDING_STUDENT_APPROVAL.name())
@@ -180,7 +181,7 @@ public class DelegationService {
     public List<DelegationResponse> getDelegationHistory() {
         User currentUser = getCurrentHistoryUser();
         String roleName = currentUser.getRole().getRoleName();
-        List<DelegationLog> history = RoleType.ACADEMICIAN.name().equals(roleName)
+        List<DelegationLog> history = (RoleType.ACADEMICIAN.name().equals(roleName) || RoleType.HOD.name().equals(roleName))
                 ? delegationLogRepository.findHistoryByDelegatedByUserId(currentUser.getUserId())
                 : delegationLogRepository.findHistoryByDelegatedToUserId(currentUser.getUserId());
         return history.stream().map(delegationMapper::toResponse).toList();
@@ -584,7 +585,7 @@ public class DelegationService {
         if (!Objects.equals(log.getDelegatedToUser().getUserId(), target.getUserId())) {
             throw new AccessDeniedException(DelegationMessages.DECISION_ACCESS_DENIED);
         }
-        DelegationStatus expected = RoleType.ACADEMICIAN.name().equals(target.getRole().getRoleName())
+        DelegationStatus expected = (RoleType.ACADEMICIAN.name().equals(target.getRole().getRoleName()) || RoleType.HOD.name().equals(target.getRole().getRoleName()))
                 ? DelegationStatus.PENDING_ACADEMICIAN_APPROVAL
                 : DelegationStatus.PENDING;
         if (!expected.name().equals(log.getDelegationStatus())) {
@@ -684,7 +685,7 @@ public class DelegationService {
     private User getCurrentDecisionUser() {
         User user = getAuthenticatedUser();
         String role = user.getRole() == null ? null : user.getRole().getRoleName();
-        if (!RoleType.ACADEMICIAN.name().equals(role) && !RoleType.ASSISTANT.name().equals(role)) {
+        if (!(RoleType.ACADEMICIAN.name().equals(role) || RoleType.HOD.name().equals(role)) && !RoleType.ASSISTANT.name().equals(role)) {
             throw new AccessDeniedException(DelegationMessages.ONLY_TARGET_STAFF);
         }
         return user;
@@ -731,7 +732,7 @@ public class DelegationService {
     private User getCurrentHistoryUser() {
         User user = getAuthenticatedUser();
         String role = user.getRole() == null ? null : user.getRole().getRoleName();
-        if (!RoleType.ACADEMICIAN.name().equals(role) && !RoleType.ASSISTANT.name().equals(role)) {
+        if (!RoleType.ACADEMICIAN.name().equals(role) && !RoleType.HOD.name().equals(role) && !RoleType.ASSISTANT.name().equals(role)) {
             throw new AccessDeniedException(DelegationMessages.HISTORY_ACCESS_DENIED);
         }
         return user;
@@ -739,7 +740,15 @@ public class DelegationService {
 
     private User getCurrentUserWithRole(RoleType role, String message) {
         User user = getAuthenticatedUser();
-        if (user.getRole() == null || !role.name().equals(user.getRole().getRoleName())) {
+        if (user.getRole() == null) {
+            throw new AccessDeniedException(message);
+        }
+        String roleName = user.getRole().getRoleName();
+        boolean isMatch = role.name().equals(roleName);
+        if (role == RoleType.ACADEMICIAN && RoleType.HOD.name().equals(roleName)) {
+            isMatch = true;
+        }
+        if (!isMatch) {
             throw new AccessDeniedException(message);
         }
         return user;

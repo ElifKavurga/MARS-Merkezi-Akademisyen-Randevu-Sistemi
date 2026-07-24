@@ -105,7 +105,8 @@ public class AcademicianDashboardService {
 
         User user = userDetails.getUser();
         if (user.getRole() == null
-                || !RoleType.ACADEMICIAN.name().equals(user.getRole().getRoleName())) {
+                || (!RoleType.ACADEMICIAN.name().equals(user.getRole().getRoleName())
+                && !RoleType.HOD.name().equals(user.getRole().getRoleName()))) {
             throw new AccessDeniedException(SecurityMessages.ACCESS_DENIED);
         }
         return user;

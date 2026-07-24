@@ -19,7 +19,6 @@ const AdminCategoriesPage = lazy(() => import('../pages/AdminCategoriesPage'));
 const AdminPenaltyRulesPage = lazy(() => import('../pages/AdminPenaltyRulesPage'));
 const AdminSchedulerStatusPage = lazy(() => import('../pages/AdminSchedulerStatusPage'));
 
-const HodDashboard = lazy(() => import('../pages/HodDashboard'));
 const HodAcademiciansPage = lazy(() => import('../pages/HodAcademiciansPage'));
 const HodAcademicianDetailPage = lazy(() => import('../pages/HodAcademicianDetailPage'));
 const HodStatisticsPage = lazy(() => import('../pages/HodStatisticsPage'));
@@ -152,15 +151,13 @@ export default function AppRouter() {
 
         <Route element={<ProtectedRoute allowedRoles={[ROLES.ACADEMICIAN, ROLES.HOD]} />}>
           <Route element={<AcademicianLayout />}>
-            <Route element={<ProtectedRoute allowedRoles={[ROLES.ACADEMICIAN]} />}>
+            <Route element={<ProtectedRoute allowedRoles={[ROLES.ACADEMICIAN, ROLES.HOD]} />}>
               <Route path={ROUTES.ACADEMICIAN} element={<AcademicianDashboard />} />
             </Route>
             <Route element={<ProtectedRoute allowedRoles={[ROLES.HOD]} />}>
-              <Route path={ROUTES.HOD} element={<HodDashboard />} />
               <Route path={ROUTES.HOD_ACADEMICIANS} element={<HodAcademiciansPage />} />
               <Route path={ROUTES.HOD_ACADEMICIAN_DETAIL} element={<HodAcademicianDetailPage />} />
               <Route path={ROUTES.HOD_STATISTICS} element={<HodStatisticsPage />} />
-              <Route path={ROUTES.HOD_PROFILE} element={<ProfilePage />} />
             </Route>
             <Route path={ROUTES.ACADEMICIAN_COURSES} element={<AcademicianCoursesPage />} />
             <Route path={ROUTES.ACADEMICIAN_COURSE_DETAIL} element={<CourseDetailPage />} />

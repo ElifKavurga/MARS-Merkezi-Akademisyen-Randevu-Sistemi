@@ -886,10 +886,13 @@ public class AppointmentService {
         User user = userDetails.getUser();
         String roleName = user.getRole() != null ? user.getRole().getRoleName() : null;
         if (!requiredRole.name().equals(roleName)) {
-            String message = requiredRole == RoleType.ASSISTANT
-                    ? AppointmentMessages.ONLY_ASSISTANT
-                    : AppointmentMessages.ONLY_ACADEMICIAN;
-            throw new AccessDeniedException(message);
+            boolean isAcademicianRequestByHod = requiredRole == RoleType.ACADEMICIAN && RoleType.HOD.name().equals(roleName);
+            if (!isAcademicianRequestByHod) {
+                String message = requiredRole == RoleType.ASSISTANT
+                        ? AppointmentMessages.ONLY_ASSISTANT
+                        : AppointmentMessages.ONLY_ACADEMICIAN;
+                throw new AccessDeniedException(message);
+            }
         }
         return user;
     }

@@ -10,11 +10,9 @@ export const ROUTES = {
   ADMIN_PENALTY_RULES: '/admin/ceza-kurallari',
   ADMIN_SCHEDULER_STATUS: '/admin/scheduler-durumu',
   ADMIN_PROFILE: '/admin/profil',
-  HOD: '/bolum-baskani',
-  HOD_ACADEMICIANS: '/hod/academicians',
-  HOD_ACADEMICIAN_DETAIL: '/hod/academicians/:userId',
-  HOD_STATISTICS: '/hod/statistics',
-  HOD_PROFILE: '/bolum-baskani/profil',
+  HOD_ACADEMICIANS: '/bolum-baskani/akademisyenler',
+  HOD_ACADEMICIAN_DETAIL: '/bolum-baskani/akademisyenler/:id',
+  HOD_STATISTICS: '/bolum-baskani/istatistikler',
   ACADEMICIAN: '/akademisyen',
   ACADEMICIAN_COURSES: '/academician/courses',
   ACADEMICIAN_COURSE_DETAIL: '/academician/courses/:courseId',
@@ -61,7 +59,7 @@ export function studentAcademicianProfilePath(userId: number | string): string {
 }
 
 export function hodAcademicianDetailPath(userId: number | string): string {
-  return `/hod/academicians/${userId}`;
+  return `/bolum-baskani/akademisyenler/${userId}`;
 }
 
 export function studentAppointmentCreatePath(academicianId: number | string): string {

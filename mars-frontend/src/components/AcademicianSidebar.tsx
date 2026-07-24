@@ -21,14 +21,9 @@ export default function AcademicianSidebar({ mobileOpen, onClose }: ModuleSideba
   const { user } = useAuth();
   const isHod = user?.role === ROLES.HOD;
 
-  const roleNavItems = commonNavItems.map((item, index) =>
-    index === 0 && isHod
-      ? { ...item, path: ROUTES.HOD }
-      : item,
-  );
   const navItems = user?.role === ROLES.ACADEMICIAN || isHod
     ? [
-        ...roleNavItems.slice(0, 3),
+        ...commonNavItems.slice(0, 3),
         {
           label: 'Randevularım',
           path: ROUTES.ACADEMICIAN_APPOINTMENTS,
@@ -41,9 +36,9 @@ export default function AcademicianSidebar({ mobileOpen, onClose }: ModuleSideba
           icon: 'swap_horiz',
           end: false,
         },
-        ...roleNavItems.slice(3),
+        ...commonNavItems.slice(3),
       ]
-    : roleNavItems;
+    : commonNavItems;
 
   return (
     <ModuleSidebar
@@ -53,7 +48,7 @@ export default function AcademicianSidebar({ mobileOpen, onClose }: ModuleSideba
       navAriaLabel="Akademisyen sayfa menüsü"
       navItems={navItems}
       footerItems={isHod ? hodFooterItems : []}
-      profilePath={isHod ? ROUTES.HOD_PROFILE : ROUTES.ACADEMICIAN_PROFILE}
+      profilePath={ROUTES.ACADEMICIAN_PROFILE}
     />
   );
 }
