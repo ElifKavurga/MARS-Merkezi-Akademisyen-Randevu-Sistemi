@@ -21,7 +21,8 @@ import com.mars.exception.ResourceNotFoundException;
 import com.mars.repository.AppointmentRepository;
 import com.mars.repository.AvailabilitySlotRepository;
 import com.mars.repository.UserRepository;
-
+import com.mars.repository.WaitlistEntryRepository;
+import com.mars.dto.HodDepartmentAnalysisDto;
 import com.mars.dto.CalendarEventResponseDto;
 import lombok.RequiredArgsConstructor;
 
@@ -33,7 +34,8 @@ public class HodServiceImpl implements HodService {
 
     private final UserRepository userRepository;
     private final AppointmentRepository appointmentRepository;
-        private final AvailabilitySlotRepository availabilitySlotRepository;
+    private final AvailabilitySlotRepository availabilitySlotRepository;
+    private final WaitlistEntryRepository waitlistEntryRepository;
     private final CalendarService calendarService;
 
     @Override
@@ -295,6 +297,192 @@ public class HodServiceImpl implements HodService {
                 .completedAppointments(completedAppointments)
                 .noShowCount(noShowCount)
                 .waitlistStudentCount(waitlistStudentCount)
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public com.mars.dto.HodDepartmentStatsDto getDepartmentStats(Integer hodUserId) {
+        User hodUser = userRepository.findByIdWithRoleAndDepartment(hodUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı"));
+
+        Integer departmentId = hodUser.getDepartment().getDepartmentId();
+        LocalDate today = LocalDate.now();
+        LocalDate weekStart = today.minusDays(6);
+        LocalDate yearStart = today.minusMonths(11).withDayOfMonth(1);
+
+        // Status distribution
+        List<com.mars.dto.HodDepartmentStatsDto.StatusCount> statusDistribution = appointmentRepository
+                .countByStatusForDepartment(departmentId)
+                .stream()
+                .map(row -> com.mars.dto.HodDepartmentStatsDto.StatusCount.builder()
+                        .status((String) row[0])
+                        .count((Long) row[1])
+                        .build())
+                .collect(Collectors.toList());
+
+        // Category distribution
+        List<com.mars.dto.HodDepartmentStatsDto.CategoryCount> categoryDistribution = appointmentRepository
+                .countByCategoryForDepartment(departmentId)
+                .stream()
+                .map(row -> com.mars.dto.HodDepartmentStatsDto.CategoryCount.builder()
+                        .categoryName((String) row[0])
+                        .count((Long) row[1])
+                        .build())
+                .collect(Collectors.toList());
+
+        // Weekly trend (last 7 days) — fill gaps with 0
+        java.util.Map<LocalDate, Long> weeklyMap = new java.util.LinkedHashMap<>();
+        for (int i = 0; i < 7; i++) {
+            weeklyMap.put(weekStart.plusDays(i), 0L);
+        }
+        appointmentRepository.countByDayForDepartmentInRange(departmentId, weekStart, today)
+                .forEach(row -> weeklyMap.put((LocalDate) row[0], (Long) row[1]));
+        List<com.mars.dto.HodDepartmentStatsDto.DayCount> weeklyTrend = weeklyMap.entrySet().stream()
+                .map(e -> com.mars.dto.HodDepartmentStatsDto.DayCount.builder()
+                        .date(e.getKey().toString())
+                        .count(e.getValue())
+                        .build())
+                .collect(Collectors.toList());
+
+        // Monthly trend (last 12 months) — fill gaps with 0
+        java.util.Map<String, Long> monthlyMap = new java.util.LinkedHashMap<>();
+        for (int i = 0; i < 12; i++) {
+            LocalDate month = yearStart.plusMonths(i);
+            monthlyMap.put(String.format("%04d-%02d", month.getYear(), month.getMonthValue()), 0L);
+        }
+        appointmentRepository.countByMonthForDepartmentInRange(departmentId, yearStart, today)
+                .forEach(row -> {
+                    String key = String.format("%04d-%02d", ((Number) row[0]).intValue(), ((Number) row[1]).intValue());
+                    monthlyMap.put(key, (Long) row[2]);
+                });
+        List<com.mars.dto.HodDepartmentStatsDto.MonthCount> monthlyTrend = monthlyMap.entrySet().stream()
+                .map(e -> com.mars.dto.HodDepartmentStatsDto.MonthCount.builder()
+                        .yearMonth(e.getKey())
+                        .count(e.getValue())
+                        .build())
+                .collect(Collectors.toList());
+
+        return com.mars.dto.HodDepartmentStatsDto.builder()
+                .statusDistribution(statusDistribution)
+                .categoryDistribution(categoryDistribution)
+                .weeklyTrend(weeklyTrend)
+                .monthlyTrend(monthlyTrend)
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public HodDepartmentAnalysisDto getDepartmentAnalysis(Integer hodUserId) {
+        User hodUser = userRepository.findByIdWithRoleAndDepartment(hodUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı"));
+
+        Integer departmentId = hodUser.getDepartment().getDepartmentId();
+        
+        // --- No-Show Analysis ---
+        long totalAppointments = appointmentRepository.countByStaff_Department_DepartmentId(departmentId);
+        long totalNoShow = appointmentRepository.countByStaff_Department_DepartmentIdAndAppointmentStatus(departmentId, "NO_SHOW");
+        double noShowRate = totalAppointments > 0 ? ((double) totalNoShow / totalAppointments) * 100 : 0.0;
+        
+        String mostNoShowDay = "-";
+        List<Object[]> noShowDates = appointmentRepository.countBySlotDateAndStatusForDepartment(departmentId, "NO_SHOW");
+        if (!noShowDates.isEmpty()) {
+            java.util.Map<String, Long> dayNameMap = new java.util.HashMap<>();
+            for (Object[] row : noShowDates) {
+                LocalDate date = (LocalDate) row[0];
+                Long count = (Long) row[1];
+                String dayName = date.getDayOfWeek().getDisplayName(java.time.format.TextStyle.FULL, new java.util.Locale("tr", "TR"));
+                dayNameMap.put(dayName, dayNameMap.getOrDefault(dayName, 0L) + count);
+            }
+            mostNoShowDay = dayNameMap.entrySet().stream()
+                    .max(java.util.Map.Entry.comparingByValue())
+                    .map(java.util.Map.Entry::getKey)
+                    .orElse("-");
+        }
+
+        String mostNoShowTimeRange = "-";
+        List<Object[]> noShowTimes = appointmentRepository.countByStartTimeAndStatusForDepartment(departmentId, "NO_SHOW");
+        if (!noShowTimes.isEmpty()) {
+            mostNoShowTimeRange = noShowTimes.get(0)[0].toString();
+        }
+
+        HodDepartmentAnalysisDto.NoShowAnalysis noShowAnalysis = HodDepartmentAnalysisDto.NoShowAnalysis.builder()
+                .totalNoShow(totalNoShow)
+                .noShowRate(noShowRate)
+                .mostNoShowDay(mostNoShowDay)
+                .mostNoShowTimeRange(mostNoShowTimeRange)
+                .build();
+
+        // --- Waitlist Analysis ---
+        long totalWaitlistStudents = waitlistEntryRepository.countByStaff_Department_DepartmentId(departmentId);
+        long convertedToAppointmentCount = waitlistEntryRepository.countByStaff_Department_DepartmentIdAndWaitlistStatus(departmentId, "BOOKED");
+        
+        List<String> topWaitlistCategories = waitlistEntryRepository.countByCategoryForDepartment(departmentId)
+                .stream()
+                .limit(3)
+                .map(row -> (String) row[0])
+                .collect(Collectors.toList());
+
+        HodDepartmentAnalysisDto.WaitlistAnalysis waitlistAnalysis = HodDepartmentAnalysisDto.WaitlistAnalysis.builder()
+                .totalWaitlistStudents(totalWaitlistStudents)
+                .topWaitlistCategories(topWaitlistCategories)
+                .convertedToAppointmentCount(convertedToAppointmentCount)
+                .averageWaitTime("Veri yok") // Mock average wait time
+                .build();
+
+        // --- General Analysis ---
+        String busiestAcademician = "-";
+        List<Object[]> staffCounts = appointmentRepository.countByStaffForDepartment(departmentId);
+        if (!staffCounts.isEmpty()) {
+            busiestAcademician = (String) staffCounts.get(0)[0];
+        }
+
+        // Calculate averages based on some simple logic for demonstration
+        long totalActiveAcademicians = userRepository.countByDepartment_DepartmentIdAndRole_RoleNameInAndIsActiveTrue(departmentId, List.of("ACADEMICIAN"));
+        double avgDailyAppointments = totalActiveAcademicians > 0 ? (double) totalAppointments / (totalActiveAcademicians * 30) : 0.0;
+        double avgWeeklyAppointments = totalActiveAcademicians > 0 ? (double) totalAppointments / (totalActiveAcademicians * 4) : 0.0;
+        
+        String busiestCategory = "-";
+        List<Object[]> categoryCounts = appointmentRepository.countByCategoryForDepartment(departmentId);
+        if (!categoryCounts.isEmpty()) {
+            busiestCategory = (String) categoryCounts.get(0)[0];
+        }
+
+        String busiestDay = "-";
+        List<Object[]> dayDates = appointmentRepository.countBySlotDateForDepartment(departmentId);
+        if (!dayDates.isEmpty()) {
+            java.util.Map<String, Long> dayNameMap = new java.util.HashMap<>();
+            for (Object[] row : dayDates) {
+                LocalDate date = (LocalDate) row[0];
+                Long count = (Long) row[1];
+                String dayName = date.getDayOfWeek().getDisplayName(java.time.format.TextStyle.FULL, new java.util.Locale("tr", "TR"));
+                dayNameMap.put(dayName, dayNameMap.getOrDefault(dayName, 0L) + count);
+            }
+            busiestDay = dayNameMap.entrySet().stream()
+                    .max(java.util.Map.Entry.comparingByValue())
+                    .map(java.util.Map.Entry::getKey)
+                    .orElse("-");
+        }
+
+        String busiestTimeRange = "-";
+        List<Object[]> timeCounts = appointmentRepository.countByStartTimeForDepartment(departmentId);
+        if (!timeCounts.isEmpty()) {
+            busiestTimeRange = timeCounts.get(0)[0].toString();
+        }
+
+        HodDepartmentAnalysisDto.GeneralAnalysis generalAnalysis = HodDepartmentAnalysisDto.GeneralAnalysis.builder()
+                .busiestAcademician(busiestAcademician)
+                .avgDailyAppointments(avgDailyAppointments)
+                .avgWeeklyAppointments(avgWeeklyAppointments)
+                .busiestCategory(busiestCategory)
+                .busiestDay(busiestDay)
+                .busiestTimeRange(busiestTimeRange)
+                .build();
+
+        return HodDepartmentAnalysisDto.builder()
+                .noShowAnalysis(noShowAnalysis)
+                .waitlistAnalysis(waitlistAnalysis)
+                .generalAnalysis(generalAnalysis)
                 .build();
     }
 }

@@ -65,4 +65,31 @@ export interface HodDepartmentKpiDto {
   waitlistStudentCount: number;
 }
 
-
+export interface HodDepartmentStatsDto {
+  statusDistribution: { status: string; count: number }[];
+  categoryDistribution: { categoryName: string; count: number }[];
+  weeklyTrend: { date: string; count: number }[];
+  monthlyTrend: { yearMonth: string; count: number }[];
+}
+export interface HodDepartmentAnalysisDto {
+  noShowAnalysis: {
+    totalNoShow: number;
+    noShowRate: number;
+    mostNoShowDay: string;
+    mostNoShowTimeRange: string;
+  };
+  waitlistAnalysis: {
+    totalWaitlistStudents: number;
+    topWaitlistCategories: string[];
+    convertedToAppointmentCount: number;
+    averageWaitTime: string;
+  };
+  generalAnalysis: {
+    busiestAcademician: string;
+    avgDailyAppointments: number;
+    avgWeeklyAppointments: number;
+    busiestCategory: string;
+    busiestDay: string;
+    busiestTimeRange: string;
+  };
+}

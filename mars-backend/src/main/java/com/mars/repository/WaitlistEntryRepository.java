@@ -43,4 +43,17 @@ public interface WaitlistEntryRepository extends JpaRepository<WaitlistEntry, In
         @Param("status") String status,
         @Param("cutoff") LocalDateTime cutoff
     );
+
+    long countByStaff_Department_DepartmentId(Integer departmentId);
+
+    long countByStaff_Department_DepartmentIdAndWaitlistStatus(Integer departmentId, String waitlistStatus);
+
+    @Query("""
+        SELECT w.category.categoryName, COUNT(w)
+        FROM WaitlistEntry w
+        WHERE w.staff.department.departmentId = :departmentId
+        GROUP BY w.category.categoryName
+        ORDER BY COUNT(w) DESC
+    """)
+    List<Object[]> countByCategoryForDepartment(@Param("departmentId") Integer departmentId);
 }

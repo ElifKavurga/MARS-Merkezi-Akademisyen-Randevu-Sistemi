@@ -470,5 +470,118 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
     long countByStaff_Department_DepartmentIdAndSlot_SlotDate(Integer departmentId, LocalDate slotDate);
 
     long countByStaff_Department_DepartmentIdAndAppointmentStatus(Integer departmentId, String appointmentStatus);
-}
 
+    /**
+     * Count appointments per status for a given department.
+     * Returns Object[] pairs: [appointmentStatus, count]
+     */
+    @Query("""
+            SELECT a.appointmentStatus, COUNT(a)
+            FROM Appointment a
+            WHERE a.staff.department.departmentId = :departmentId
+            GROUP BY a.appointmentStatus
+            ORDER BY COUNT(a) DESC
+            """)
+    List<Object[]> countByStatusForDepartment(@Param("departmentId") Integer departmentId);
+
+    /**
+     * Count appointments per category for a given department.
+     * Returns Object[] pairs: [categoryName, count]
+     */
+    @Query("""
+            SELECT a.category.categoryName, COUNT(a)
+            FROM Appointment a
+            WHERE a.staff.department.departmentId = :departmentId
+            GROUP BY a.category.categoryName
+            ORDER BY COUNT(a) DESC
+            """)
+    List<Object[]> countByCategoryForDepartment(@Param("departmentId") Integer departmentId);
+
+    /**
+     * Count appointments per slot date for the department, within a date range.
+     * Returns Object[] pairs: [slotDate (LocalDate), count]
+     */
+    @Query("""
+            SELECT a.slot.slotDate, COUNT(a)
+            FROM Appointment a
+            JOIN a.slot s
+            WHERE a.staff.department.departmentId = :departmentId
+              AND s.slotDate BETWEEN :from AND :to
+            GROUP BY a.slot.slotDate
+            ORDER BY a.slot.slotDate ASC
+            """)
+    List<Object[]> countByDayForDepartmentInRange(
+            @Param("departmentId") Integer departmentId,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to);
+
+    @Query("""
+            SELECT YEAR(s.slotDate), MONTH(s.slotDate), COUNT(a)
+            FROM Appointment a
+            JOIN a.slot s
+            WHERE a.staff.department.departmentId = :departmentId
+              AND s.slotDate BETWEEN :from AND :to
+            GROUP BY YEAR(s.slotDate), MONTH(s.slotDate)
+            ORDER BY YEAR(s.slotDate) ASC, MONTH(s.slotDate) ASC
+            """)
+    List<Object[]> countByMonthForDepartmentInRange(
+            @Param("departmentId") Integer departmentId,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to);
+
+    @Query("""
+            SELECT s.slotDate, COUNT(a)
+            FROM Appointment a
+            JOIN a.slot s
+            WHERE a.staff.department.departmentId = :departmentId
+              AND a.appointmentStatus = :status
+            GROUP BY s.slotDate
+            """)
+    List<Object[]> countBySlotDateAndStatusForDepartment(
+            @Param("departmentId") Integer departmentId,
+            @Param("status") String status);
+
+    @Query("""
+            SELECT s.startTime, COUNT(a)
+            FROM Appointment a
+            JOIN a.slot s
+            WHERE a.staff.department.departmentId = :departmentId
+              AND a.appointmentStatus = :status
+            GROUP BY s.startTime
+            ORDER BY COUNT(a) DESC
+            """)
+    List<Object[]> countByStartTimeAndStatusForDepartment(
+            @Param("departmentId") Integer departmentId,
+            @Param("status") String status);
+
+    @Query("""
+            SELECT a.staff.fullName, COUNT(a)
+            FROM Appointment a
+            WHERE a.staff.department.departmentId = :departmentId
+            GROUP BY a.staff.userId, a.staff.fullName
+            ORDER BY COUNT(a) DESC
+            """)
+    List<Object[]> countByStaffForDepartment(
+            @Param("departmentId") Integer departmentId);
+
+    @Query("""
+            SELECT s.slotDate, COUNT(a)
+            FROM Appointment a
+            JOIN a.slot s
+            WHERE a.staff.department.departmentId = :departmentId
+            GROUP BY s.slotDate
+            """)
+    List<Object[]> countBySlotDateForDepartment(
+            @Param("departmentId") Integer departmentId);
+
+    @Query("""
+            SELECT s.startTime, COUNT(a)
+            FROM Appointment a
+            JOIN a.slot s
+            WHERE a.staff.department.departmentId = :departmentId
+            GROUP BY s.startTime
+            ORDER BY COUNT(a) DESC
+            """)
+    List<Object[]> countByStartTimeForDepartment(
+            @Param("departmentId") Integer departmentId);
+}

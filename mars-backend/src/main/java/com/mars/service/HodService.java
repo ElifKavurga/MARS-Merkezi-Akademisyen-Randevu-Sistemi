@@ -39,4 +39,6 @@ public interface HodService {
     List<com.mars.dto.HodRecentAppointmentDto> getDepartmentAcademicianRecentAppointments(Integer hodUserId, Integer targetUserId);
     com.mars.dto.HodPerformanceSummaryDto getDepartmentAcademicianPerformanceSummary(Integer hodUserId, Integer targetUserId);
     com.mars.dto.HodDepartmentKpiDto getDepartmentKpiStats(Integer hodUserId);
+    com.mars.dto.HodDepartmentStatsDto getDepartmentStats(Integer hodUserId);
+    com.mars.dto.HodDepartmentAnalysisDto getDepartmentAnalysis(Integer hodUserId);
 }
