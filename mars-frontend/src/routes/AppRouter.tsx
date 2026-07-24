@@ -21,6 +21,7 @@ const AdminSchedulerStatusPage = lazy(() => import('../pages/AdminSchedulerStatu
 
 const HodDashboard = lazy(() => import('../pages/HodDashboard'));
 const HodAcademiciansPage = lazy(() => import('../pages/HodAcademiciansPage'));
+const HodAcademicianDetailPage = lazy(() => import('../pages/HodAcademicianDetailPage'));
 const HodStatisticsPage = lazy(() => import('../pages/HodStatisticsPage'));
 const AcademicianDashboard = lazy(() => import('../pages/AcademicianDashboard'));
 const AcademicianCoursesPage = lazy(() => import('../pages/AcademicianCoursesPage'));
@@ -157,6 +158,7 @@ export default function AppRouter() {
             <Route element={<ProtectedRoute allowedRoles={[ROLES.HOD]} />}>
               <Route path={ROUTES.HOD} element={<HodDashboard />} />
               <Route path={ROUTES.HOD_ACADEMICIANS} element={<HodAcademiciansPage />} />
+              <Route path={ROUTES.HOD_ACADEMICIAN_DETAIL} element={<HodAcademicianDetailPage />} />
               <Route path={ROUTES.HOD_STATISTICS} element={<HodStatisticsPage />} />
               <Route path={ROUTES.HOD_PROFILE} element={<ProfilePage />} />
             </Route>
