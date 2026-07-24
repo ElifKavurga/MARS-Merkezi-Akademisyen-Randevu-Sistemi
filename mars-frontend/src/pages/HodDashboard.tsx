@@ -1,5 +1,5 @@
-import RoleWelcomeView from '../components/RoleWelcomeView';
+import AcademicianDashboard from './AcademicianDashboard';
 
 export default function HodDashboard() {
-  return <RoleWelcomeView />;
+  return <AcademicianDashboard />;
 }

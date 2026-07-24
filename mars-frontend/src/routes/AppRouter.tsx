@@ -20,6 +20,8 @@ const AdminPenaltyRulesPage = lazy(() => import('../pages/AdminPenaltyRulesPage'
 const AdminSchedulerStatusPage = lazy(() => import('../pages/AdminSchedulerStatusPage'));
 
 const HodDashboard = lazy(() => import('../pages/HodDashboard'));
+const HodAcademiciansPage = lazy(() => import('../pages/HodAcademiciansPage'));
+const HodStatisticsPage = lazy(() => import('../pages/HodStatisticsPage'));
 const AcademicianDashboard = lazy(() => import('../pages/AcademicianDashboard'));
 const AcademicianCoursesPage = lazy(() => import('../pages/AcademicianCoursesPage'));
 const CourseDetailPage = lazy(() => import('../pages/CourseDetailPage'));
@@ -84,10 +86,6 @@ export default function AppRouter() {
         <Route element={<MainLayout />}>
           <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.DASHBOARD} replace />} />
           <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
-
-          <Route element={<ProtectedRoute allowedRoles={[ROLES.HOD]} />}>
-            <Route path={ROUTES.HOD} element={<HodDashboard />} />
-          </Route>
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[ROLES.STUDENT]} />}>
@@ -156,31 +154,35 @@ export default function AppRouter() {
             <Route element={<ProtectedRoute allowedRoles={[ROLES.ACADEMICIAN]} />}>
               <Route path={ROUTES.ACADEMICIAN} element={<AcademicianDashboard />} />
             </Route>
+            <Route element={<ProtectedRoute allowedRoles={[ROLES.HOD]} />}>
+              <Route path={ROUTES.HOD} element={<HodDashboard />} />
+              <Route path={ROUTES.HOD_ACADEMICIANS} element={<HodAcademiciansPage />} />
+              <Route path={ROUTES.HOD_STATISTICS} element={<HodStatisticsPage />} />
+              <Route path={ROUTES.HOD_PROFILE} element={<ProfilePage />} />
+            </Route>
             <Route path={ROUTES.ACADEMICIAN_COURSES} element={<AcademicianCoursesPage />} />
             <Route path={ROUTES.ACADEMICIAN_COURSE_DETAIL} element={<CourseDetailPage />} />
             <Route path={ROUTES.ACADEMICIAN_AVAILABILITY} element={<AcademicianAvailabilityPage />} />
-            <Route element={<ProtectedRoute allowedRoles={[ROLES.ACADEMICIAN]} />}>
-              <Route
-                path={ROUTES.ACADEMICIAN_APPOINTMENTS}
-                element={<AcademicianAppointmentsPage />}
-              />
-              <Route
-                path={ROUTES.ACADEMICIAN_APPOINTMENT_DETAIL}
-                element={<AcademicianAppointmentDetailPage />}
-              />
-              <Route
-                path={ROUTES.ACADEMICIAN_DELEGATION_HISTORY}
-                element={<DelegationManagementPage />}
-              />
-              <Route
-                path={ROUTES.ACADEMICIAN_INCOMING_DELEGATIONS}
-                element={<DelegationManagementPage />}
-              />
-              <Route
-                path={ROUTES.ACADEMICIAN_INCOMING_DELEGATION_DETAIL}
-                element={<AcademicianIncomingDelegationDetailPage />}
-              />
-            </Route>
+            <Route
+              path={ROUTES.ACADEMICIAN_APPOINTMENTS}
+              element={<AcademicianAppointmentsPage />}
+            />
+            <Route
+              path={ROUTES.ACADEMICIAN_APPOINTMENT_DETAIL}
+              element={<AcademicianAppointmentDetailPage />}
+            />
+            <Route
+              path={ROUTES.ACADEMICIAN_DELEGATION_HISTORY}
+              element={<DelegationManagementPage />}
+            />
+            <Route
+              path={ROUTES.ACADEMICIAN_INCOMING_DELEGATIONS}
+              element={<DelegationManagementPage />}
+            />
+            <Route
+              path={ROUTES.ACADEMICIAN_INCOMING_DELEGATION_DETAIL}
+              element={<AcademicianIncomingDelegationDetailPage />}
+            />
             <Route
               path={ROUTES.ACADEMICIAN_CALENDAR}
               element={

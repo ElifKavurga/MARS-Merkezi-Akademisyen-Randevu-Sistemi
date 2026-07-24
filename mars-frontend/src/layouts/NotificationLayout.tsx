@@ -11,6 +11,7 @@ export default function NotificationLayout() {
   switch (user?.role) {
     case ROLES.STUDENT: return <StudentLayout />;
     case ROLES.ACADEMICIAN: return <AcademicianLayout />;
+    case ROLES.HOD: return <AcademicianLayout />;
     case ROLES.ASSISTANT: return <AssistantLayout />;
     case ROLES.ADMIN: return <AdminLayout />;
     default: return <MainLayout />;

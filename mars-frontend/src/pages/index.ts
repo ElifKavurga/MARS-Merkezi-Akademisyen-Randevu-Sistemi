@@ -7,6 +7,8 @@ export { default as AdminCategoriesPage } from './AdminCategoriesPage';
 export { default as AdminPenaltyRulesPage } from './AdminPenaltyRulesPage';
 export { default as AdminProfilePage } from './AdminProfilePage';
 export { default as HodDashboard } from './HodDashboard';
+export { default as HodAcademiciansPage } from './HodAcademiciansPage';
+export { default as HodStatisticsPage } from './HodStatisticsPage';
 export { default as AcademicianDashboard } from './AcademicianDashboard';
 export { default as AcademicianCoursesPage } from './AcademicianCoursesPage';
 export { default as CourseDetailPage } from './CourseDetailPage';

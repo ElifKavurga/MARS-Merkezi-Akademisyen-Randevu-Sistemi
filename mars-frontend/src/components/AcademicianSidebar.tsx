@@ -12,14 +12,21 @@ const commonNavItems = [
   { label: 'İzin Aralıkları', path: ROUTES.ACADEMICIAN_OUT_OF_OFFICE, icon: 'event_busy', end: false },
 ] as const;
 
+const hodFooterItems = [
+  { label: 'Akademisyenler', path: ROUTES.HOD_ACADEMICIANS, icon: 'groups', end: false },
+  { label: 'Bölüm İstatistikleri', path: ROUTES.HOD_STATISTICS, icon: 'bar_chart', end: false },
+] as const;
+
 export default function AcademicianSidebar({ mobileOpen, onClose }: ModuleSidebarProps) {
   const { user } = useAuth();
+  const isHod = user?.role === ROLES.HOD;
+
   const roleNavItems = commonNavItems.map((item, index) =>
-    index === 0 && user?.role === ROLES.HOD
+    index === 0 && isHod
       ? { ...item, path: ROUTES.HOD }
       : item,
   );
-  const navItems = user?.role === ROLES.ACADEMICIAN
+  const navItems = user?.role === ROLES.ACADEMICIAN || isHod
     ? [
         ...roleNavItems.slice(0, 3),
         {
@@ -45,7 +52,8 @@ export default function AcademicianSidebar({ mobileOpen, onClose }: ModuleSideba
       ariaLabel="Akademisyen menü"
       navAriaLabel="Akademisyen sayfa menüsü"
       navItems={navItems}
-      profilePath={ROUTES.ACADEMICIAN_PROFILE}
+      footerItems={isHod ? hodFooterItems : []}
+      profilePath={isHod ? ROUTES.HOD_PROFILE : ROUTES.ACADEMICIAN_PROFILE}
     />
   );
 }
