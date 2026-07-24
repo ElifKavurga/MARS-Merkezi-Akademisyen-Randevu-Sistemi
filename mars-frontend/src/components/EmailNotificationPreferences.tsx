@@ -5,6 +5,7 @@ import {
   updateMyEmailNotificationPreferences,
 } from '../services/emailNotificationPreferenceService';
 import type { EmailNotificationPreference } from '../types/emailNotificationPreference';
+import AdminActionButton from './AdminActionButton';
 
 const preferenceLabels: Array<{
   key: keyof EmailNotificationPreference;
@@ -59,8 +60,8 @@ export default function EmailNotificationPreferences() {
   };
 
   return (
-    <section className="mt-8 max-w-3xl overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest">
-      <div className="border-b border-outline-variant px-5 py-5 sm:px-6">
+    <section className="mt-8 max-w-3xl overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+      <div className="border-b border-outline-variant px-5 py-5 sm:px-6 bg-surface-container-lowest/50">
         <h2 className="font-headline-md text-body-lg text-on-background">E-Posta Bildirim Tercihleri</h2>
         <p className="mt-1 font-body-md text-body-md text-on-surface-variant">
           Uygulama içi bildirimleriniz değişmeden, almak istediğiniz e-postaları yönetin.
@@ -71,9 +72,9 @@ export default function EmailNotificationPreferences() {
         <p className="px-6 py-8 font-body-md text-body-md text-on-surface-variant">Tercihler yükleniyor...</p>
       ) : preferences ? (
         <>
-          <div className="divide-y divide-outline-variant/60">
+          <div className="divide-y divide-outline-variant/40">
             {preferenceLabels.map((item) => (
-              <div key={item.key} className="flex items-center justify-between gap-4 px-5 py-4 sm:px-6">
+              <div key={item.key} className="flex items-center justify-between gap-4 px-5 py-4 sm:px-6 bg-surface-container-lowest">
                 <div className="min-w-0">
                   <p className="font-label-md text-label-md text-on-surface">{item.label}</p>
                   <p className="mt-0.5 font-body-sm text-body-sm text-on-surface-variant">{item.description}</p>
@@ -85,11 +86,11 @@ export default function EmailNotificationPreferences() {
                   aria-label={`${item.label} e-postalarını ${preferences[item.key] ? 'kapat' : 'aç'}`}
                   onClick={() => toggle(item.key)}
                   className={`relative h-7 w-12 shrink-0 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                    preferences[item.key] ? 'bg-primary' : 'bg-outline-variant'
+                    preferences[item.key] ? 'bg-primary' : 'bg-surface-container-highest border border-outline-variant/60'
                   }`}
                 >
                   <span
-                    className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                    className={`absolute top-[3px] h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
                       preferences[item.key] ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
@@ -97,15 +98,15 @@ export default function EmailNotificationPreferences() {
               </div>
             ))}
           </div>
-          <div className="flex justify-end border-t border-outline-variant bg-surface-container-low px-5 py-4 sm:px-6">
-            <button
-              type="button"
+          <div className="flex justify-end border-t border-outline-variant bg-surface-container-lowest px-5 py-4 sm:px-6">
+            <AdminActionButton
+              variant="primary"
+              icon="save"
               disabled={saving}
               onClick={() => void save()}
-              className="rounded-lg bg-primary px-5 py-2.5 font-label-md text-label-md text-on-primary transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {saving ? 'Kaydediliyor...' : 'Tercihleri Kaydet'}
-            </button>
+              {saving ? 'Kaydediliyor' : 'Tercihleri Kaydet'}
+            </AdminActionButton>
           </div>
         </>
       ) : (
