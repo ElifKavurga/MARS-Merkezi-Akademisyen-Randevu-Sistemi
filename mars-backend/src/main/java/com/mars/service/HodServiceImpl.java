@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.mars.dto.HodAcademicianDetailDto;
 import com.mars.dto.HodAcademicianListDto;
 import com.mars.dto.HodAcademicianStatsDto;
+import com.mars.dto.HodDepartmentKpiDto;
 import com.mars.dto.HodPerformanceSummaryDto;
 import com.mars.dto.HodRecentAppointmentDto;
 import com.mars.entity.User;
@@ -264,6 +265,36 @@ public class HodServiceImpl implements HodService {
                 .averageResponseTime("2 Saat") // Placeholder
                 .busiestDay("Çarşamba") // Placeholder
                 .busiestTimeRange("14:00 - 15:00") // Placeholder
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public HodDepartmentKpiDto getDepartmentKpiStats(Integer hodUserId) {
+        User hodUser = userRepository.findByIdWithRoleAndDepartment(hodUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı"));
+
+        Integer departmentId = hodUser.getDepartment().getDepartmentId();
+        LocalDate today = LocalDate.now();
+
+        long totalAcademicians = userRepository.countByDepartment_DepartmentIdAndRole_RoleNameIn(departmentId, ALLOWED_ROLES);
+        long activeAcademicians = userRepository.countByDepartment_DepartmentIdAndRole_RoleNameInAndIsActiveTrue(departmentId, ALLOWED_ROLES);
+        long totalAppointments = appointmentRepository.countByStaff_Department_DepartmentId(departmentId);
+        long todayAppointments = appointmentRepository.countByStaff_Department_DepartmentIdAndSlot_SlotDate(departmentId, today);
+        long pendingAppointments = appointmentRepository.countByStaff_Department_DepartmentIdAndAppointmentStatus(departmentId, "PENDING");
+        long completedAppointments = appointmentRepository.countByStaff_Department_DepartmentIdAndAppointmentStatus(departmentId, "COMPLETED");
+        long noShowCount = appointmentRepository.countByStaff_Department_DepartmentIdAndAppointmentStatus(departmentId, "NO_SHOW");
+        long waitlistStudentCount = 12L; // Placeholder data
+
+        return HodDepartmentKpiDto.builder()
+                .totalAcademicians(totalAcademicians)
+                .activeAcademicians(activeAcademicians)
+                .totalAppointments(totalAppointments)
+                .todayAppointments(todayAppointments)
+                .pendingAppointments(pendingAppointments)
+                .completedAppointments(completedAppointments)
+                .noShowCount(noShowCount)
+                .waitlistStudentCount(waitlistStudentCount)
                 .build();
     }
 }

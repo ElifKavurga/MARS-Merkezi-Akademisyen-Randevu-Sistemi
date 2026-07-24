@@ -98,7 +98,7 @@ export default function HodAcademicianDetailPage() {
           <button
             type="button"
             onClick={() => navigate(ROUTES.HOD_ACADEMICIANS)}
-            className="inline-flex items-center gap-1.5 font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
+            className="inline-flex items-center gap-2 rounded-full border border-outline-variant bg-surface px-4 py-2 font-label-md text-label-md text-on-surface-variant shadow-sm transition-all hover:bg-surface-container-high hover:text-primary hover:shadow-md"
           >
             <span className="material-symbols-outlined text-[18px]">arrow_back</span>
             Akademisyenler Listesi
@@ -132,7 +132,7 @@ export default function HodAcademicianDetailPage() {
         <button
           type="button"
           onClick={() => navigate(ROUTES.HOD_ACADEMICIANS)}
-          className="inline-flex items-center gap-1.5 font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
+          className="inline-flex items-center gap-2 rounded-full border border-outline-variant bg-surface px-4 py-2 font-label-md text-label-md text-on-surface-variant shadow-sm transition-all hover:bg-surface-container-high hover:text-primary hover:shadow-md"
         >
           <span className="material-symbols-outlined text-[18px]">arrow_back</span>
           Akademisyenler Listesi

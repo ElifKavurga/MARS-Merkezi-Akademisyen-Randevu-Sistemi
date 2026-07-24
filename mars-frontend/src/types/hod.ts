@@ -54,3 +54,15 @@ export interface HodPerformanceSummaryDto {
   busiestTimeRange: string;
 }
 
+export interface HodDepartmentKpiDto {
+  totalAcademicians: number;
+  activeAcademicians: number;
+  totalAppointments: number;
+  todayAppointments: number;
+  pendingAppointments: number;
+  completedAppointments: number;
+  noShowCount: number;
+  waitlistStudentCount: number;
+}
+
+

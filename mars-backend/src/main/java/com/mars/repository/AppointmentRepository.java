@@ -465,5 +465,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
             @Param("staffId") Integer staffId,
             @Param("from") LocalDate from,
             @Param("to") LocalDate to);
+    long countByStaff_Department_DepartmentId(Integer departmentId);
+
+    long countByStaff_Department_DepartmentIdAndSlot_SlotDate(Integer departmentId, LocalDate slotDate);
+
+    long countByStaff_Department_DepartmentIdAndAppointmentStatus(Integer departmentId, String appointmentStatus);
 }
 

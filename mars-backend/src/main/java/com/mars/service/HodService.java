@@ -38,4 +38,5 @@ public interface HodService {
     List<CalendarEventResponseDto> getDepartmentAcademicianCalendar(Integer hodUserId, Integer targetUserId, LocalDate from, LocalDate to, boolean includeAppointments);
     List<com.mars.dto.HodRecentAppointmentDto> getDepartmentAcademicianRecentAppointments(Integer hodUserId, Integer targetUserId);
     com.mars.dto.HodPerformanceSummaryDto getDepartmentAcademicianPerformanceSummary(Integer hodUserId, Integer targetUserId);
+    com.mars.dto.HodDepartmentKpiDto getDepartmentKpiStats(Integer hodUserId);
 }

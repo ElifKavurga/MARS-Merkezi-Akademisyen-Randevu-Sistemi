@@ -133,4 +133,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     List<User> findActiveUsersByDepartmentIdAndRoleNames(
             @Param("departmentId") Integer departmentId,
             @Param("roleNames") Collection<String> roleNames);
+    long countByDepartment_DepartmentIdAndRole_RoleNameIn(Integer departmentId, Collection<String> roleNames);
+
+    long countByDepartment_DepartmentIdAndRole_RoleNameInAndIsActiveTrue(Integer departmentId, Collection<String> roleNames);
 }

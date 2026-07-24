@@ -85,4 +85,13 @@ public class HodController {
         return ResponseEntity.ok(summary);
     }
 
+    @GetMapping("/department/stats/kpi")
+    @PreAuthorize("hasRole('HOD')")
+    public ResponseEntity<com.mars.dto.HodDepartmentKpiDto> getDepartmentKpiStats(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        com.mars.dto.HodDepartmentKpiDto kpi = hodService.getDepartmentKpiStats(
+                userDetails.getUser().getUserId());
+        return ResponseEntity.ok(kpi);
+    }
+
 }
