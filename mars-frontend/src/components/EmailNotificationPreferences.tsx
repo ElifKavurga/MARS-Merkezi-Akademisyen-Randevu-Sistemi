@@ -9,19 +9,15 @@ import AdminActionButton from './AdminActionButton';
 
 const preferenceLabels: Array<{
   key: keyof EmailNotificationPreference;
-  label: string;
   description: string;
 }> = [
-  { key: 'appointmentRequest', label: 'Randevu Talebi', description: 'Yeni randevu talepleri' },
-  { key: 'appointmentApproval', label: 'Randevu Onayı', description: 'Onaylanan randevular' },
-  { key: 'appointmentRejection', label: 'Randevu Reddi', description: 'Reddedilen randevular' },
-  { key: 'appointmentCancellation', label: 'Randevu İptali', description: 'İptal edilen randevular' },
-  { key: 'reschedule', label: 'Yeniden Planlama', description: 'Tarih değişikliği süreçleri' },
-  { key: 'delegation', label: 'Randevu Devri', description: 'Randevu devri ve onay süreçleri' },
-  { key: 'appointmentReminder', label: 'Randevu Hatırlatmaları', description: '24 saat ve 1 saat hatırlatmaları' },
-  { key: 'waitlist', label: 'Waitlist Bildirimleri', description: 'Bekleme listesi gelişmeleri' },
-  { key: 'noShow', label: 'No-Show Bildirimleri', description: 'Katılım durumu bilgilendirmeleri' },
-  { key: 'penalty', label: 'Ceza Bildirimleri', description: 'Kısıtlama ve ceza gelişmeleri' },
+  { key: 'appointmentRequest', description: 'Yeni bir randevu talebi geldiğinde bildir' },
+  { key: 'appointmentApproval', description: 'Randevunuz onaylandığında bildir' },
+  { key: 'appointmentRejection', description: 'Randevunuz reddedildiğinde bildir' },
+  { key: 'appointmentCancellation', description: 'Randevunuz iptal edildiğinde bildir' },
+  { key: 'appointmentReminder', description: 'Yaklaşan randevularınız için hatırlatma gönder' },
+  { key: 'waitlist', description: 'Bekleme listesinde sıranız geldiğinde bildir' },
+  { key: 'systemAnnouncements', description: 'Sistem güncellemeleri ve önemli duyuruları bildir' },
 ];
 
 export default function EmailNotificationPreferences() {
@@ -74,27 +70,28 @@ export default function EmailNotificationPreferences() {
         <>
           <div className="divide-y divide-outline-variant/40">
             {preferenceLabels.map((item) => (
-              <div key={item.key} className="flex items-center justify-between gap-4 px-5 py-4 sm:px-6 bg-surface-container-lowest">
+              <div 
+                key={item.key} 
+                onClick={() => toggle(item.key)}
+                className="flex cursor-pointer items-center justify-between gap-4 px-5 py-3 sm:px-6 bg-surface-container-lowest hover:bg-surface-container-low transition-colors"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(item.key); } }}
+              >
                 <div className="min-w-0">
-                  <p className="font-label-md text-label-md text-on-surface">{item.label}</p>
-                  <p className="mt-0.5 font-body-sm text-body-sm text-on-surface-variant">{item.description}</p>
+                  <p className="font-body-md text-on-surface">{item.description}</p>
                 </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={preferences[item.key]}
-                  aria-label={`${item.label} e-postalarını ${preferences[item.key] ? 'kapat' : 'aç'}`}
-                  onClick={() => toggle(item.key)}
-                  className={`relative h-7 w-12 shrink-0 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                    preferences[item.key] ? 'bg-primary' : 'bg-surface-container-highest border border-outline-variant/60'
+                <div
+                  className={`relative h-7 w-12 shrink-0 rounded-full transition-colors duration-300 ${
+                    preferences[item.key] ? 'bg-primary' : 'bg-surface-variant shadow-inner'
                   }`}
                 >
-                  <span
-                    className={`absolute top-[3px] h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
-                      preferences[item.key] ? 'translate-x-6' : 'translate-x-1'
+                  <div
+                    className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-md transition-all duration-300 ease-in-out ${
+                      preferences[item.key] ? 'left-6' : 'left-1'
                     }`}
                   />
-                </button>
+                </div>
               </div>
             ))}
           </div>

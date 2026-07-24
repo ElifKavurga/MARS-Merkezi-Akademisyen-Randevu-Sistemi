@@ -10,5 +10,6 @@ public record EmailNotificationPreferenceResponse(
         boolean appointmentReminder,
         boolean waitlist,
         boolean noShow,
-        boolean penalty) {
+        boolean penalty,
+        boolean systemAnnouncements) {
 }

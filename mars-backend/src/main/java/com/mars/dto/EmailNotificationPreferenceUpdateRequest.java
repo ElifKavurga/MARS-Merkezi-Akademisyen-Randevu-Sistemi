@@ -12,5 +12,6 @@ public record EmailNotificationPreferenceUpdateRequest(
         @NotNull Boolean appointmentReminder,
         @NotNull Boolean waitlist,
         @NotNull Boolean noShow,
-        @NotNull Boolean penalty) {
+        @NotNull Boolean penalty,
+        @NotNull Boolean systemAnnouncements) {
 }

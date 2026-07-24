@@ -11,7 +11,7 @@ public class EmailNotificationPreferenceMapper {
         return new EmailNotificationPreferenceResponse(
                 value.getAppointmentRequest(), value.getAppointmentApproval(), value.getAppointmentRejection(),
                 value.getAppointmentCancellation(), value.getReschedule(), value.getDelegation(),
-                value.getAppointmentReminder(), value.getWaitlist(), value.getNoShow(), value.getPenalty());
+                value.getAppointmentReminder(), value.getWaitlist(), value.getNoShow(), value.getPenalty(), value.getSystemAnnouncements());
     }
 
     public void update(UserEmailNotificationPreference value, EmailNotificationPreferenceUpdateRequest request) {
@@ -25,5 +25,6 @@ public class EmailNotificationPreferenceMapper {
         value.setWaitlist(request.waitlist());
         value.setNoShow(request.noShow());
         value.setPenalty(request.penalty());
+        value.setSystemAnnouncements(request.systemAnnouncements());
     }
 }

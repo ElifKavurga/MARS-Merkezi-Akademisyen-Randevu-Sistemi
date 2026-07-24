@@ -9,4 +9,5 @@ export interface EmailNotificationPreference {
   waitlist: boolean;
   noShow: boolean;
   penalty: boolean;
+  systemAnnouncements: boolean;
 }

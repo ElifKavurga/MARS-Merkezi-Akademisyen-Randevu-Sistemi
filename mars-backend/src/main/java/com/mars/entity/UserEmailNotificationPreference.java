@@ -37,4 +37,5 @@ public class UserEmailNotificationPreference {
     @Column(name = "waitlist", nullable = false) private Boolean waitlist = true;
     @Column(name = "no_show", nullable = false) private Boolean noShow = true;
     @Column(name = "penalty", nullable = false) private Boolean penalty = true;
+    @Column(name = "system_announcements", nullable = false) private Boolean systemAnnouncements = true;
 }

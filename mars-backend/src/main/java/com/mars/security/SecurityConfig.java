@@ -110,6 +110,8 @@ public class SecurityConfig {
                                 .hasRole("ACADEMICIAN")
                         .requestMatchers("/users/me")
                                 .authenticated()
+                        .requestMatchers("/email-preferences", "/email-preferences/**")
+                                .authenticated()
                         .requestMatchers(HttpMethod.GET, "/users")
                                 .hasAnyRole("ACADEMICIAN", "STUDENT")
                         .requestMatchers("/notifications", "/notifications/**")

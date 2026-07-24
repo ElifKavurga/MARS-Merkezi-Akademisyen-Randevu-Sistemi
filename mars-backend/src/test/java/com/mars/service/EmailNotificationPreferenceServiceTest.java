@@ -28,6 +28,7 @@ import com.mars.security.CustomUserDetails;
 @ExtendWith(MockitoExtension.class)
 class EmailNotificationPreferenceServiceTest {
     @Mock private UserEmailNotificationPreferenceRepository repository;
+    @Mock private com.mars.repository.UserRepository userRepository;
     @Spy private final EmailNotificationPreferenceMapper mapper = new EmailNotificationPreferenceMapper();
     @InjectMocks private EmailNotificationPreferenceService service;
 
@@ -40,6 +41,7 @@ class EmailNotificationPreferenceServiceTest {
     void missingPreference_createsAllEnabledDefaultsForCurrentUser() {
         User user = authenticate(7);
         when(repository.findById(7)).thenReturn(Optional.empty());
+        when(userRepository.getReferenceById(7)).thenReturn(user);
         when(repository.save(org.mockito.ArgumentMatchers.any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         var response = service.getMyPreferences();
@@ -67,7 +69,7 @@ class EmailNotificationPreferenceServiceTest {
         when(repository.findById(7)).thenReturn(Optional.of(preference));
         when(repository.save(preference)).thenReturn(preference);
         var request = new EmailNotificationPreferenceUpdateRequest(
-                false, true, true, true, true, true, false, true, true, true);
+                false, true, true, true, true, true, false, true, true, true, true);
 
         var response = service.updateMyPreferences(request);
 

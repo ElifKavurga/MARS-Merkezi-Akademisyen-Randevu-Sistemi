@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class EmailNotificationPreferenceService {
     private final UserEmailNotificationPreferenceRepository repository;
+    private final com.mars.repository.UserRepository userRepository;
     private final EmailNotificationPreferenceMapper mapper;
 
     @Transactional
@@ -51,7 +52,7 @@ public class EmailNotificationPreferenceService {
     private UserEmailNotificationPreference getOrCreate(User user) {
         return repository.findById(user.getUserId()).orElseGet(() -> {
             UserEmailNotificationPreference preference = new UserEmailNotificationPreference();
-            preference.setUser(user);
+            preference.setUser(userRepository.getReferenceById(user.getUserId()));
             return repository.save(preference);
         });
     }
@@ -86,6 +87,7 @@ public class EmailNotificationPreferenceService {
             case WAITLIST -> value.getWaitlist();
             case NO_SHOW -> value.getNoShow();
             case PENALTY -> value.getPenalty();
+            case SYSTEM_ANNOUNCEMENT -> value.getSystemAnnouncements();
         };
     }
 

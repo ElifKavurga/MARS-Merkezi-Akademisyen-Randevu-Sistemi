@@ -10,5 +10,6 @@ public enum EmailNotificationCategory {
     APPOINTMENT_REMINDER,
     WAITLIST,
     NO_SHOW,
-    PENALTY
+    PENALTY,
+    SYSTEM_ANNOUNCEMENT
 }
