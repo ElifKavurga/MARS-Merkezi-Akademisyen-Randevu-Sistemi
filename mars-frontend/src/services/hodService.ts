@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient';
-import type { HodAcademicianListDto, HodAcademicianDetailDto } from '../types/hod';
+import type { HodAcademicianListDto, HodAcademicianDetailDto, HodRecentAppointmentDto, HodPerformanceSummaryDto } from '../types/hod';
 
 export const hodService = {
   getDepartmentAcademicians: async (): Promise<HodAcademicianListDto[]> => {
@@ -8,6 +8,14 @@ export const hodService = {
   },
   getAcademicianDetail: async (userId: number): Promise<HodAcademicianDetailDto> => {
     const response = await apiClient.get<HodAcademicianDetailDto>(`/hod/academicians/${userId}`);
+    return response.data;
+  },
+  getAcademicianRecentAppointments: async (userId: number): Promise<HodRecentAppointmentDto[]> => {
+    const response = await apiClient.get<HodRecentAppointmentDto[]>(`/hod/academicians/${userId}/recent-appointments`);
+    return response.data;
+  },
+  getAcademicianPerformance: async (userId: number): Promise<HodPerformanceSummaryDto> => {
+    const response = await apiClient.get<HodPerformanceSummaryDto>(`/hod/academicians/${userId}/performance`);
     return response.data;
   },
 };

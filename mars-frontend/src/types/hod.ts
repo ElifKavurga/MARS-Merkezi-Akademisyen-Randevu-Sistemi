@@ -31,3 +31,26 @@ export interface HodAcademicianStatsDto {
   /** Monthly trend, ordered by year-month */
   monthlyTrend: { yearMonth: string; count: number }[];
 }
+
+export interface HodRecentAppointmentDto {
+  appointmentId: number;
+  date: string;
+  startTime: string;
+  endTime: string;
+  studentName: string;
+  categoryName: string;
+  status: string;
+  meetingType: string;
+  durationMinutes: number;
+}
+
+export interface HodPerformanceSummaryDto {
+  totalCompleted: number;
+  averageDaily: number;
+  noShowCount: number;
+  noShowRate: number;
+  averageResponseTime: string;
+  busiestDay: string;
+  busiestTimeRange: string;
+}
+

@@ -117,6 +117,20 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
 
     boolean existsByAppointmentId(Integer appointmentId);
 
+    @Query("""
+            SELECT a
+            FROM Appointment a
+            JOIN FETCH a.student stu
+            JOIN FETCH a.category
+            JOIN FETCH a.slot s
+            LEFT JOIN FETCH a.course
+            WHERE a.staff.userId = :staffId
+            ORDER BY s.slotDate DESC, s.startTime DESC
+            """)
+    List<Appointment> findRecentByStaffIdWithDetails(
+            @Param("staffId") Integer staffId,
+            Pageable pageable);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             SELECT a

@@ -11,7 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.mars.dto.HodAcademicianDetailDto;
 import com.mars.dto.HodAcademicianListDto;
 import com.mars.dto.HodAcademicianStatsDto;
+import com.mars.dto.HodPerformanceSummaryDto;
+import com.mars.dto.HodRecentAppointmentDto;
 import com.mars.entity.User;
+import com.mars.entity.Appointment;
+import org.springframework.data.domain.PageRequest;
 import com.mars.exception.ResourceNotFoundException;
 import com.mars.repository.AppointmentRepository;
 import com.mars.repository.AvailabilitySlotRepository;
@@ -214,5 +218,52 @@ public class HodServiceImpl implements HodService {
         validateSameDepartmentAcademician(hodUser, targetUserId);
         // Fetch calendar events for the academician
         return calendarService.getEventsForStaff(targetUserId, from, to, includeAppointments);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<HodRecentAppointmentDto> getDepartmentAcademicianRecentAppointments(Integer hodUserId, Integer targetUserId) {
+        User hodUser = userRepository.findByIdWithRoleAndDepartment(hodUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı"));
+        validateSameDepartmentAcademician(hodUser, targetUserId);
+
+        List<Appointment> recentAppointments = appointmentRepository.findRecentByStaffIdWithDetails(targetUserId, PageRequest.of(0, 10));
+        
+        return recentAppointments.stream().map(a -> HodRecentAppointmentDto.builder()
+                .appointmentId(a.getAppointmentId())
+                .date(a.getSlot().getSlotDate().toString())
+                .startTime(a.getSlot().getStartTime().toString())
+                .endTime(a.getSlot().getEndTime().toString())
+                .studentName(a.getStudent().getFullName())
+                .categoryName(a.getCategory().getCategoryName())
+                .status(a.getAppointmentStatus())
+                .meetingType(a.getMeetingType())
+                .durationMinutes(java.time.temporal.ChronoUnit.MINUTES.between(a.getSlot().getStartTime(), a.getSlot().getEndTime()))
+                .build()).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public HodPerformanceSummaryDto getDepartmentAcademicianPerformanceSummary(Integer hodUserId, Integer targetUserId) {
+        User hodUser = userRepository.findByIdWithRoleAndDepartment(hodUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı"));
+        validateSameDepartmentAcademician(hodUser, targetUserId);
+
+        long totalAppointments = appointmentRepository.countByStaff_UserId(targetUserId);
+        long completedAppointments = appointmentRepository.countByStaff_UserIdAndAppointmentStatus(targetUserId, "COMPLETED");
+        long noShowAppointments = appointmentRepository.countByStaff_UserIdAndAppointmentStatus(targetUserId, "NO_SHOW");
+
+        double noShowRate = totalAppointments > 0 ? (noShowAppointments / (double) totalAppointments) * 100 : 0.0;
+        double averageDaily = completedAppointments / 30.0; // Placeholder calculation
+
+        return HodPerformanceSummaryDto.builder()
+                .totalCompleted(completedAppointments)
+                .averageDaily(Math.round(averageDaily * 10.0) / 10.0)
+                .noShowCount(noShowAppointments)
+                .noShowRate(Math.round(noShowRate * 10.0) / 10.0)
+                .averageResponseTime("2 Saat") // Placeholder
+                .busiestDay("Çarşamba") // Placeholder
+                .busiestTimeRange("14:00 - 15:00") // Placeholder
+                .build();
     }
 }

@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import com.mars.dto.HodAcademicianDetailDto;
 import com.mars.dto.HodAcademicianListDto;
 import com.mars.dto.HodAcademicianStatsDto;
+import com.mars.dto.HodPerformanceSummaryDto;
+import com.mars.dto.HodRecentAppointmentDto;
 import com.mars.security.CustomUserDetails;
 import com.mars.service.HodService;
 
@@ -63,5 +65,24 @@ public class HodController {
         return ResponseEntity.ok(events);
     }
 
+    @GetMapping("/academicians/{userId}/recent-appointments")
+    @PreAuthorize("hasRole('HOD')")
+    public ResponseEntity<List<HodRecentAppointmentDto>> getDepartmentAcademicianRecentAppointments(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Integer userId) {
+        List<HodRecentAppointmentDto> appointments = hodService.getDepartmentAcademicianRecentAppointments(
+                userDetails.getUser().getUserId(), userId);
+        return ResponseEntity.ok(appointments);
+    }
+
+    @GetMapping("/academicians/{userId}/performance")
+    @PreAuthorize("hasRole('HOD')")
+    public ResponseEntity<HodPerformanceSummaryDto> getDepartmentAcademicianPerformanceSummary(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Integer userId) {
+        HodPerformanceSummaryDto summary = hodService.getDepartmentAcademicianPerformanceSummary(
+                userDetails.getUser().getUserId(), userId);
+        return ResponseEntity.ok(summary);
+    }
 
 }

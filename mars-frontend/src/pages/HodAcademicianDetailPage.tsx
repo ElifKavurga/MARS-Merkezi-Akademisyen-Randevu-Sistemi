@@ -47,6 +47,8 @@ export default function HodAcademicianDetailPage() {
   const navigate = useNavigate();
 
   const [academician, setAcademician] = useState<HodAcademicianDetailDto | null>(null);
+  const [performance, setPerformance] = useState<any>(null);
+  const [recentAppointments, setRecentAppointments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,8 +64,14 @@ export default function HodAcademicianDetailPage() {
     setLoading(true);
     setError(null);
     try {
-      const data = await hodService.getAcademicianDetail(userId);
-      setAcademician(data);
+      const [detailData, perfData, recentData] = await Promise.all([
+        hodService.getAcademicianDetail(userId),
+        hodService.getAcademicianPerformance(userId),
+        hodService.getAcademicianRecentAppointments(userId)
+      ]);
+      setAcademician(detailData);
+      setPerformance(perfData);
+      setRecentAppointments(recentData);
     } catch {
       setError('Akademisyen bilgileri yüklenirken bir hata oluştu.');
     } finally {
@@ -205,6 +213,112 @@ export default function HodAcademicianDetailPage() {
           />
         </div>
       </section>
+
+      {/* Performance Summary */}
+      {performance && (
+        <section className="mb-6">
+          <div className="mb-4 flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary" aria-hidden="true">
+              speed
+            </span>
+            <h2 className="font-headline-md text-headline-md text-primary">Performans Özeti</h2>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <KpiCard
+              icon="task_alt"
+              label="Tamamlanan"
+              value={performance.totalCompleted}
+              accent="bg-green-50 border border-green-200 text-green-700"
+            />
+            <KpiCard
+              icon="trending_up"
+              label="Günlük Ortalama"
+              value={performance.averageDaily}
+              accent="bg-blue-50 border border-blue-200 text-blue-700"
+            />
+            <KpiCard
+              icon="person_cancel"
+              label="No-Show Sayısı"
+              value={performance.noShowCount}
+              accent="bg-red-50 border border-red-200 text-red-700"
+            />
+            <KpiCard
+              icon="pie_chart"
+              label="No-Show Oranı (%)"
+              value={performance.noShowRate}
+              accent="bg-orange-50 border border-orange-200 text-orange-700"
+            />
+          </div>
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-5 flex flex-col gap-2">
+              <span className="font-label-md text-on-surface-variant">Ortalama Cevap Süresi</span>
+              <span className="font-headline-sm text-primary">{performance.averageResponseTime}</span>
+            </div>
+            <div className="rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-5 flex flex-col gap-2">
+              <span className="font-label-md text-on-surface-variant">En Yoğun Gün</span>
+              <span className="font-headline-sm text-primary">{performance.busiestDay}</span>
+            </div>
+            <div className="rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-5 flex flex-col gap-2">
+              <span className="font-label-md text-on-surface-variant">En Yoğun Saat</span>
+              <span className="font-headline-sm text-primary">{performance.busiestTimeRange}</span>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Recent Appointments */}
+      {recentAppointments.length > 0 && (
+        <section className="mb-6">
+          <div className="mb-4 flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary" aria-hidden="true">
+              history
+            </span>
+            <h2 className="font-headline-md text-headline-md text-primary">Son Randevular</h2>
+          </div>
+
+          <div className="overflow-hidden rounded-xl border border-outline-variant/40 bg-surface-container-lowest shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left font-body-md">
+                <thead className="border-b border-outline-variant/40 bg-surface-container-lowest text-label-md text-on-surface-variant">
+                  <tr>
+                    <th className="px-6 py-4 font-medium">Tarih / Saat</th>
+                    <th className="px-6 py-4 font-medium">Öğrenci</th>
+                    <th className="px-6 py-4 font-medium">Kategori</th>
+                    <th className="px-6 py-4 font-medium">Tür / Süre</th>
+                    <th className="px-6 py-4 font-medium">Durum</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-outline-variant/20">
+                  {recentAppointments.map((app) => (
+                    <tr key={app.appointmentId} className="hover:bg-surface-container-lowest/50">
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-on-surface">{app.date}</div>
+                        <div className="text-body-sm text-on-surface-variant">{app.startTime} - {app.endTime}</div>
+                      </td>
+                      <td className="px-6 py-4 text-on-surface">{app.studentName}</td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center rounded-full bg-primary-container/30 px-2.5 py-1 text-label-sm font-medium text-primary">
+                          {app.categoryName}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-on-surface">{app.meetingType}</div>
+                        <div className="text-body-sm text-on-surface-variant">{app.durationMinutes} dk</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center rounded-full bg-surface-container-high px-2.5 py-1 text-label-sm font-medium text-on-surface">
+                          {app.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
