@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.mars.dto.HodAcademicianDetailDto;
 import com.mars.dto.HodAcademicianListDto;
+import com.mars.dto.HodAcademicianStatsDto;
 import com.mars.security.CustomUserDetails;
 import com.mars.service.HodService;
 
@@ -29,7 +30,6 @@ public class HodController {
     @PreAuthorize("hasRole('HOD')")
     public ResponseEntity<List<HodAcademicianListDto>> getDepartmentAcademicians(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        
         List<HodAcademicianListDto> academicians = hodService.getDepartmentAcademicians(userDetails.getUser().getUserId());
         return ResponseEntity.ok(academicians);
     }
@@ -39,9 +39,19 @@ public class HodController {
     public ResponseEntity<HodAcademicianDetailDto> getDepartmentAcademicianDetail(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Integer userId) {
-        
         HodAcademicianDetailDto academician = hodService.getDepartmentAcademicianDetail(
                 userDetails.getUser().getUserId(), userId);
         return ResponseEntity.ok(academician);
     }
+
+    @GetMapping("/academicians/{userId}/stats")
+    @PreAuthorize("hasRole('HOD')")
+    public ResponseEntity<HodAcademicianStatsDto> getDepartmentAcademicianStats(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Integer userId) {
+        HodAcademicianStatsDto stats = hodService.getDepartmentAcademicianStats(
+                userDetails.getUser().getUserId(), userId);
+        return ResponseEntity.ok(stats);
+    }
 }
+

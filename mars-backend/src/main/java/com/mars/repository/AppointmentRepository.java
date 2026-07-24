@@ -389,4 +389,67 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
     long countByStaff_UserId(Integer staffId);
 
     long countByStaff_UserIdAndSlot_SlotDate(Integer staffId, LocalDate slotDate);
+
+    /**
+     * Count appointments per status for a given staff member.
+     * Returns Object[] pairs: [appointmentStatus, count]
+     */
+    @Query("""
+            SELECT a.appointmentStatus, COUNT(a)
+            FROM Appointment a
+            WHERE a.staff.userId = :staffId
+            GROUP BY a.appointmentStatus
+            ORDER BY COUNT(a) DESC
+            """)
+    List<Object[]> countByStatusForStaff(@Param("staffId") Integer staffId);
+
+    /**
+     * Count appointments per category for a given staff member.
+     * Returns Object[] pairs: [categoryName, count]
+     */
+    @Query("""
+            SELECT a.category.categoryName, COUNT(a)
+            FROM Appointment a
+            WHERE a.staff.userId = :staffId
+            GROUP BY a.category.categoryName
+            ORDER BY COUNT(a) DESC
+            """)
+    List<Object[]> countByCategoryForStaff(@Param("staffId") Integer staffId);
+
+    /**
+     * Count appointments per slot date for the given staff, within a date range.
+     * Returns Object[] pairs: [slotDate (LocalDate), count]
+     */
+    @Query("""
+            SELECT a.slot.slotDate, COUNT(a)
+            FROM Appointment a
+            JOIN a.slot s
+            WHERE a.staff.userId = :staffId
+              AND s.slotDate BETWEEN :from AND :to
+            GROUP BY a.slot.slotDate
+            ORDER BY a.slot.slotDate ASC
+            """)
+    List<Object[]> countByDayForStaffInRange(
+            @Param("staffId") Integer staffId,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to);
+
+    /**
+     * Count appointments per year-month for a given staff member, within a date range.
+     * Returns Object[] pairs: [year (Integer), month (Integer), count]
+     */
+    @Query("""
+            SELECT YEAR(s.slotDate), MONTH(s.slotDate), COUNT(a)
+            FROM Appointment a
+            JOIN a.slot s
+            WHERE a.staff.userId = :staffId
+              AND s.slotDate BETWEEN :from AND :to
+            GROUP BY YEAR(s.slotDate), MONTH(s.slotDate)
+            ORDER BY YEAR(s.slotDate) ASC, MONTH(s.slotDate) ASC
+            """)
+    List<Object[]> countByMonthForStaffInRange(
+            @Param("staffId") Integer staffId,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to);
 }
+
