@@ -208,7 +208,7 @@ export default function AdminHomePage() {
             <p className="font-body-md text-body-md text-on-error-container">{error}</p>
             <button
               type="button"
-              className="rounded-lg bg-primary-container px-4 py-2 font-label-md text-label-md text-on-primary"
+              className="bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-primary/90 transition-colors"
               onClick={() => void loadData()}
             >
               Tekrar Dene
@@ -232,7 +232,6 @@ export default function AdminHomePage() {
                 key={card.label}
                 to={card.to}
                 className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 no-underline transition-colors hover:bg-surface-container hover:no-underline focus:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim"
-                style={{ textDecoration: 'none' }}
               >
                 <span
                   className="material-symbols-outlined text-[22px] text-primary"
@@ -310,7 +309,6 @@ export default function AdminHomePage() {
                     <Link
                       to={item.to}
                       className="block rounded-lg border border-outline-variant bg-surface p-4 no-underline transition-colors hover:bg-surface-container hover:no-underline focus:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim"
-                      style={{ textDecoration: 'none' }}
                     >
                       <p className="truncate font-body-md text-body-md font-semibold text-primary">
                         {item.title}

@@ -1,7 +1,5 @@
 import { apiClient } from './apiClient';
 import type {
-  Appointment,
-  AppointmentCreatePayload,
   AppointmentReschedulePayload,
   AppointmentRescheduleApproval,
   AvailableSlot,
@@ -10,13 +8,6 @@ import type {
 } from '../types/appointment';
 import type { StudentAvailableSlot } from '../types/studentAppointment';
 import type { AppointmentCategory } from '../types/category';
-
-export async function createAppointment(
-  payload: AppointmentCreatePayload,
-): Promise<Appointment> {
-  const { data } = await apiClient.post<Appointment>('/appointments', payload);
-  return data;
-}
 
 export async function getAvailableSlots(staffId: number): Promise<AvailableSlot[]> {
   const { data } = await apiClient.get<AvailableSlot[]>('/availability-slots/available', {

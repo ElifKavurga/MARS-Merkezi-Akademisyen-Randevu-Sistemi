@@ -249,7 +249,7 @@ export default function AdminPenaltyRulesPage() {
                 <div className="mt-8 flex justify-end border-t border-outline-variant/50 pt-6">
                   <button
                     type="submit"
-                    className="flex items-center gap-2 rounded-lg bg-primary-container px-6 py-3 font-label-md text-label-md text-on-primary shadow-sm transition-all duration-200 hover:bg-inverse-surface active:scale-95 disabled:opacity-70"
+                    className="bg-primary text-on-primary px-6 py-3 rounded-lg font-label-md text-label-md hover:bg-primary/90 transition-colors flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                     disabled={submitting}
                   >
                     <span className="material-symbols-outlined" style={{ fontSize: 20 }}>

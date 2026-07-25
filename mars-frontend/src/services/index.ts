@@ -39,7 +39,6 @@ export {
   updateAvailabilitySlotBlocked,
 } from './availabilityService';
 export {
-  createAppointment,
   getAvailableSlots,
   getAppointmentCategories,
   getStaffAppointments,

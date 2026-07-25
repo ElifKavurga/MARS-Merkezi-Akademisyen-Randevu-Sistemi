@@ -142,7 +142,7 @@ export default function AdminCategoriesPage() {
                 {categories.map((category) => (
                   <tr
                     key={category.categoryId}
-                    className="hover:bg-surface-container-low transition-colors"
+                    className="hover:bg-surface-container-low transition-colors group"
                   >
                     <td className="py-4 px-6 font-body-md text-body-md text-on-background font-medium">
                       {category.categoryName}
