@@ -37,6 +37,17 @@ const STATUS_CONFIG: Record<
   },
 };
 
+const SCHEDULER_NAME_MAP: Record<string, string> = {
+  AppointmentReminder: 'Randevu Hatırlatma Servisi',
+  DelegationExpiry: 'Randevu Devri Süre Sonu Kontrolü',
+  DelegationSync: 'Randevu Devri Senkronizasyonu',
+  WaitlistOfferExpiry: 'Bekleme Listesi Teklif Süre Kontrolü',
+};
+
+function getSchedulerDisplayName(technicalName: string): string {
+  return SCHEDULER_NAME_MAP[technicalName] || technicalName;
+}
+
 function formatDateTime(iso: string | null): string {
   if (!iso) return '—';
   const d = new Date(iso);
@@ -68,7 +79,7 @@ function SchedulerCard({ scheduler }: { scheduler: SchedulerStatus }) {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <h2 className="text-base font-semibold text-slate-800 leading-tight">
-          {scheduler.schedulerName}
+          {getSchedulerDisplayName(scheduler.schedulerName)}
         </h2>
         <span
           className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${cfg.badge}`}
