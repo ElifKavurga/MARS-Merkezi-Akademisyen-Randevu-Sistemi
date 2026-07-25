@@ -77,12 +77,14 @@ export const STAFF_APPOINTMENT_MESSAGES = {
 } as const;
 
 export const APPOINTMENT_STATUS_LABELS: Record<string, string> = {
-  PENDING: 'Bekliyor',
+  PENDING: 'Beklemede',
   APPROVED: 'Onaylandı',
   REJECTED: 'Reddedildi',
   COMPLETED: 'Tamamlandı',
-  NO_SHOW: 'Gelmedi',
-  CANCELLED: 'İptal',
+  NO_SHOW: 'Katılım Sağlanmadı',
+  CANCELLED: 'İptal Edildi',
+  WAITING: 'Bekleme Listesinde',
+  EXPIRED: 'Süresi Doldu',
   DELEGATION_PENDING: 'Randevu Devri Bekliyor',
   RESCHEDULE_PENDING: 'Yeniden Planlama Bekliyor',
 };

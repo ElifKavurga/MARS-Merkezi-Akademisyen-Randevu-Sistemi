@@ -37,13 +37,13 @@ export type MeetingType = (typeof MEETING_TYPE)[keyof typeof MEETING_TYPE];
 
 export const MEETING_TYPE_OPTIONS = [
   { value: MEETING_TYPE.FACE_TO_FACE, label: 'Yüz Yüze' },
-  { value: MEETING_TYPE.ONLINE, label: 'Online' },
+  { value: MEETING_TYPE.ONLINE, label: 'Çevrim İçi' },
   { value: MEETING_TYPE.BOTH, label: 'Her İkisi' },
 ] as const;
 
 export const APPOINTMENT_MEETING_TYPE_OPTIONS = [
   { value: MEETING_TYPE.FACE_TO_FACE, label: 'Yüz Yüze' },
-  { value: MEETING_TYPE.ONLINE, label: 'Online' },
+  { value: MEETING_TYPE.ONLINE, label: 'Çevrim İçi' },
 ] as const;
 
 export const APPOINTMENT_DURATION_MINUTES = 10;
