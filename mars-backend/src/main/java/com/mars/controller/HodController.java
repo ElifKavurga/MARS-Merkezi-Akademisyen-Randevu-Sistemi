@@ -19,8 +19,10 @@ import com.mars.dto.HodRecentAppointmentDto;
 import com.mars.security.CustomUserDetails;
 import com.mars.service.HodService;
 
-import com.mars.dto.CalendarEventResponseDto;
 import com.mars.dto.HodDepartmentAnalysisDto;
+import com.mars.dto.CalendarEventResponseDto;
+import com.mars.dto.HodAcademicianStatsDto;
+
 import com.mars.dto.CalendarEventResponseDto;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -110,5 +112,15 @@ public class HodController {
         HodDepartmentAnalysisDto analysis = hodService.getDepartmentAnalysis(
                 userDetails.getUser().getUserId());
         return ResponseEntity.ok(analysis);
+    }
+
+    @GetMapping("/academicians/{userId}/stats/charts")
+    @PreAuthorize("hasRole('HOD')")
+    public ResponseEntity<HodAcademicianStatsDto> getDepartmentAcademicianStats(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Integer userId) {
+        HodAcademicianStatsDto stats = hodService.getDepartmentAcademicianStats(
+                userDetails.getUser().getUserId(), userId);
+        return ResponseEntity.ok(stats);
     }
 }

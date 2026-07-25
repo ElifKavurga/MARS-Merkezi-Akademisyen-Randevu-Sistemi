@@ -6,7 +6,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mars.dto.AcademicianDashboardResponseDto;
+import com.mars.dto.HodAcademicianStatsDto;
 import com.mars.service.AcademicianDashboardService;
+
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,5 +22,10 @@ public class AcademicianDashboardController {
     @GetMapping
     public ResponseEntity<AcademicianDashboardResponseDto> getDashboardSummary() {
         return ResponseEntity.ok(academicianDashboardService.getDashboardSummary());
+    }
+
+    @GetMapping("/stats/charts")
+    public ResponseEntity<HodAcademicianStatsDto> getDashboardStats() {
+        return ResponseEntity.ok(academicianDashboardService.getDashboardStats());
     }
 }

@@ -26,6 +26,10 @@ export const hodService = {
     const response = await apiClient.get<HodDepartmentStatsDto>('/hod/department/stats/charts');
     return response.data;
   },
+  getAcademicianStats: async (userId: number): Promise<HodDepartmentStatsDto> => {
+    const response = await apiClient.get<HodDepartmentStatsDto>(`/hod/academicians/${userId}/stats/charts`);
+    return response.data;
+  },
   getDepartmentAnalysis: async (): Promise<HodDepartmentAnalysisDto> => {
     const response = await apiClient.get<HodDepartmentAnalysisDto>('/hod/department/stats/analysis');
     return response.data;

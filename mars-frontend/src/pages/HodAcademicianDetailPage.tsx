@@ -9,6 +9,8 @@ import ErrorState from '../components/ErrorState';
 import EmptyState from '../components/EmptyState';
 import HodPageHeader from '../components/HodPageHeader';
 import UserAvatar from '../components/UserAvatar';
+import { LineChart, BarChart, DoughnutChart } from '../components/charts';
+import type { HodDepartmentStatsDto } from '../types/hod';
 
 function KpiCard({
   icon,
@@ -46,12 +48,27 @@ function InfoRow({ icon, label, value }: { icon: string; label: string; value: s
   );
 }
 
+function ChartCard({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-sm">
+      <div className="mb-4 flex items-center gap-2">
+        <span className="material-symbols-outlined text-[20px] text-primary" aria-hidden="true">{icon}</span>
+        <h3 className="font-title-md text-title-md text-on-surface">{title}</h3>
+      </div>
+      <div className="flex-1 flex flex-col justify-end">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export default function HodAcademicianDetailPage() {
   const { id: userIdParam } = useParams<{ id: string }>();
 
   const [academician, setAcademician] = useState<HodAcademicianDetailDto | null>(null);
   const [performance, setPerformance] = useState<any>(null);
   const [recentAppointments, setRecentAppointments] = useState<any[]>([]);
+  const [stats, setStats] = useState<HodDepartmentStatsDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,14 +84,16 @@ export default function HodAcademicianDetailPage() {
     setLoading(true);
     setError(null);
     try {
-      const [detailData, perfData, recentData] = await Promise.all([
+      const [detailData, perfData, recentData, statsData] = await Promise.all([
         hodService.getAcademicianDetail(userId),
         hodService.getAcademicianPerformance(userId),
-        hodService.getAcademicianRecentAppointments(userId)
+        hodService.getAcademicianRecentAppointments(userId),
+        hodService.getAcademicianStats(userId)
       ]);
       setAcademician(detailData);
       setPerformance(perfData);
       setRecentAppointments(recentData);
+      setStats(statsData);
     } catch {
       setError('Akademisyen bilgileri yüklenirken bir hata oluştu.');
     } finally {
@@ -111,6 +130,25 @@ export default function HodAcademicianDetailPage() {
       </div>
     );
   }
+
+  const STATUS_LABELS: Record<string, string> = {
+    PENDING: 'Bekleyen',
+    APPROVED: 'Onaylanan',
+    REJECTED: 'Reddedilen',
+    COMPLETED: 'Tamamlanan',
+    NO_SHOW: 'No-Show',
+    CANCELLED: 'İptal',
+  };
+  const STATUS_COLORS = ['#f59e0b', '#6366f1', '#ef4444', '#10b981', '#64748b', '#ec4899'];
+
+  const weeklyData = stats?.weeklyTrend.map(d => ({ label: d.date, value: d.count })) ?? [];
+  const monthlyData = stats?.monthlyTrend.map(d => ({ label: d.yearMonth, value: d.count })) ?? [];
+  const categoryData = stats?.categoryDistribution.map(d => ({ label: d.categoryName, value: d.count })) ?? [];
+  const statusData = stats?.statusDistribution.map((d, i) => ({
+    label: STATUS_LABELS[d.status] ?? d.status,
+    value: d.count,
+    color: STATUS_COLORS[i % STATUS_COLORS.length],
+  })) ?? [];
 
   return (
     <div className="w-full min-w-0 animate-fade-in pb-12">
@@ -223,6 +261,37 @@ export default function HodAcademicianDetailPage() {
               <span className="font-label-md text-on-surface-variant">En Yoğun Saat</span>
               <span className="font-headline-sm text-primary">{performance.busiestTimeRange}</span>
             </div>
+          </div>
+        </section>
+      )}
+
+      {stats && (
+        <section className="mb-6">
+          <div className="mb-4 flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary" aria-hidden="true">analytics</span>
+            <h2 className="font-headline-md text-headline-md text-primary">Kişisel Analiz Grafikleri</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <ChartCard title="Haftalık Randevu Yoğunluğu" icon="show_chart">
+              <p className="font-body-sm text-body-sm text-on-surface-variant -mt-2">Son 7 günlük kişisel randevu sayısı</p>
+              <LineChart data={weeklyData} />
+            </ChartCard>
+
+            <ChartCard title="Aylık Randevu Dağılımı" icon="bar_chart">
+              <p className="font-body-sm text-body-sm text-on-surface-variant -mt-2">Son 12 aylık kişisel randevu sayısı</p>
+              <BarChart data={monthlyData} />
+            </ChartCard>
+
+            <ChartCard title="Randevu Durum Dağılımı" icon="donut_large">
+              <p className="font-body-sm text-body-sm text-on-surface-variant -mt-2">Randevuların mevcut duruma göre dağılımı</p>
+              <DoughnutChart data={statusData} />
+            </ChartCard>
+
+            <ChartCard title="Randevu Kategori Dağılımı" icon="category">
+              <p className="font-body-sm text-body-sm text-on-surface-variant -mt-2">Kategori bazlı toplam randevu sayıları</p>
+              <BarChart data={categoryData} />
+            </ChartCard>
           </div>
         </section>
       )}

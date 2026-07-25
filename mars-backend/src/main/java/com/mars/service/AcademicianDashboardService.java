@@ -13,7 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mars.dto.AcademicianDashboardResponseDto;
 import com.mars.dto.StaffAppointmentResponseDto;
+import com.mars.dto.HodAcademicianStatsDto;
 import com.mars.entity.User;
+
 import com.mars.enums.AppointmentStatus;
 import com.mars.enums.DelegationStatus;
 import com.mars.enums.RoleType;
@@ -93,6 +95,70 @@ public class AcademicianDashboardService {
                 .rejectedDelegationCount(rejectedDelegationCount)
                 .pendingAppointments(pendingAppointments)
                 .upcomingAppointments(upcomingAppointments)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public HodAcademicianStatsDto getDashboardStats() {
+        User academician = getCurrentAcademician();
+        Integer academicianId = academician.getUserId();
+        LocalDate today = LocalDate.now();
+        LocalDate weekStart = today.minusDays(6);
+        LocalDate yearStart = today.minusMonths(11).withDayOfMonth(1);
+
+        List<HodAcademicianStatsDto.StatusCount> statusDistribution = appointmentRepository
+                .countByStatusForStaff(academicianId)
+                .stream()
+                .map(row -> HodAcademicianStatsDto.StatusCount.builder()
+                        .status((String) row[0])
+                        .count((Long) row[1])
+                        .build())
+                .toList();
+
+        List<HodAcademicianStatsDto.CategoryCount> categoryDistribution = appointmentRepository
+                .countByCategoryForStaff(academicianId)
+                .stream()
+                .map(row -> HodAcademicianStatsDto.CategoryCount.builder()
+                        .categoryName((String) row[0])
+                        .count((Long) row[1])
+                        .build())
+                .toList();
+
+        java.util.Map<LocalDate, Long> weeklyMap = new java.util.LinkedHashMap<>();
+        for (int i = 0; i < 7; i++) {
+            weeklyMap.put(weekStart.plusDays(i), 0L);
+        }
+        appointmentRepository.countByDayForStaffInRange(academicianId, weekStart, today)
+                .forEach(row -> weeklyMap.put((LocalDate) row[0], (Long) row[1]));
+        List<HodAcademicianStatsDto.DayCount> weeklyTrend = weeklyMap.entrySet().stream()
+                .map(e -> HodAcademicianStatsDto.DayCount.builder()
+                        .date(e.getKey().toString())
+                        .count(e.getValue())
+                        .build())
+                .toList();
+
+        java.util.Map<String, Long> monthlyMap = new java.util.LinkedHashMap<>();
+        for (int i = 0; i < 12; i++) {
+            LocalDate month = yearStart.plusMonths(i);
+            monthlyMap.put(String.format("%04d-%02d", month.getYear(), month.getMonthValue()), 0L);
+        }
+        appointmentRepository.countByMonthForStaffInRange(academicianId, yearStart, today)
+                .forEach(row -> {
+                    String key = String.format("%04d-%02d", ((Number) row[0]).intValue(), ((Number) row[1]).intValue());
+                    monthlyMap.put(key, (Long) row[2]);
+                });
+        List<HodAcademicianStatsDto.MonthCount> monthlyTrend = monthlyMap.entrySet().stream()
+                .map(e -> HodAcademicianStatsDto.MonthCount.builder()
+                        .yearMonth(e.getKey())
+                        .count(e.getValue())
+                        .build())
+                .toList();
+
+        return HodAcademicianStatsDto.builder()
+                .statusDistribution(statusDistribution)
+                .categoryDistribution(categoryDistribution)
+                .weeklyTrend(weeklyTrend)
+                .monthlyTrend(monthlyTrend)
                 .build();
     }
 

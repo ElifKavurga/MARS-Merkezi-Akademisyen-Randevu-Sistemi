@@ -12,8 +12,10 @@ import { useAuth } from '../hooks/useAuth';
 import { useDashboardDailySchedule } from '../hooks/useDashboardDailySchedule';
 import { useToast } from '../hooks/useToast';
 import { useNotificationRealtimeRefresh } from '../hooks/useNotificationRealtimeRefresh';
-import { getAcademicianDashboardSummary } from '../services/academicianDashboardService';
+import { getAcademicianDashboardSummary, getDashboardStats } from '../services/academicianDashboardService';
 import { getCourseAssistants, getMyCourses } from '../services/courseService';
+import { LineChart, BarChart, DoughnutChart } from '../components/charts';
+import type { HodDepartmentStatsDto } from '../types/hod';
 import type { CourseAssistant } from '../types/course';
 import type { AcademicianDashboardSummary } from '../types/dashboard';
 import type { NotificationItem } from '../types/notification';
@@ -28,6 +30,7 @@ export default function AcademicianDashboard() {
   const dailySchedule = useDashboardDailySchedule();
   const retryDailySchedule = dailySchedule.retry;
   const [summary, setSummary] = useState<AcademicianDashboardSummary | null>(null);
+  const [stats, setStats] = useState<HodDepartmentStatsDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [courseItems, setCourseItems] = useState<
@@ -42,7 +45,12 @@ export default function AcademicianDashboard() {
     if (!silent) setLoading(true);
     if (!silent) setError(null);
     try {
-      setSummary(await getAcademicianDashboardSummary());
+      const [summaryData, statsData] = await Promise.all([
+        getAcademicianDashboardSummary(),
+        getDashboardStats()
+      ]);
+      setSummary(summaryData);
+      setStats(statsData);
     } catch {
       const message = 'Ana ekran verileri yüklenirken bir hata oluştu.';
       if (!silent) {
@@ -120,8 +128,26 @@ export default function AcademicianDashboard() {
     return null;
   }
 
+  const STATUS_LABELS: Record<string, string> = {
+    PENDING: 'Bekleyen',
+    APPROVED: 'Onaylanan',
+    REJECTED: 'Reddedilen',
+    COMPLETED: 'Tamamlanan',
+    NO_SHOW: 'No-Show',
+    CANCELLED: 'İptal',
+  };
+  const STATUS_COLORS = ['#f59e0b', '#6366f1', '#ef4444', '#10b981', '#64748b', '#ec4899'];
+
+  const weeklyData = stats?.weeklyTrend.map(d => ({ label: d.date, value: d.count })) ?? [];
+  const categoryData = stats?.categoryDistribution.map(d => ({ label: d.categoryName, value: d.count })) ?? [];
+  const statusData = stats?.statusDistribution.map((d, i) => ({
+    label: STATUS_LABELS[d.status] ?? d.status,
+    value: d.count,
+    color: STATUS_COLORS[i % STATUS_COLORS.length],
+  })) ?? [];
+
   return (
-    <div className="w-full min-w-0 animate-fade-in">
+    <div className="w-full min-w-0 animate-fade-in pb-12">
       <DashboardWelcomeBanner
         fullName={user.fullName}
         description="Randevularınızı, derslerinizi ve akademik programınızı tek yerden takip edin."
@@ -235,6 +261,47 @@ export default function AcademicianDashboard() {
           actionPath={ROUTES.ACADEMICIAN_COURSES}
         />
       </div>
+
+      {stats && (
+        <div className="mt-8">
+          <div className="mb-4 flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary" aria-hidden="true">analytics</span>
+            <h2 className="font-headline-md text-headline-md text-primary">Kişisel İstatistiklerim</h2>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="flex h-full flex-col gap-4 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[20px] text-primary" aria-hidden="true">show_chart</span>
+                <h3 className="font-title-md text-title-md text-on-surface">Son 7 Gün</h3>
+              </div>
+              <div className="mt-auto">
+                <LineChart data={weeklyData} />
+              </div>
+            </div>
+
+            <div className="flex h-full flex-col gap-4 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[20px] text-primary" aria-hidden="true">donut_large</span>
+                <h3 className="font-title-md text-title-md text-on-surface">Durum Dağılımı</h3>
+              </div>
+              <div className="mt-auto">
+                <DoughnutChart data={statusData} />
+              </div>
+            </div>
+
+            <div className="flex h-full flex-col gap-4 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[20px] text-primary" aria-hidden="true">category</span>
+                <h3 className="font-title-md text-title-md text-on-surface">Kategoriler</h3>
+              </div>
+              <div className="mt-auto">
+                <BarChart data={categoryData} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
