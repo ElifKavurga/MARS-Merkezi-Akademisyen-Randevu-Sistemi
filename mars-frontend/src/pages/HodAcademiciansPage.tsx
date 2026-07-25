@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { HodAcademicianListDto } from '../types/hod';
 import { hodService } from '../services/hodService';
 import { hodAcademicianDetailPath } from '../constants/routes';
@@ -11,17 +11,60 @@ import HodPageHeader from '../components/HodPageHeader';
 import UserAvatar from '../components/UserAvatar';
 
 export default function HodAcademiciansPage() {
-  const [academicians, setAcademicians] = useState<HodAcademicianListDto[]>([]);
+  const [academicians, setAcademicians] = useState<(HodAcademicianListDto & { 
+    completedAppointmentsCount?: number; 
+    noShowCount?: number; 
+    waitlistCount?: number; 
+  })[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const filter = searchParams.get('filter');
 
   useEffect(() => {
     const fetchAcademicians = async () => {
       try {
         setLoading(true);
         const data = await hodService.getDepartmentAcademicians();
-        setAcademicians(data);
+        
+        // Eğer filtre tamamlanan, noshow veya bekleme listesi ise, backend'den bireysel detayları (Performance & Stats) çek.
+        if (filter === 'completed' || filter === 'noshow' || filter === 'waitlist') {
+          const enrichedData = await Promise.all(
+            data.map(async (ac) => {
+              try {
+                let completed = 0;
+                let noshow = 0;
+                let waitlist = 0;
+                
+                if (filter === 'completed' || filter === 'noshow') {
+                  const perf = await hodService.getAcademicianPerformance(ac.userId);
+                  completed = perf.totalCompleted;
+                  noshow = perf.noShowCount;
+                }
+                
+                if (filter === 'waitlist') {
+                  const stats = await hodService.getAcademicianStats(ac.userId);
+                  // Waitlist durumu genellikle WAITING veya BEKLEMEDE gibi bir statü ile statusDistribution içerisinde yer alabilir.
+                  const waitlistStat = stats.statusDistribution.find(s => s.status === 'WAITING' || s.status === 'WAITLIST' || s.status === 'BEKLEYEN');
+                  waitlist = waitlistStat ? waitlistStat.count : 0;
+                }
+                
+                return {
+                  ...ac,
+                  completedAppointmentsCount: completed,
+                  noShowCount: noshow,
+                  waitlistCount: waitlist,
+                };
+              } catch {
+                return { ...ac, completedAppointmentsCount: 0, noShowCount: 0, waitlistCount: 0 };
+              }
+            })
+          );
+          setAcademicians(enrichedData);
+        } else {
+          setAcademicians(data);
+        }
       } catch {
         setError('Akademisyen listesi yüklenirken bir hata oluştu.');
       } finally {
@@ -30,7 +73,48 @@ export default function HodAcademiciansPage() {
     };
 
     void fetchAcademicians();
-  }, []);
+  }, [filter]);
+
+  const filteredAcademicians = useMemo(() => {
+    let result = [...academicians];
+    if (filter === 'active') {
+      result = result.filter(a => a.activeOfficeHoursCount > 0);
+    } else if (filter === 'today') {
+      result = result.filter(a => a.todayAppointmentsCount > 0).sort((a, b) => b.todayAppointmentsCount - a.todayAppointmentsCount);
+    } else if (filter === 'pending') {
+      result = result.filter(a => a.pendingAppointmentsCount > 0).sort((a, b) => b.pendingAppointmentsCount - a.pendingAppointmentsCount);
+    } else if (filter === 'total') {
+      result = result.filter(a => a.totalAppointmentsCount > 0).sort((a, b) => b.totalAppointmentsCount - a.totalAppointmentsCount);
+    } else if (filter === 'completed') {
+      result = result.filter(a => (a.completedAppointmentsCount ?? 0) > 0).sort((a, b) => (b.completedAppointmentsCount ?? 0) - (a.completedAppointmentsCount ?? 0));
+    } else if (filter === 'noshow') {
+      result = result.filter(a => (a.noShowCount ?? 0) > 0).sort((a, b) => (b.noShowCount ?? 0) - (a.noShowCount ?? 0));
+    } else if (filter === 'waitlist') {
+      result = result.filter(a => (a.waitlistCount ?? 0) > 0).sort((a, b) => (b.waitlistCount ?? 0) - (a.waitlistCount ?? 0));
+    }
+    return result;
+  }, [academicians, filter]);
+
+  const pageDescription = useMemo(() => {
+    switch (filter) {
+      case 'active':
+        return 'Bu sayfada bölümünüzde aktif ofis saati bulunan akademisyenler listelenmektedir.';
+      case 'today':
+        return 'Bu sayfada bugün randevusu olan akademisyenler listelenmektedir.';
+      case 'pending':
+        return 'Bu sayfada bölümünüzde bekleyen randevuya sahip akademisyenler listelenmektedir.';
+      case 'total':
+        return 'Bu sayfada bölümünüzdeki tüm randevulara sahip akademisyenler listelenmektedir.';
+      case 'completed':
+        return 'Bu sayfada tamamlanan randevularınızla ilgili detaylı akademisyen listesi görüntülenmektedir.';
+      case 'noshow':
+        return 'Bu sayfada No-Show kayıtlarına sahip akademisyenler görüntülenmektedir.';
+      case 'waitlist':
+        return 'Bu sayfada bekleme listesinde öğrencisi olan akademisyenler listelenmektedir.';
+      default:
+        return 'Bölümünüzdeki akademisyenleri ve güncel randevu istatistiklerini görüntüleyin.';
+    }
+  }, [filter]);
 
   if (loading) {
     return (
@@ -45,10 +129,10 @@ export default function HodAcademiciansPage() {
   }
 
   return (
-    <div className="w-full min-w-0 animate-fade-in">
+    <div className="w-full min-w-0 animate-fade-in pb-12">
       <HodPageHeader 
         title="Akademisyenler" 
-        description="Bölümünüzdeki akademisyenleri ve güncel randevu istatistiklerini görüntüleyin."
+        description={pageDescription}
       />
 
       <div className="rounded-xl border border-outline-variant/40 bg-surface-container-lowest overflow-hidden shadow-sm">
@@ -80,18 +164,18 @@ export default function HodAcademiciansPage() {
               </tr>
             </thead>
             <tbody>
-              {academicians.length === 0 ? (
+              {filteredAcademicians.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-0">
                     <EmptyState 
                       icon="group"
                       title="Akademisyen Bulunamadı"
-                      message="Bölümünüzde henüz bir akademisyen kaydı bulunmamaktadır."
+                      message="Bölümünüzde belirtilen kriterlere uygun akademisyen bulunmamaktadır."
                     />
                   </td>
                 </tr>
               ) : (
-                academicians.map((academician) => (
+                filteredAcademicians.map((academician) => (
                   <tr
                     key={academician.userId}
                     className="border-b border-outline-variant/20 last:border-0 transition-colors hover:bg-surface-container-low/60"

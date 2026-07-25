@@ -7,6 +7,8 @@ import HodPageHeader from '../components/HodPageHeader';
 import ModalShell from '../components/ModalShell';
 import ModalHeader from '../components/ModalHeader';
 import { LineChart, BarChart, DoughnutChart } from '../components/charts';
+import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '../constants/routes';
 
 // ─── KPI Card ────────────────────────────────────────────────────────────────
 function KpiCard({
@@ -14,20 +16,25 @@ function KpiCard({
   label,
   value,
   accent,
+  onClick,
 }: {
   icon: string;
   label: string;
   value: number;
   accent?: string;
+  onClick?: () => void;
 }) {
   return (
-    <div className="flex h-full min-h-[120px] flex-col gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-sm transition-shadow hover:shadow-md">
-      <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${accent ?? 'bg-surface-container'}`}>
-        <span className="material-symbols-outlined text-[24px] text-primary">{icon}</span>
+    <div 
+      onClick={onClick}
+      className={`flex flex-col gap-2 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-4 shadow-sm transition-all duration-200 ${onClick ? 'cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98]' : ''}`}
+    >
+      <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${accent ?? 'bg-surface-container'}`}>
+        <span className="material-symbols-outlined text-[20px] text-primary">{icon}</span>
       </div>
-      <div className="mt-auto">
-        <p className="font-label-md text-label-md text-on-surface-variant">{label}</p>
-        <p className="mt-1 font-headline-md text-headline-md text-on-surface leading-tight">{value}</p>
+      <div className="mt-1">
+        <p className="font-label-sm text-label-sm text-on-surface-variant">{label}</p>
+        <p className="font-headline-sm text-headline-sm text-on-surface font-semibold">{value}</p>
       </div>
     </div>
   );
@@ -84,6 +91,7 @@ export default function HodStatisticsPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -235,8 +243,8 @@ export default function HodStatisticsPage() {
               <h2 className="font-headline-md text-headline-md text-primary">Akademisyenler</h2>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <KpiCard icon="school" label="Toplam Akademisyen" value={kpi.totalAcademicians} accent="bg-surface-container-high" />
-              <KpiCard icon="person_check" label="Aktif Akademisyen" value={kpi.activeAcademicians} accent="bg-green-50 border border-green-200" />
+              <KpiCard icon="school" label="Toplam Akademisyen" value={kpi.totalAcademicians} accent="bg-surface-container-high" onClick={() => navigate(ROUTES.HOD_ACADEMICIANS)} />
+              <KpiCard icon="person_check" label="Aktif Akademisyen" value={kpi.activeAcademicians} accent="bg-green-50 border border-green-200" onClick={() => navigate(`${ROUTES.HOD_ACADEMICIANS}?filter=active`)} />
             </div>
           </section>
 
@@ -247,12 +255,12 @@ export default function HodStatisticsPage() {
               <h2 className="font-headline-md text-headline-md text-primary">Randevular</h2>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <KpiCard icon="event_note" label="Toplam Randevu" value={kpi.totalAppointments} accent="bg-surface-container-high" />
-              <KpiCard icon="today" label="Bugünkü Randevu" value={kpi.todayAppointments} accent="bg-blue-50 border border-blue-200" />
-              <KpiCard icon="pending_actions" label="Bekleyen Randevu" value={kpi.pendingAppointments} accent="bg-amber-50 border border-amber-200" />
-              <KpiCard icon="task_alt" label="Tamamlanan Randevu" value={kpi.completedAppointments} accent="bg-green-50 border border-green-200" />
-              <KpiCard icon="person_cancel" label="No-Show Sayısı" value={kpi.noShowCount} accent="bg-red-50 border border-red-200" />
-              <KpiCard icon="group_add" label="Bekleme Listesi" value={kpi.waitlistStudentCount} accent="bg-purple-50 border border-purple-200" />
+              <KpiCard icon="event_note" label="Toplam Randevu" value={kpi.totalAppointments} accent="bg-surface-container-high" onClick={() => navigate(`${ROUTES.HOD_ACADEMICIANS}?filter=total`)} />
+              <KpiCard icon="today" label="Bugünkü Randevu" value={kpi.todayAppointments} accent="bg-surface-container-high" onClick={() => navigate(`${ROUTES.HOD_ACADEMICIANS}?filter=today`)} />
+              <KpiCard icon="pending" label="Bekleyen Randevu" value={kpi.pendingAppointments} accent="bg-amber-100 border border-amber-200 text-amber-700" onClick={() => navigate(`${ROUTES.HOD_ACADEMICIANS}?filter=pending`)} />
+              <KpiCard icon="task_alt" label="Tamamlanan Randevu" value={kpi.completedAppointments} accent="bg-green-100 border border-green-200 text-green-700" onClick={() => navigate(`${ROUTES.HOD_ACADEMICIANS}?filter=completed`)} />
+              <KpiCard icon="person_cancel" label="No-Show Sayısı" value={kpi.noShowCount} accent="bg-red-100 border border-red-200 text-red-700" onClick={() => navigate(`${ROUTES.HOD_ACADEMICIANS}?filter=noshow`)} />
+              <KpiCard icon="group_add" label="Bekleme Listesi" value={kpi.waitlistStudentCount} accent="bg-purple-100 border border-purple-200 text-purple-700" onClick={() => navigate(`${ROUTES.HOD_ACADEMICIANS}?filter=waitlist`)} />
             </div>
           </section>
         </>
@@ -263,24 +271,26 @@ export default function HodStatisticsPage() {
             <h2 className="font-headline-md text-headline-md text-primary">Akademisyen Performansı</h2>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <KpiCard icon="task_alt" label="Tamamlanan" value={academicianPerformance.totalCompleted} accent="bg-green-50 border border-green-200" />
-            <KpiCard icon="person_cancel" label="No-Show" value={academicianPerformance.noShowCount} accent="bg-red-50 border border-red-200" />
-            <div className="flex h-full min-h-[120px] flex-col gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-sm transition-shadow hover:shadow-md">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 border border-orange-200">
-                <span className="material-symbols-outlined text-[24px] text-primary">percent</span>
+            <KpiCard icon="task_alt" label="Tamamlanan" value={academicianPerformance.totalCompleted} accent="bg-green-100 border border-green-200 text-green-700" onClick={() => navigate(`${ROUTES.HOD_ACADEMICIANS}?filter=completed`)} />
+            <KpiCard icon="person_cancel" label="No-Show" value={academicianPerformance.noShowCount} accent="bg-red-100 border border-red-200 text-red-700" onClick={() => navigate(`${ROUTES.HOD_ACADEMICIANS}?filter=noshow`)} />
+            
+            <div className="flex flex-col gap-2 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-4 shadow-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 border border-orange-200 text-orange-700">
+                <span className="material-symbols-outlined text-[20px] text-primary">percent</span>
               </div>
-              <div className="mt-auto">
-                <p className="font-label-md text-label-md text-on-surface-variant">No-Show Oranı</p>
-                <p className="mt-1 font-headline-md text-headline-md text-on-surface leading-tight">%{academicianPerformance.noShowRate}</p>
+              <div className="mt-1">
+                <p className="font-label-sm text-label-sm text-on-surface-variant">No-Show Oranı</p>
+                <p className="font-headline-sm text-headline-sm text-on-surface font-semibold">%{academicianPerformance.noShowRate}</p>
               </div>
             </div>
-            <div className="flex h-full min-h-[120px] flex-col gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-sm transition-shadow hover:shadow-md">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 border border-blue-200">
-                <span className="material-symbols-outlined text-[24px] text-primary">avg_time</span>
+            
+            <div className="flex flex-col gap-2 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-4 shadow-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 border border-blue-200 text-blue-700">
+                <span className="material-symbols-outlined text-[20px] text-primary">avg_time</span>
               </div>
-              <div className="mt-auto">
-                <p className="font-label-md text-label-md text-on-surface-variant">Ort. Günlük</p>
-                <p className="mt-1 font-headline-md text-headline-md text-on-surface leading-tight">{academicianPerformance.averageDaily}</p>
+              <div className="mt-1">
+                <p className="font-label-sm text-label-sm text-on-surface-variant">Ort. Günlük</p>
+                <p className="font-headline-sm text-headline-sm text-on-surface font-semibold">{academicianPerformance.averageDaily}</p>
               </div>
             </div>
           </div>
