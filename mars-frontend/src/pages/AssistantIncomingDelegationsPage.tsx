@@ -130,9 +130,7 @@ export default function AssistantIncomingDelegationsPage() {
         <h1 className="font-headline-lg text-headline-lg text-on-background">
           Kendime Gelen Randevu Devri Talepleri
         </h1>
-        <p className="mt-2 text-on-surface-variant">
-          Size gönderilen aktif talepleri inceleyin, kabul edin veya reddedin.
-        </p>
+        
       </header>
 
       <section className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest">

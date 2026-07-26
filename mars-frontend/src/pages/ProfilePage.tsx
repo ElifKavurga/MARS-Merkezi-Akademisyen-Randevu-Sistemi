@@ -52,9 +52,7 @@ export default function ProfilePage() {
     <div className="w-full min-w-0 animate-fade-in">
       <div className="mb-8">
         <h1 className="font-headline-lg text-headline-lg text-on-background">Profil Bilgileri</h1>
-        <p className="mt-2 max-w-2xl font-body-lg text-body-lg text-on-surface-variant">
-          Kişisel bilgilerinizi görüntüleyebilirsiniz. Bu sayfada düzenleme yapılamaz.
-        </p>
+        
       </div>
 
       <div className="mb-8 max-w-3xl overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">

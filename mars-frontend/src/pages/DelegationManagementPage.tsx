@@ -156,9 +156,7 @@ export default function DelegationManagementPage() {
     <div className="admin-page animate-fade-in">
       <header className="mb-6">
         <h1 className="font-headline-lg text-headline-lg text-on-background">Randevu Devri</h1>
-        <p className="mt-2 text-on-surface-variant">
-          Gelen ve gönderilen randevu devri taleplerini tek ekrandan yönetin.
-        </p>
+        
       </header>
 
       <section className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest">

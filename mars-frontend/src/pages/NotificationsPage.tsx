@@ -81,7 +81,7 @@ export default function NotificationsPage() {
       <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
         <div>
         <h1 className="font-headline-lg text-2xl font-bold text-on-background sm:text-headline-lg">Bildirim Merkezi</h1>
-        <p className="mt-2 font-body-md text-sm text-on-surface-variant sm:text-base">Size gönderilen güncel bildirimleri görüntüleyin.</p>
+        
         </div>
         <button type="button" disabled={unreadCount === 0 || markingAll} onClick={() => void handleMarkAllAsRead()} className="inline-flex h-10 shrink-0 items-center justify-center gap-2 self-start rounded-lg border border-outline-variant bg-surface-container-lowest px-4 font-body-md text-sm font-semibold text-primary-container transition-colors hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-45 sm:self-auto">
           <span className="material-symbols-outlined text-[18px]" aria-hidden="true">done_all</span>

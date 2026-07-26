@@ -267,9 +267,7 @@ export default function AcademicianAvailabilityPage({
     <div className="admin-page animate-fade-in">
       <div className="mb-8">
         <h1 className="font-headline-lg text-headline-lg text-on-background">{labels.title}</h1>
-        <p className="mt-2 max-w-2xl font-body-lg text-body-lg text-on-surface-variant">
-          {labels.subtitle}
-        </p>
+        
       </div>
 
       <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">

@@ -65,7 +65,7 @@ type AcademicianCalendarPageProps = {
 export default function AcademicianCalendarPage({
   includeAppointments = false,
   title = CALENDAR_MESSAGES.TITLE,
-  subtitle = CALENDAR_MESSAGES.SUBTITLE,
+  subtitle: _subtitle = CALENDAR_MESSAGES.SUBTITLE,
 }: AcademicianCalendarPageProps = {}) {
   const toast = useToast();
   const [loading, setLoading] = useState(true);
@@ -146,9 +146,7 @@ export default function AcademicianCalendarPage({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-headline-lg text-headline-lg text-on-background">{title}</h1>
-          <p className="mt-1 font-body-md text-body-md text-on-surface-variant">
-            {subtitle}
-          </p>
+          
         </div>
         <label className="flex flex-col gap-1.5 sm:min-w-[200px]">
           <span className="font-label-md text-label-md text-on-surface-variant">Filtre</span>

@@ -78,9 +78,7 @@ export default function AdminCategoriesPage() {
     <div className="admin-page animate-fade-in">
       <div className="mb-8">
         <h1 className="font-headline-lg text-headline-lg text-on-background">Kategori Yönetimi</h1>
-        <p className="mt-2 max-w-2xl font-body-lg text-body-lg text-on-surface-variant">
-          Aktif randevu kategorilerini yönetin.
-        </p>
+        
       </div>
 
       <div className="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">

@@ -192,9 +192,7 @@ export default function AdminHomePage() {
           <h1 className="mt-2 font-headline-lg text-headline-lg">
             Hoş Geldiniz{user.fullName ? `, ${user.fullName}` : ''}
           </h1>
-          <p className="mt-2 font-body-md text-body-md text-on-primary/70">
-            {getRoleLabel(user.role)}
-          </p>
+          
           <p className="mt-1 max-w-2xl font-body-md text-body-md text-on-primary/70">
             Sistem kullanıcılarını, kategorileri ve ceza kurallarını buradan yönetebilirsiniz.
           </p>

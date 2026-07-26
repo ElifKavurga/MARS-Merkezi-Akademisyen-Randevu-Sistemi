@@ -155,9 +155,7 @@ export default function AdminSchedulerStatusPage() {
       <div className="mb-8 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Sistem Durumu</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Tüm scheduler görevlerinin anlık durumu — her {AUTO_REFRESH_MS / 1000} saniyede otomatik yenilenir.
-          </p>
+          
         </div>
         {lastRefreshed && (
           <p className="text-xs text-slate-400">

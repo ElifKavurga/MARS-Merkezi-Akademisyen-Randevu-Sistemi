@@ -17,7 +17,7 @@ type DashboardWelcomeBannerProps = {
 
 export default function DashboardWelcomeBanner({
   fullName,
-  description,
+  description: _description,
   stats,
   loading = false,
   loadingLabel = 'Özet yükleniyor...',
@@ -29,9 +29,6 @@ export default function DashboardWelcomeBanner({
           <h1 className="font-headline-lg text-headline-lg">
             Hoş Geldiniz{fullName ? `, ${fullName}` : ''}
           </h1>
-          <p className="mt-2 max-w-2xl font-body-md text-body-md text-on-primary/70">
-            {description}
-          </p>
         </div>
 
         {loading ? (

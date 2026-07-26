@@ -190,9 +190,7 @@ export default function DelegationHistoryPage() {
         <h1 className="font-headline-lg text-headline-lg text-on-background">
           {DELEGATION_HISTORY_MESSAGES.TITLE}
         </h1>
-        <p className="mt-2 max-w-2xl font-body-lg text-body-lg text-on-surface-variant">
-          {DELEGATION_HISTORY_MESSAGES.SUBTITLE}
-        </p>
+        
       </div>
 
       <section className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest">

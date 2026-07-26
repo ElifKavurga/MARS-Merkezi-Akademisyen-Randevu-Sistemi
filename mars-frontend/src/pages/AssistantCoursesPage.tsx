@@ -66,9 +66,7 @@ export default function AssistantCoursesPage() {
         <h1 className="font-headline-lg text-headline-lg text-on-background">
           {ASSISTANT_COURSE_MESSAGES.TITLE}
         </h1>
-        <p className="mt-2 max-w-2xl font-body-lg text-body-lg text-on-surface-variant">
-          {ASSISTANT_COURSE_MESSAGES.SUBTITLE}
-        </p>
+        
       </div>
 
       <section className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest">

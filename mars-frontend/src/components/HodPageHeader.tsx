@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function HodPageHeader({
   title,
-  description,
+  description: _description,
   backAction,
 }: {
   title: string;
@@ -31,9 +31,6 @@ export default function HodPageHeader({
       <h1 className="font-headline-lg text-headline-lg text-primary tracking-tight">
         {title}
       </h1>
-      <p className="mt-1 font-body-md text-body-md text-on-surface-variant">
-        {description}
-      </p>
     </div>
   );
 }
