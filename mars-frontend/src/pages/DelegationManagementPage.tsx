@@ -227,7 +227,7 @@ export default function DelegationManagementPage() {
                       <td className="whitespace-nowrap px-4 py-4">{formatTime(item.startTime)}–{formatTime(item.endTime)}</td>
                       <td className="px-4 py-4"><DelegationStatusBadge status={item.delegationStatus} /></td>
                       <td className="px-4 py-4">
-                        <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex flex-nowrap items-center gap-2">
                           {actionable ? <>
                             <AdminActionButton variant="primary" icon="check" onClick={() => setDecision({ item, action: 'accept' })}>Kabul Et</AdminActionButton>
                             <AdminActionButton variant="danger" icon="close" onClick={() => setDecision({ item, action: 'reject' })}>Reddet</AdminActionButton>

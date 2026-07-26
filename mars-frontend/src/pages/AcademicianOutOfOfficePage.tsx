@@ -180,7 +180,7 @@ export default function AcademicianOutOfOfficePage() {
                             {OUT_OF_OFFICE_MESSAGES.NO_ACTIONS}
                           </span>
                         ) : (
-                          <div className="flex flex-wrap justify-end gap-2">
+                          <div className="flex flex-nowrap justify-end gap-2">
                             <AdminActionButton
                               variant="primary"
                               icon="edit"

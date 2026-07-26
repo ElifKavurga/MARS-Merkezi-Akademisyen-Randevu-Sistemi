@@ -467,7 +467,7 @@ export default function AcademicianAvailabilityPage({
                         <AvailabilityStatusBadge isBlocked={slot.isBlocked} />
                       </td>
                       <td className="py-4 px-6">
-                        <div className="flex flex-wrap justify-end gap-2">
+                        <div className="flex flex-nowrap justify-end gap-2">
                           <AdminActionButton
                             variant="primary"
                             icon="edit"

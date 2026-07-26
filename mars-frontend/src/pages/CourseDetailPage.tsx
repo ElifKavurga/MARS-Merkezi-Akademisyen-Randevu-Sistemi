@@ -271,7 +271,7 @@ export default function CourseDetailPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex flex-row flex-wrap items-center justify-end gap-2 ml-auto shrink-0">
+                    <div className="flex flex-row flex-nowrap items-center justify-end gap-2 ml-auto shrink-0">
                       <AdminActionButton
                         variant="neutral"
                         icon="edit"

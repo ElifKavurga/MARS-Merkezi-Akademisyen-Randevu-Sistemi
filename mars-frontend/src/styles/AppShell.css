@@ -239,20 +239,6 @@
   max-width: 100%;
 }
 
-.admin-users-table .mars-action-btn {
-  min-width: 0;
-  height: 2rem;
-  padding: 0 0.5rem;
-  font-size: 11px;
-  line-height: 14px;
-  flex-shrink: 0;
-}
-
-.admin-users-table .mars-action-btn .material-symbols-outlined {
-  font-size: 16px !important;
-  width: 16px;
-  height: 16px;
-}
 
 @media (max-width: 1279px) {
   .admin-users-table th,
@@ -573,16 +559,17 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.375rem;
-  height: 2.25rem;
-  min-width: 7.5rem;
-  padding: 0 0.75rem;
-  border-radius: 0.5rem;
+  gap: 0.25rem;
+  height: 2rem;
+  min-width: 0;
+  padding: 0 0.625rem;
+  border-radius: 0.375rem;
   font-family: inherit;
   font-size: 12px;
   line-height: 16px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-weight: 500;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
   transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
   cursor: pointer;
 }
@@ -593,10 +580,10 @@
 }
 
 .mars-action-btn .material-symbols-outlined {
-  font-size: 18px !important;
+  font-size: 16px !important;
   line-height: 1;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 
 .mars-action-btn--primary {
