@@ -20,7 +20,7 @@ public class StudentAppointmentCategoryService {
 
     /**
      * Öğrenci randevu akışı için kategoriler.
-     * Modelde isActive / displayOrder yok; tüm kayıtlar categoryId sırasıyla döner
+     * Modelde isActive / displayOrder yok; t�m kayıtlar categoryId sırasıyla d�ner
      * (admin oluşturma sırası).
      */
     @Transactional(readOnly = true)

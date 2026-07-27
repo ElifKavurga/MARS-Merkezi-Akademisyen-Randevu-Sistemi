@@ -11,7 +11,7 @@ public final class AvailabilityTimeRules {
 
     public static final int APPOINTMENT_DURATION_MINUTES = 10;
     public static final int MINUTE_STEP = 10;
-    /** RecurrenceRule.repeatCount — UX haftalık tekrar için sabit 1. */
+    /** RecurrenceRule.repeatCount � UX haftalık tekrar için sabit 1. */
     public static final int WEEKLY_REPEAT_COUNT = 1;
 
     private AvailabilityTimeRules() {

@@ -107,7 +107,7 @@ public class CourseService {
 
         if (assistant.getRole() == null
                 || !RoleType.ASSISTANT.name().equals(assistant.getRole().getRoleName())) {
-            throw new BadRequestException("Yalnızca ASSISTANT rolündeki kullanıcılar atanabilir.");
+            throw new BadRequestException("Yalnızca ASSISTANT rol�ndeki kullanıcılar atanabilir.");
         }
 
         if (courseAssignmentRepository.existsByCourse_CourseIdAndAssistant_UserId(

@@ -45,7 +45,7 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                 && !USER_NOTIFICATION_DESTINATION.equals(accessor.getDestination())) {
             throw new IllegalArgumentException("Bu WebSocket kanalına erişim yetkiniz yok.");
         } else if (command == StompCommand.SEND) {
-            throw new IllegalArgumentException("WebSocket üzerinden mesaj gönderilemez.");
+            throw new IllegalArgumentException("WebSocket üzerinden mesaj günderilemez.");
         }
         return message;
     }
@@ -59,12 +59,12 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
 
         String token = authorization.substring(BEARER_PREFIX.length());
         if (!jwtService.isTokenValid(token)) {
-            throw new IllegalArgumentException("Geçersiz WebSocket kimlik bilgisi.");
+            throw new IllegalArgumentException("Ge�ersiz WebSocket kimlik bilgisi.");
         }
         String username = jwtService.extractUsername(token);
         UserDetails details = userDetailsService.loadUserByUsername(username);
         if (!details.isEnabled() || !jwtService.isTokenValid(token, details.getUsername())) {
-            throw new IllegalArgumentException("Geçersiz WebSocket kimlik bilgisi.");
+            throw new IllegalArgumentException("Ge�ersiz WebSocket kimlik bilgisi.");
         }
         accessor.setUser(new UsernamePasswordAuthenticationToken(
                 details, token, details.getAuthorities()));

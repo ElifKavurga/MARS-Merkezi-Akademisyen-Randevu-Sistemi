@@ -16,21 +16,21 @@ public final class DelegationMessages {
     public static final String ONLY_TARGET_STAFF =
             "Gelen randevu devri taleplerini yalnızca hedef akademisyen veya asistan görüntüleyebilir.";
     public static final String ONLY_STUDENT =
-            "Randevu devri onayı yalnızca ilgili öğrenci tarafından verilebilir.";
+            "Randevu devri onayı yalnızca ilgili Öğrenci tarafından verilebilir.";
     public static final String HISTORY_ACCESS_DENIED =
-            "Randevu devri geçmişi yalnızca akademisyen veya asistan tarafından görüntülenebilir.";
+            "Randevu devri ge�mişi yalnızca akademisyen veya asistan tarafından görüntülenebilir.";
     public static final String APPOINTMENT_NOT_FOUND = "Randevu bulunamadı.";
     public static final String DELEGATION_NOT_FOUND = "Randevu devri kaydı bulunamadı.";
-    public static final String INVALID_DELEGATION_ID = "Geçersiz delegasyon kimliği.";
+    public static final String INVALID_DELEGATION_ID = "Ge�ersiz delegasyon kimliği.";
     public static final String ACCESS_DENIED = "Bu delegasyon kaydına erişim yetkiniz yok.";
     public static final String OWNERSHIP_DENIED =
             "Yalnızca kendi randevularınız için delegasyon başlatabilirsiniz.";
     public static final String ASSISTANT_NOT_FOUND = "Asistan bulunamadı.";
     public static final String ASSISTANT_INACTIVE = "Pasif kullanıcıya delegasyon yapılamaz.";
     public static final String ASSISTANT_ROLE_REQUIRED =
-            "Delegasyon yalnızca ASSISTANT rolündeki kullanıcılara yapılabilir.";
+            "Delegasyon yalnızca ASSISTANT rol�ndeki kullanıcılara yapılabilir.";
     public static final String ASSISTANT_NOT_ASSIGNED =
-            "Seçilen asistan, randevuya bağlı derse atanmış olmalıdır.";
+            "Se�ilen asistan, randevuya bağlı derse atanmış olmalıdır.";
     public static final String PENDING_EXISTS =
             "Bu randevu için bekleyen bir randevu devri zaten bulunmaktadır.";
     public static final String DECISION_ACCESS_DENIED =
@@ -40,13 +40,13 @@ public final class DelegationMessages {
     public static final String APPOINTMENT_NOT_PROCESSABLE =
             "Yalnızca aktif randevular için randevu devri işlemi yapılabilir.";
     public static final String STUDENT_DECISION_ACCESS_DENIED =
-            "Bu randevu devri üzerinde yalnızca randevu sahibi öğrenci işlem yapabilir.";
+            "Bu randevu devri üzerinde yalnızca randevu sahibi Öğrenci işlem yapabilir.";
     public static final String NOT_PENDING_STUDENT_APPROVAL =
-            "Yalnızca öğrenci onayı bekleyen randevu devirleri üzerinde işlem yapılabilir.";
+            "Yalnızca Öğrenci onayı bekleyen randevu devirleri üzerinde işlem yapılabilir.";
     public static final String STUDENT_APPROVAL_EXPIRED =
-            "Randevu devri için iki saatlik öğrenci onay süresi dolmuştur.";
+            "Randevu devri için iki saatlik Öğrenci onay süresi dolmuştur.";
     public static final String INVALID_STATUS_TRANSITION =
-            "Randevu devri için geçersiz durum geçişi.";
+            "Randevu devri için geçersiz durum ge�işi.";
 
     private DelegationMessages() {
     }

@@ -19,7 +19,7 @@ public class HodAcademicianStatsDto {
     /** Randevu kategori dağılımı */
     private List<CategoryCount> categoryDistribution;
 
-    /** Son 7 günlük randevu yoğunluğu (her gün için sayı) */
+    /** Son 7 günl�k randevu yoğunluğu (her gün için sayı) */
     private List<DayCount> weeklyTrend;
 
     /** Son 12 aylık randevu dağılımı */

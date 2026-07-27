@@ -12,7 +12,7 @@ public final class AcademicTermCalendar {
     }
 
     /**
-     * Güz: Sep–Jan → 31 Jan; Bahar: Feb–Jun → 30 Jun; Yaz: Jul–Aug → 31 Aug.
+     * G�z: Sep�Jan → 31 Jan; Bahar: Feb�Jun → 30 Jun; Yaz: Jul�Aug → 31 Aug.
      */
     public static LocalDate resolveCurrentTermEndDate(LocalDate referenceDate) {
         int month = referenceDate.getMonthValue();
@@ -31,7 +31,7 @@ public final class AcademicTermCalendar {
     }
 
     /**
-     * Öğrenci bookable-slot listesi için üst sınır: mevcut dönem sonu + bir sonraki dönem sonu.
+     * Öğrenci bookable-slot listesi için �st sınır: mevcut dönem sonu + bir sonraki dönem sonu.
      * Yaz döneminde OOO sonrası gelen haftalık occurrence'lar 31 Ağustos'ta kesilmez.
      */
     public static LocalDate resolveBookableHorizonEnd(LocalDate referenceDate) {

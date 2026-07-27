@@ -146,13 +146,13 @@ public class AvailabilitySlotService {
             throw new BadRequestException("Akademisyen seçimi zorunludur.");
         }
         if (durationMinutes == null || durationMinutes < 1) {
-            throw new BadRequestException("Geçerli bir görüşme süresi zorunludur.");
+            throw new BadRequestException("Ge�erli bir gör�şme süresi zorunludur.");
         }
 
         LocalDateTime now = LocalDateTime.now(APP_ZONE);
         LocalDate today = now.toLocalDate();
-        // Regresyon düzeltmesi: today+14 sert kesimi, OOO sonrası uygun haftalık
-        // occurrence'ları (ör. 6 Ağustos+) yanlışlıkla eliyordu. Dönem ufku geri.
+        // Regresyon d�zeltmesi: today+14 sert kesimi, OOO sonrası uygun haftalık
+        // occurrence'ları (�r. 6 Ağustos+) yanlışlıkla eliyordu. D�nem ufku geri.
         LocalDate rangeEnd = AcademicTermCalendar.resolveBookableHorizonEnd(today);
         LocalDateTime earliestBookable = now.plusMinutes(AppointmentConstraints.MINIMUM_BOOKING_NOTICE_MINUTES);
 
@@ -345,7 +345,7 @@ public class AvailabilitySlotService {
         }
 
         if (!RepeatType.WEEKLY.name().equalsIgnoreCase(rule.getRepeatType())) {
-            // Sistem yalnızca WEEKLY destekler (RecurrenceRuleService); sessizce boş dönme.
+            // Sistem yalnızca WEEKLY destekler (RecurrenceRuleService); sessizce boş d�nme.
             log.warn(
                     "available-slots slotId={} unsupported repeatType={} (only WEEKLY is expanded)",
                     slot.getSlotId(),

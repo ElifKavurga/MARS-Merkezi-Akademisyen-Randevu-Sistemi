@@ -2,7 +2,7 @@ package com.mars;
 
 /**
  * Bildirim sistemi (Sprint 29) için olay sabitleri.
- * Bu sprintte bildirim gönderilmez; ileride randevu oluşturma akışına bağlanacaktır.
+ * Bu sprintte bildirim günderilmez; ileride randevu oluşturma akışına bağlanacaktır.
  */
 public final class NotificationEventMessages {
 

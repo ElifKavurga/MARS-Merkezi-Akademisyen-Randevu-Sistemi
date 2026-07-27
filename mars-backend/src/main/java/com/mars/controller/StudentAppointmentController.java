@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * Öğrenci randevu oluşturma, aktif liste, detay ve iptal.
- * Başarı gövdesi FE uyumu için ham DTO döner; hatalar GlobalExceptionHandler ApiResponse ile.
+ * Başarı g�vdesi FE uyumu için ham DTO d�ner; hatalar GlobalExceptionHandler ApiResponse ile.
  */
 @RestController
 @RequestMapping("/students/appointments")

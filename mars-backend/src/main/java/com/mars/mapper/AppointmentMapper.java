@@ -143,7 +143,7 @@ public class AppointmentMapper {
                 .meetingType(appointment.getMeetingType())
                 .appointmentStatus(appointment.getAppointmentStatus())
                 .createdAt(appointment.getCreatedAt())
-                // Ofis alanlarÃ„Â± User entityÃ¢â‚¬â„¢de henÃƒÂ¼z yok; profil detayÃ„Â± ile aynÃ„Â± placeholder.
+                // Ofis alanları User entity’de henüz yok; profil detayı ile aynı placeholder.
                 .officeName(null)
                 .officeLocation(null)
                 .build();

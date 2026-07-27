@@ -86,13 +86,13 @@ public class NotificationMailPublisher {
             return List.of();
         }
         List<MailDetail> details = new ArrayList<>();
-        add(details, "Ãƒâ€“Ã„Å¸renci", appointment.getStudent() == null ? null : appointment.getStudent().getFullName());
+        add(details, "Öğrenci", appointment.getStudent() == null ? null : appointment.getStudent().getFullName());
         add(details, "Akademisyen / Personel", appointment.getStaff() == null ? null : appointment.getStaff().getFullName());
 
         if (reschedule != null) {
             addSlot(details, "Eski", reschedule.getOriginalSlot());
             addSlot(details, "Yeni", reschedule.getProposedSlot());
-            add(details, "GÃƒÂ¶rÃƒÂ¼Ã…Å¸me TÃƒÂ¼rÃƒÂ¼", meetingType(reschedule.getProposedMeetingType()));
+            add(details, "Görüşme Türü", meetingType(reschedule.getProposedMeetingType()));
         } else {
             var slot = delegation != null && delegation.getTargetSlot() != null
                 ? delegation.getTargetSlot() : appointment.getSlot();
@@ -103,9 +103,9 @@ public class NotificationMailPublisher {
             var end = delegation != null && delegation.getTargetEndTime() != null
                 ? delegation.getTargetEndTime() : slot == null ? null : slot.getEndTime();
             add(details, "Randevu Tarihi", date == null ? null : date.format(DATE_FORMAT));
-            add(details, "BaÃ…Å¸langÃ„Â±ÃƒÂ§ Saati", start == null ? null : start.format(TIME_FORMAT));
-            add(details, "BitiÃ…Å¸ Saati", end == null ? null : end.format(TIME_FORMAT));
-            add(details, "GÃƒÂ¶rÃƒÂ¼Ã…Å¸me TÃƒÂ¼rÃƒÂ¼", meetingType(appointment.getMeetingType()));
+            add(details, "Başlangıç Saati", start == null ? null : start.format(TIME_FORMAT));
+            add(details, "Bitiş Saati", end == null ? null : end.format(TIME_FORMAT));
+            add(details, "Görüşme Türü", meetingType(appointment.getMeetingType()));
         }
         add(details, "Kategori", appointment.getCategory() == null ? null : appointment.getCategory().getCategoryName());
         if (appointment.getCourse() != null) {
@@ -130,26 +130,26 @@ public class NotificationMailPublisher {
         if (reschedule != null) {
             switch (notification.getNotificationType()) {
                 case APPOINTMENT_RESCHEDULE_REQUESTED -> putPresentation(values,
-                        "Yeni tarih teklifiniz onay bekliyor.", "ONAY BEKLÃ„Â°YOR", "#b45309", "#fffbeb");
+                        "Yeni tarih teklifiniz onay bekliyor.", "ONAY BEKLİYOR", "#b45309", "#fffbeb");
                 case APPOINTMENT_RESCHEDULED -> putPresentation(values,
-                        "Yeni randevu tarihi kesinleÃ…Å¸ti.", "KABUL EDÃ„Â°LDÃ„Â°", "#047857", "#ecfdf5");
+                        "Yeni randevu tarihi kesinleşti.", "KABUL EDİLDİ", "#047857", "#ecfdf5");
                 case APPOINTMENT_RESCHEDULE_REJECTED, APPOINTMENT_CANCELLED -> putPresentation(values,
-                        "Teklif reddedildi ve randevu iptal edildi.", "REDDEDÃ„Â°LDÃ„Â°", "#b91c1c", "#fef2f2");
+                        "Teklif reddedildi ve randevu iptal edildi.", "REDDEDİLDİ", "#b91c1c", "#fef2f2");
                 case APPOINTMENT_RESCHEDULE_EXPIRED -> putPresentation(values,
-                        "YanÃ„Â±t sÃƒÂ¼resi dolduÃ„Å¸u iÃƒÂ§in teklif kapatÃ„Â±ldÃ„Â±.", "SÃƒÅ“RESÃ„Â° DOLDU", "#6b7280", "#f3f4f6");
+                        "Yanıt süresi dolduğu için teklif kapatıldı.", "SÜRESİ DOLDU", "#6b7280", "#f3f4f6");
                 default -> putPresentation(values, "Randevu yeniden planlama bilgilendirmesi.",
-                        "GÃƒÅ“NCELLENDÃ„Â°", "#1d4ed8", "#eff6ff");
+                        "GÜNCELLENDİ", "#1d4ed8", "#eff6ff");
             }
         } else if (delegation != null) {
             switch (notification.getNotificationType()) {
                 case DELEGATION_REQUEST, STUDENT_APPROVAL_PENDING -> putPresentation(values,
-                        "Randevu devri iÃ…Å¸lemi iÃƒÂ§in onay bekleniyor.", "ONAY BEKLÃ„Â°YOR", "#b45309", "#fffbeb");
+                        "Randevu devri işlemi için onay bekleniyor.", "ONAY BEKLİYOR", "#b45309", "#fffbeb");
                 case DELEGATION_ACCEPTED -> putPresentation(values,
-                        "Randevu devri iÃ…Å¸lemi baÃ…Å¸arÃ„Â±yla kabul edildi.", "KABUL EDÃ„Â°LDÃ„Â°", "#047857", "#ecfdf5");
+                        "Randevu devri işlemi başarıyla kabul edildi.", "KABUL EDİLDİ", "#047857", "#ecfdf5");
                 case DELEGATION_REJECTED -> putPresentation(values,
-                        "Randevu devri iÃ…Å¸lemi reddedildi.", "REDDEDÃ„Â°LDÃ„Â°", "#b91c1c", "#fef2f2");
+                        "Randevu devri işlemi reddedildi.", "REDDEDİLDİ", "#b91c1c", "#fef2f2");
                 case DELEGATION_EXPIRED -> putPresentation(values,
-                        "YanÃ„Â±t sÃƒÂ¼resi dolduÃ„Å¸u iÃƒÂ§in randevu devri kapatÃ„Â±ldÃ„Â±.", "SÃƒÅ“RESÃ„Â° DOLDU", "#6b7280", "#f3f4f6");
+                        "Yanıt süresi dolduğu için randevu devri kapatıldı.", "SÜRESİ DOLDU", "#6b7280", "#f3f4f6");
                 default -> { }
             }
         }
@@ -184,13 +184,13 @@ public class NotificationMailPublisher {
         }
         return switch (status) {
             case "PENDING" -> "Bekliyor";
-            case "PENDING_ACADEMICIAN_APPROVAL" -> "Akademisyen OnayÃ„Â± Bekliyor";
-            case "PENDING_STUDENT_APPROVAL" -> "Ãƒâ€“Ã„Å¸renci OnayÃ„Â± Bekliyor";
+            case "PENDING_ACADEMICIAN_APPROVAL" -> "Akademisyen Onayı Bekliyor";
+            case "PENDING_STUDENT_APPROVAL" -> "Öğrenci Onayı Bekliyor";
             case "ACCEPTED" -> "Kabul Edildi";
             case "REJECTED", "STUDENT_REJECTED" -> "Reddedildi";
-            case "EXPIRED" -> "SÃƒÂ¼resi Doldu";
-            case "CANCELLED" -> "Ã„Â°ptal Edildi";
-            case "COMPLETED" -> "TamamlandÃ„Â±";
+            case "EXPIRED" -> "Süresi Doldu";
+            case "CANCELLED" -> "İptal Edildi";
+            case "COMPLETED" -> "Tamamlandı";
             default -> status;
         };
     }
@@ -200,7 +200,7 @@ public class NotificationMailPublisher {
             return "Online";
         }
         if (MeetingType.FACE_TO_FACE.name().equals(value)) {
-            return "YÃƒÂ¼z YÃƒÂ¼ze";
+            return "Yüz Yüze";
         }
         return null;
     }

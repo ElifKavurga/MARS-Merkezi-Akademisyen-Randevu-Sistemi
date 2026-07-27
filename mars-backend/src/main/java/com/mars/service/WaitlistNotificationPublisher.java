@@ -20,8 +20,8 @@ public class WaitlistNotificationPublisher {
     private final WaitlistMailSubjectGenerator subjectGenerator;
     private final PublisherMailDetails mailDetails;
 
-    // TODO Sprint Waitlist: WaitlistService durum geçişleri tamamlandığında ADDED,
-    // TURN_AVAILABLE, REMOVED ve CANCELLED işlemlerinden bu metot çağrılmalıdır.
+    // TODO Sprint Waitlist: WaitlistService durum ge�işleri tamamlandığında ADDED,
+    // TURN_AVAILABLE, REMOVED ve CANCELLED işlemlerinden bu metot �ağrılmalıdır.
     public NotificationResponse publish(WaitlistNotificationRequest request) {
         String subject = subjectGenerator.subject(request.event());
         return notificationService.createNotification(NotificationCreateRequest.builder()
@@ -63,7 +63,7 @@ public class WaitlistNotificationPublisher {
             case TURN_AVAILABLE -> "Bekleme listesinde sıranız geldi. "
                     + (reservationInformation == null ? "Rezervasyon hakkınızı uygulama üzerinden kullanabilirsiniz."
                             : reservationInformation);
-            case REMOVED -> "Bekleme listesinden çıkarıldınız.";
+            case REMOVED -> "Bekleme listesinden �ıkarıldınız.";
             case CANCELLED -> "Bekleme listesi kaydınız iptal edildi.";
         };
     }
@@ -77,7 +77,7 @@ public class WaitlistNotificationPublisher {
         return switch (event) {
             case ADDED -> "LİSTEYE EKLENDİ";
             case TURN_AVAILABLE -> "SIRANIZ GELDİ";
-            case REMOVED -> "LİSTEDEN ÇIKARILDI";
+            case REMOVED -> "LİSTEDEN �IKARILDI";
             case CANCELLED -> "İPTAL EDİLDİ";
         };
     }

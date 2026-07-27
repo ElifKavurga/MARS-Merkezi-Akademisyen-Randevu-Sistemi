@@ -247,8 +247,8 @@ public class DelegationService {
             notificationService.createPreparedEmailNotification(
                     log.getAppointment().getStudent(),
                     "DELEGATION_STUDENT_APPROVAL",
-                    "Randevu devri onayÃ„Â±",
-                    withDelegationContext(log, "Hedef personel randevu devrini kabul etti. OnayÃ„Â±nÃ„Â±z bekleniyor."),
+                    "Randevu devri onayı",
+                    withDelegationContext(log, "Hedef personel randevu devrini kabul etti. Onayınız bekleniyor."),
                     log);
             return toResponse(log);
         }
@@ -267,7 +267,7 @@ public class DelegationService {
                 log.getAppointment().getStudent(),
                 NotificationType.DELEGATION_ACCEPTED,
                 "Randevu Devri Bilgilendirmesi",
-                "Randevunuz ilgili dersin yetkili asistanÃ„Â±na devredildi.");
+                "Randevunuz ilgili dersin yetkili asistanına devredildi.");
         return toResponse(log);
     }
 
@@ -326,14 +326,14 @@ public class DelegationService {
                 log.getDelegatedByUser(),
                 "DELEGATION_STUDENT_ACCEPTED",
                 "Randevu devri kabul edildi",
-                withDelegationContext(log, "Ãƒâ€“Ã„Å¸renci randevu yÃƒÂ¶nlendirmesini kabul etti."),
+                withDelegationContext(log, "Öğrenci randevu yönlendirmesini kabul etti."),
                 log);
         createDelegationNotification(
                 log,
                 log.getDelegatedToUser(),
                 NotificationType.DELEGATION_ACCEPTED,
                 "Randevu Devri Kabul Edildi",
-                "Ãƒâ€“Ã„Å¸renci randevu devrini kabul etti.");
+                "Öğrenci randevu devrini kabul etti.");
         return toResponse(log);
     }
 
@@ -348,14 +348,14 @@ public class DelegationService {
                 log.getDelegatedByUser(),
                 "DELEGATION_STUDENT_REJECTED",
                 "Randevu devri reddedildi",
-                withDelegationContext(log, "Ãƒâ€“Ã„Å¸renci randevu yÃƒÂ¶nlendirmesini reddetti."),
+                withDelegationContext(log, "Öğrenci randevu yönlendirmesini reddetti."),
                 log);
         createDelegationNotification(
                 log,
                 log.getDelegatedToUser(),
                 NotificationType.DELEGATION_REJECTED,
                 "Randevu Devri Reddedildi",
-                "Ãƒâ€“Ã„Å¸renci randevu devrini reddetti.");
+                "Öğrenci randevu devrini reddetti.");
         return toResponse(log);
     }
 
@@ -369,8 +369,8 @@ public class DelegationService {
             notificationService.createPreparedEmailNotification(
                     log.getDelegatedByUser(),
                     "DELEGATION_EXPIRED",
-                    "Randevu devri sÃƒÂ¼resi doldu",
-                    withDelegationContext(log, "Ãƒâ€“Ã„Å¸renci iki saat iÃƒÂ§inde yanÃ„Â±t vermediÃ„Å¸i iÃƒÂ§in randevu devri sonlandÃ„Â±rÃ„Â±ldÃ„Â±."),
+                    "Randevu devri süresi doldu",
+                    withDelegationContext(log, "Öğrenci iki saat içinde yanıt vermediği için randevu devri sonlandırıldı."),
                     log);
         }
         delegationLogRepository.saveAll(expired);
@@ -404,8 +404,8 @@ public class DelegationService {
         var end = delegation.getTargetEndTime() != null
                 ? delegation.getTargetEndTime() : fallbackSlot == null ? null : fallbackSlot.getEndTime();
         String meetingType = "ONLINE".equals(appointment.getMeetingType())
-                ? "Online" : "FACE_TO_FACE".equals(appointment.getMeetingType()) ? "YÃƒÂ¼z YÃƒÂ¼ze" : "-";
-        return "%s GÃƒÂ¶nderen: %s, hedef personel: %s, ÃƒÂ¶Ã„Å¸renci: %s, tarih ve saat: %s %s-%s, gÃƒÂ¶rÃƒÂ¼Ã…Å¸me tÃƒÂ¼rÃƒÂ¼: %s, kategori: %s."
+                ? "Online" : "FACE_TO_FACE".equals(appointment.getMeetingType()) ? "Yüz Yüze" : "-";
+        return "%s Gönderen: %s, hedef personel: %s, öğrenci: %s, tarih ve saat: %s %s-%s, görüşme türü: %s, kategori: %s."
                 .formatted(
                         message,
                         delegation.getDelegatedByUser().getFullName(),
@@ -422,7 +422,7 @@ public class DelegationService {
         if (description == null || description.isBlank()) {
             return message;
         }
-        return message + " AÃƒÂ§Ã„Â±klama: " + description.trim();
+        return message + " Açıklama: " + description.trim();
     }
 
     private DelegationTargetResponse toTargetResponse(Appointment appointment, User target) {
@@ -493,8 +493,8 @@ public class DelegationService {
             throw new ConflictException(DelegationMessages.STUDENT_APPROVAL_EXPIRED);
         }
 
-        // V7/V8 ile oluÃ…Å¸turulmuÃ…Å¸ bekleyen delegasyonlarda hedef slot bilgisi yoktur.
-        // Bu kayÃ„Â±tlar mevcut davranÃ„Â±Ã…Å¸la tamamlanmaya devam eder.
+        // V7/V8 ile oluşturulmuş bekleyen delegasyonlarda hedef slot bilgisi yoktur.
+        // Bu kayıtlar mevcut davranışla tamamlanmaya devam eder.
         if (log.getTargetSlot() == null) {
             appointment.setStaff(target);
             appointment.setUpdatedAt(now);

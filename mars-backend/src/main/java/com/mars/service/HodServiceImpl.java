@@ -42,7 +42,7 @@ public class HodServiceImpl implements HodService {
     @Transactional(readOnly = true)
     public List<HodAcademicianListDto> getDepartmentAcademicians(Integer hodUserId) {
         User hodUser = userRepository.findByIdWithRoleAndDepartment(hodUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("KullanÃ„Â±cÃ„Â± bulunamadÃ„Â±"));
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı"));
 
         Integer departmentId = hodUser.getDepartment().getDepartmentId();
 
@@ -62,7 +62,7 @@ public class HodServiceImpl implements HodService {
     @Transactional(readOnly = true)
     public HodAcademicianDetailDto getDepartmentAcademicianDetail(Integer hodUserId, Integer targetUserId) {
         User hodUser = userRepository.findByIdWithRoleAndDepartment(hodUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("KullanÃ„Â±cÃ„Â± bulunamadÃ„Â±"));
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı"));
 
         User targetUser = validateSameDepartmentAcademician(hodUser, targetUserId);
 
@@ -94,7 +94,7 @@ public class HodServiceImpl implements HodService {
     @Transactional(readOnly = true)
     public HodAcademicianStatsDto getDepartmentAcademicianStats(Integer hodUserId, Integer targetUserId) {
         User hodUser = userRepository.findByIdWithRoleAndDepartment(hodUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("KullanÃ„Â±cÃ„Â± bulunamadÃ„Â±"));
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı"));
 
         validateSameDepartmentAcademician(hodUser, targetUserId);
 
@@ -122,7 +122,7 @@ public class HodServiceImpl implements HodService {
                         .build())
                 .collect(Collectors.toList());
 
-        // Weekly trend (last 7 days) Ã¢â‚¬â€ fill gaps with 0
+        // Weekly trend (last 7 days) — fill gaps with 0
         java.util.Map<LocalDate, Long> weeklyMap = new java.util.LinkedHashMap<>();
         for (int i = 0; i < 7; i++) {
             weeklyMap.put(weekStart.plusDays(i), 0L);
@@ -136,7 +136,7 @@ public class HodServiceImpl implements HodService {
                         .build())
                 .collect(Collectors.toList());
 
-        // Monthly trend (last 12 months) Ã¢â‚¬â€ fill gaps with 0
+        // Monthly trend (last 12 months) — fill gaps with 0
         java.util.Map<String, Long> monthlyMap = new java.util.LinkedHashMap<>();
         for (int i = 0; i < 12; i++) {
             LocalDate month = yearStart.plusMonths(i);
@@ -162,7 +162,7 @@ public class HodServiceImpl implements HodService {
                 .build();
     }
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Helpers Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    // ── Helpers ──────────────────────────────────────────────────────────────
 
     /**
      * Validates that the target user is in the same department as the HOD,
@@ -172,18 +172,18 @@ public class HodServiceImpl implements HodService {
      */
     private User validateSameDepartmentAcademician(User hodUser, Integer targetUserId) {
         User targetUser = userRepository.findByIdWithRoleAndDepartment(targetUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("Akademisyen bulunamadÃ„Â±"));
+                .orElseThrow(() -> new ResourceNotFoundException("Akademisyen bulunamadı"));
 
         if (!targetUser.getDepartment().getDepartmentId().equals(hodUser.getDepartment().getDepartmentId())) {
-            throw new ResourceNotFoundException("Akademisyen bulunamadÃ„Â±");
+            throw new ResourceNotFoundException("Akademisyen bulunamadı");
         }
 
         if (!ALLOWED_ROLES.contains(targetUser.getRole().getRoleName())) {
-            throw new ResourceNotFoundException("Akademisyen bulunamadÃ„Â±");
+            throw new ResourceNotFoundException("Akademisyen bulunamadı");
         }
 
         if (Boolean.FALSE.equals(targetUser.getIsActive())) {
-            throw new ResourceNotFoundException("Akademisyen bulunamadÃ„Â±");
+            throw new ResourceNotFoundException("Akademisyen bulunamadı");
         }
 
         return targetUser;
@@ -216,7 +216,7 @@ public class HodServiceImpl implements HodService {
     public List<CalendarEventResponseDto> getDepartmentAcademicianCalendar(Integer hodUserId, Integer targetUserId, LocalDate from, LocalDate to, boolean includeAppointments) {
         // Validate that the HOD exists
         User hodUser = userRepository.findByIdWithRoleAndDepartment(hodUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("KullanÃ„Â±cÃ„Â± bulunamadÃ„Â±"));
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı"));
         // Validate target academician belongs to same department and has proper role
         validateSameDepartmentAcademician(hodUser, targetUserId);
         // Fetch calendar events for the academician
@@ -227,7 +227,7 @@ public class HodServiceImpl implements HodService {
     @Transactional(readOnly = true)
     public List<HodRecentAppointmentDto> getDepartmentAcademicianRecentAppointments(Integer hodUserId, Integer targetUserId) {
         User hodUser = userRepository.findByIdWithRoleAndDepartment(hodUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("KullanÃ„Â±cÃ„Â± bulunamadÃ„Â±"));
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı"));
         validateSameDepartmentAcademician(hodUser, targetUserId);
 
         List<Appointment> recentAppointments = appointmentRepository.findRecentByStaffIdWithDetails(targetUserId, PageRequest.of(0, 10));
@@ -249,7 +249,7 @@ public class HodServiceImpl implements HodService {
     @Transactional(readOnly = true)
     public HodPerformanceSummaryDto getDepartmentAcademicianPerformanceSummary(Integer hodUserId, Integer targetUserId) {
         User hodUser = userRepository.findByIdWithRoleAndDepartment(hodUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("KullanÃ„Â±cÃ„Â± bulunamadÃ„Â±"));
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı"));
         validateSameDepartmentAcademician(hodUser, targetUserId);
 
         long totalAppointments = appointmentRepository.countByStaff_UserId(targetUserId);
@@ -265,7 +265,7 @@ public class HodServiceImpl implements HodService {
                 .noShowCount(noShowAppointments)
                 .noShowRate(Math.round(noShowRate * 10.0) / 10.0)
                 .averageResponseTime("2 Saat") // Placeholder
-                .busiestDay("Ãƒâ€¡arÃ…Å¸amba") // Placeholder
+                .busiestDay("Çarşamba") // Placeholder
                 .busiestTimeRange("14:00 - 15:00") // Placeholder
                 .build();
     }
@@ -274,7 +274,7 @@ public class HodServiceImpl implements HodService {
     @Transactional(readOnly = true)
     public HodDepartmentKpiDto getDepartmentKpiStats(Integer hodUserId) {
         User hodUser = userRepository.findByIdWithRoleAndDepartment(hodUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("KullanÃ„Â±cÃ„Â± bulunamadÃ„Â±"));
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı"));
 
         Integer departmentId = hodUser.getDepartment().getDepartmentId();
         LocalDate today = LocalDate.now();
@@ -304,7 +304,7 @@ public class HodServiceImpl implements HodService {
     @Transactional(readOnly = true)
     public com.mars.dto.HodDepartmentStatsDto getDepartmentStats(Integer hodUserId) {
         User hodUser = userRepository.findByIdWithRoleAndDepartment(hodUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("KullanÃ„Â±cÃ„Â± bulunamadÃ„Â±"));
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı"));
 
         Integer departmentId = hodUser.getDepartment().getDepartmentId();
         LocalDate today = LocalDate.now();
@@ -331,7 +331,7 @@ public class HodServiceImpl implements HodService {
                         .build())
                 .collect(Collectors.toList());
 
-        // Weekly trend (last 7 days) Ã¢â‚¬â€ fill gaps with 0
+        // Weekly trend (last 7 days) — fill gaps with 0
         java.util.Map<LocalDate, Long> weeklyMap = new java.util.LinkedHashMap<>();
         for (int i = 0; i < 7; i++) {
             weeklyMap.put(weekStart.plusDays(i), 0L);
@@ -345,7 +345,7 @@ public class HodServiceImpl implements HodService {
                         .build())
                 .collect(Collectors.toList());
 
-        // Monthly trend (last 12 months) Ã¢â‚¬â€ fill gaps with 0
+        // Monthly trend (last 12 months) — fill gaps with 0
         java.util.Map<String, Long> monthlyMap = new java.util.LinkedHashMap<>();
         for (int i = 0; i < 12; i++) {
             LocalDate month = yearStart.plusMonths(i);
@@ -375,7 +375,7 @@ public class HodServiceImpl implements HodService {
     @Transactional(readOnly = true)
     public HodDepartmentAnalysisDto getDepartmentAnalysis(Integer hodUserId) {
         User hodUser = userRepository.findByIdWithRoleAndDepartment(hodUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("KullanÃ„Â±cÃ„Â± bulunamadÃ„Â±"));
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı"));
 
         Integer departmentId = hodUser.getDepartment().getDepartmentId();
         

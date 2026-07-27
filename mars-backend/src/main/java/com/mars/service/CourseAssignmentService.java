@@ -45,12 +45,12 @@ public class CourseAssignmentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı."));
 
         if (!Boolean.TRUE.equals(newAssistant.getIsActive())) {
-            throw new BadRequestException("Pasif kullanıcı seçilemez.");
+            throw new BadRequestException("Pasif kullanıcı se�ilemez.");
         }
 
         if (newAssistant.getRole() == null
                 || !RoleType.ASSISTANT.name().equals(newAssistant.getRole().getRoleName())) {
-            throw new BadRequestException("Yalnızca ASSISTANT rolündeki kullanıcılar atanabilir.");
+            throw new BadRequestException("Yalnızca ASSISTANT rol�ndeki kullanıcılar atanabilir.");
         }
 
         Integer courseId = assignment.getCourse().getCourseId();

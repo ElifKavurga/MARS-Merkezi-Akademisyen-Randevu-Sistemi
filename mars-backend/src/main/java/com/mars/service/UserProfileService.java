@@ -19,7 +19,7 @@ public class UserProfileService {
     @Transactional(readOnly = true)
     public UserProfileResponseDto getMyProfile(Integer userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("KullanÃ„Â±cÃ„Â± bulunamadÃ„Â±."));
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı."));
         return mapToDto(user);
     }
 

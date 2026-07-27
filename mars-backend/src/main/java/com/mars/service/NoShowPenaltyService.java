@@ -121,8 +121,8 @@ public class NoShowPenaltyService {
 
         // Publish No-Show Notification
         String nextProc = penaltyApplied 
-                ? "Mevcut ceza kurallarÃ„Â± kapsamÃ„Â±nda randevu almanÃ„Â±z geÃƒÂ§ici olarak kÃ„Â±sÃ„Â±tlanmÃ„Â±Ã…Å¸tÃ„Â±r."
-                : "Mevcut ceza kurallarÃ„Â± kapsamÃ„Â±nda takip edilmektedir.";
+                ? "Mevcut ceza kuralları kapsamında randevu almanız geçici olarak kısıtlanmıştır."
+                : "Mevcut ceza kuralları kapsamında takip edilmektedir.";
         try {
             noShowNotificationPublisher.publish(new NoShowNotificationRequest(
                     student.getUserId(),
@@ -149,7 +149,7 @@ public class NoShowPenaltyService {
                         student.getUserId(), // Using student ID as the reference as well
                         PenaltyNotificationEvent.APPLIED,
                         student.getFullName(),
-                        "No-Show limiti aÃ…Å¸Ã„Â±ldÃ„Â± (" + rule.getMaxNoShowCount() + " kez katÃ„Â±lÃ„Â±m saÃ„Å¸lanmadÃ„Â±)",
+                        "No-Show limiti aşıldı (" + rule.getMaxNoShowCount() + " kez katılım sağlanmadı)",
                         penaltyStatus.getRestrictionStartDate(),
                         penaltyStatus.getRestrictionEndDate(),
                         rule.getBanDurationDays()
@@ -194,7 +194,7 @@ public class NoShowPenaltyService {
                     status.getStudent().getUserId(),
                     PenaltyNotificationEvent.LIFTED,
                     status.getStudent().getFullName(),
-                    "Ceza sÃƒÂ¼resi doldu",
+                    "Ceza süresi doldu",
                     null,
                     null,
                     null

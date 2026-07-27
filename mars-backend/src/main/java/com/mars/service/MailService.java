@@ -110,7 +110,7 @@ public class MailService {
                 && hasText(subject) && hasText(content)) {
             return true;
         }
-        LOGGER.warn("Mail gönderilmedi: gönderen adresi veya zorunlu mail alanları eksik.");
+        LOGGER.warn("Mail günderilmedi: günderen adresi veya zorunlu mail alanları eksik.");
         return false;
     }
 
@@ -122,11 +122,11 @@ public class MailService {
         if (mailProperties.enabled()) {
             return false;
         }
-        LOGGER.debug("Mail gönderimi devre dışı bırakıldığı için e-posta gönderilmedi.");
+        LOGGER.debug("Mail günderimi devre dışı bırakıldığı için e-posta günderilmedi.");
         return true;
     }
 
     private void logFailure(Exception exception) {
-        LOGGER.error("Mail gönderilemedi. errorType={}", exception.getClass().getSimpleName());
+        LOGGER.error("Mail günderilemedi. errorType={}", exception.getClass().getSimpleName());
     }
 }

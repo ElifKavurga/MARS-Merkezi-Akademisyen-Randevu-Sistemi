@@ -20,7 +20,7 @@ public class LoginRequest {
     @Pattern(
             regexp = InstitutionalEmailValidator.INSTITUTIONAL_EMAIL_REGEX,
             flags = Pattern.Flag.CASE_INSENSITIVE,
-            message = "Geçerli bir kurumsal (@...edu.tr) e-posta adresi giriniz.")
+            message = "Ge�erli bir kurumsal (@...edu.tr) e-posta adresi giriniz.")
     private String institutionalEmail;
 
     @NotBlank(message = "Şifre zorunludur.")

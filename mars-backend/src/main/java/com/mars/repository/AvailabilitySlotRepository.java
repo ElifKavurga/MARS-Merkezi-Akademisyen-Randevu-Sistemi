@@ -127,13 +127,13 @@ public interface AvailabilitySlotRepository extends JpaRepository<AvailabilitySl
 
     /**
      * Öğrenci bookable-slot hesabı için şablonlar.
-     * Üst tarih sınırı yok: one-time için slotDate &gt;= from,
+     * �st tarih sınırı yok: one-time için slotDate &gt;= from,
      * recurring için endDate &gt;= from (hala aktif kural).
      * Occurrence genişletmesi serviste horizon ile sınırlanır.
      *
      * Randevu oluşturma sırasında yaratılan tekil occurrence slotları (recurrenceRule IS NULL)
-     * üzerinde aktif randevu varsa şablon listesinden hariç tutulur; aksi hâlde tekrarlayan
-     * şablonun genişlettiği candidate ile çakışarak duplicate gösterime yol açar.
+     * üzerinde aktif randevu varsa şablon listesinden hari� tutulur; aksi h�lde tekrarlayan
+     * şablonun genişlettiği candidate ile �akışarak duplicate g�sterime yol a�ar.
      */
     @Query("""
             SELECT s FROM AvailabilitySlot s
