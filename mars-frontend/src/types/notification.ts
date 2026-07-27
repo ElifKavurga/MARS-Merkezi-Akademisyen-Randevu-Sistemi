@@ -15,7 +15,11 @@ export type NotificationType =
   | 'WAITLIST_ADDED'
   | 'WAITLIST_TURN_AVAILABLE'
   | 'WAITLIST_REMOVED'
-  | 'WAITLIST_CANCELLED';
+  | 'WAITLIST_CANCELLED'
+  | 'NO_SHOW_RECORDED'
+  | 'PENALTY_APPLIED'
+  | 'PENALTY_LIFTED'
+  | 'SYSTEM';
 
 export type NotificationItem = {
   notificationId: number;

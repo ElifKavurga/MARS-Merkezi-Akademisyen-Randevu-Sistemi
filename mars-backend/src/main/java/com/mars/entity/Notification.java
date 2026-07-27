@@ -35,6 +35,9 @@ public class Notification {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(name = "user_id", insertable = false, updatable = false)
+    private Integer userId;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "notification_type", nullable = false, length = 64)
     private NotificationType notificationType;
@@ -49,9 +52,15 @@ public class Notification {
     @JoinColumn(name = "related_appointment_id")
     private Appointment relatedAppointment;
 
+    @Column(name = "related_appointment_id", insertable = false, updatable = false)
+    private Integer relatedAppointmentId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "related_delegation_id")
     private DelegationLog relatedDelegation;
+
+    @Column(name = "related_delegation_id", insertable = false, updatable = false)
+    private Integer relatedDelegationId;
 
     @Column(name = "is_read", nullable = false)
     private Boolean isRead;

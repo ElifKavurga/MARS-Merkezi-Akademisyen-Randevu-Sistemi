@@ -17,6 +17,7 @@ public class NotificationResponse {
     private String message;
     private Integer relatedAppointmentId;
     private Integer relatedDelegationId;
+    private String eventKey;
     private Boolean isRead;
     private LocalDateTime createdAt;
 }

@@ -6,9 +6,36 @@ export async function getMyNotifications(): Promise<NotificationItem[]> {
   return Array.isArray(data) ? data : [];
 }
 
+function buildFallbackPage(
+  notifications: NotificationItem[],
+  page: number,
+  size: number,
+): NotificationPage {
+  const safePage = Math.max(0, page);
+  const safeSize = Math.max(1, size);
+  const totalElements = notifications.length;
+  const totalPages = totalElements === 0 ? 0 : Math.ceil(totalElements / safeSize);
+  const start = safePage * safeSize;
+  const content = notifications.slice(start, start + safeSize);
+  return {
+    content,
+    page: safePage,
+    size: safeSize,
+    totalElements,
+    totalPages,
+    first: safePage === 0,
+    last: totalPages === 0 ? true : safePage >= totalPages - 1,
+  };
+}
+
 export async function getMyNotificationsPage(page: number, size: number): Promise<NotificationPage> {
-  const { data } = await apiClient.get<NotificationPage>('/notifications/page', { params: { page, size } });
-  return data;
+  try {
+    const { data } = await apiClient.get<NotificationPage>('/notifications/page', { params: { page, size } });
+    return data;
+  } catch {
+    const notifications = await getMyNotifications();
+    return buildFallbackPage(notifications, page, size);
+  }
 }
 
 export async function markNotificationAsRead(notificationId: number): Promise<NotificationItem> {

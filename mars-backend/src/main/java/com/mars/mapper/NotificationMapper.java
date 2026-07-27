@@ -38,14 +38,13 @@ public class NotificationMapper {
     public NotificationResponse toResponse(Notification notification) {
         return NotificationResponse.builder()
                 .notificationId(notification.getNotificationId())
-                .userId(notification.getUser().getUserId())
+                .userId(notification.getUserId())
                 .notificationType(notification.getNotificationType())
                 .title(notification.getTitle())
                 .message(notification.getMessage())
-                .relatedAppointmentId(notification.getRelatedAppointment() == null
-                        ? null : notification.getRelatedAppointment().getAppointmentId())
-                .relatedDelegationId(notification.getRelatedDelegation() == null
-                        ? null : notification.getRelatedDelegation().getDelegationId())
+                .relatedAppointmentId(notification.getRelatedAppointmentId())
+                .relatedDelegationId(notification.getRelatedDelegationId())
+                .eventKey(notification.getEventKey())
                 .isRead(notification.getIsRead())
                 .createdAt(notification.getCreatedAt())
                 .build();

@@ -72,6 +72,7 @@ public class EmailNotificationPreferenceService {
                     EmailNotificationCategory.WAITLIST;
             case NO_SHOW_RECORDED -> EmailNotificationCategory.NO_SHOW;
             case PENALTY_APPLIED, PENALTY_LIFTED -> EmailNotificationCategory.PENALTY;
+            case SYSTEM -> EmailNotificationCategory.SYSTEM_ANNOUNCEMENT;
         };
     }
 

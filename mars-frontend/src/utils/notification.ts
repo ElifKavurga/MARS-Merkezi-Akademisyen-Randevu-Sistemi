@@ -37,6 +37,15 @@ export function getNotificationVisual(type: NotificationType): NotificationVisua
   if (type === 'STUDENT_APPROVAL_PENDING') {
     return { icon: 'hourglass_top', iconClass: 'text-primary-container', containerClass: 'bg-primary-fixed' };
   }
+  if (type === 'NO_SHOW_RECORDED') {
+    return { icon: 'person_off', iconClass: 'text-error', containerClass: 'bg-error-container/60' };
+  }
+  if (type === 'PENALTY_APPLIED' || type === 'PENALTY_LIFTED') {
+    return { icon: 'gavel', iconClass: 'text-amber-700', containerClass: 'bg-amber-50' };
+  }
+  if (type === 'SYSTEM') {
+    return { icon: 'info', iconClass: 'text-primary-container', containerClass: 'bg-surface-container-high' };
+  }
   if (type.startsWith('DELEGATION_')) {
     return { icon: 'forward_to_inbox', iconClass: 'text-secondary', containerClass: 'bg-secondary-container/70' };
   }

@@ -20,5 +20,6 @@ public enum NotificationType {
     WAITLIST_CANCELLED,
     NO_SHOW_RECORDED,
     PENALTY_APPLIED,
-    PENALTY_LIFTED
+    PENALTY_LIFTED,
+    SYSTEM
 }
