@@ -142,13 +142,12 @@ export default function AcademicianCalendarPage({
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 p-4 sm:p-6 lg:p-8">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-headline-lg text-headline-lg text-on-background">{title}</h1>
-          
         </div>
-        <label className="flex flex-col gap-1.5 sm:min-w-[200px]">
+        <label className="flex flex-col gap-1 sm:min-w-[200px]">
           <span className="font-label-md text-label-md text-on-surface-variant">Filtre</span>
           {viewMode === 'calendar' ? (
             <select
@@ -183,7 +182,7 @@ export default function AcademicianCalendarPage({
         </label>
       </div>
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <StudentSegmentedTabs
           value={viewMode}
           options={VIEW_OPTIONS}
@@ -222,7 +221,7 @@ export default function AcademicianCalendarPage({
       </div>
 
       {includeAppointments && viewMode === 'calendar' ? (
-        <div className="flex flex-wrap items-center gap-4 rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 font-label-sm text-label-sm text-on-surface-variant">
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-outline-variant bg-surface-container-lowest px-3 py-2 font-label-sm text-label-sm text-on-surface-variant sm:px-4">
           <LegendItem
             color={CALENDAR_EVENT_COLORS.NORMAL_SOFT}
             borderColor={CALENDAR_EVENT_COLORS.NORMAL}

@@ -34,9 +34,10 @@ export function canDecideStaffAppointment(
 
 export function canRescheduleAcademicianAppointment(
   appointment: StaffAppointment,
+  scope: StaffAppointmentScope,
   user: AuthUser | null | undefined,
 ): boolean {
-  return isOwnedStaffAppointment(appointment, 'academician', user)
+  return isOwnedStaffAppointment(appointment, scope, user)
     && !['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(appointment.appointmentStatus);
 }
 
@@ -54,8 +55,9 @@ export function getDelegationUnavailableReason(
   user: AuthUser | null | undefined,
   hasActiveDelegation = false,
 ): string | null {
-  if (scope !== 'academician' || !isOwnedStaffAppointment(appointment, scope, user)) {
-    return 'Yalnızca randevunun ilgili akademisyeni bu işlemi yapabilir.';
+  if (!['academician', 'assistant'].includes(scope)
+    || !isOwnedStaffAppointment(appointment, scope, user)) {
+    return 'Yalnızca randevunun ilgili personeli bu işlemi yapabilir.';
   }
   if (appointment.appointmentStatus === 'COMPLETED') {
     return 'Tamamlanmış randevular devredilemez.';

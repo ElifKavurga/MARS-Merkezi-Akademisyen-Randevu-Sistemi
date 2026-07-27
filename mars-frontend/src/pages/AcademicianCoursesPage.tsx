@@ -7,7 +7,7 @@ import CourseCreateModal from '../components/CourseCreateModal';
 import CourseEditModal from '../components/CourseEditModal';
 import CourseStatusBadge from '../components/CourseStatusBadge';
 import Loading from '../components/Loading';
-import { FORM_FIELD_CLASS, FORM_SELECT_CLASS } from '../constants';
+import { FORM_FIELD_CLASS, FORM_SEARCH_ICON_CLASS, FORM_SELECT_CLASS } from '../constants';
 import {
   COURSE_MESSAGES,
   COURSE_SORT_FIELD,
@@ -276,7 +276,7 @@ export default function AcademicianCoursesPage() {
 
             <div className="relative">
               <span
-                className="pointer-events-none absolute inset-y-0 left-3 flex items-center material-symbols-outlined text-on-surface-variant text-[20px] leading-none"
+                className={FORM_SEARCH_ICON_CLASS}
                 aria-hidden="true"
               >
                 search

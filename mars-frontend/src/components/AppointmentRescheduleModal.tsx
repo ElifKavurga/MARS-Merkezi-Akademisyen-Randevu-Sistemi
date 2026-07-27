@@ -6,7 +6,7 @@ import {
   getStaffAppointmentRescheduleSlots,
   rescheduleStaffAppointment,
 } from '../services/appointmentService';
-import type { StaffAppointment } from '../types/appointment';
+import type { StaffAppointment, StaffAppointmentScope } from '../types/appointment';
 import type { StudentAvailableSlot } from '../types/studentAppointment';
 import { appointmentSlotSelectionKey } from '../utils/appointmentSlot';
 import AppointmentSlotPicker from './AppointmentSlotPicker';
@@ -16,6 +16,7 @@ import ModalShell from './ModalShell';
 type AppointmentRescheduleModalProps = {
   appointment: StaffAppointment | null;
   open: boolean;
+  scope?: StaffAppointmentScope;
   onClose: () => void;
   onSuccess: () => void;
 };
@@ -38,6 +39,7 @@ function durationMinutes(appointment: StaffAppointment): number {
 export default function AppointmentRescheduleModal({
   appointment,
   open,
+  scope = 'academician',
   onClose,
   onSuccess,
 }: AppointmentRescheduleModalProps) {
@@ -53,14 +55,14 @@ export default function AppointmentRescheduleModal({
     setLoading(true);
     setError(null);
     try {
-      setSlots(await getStaffAppointmentRescheduleSlots(appointment.appointmentId));
+      setSlots(await getStaffAppointmentRescheduleSlots(appointment.appointmentId, scope));
     } catch {
       setSlots([]);
       setError(STAFF_APPOINTMENT_MESSAGES.RESCHEDULE_LOAD_ERROR);
     } finally {
       setLoading(false);
     }
-  }, [appointment]);
+  }, [appointment, scope]);
 
   useEffect(() => {
     if (!open || !appointment) return;
@@ -85,13 +87,17 @@ export default function AppointmentRescheduleModal({
       const meetingType = selectedSlot.meetingType === 'BOTH'
         ? appointment.meetingType
         : selectedSlot.meetingType;
-      await rescheduleStaffAppointment(appointment.appointmentId, {
-        slotId: selectedSlot.slotId,
-        appointmentDate: selectedSlot.slotDate,
-        startTime: selectedSlot.startTime,
-        endTime: selectedSlot.endTime,
-        meetingType,
-      });
+      await rescheduleStaffAppointment(
+        appointment.appointmentId,
+        {
+          slotId: selectedSlot.slotId,
+          appointmentDate: selectedSlot.slotDate,
+          startTime: selectedSlot.startTime,
+          endTime: selectedSlot.endTime,
+          meetingType,
+        },
+        scope,
+      );
       onSuccess();
     } catch (err) {
       const backendMessage = isAxiosError(err) ? err.response?.data?.message : null;

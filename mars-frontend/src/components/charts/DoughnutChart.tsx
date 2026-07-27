@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ChartTooltip from './ChartTooltip';
 import EmptyChart from './EmptyChart';
 
 interface DataPoint {
@@ -13,34 +14,45 @@ export default function DoughnutChart({ data, onClick }: { data: DataPoint[], on
   if (data.length === 0 || data.every((d) => d.value === 0)) return <EmptyChart />;
 
   const total = data.reduce((s, d) => s + d.value, 0);
-  const R = 60, cx = 80, cy = 80, strokeWidthBase = 22;
+  const W = 160, H = 160, R = 60, cx = 80, cy = 80, strokeWidthBase = 22;
   const circumference = 2 * Math.PI * R;
   let offset = 0;
+  const segments = data.map((d) => {
+    const pct = d.value / total;
+    const dash = pct * circumference;
+    const dashOffset = circumference - offset * circumference;
+    const midAngle = (offset + pct / 2) * Math.PI * 2 - Math.PI / 2;
+    offset += pct;
+
+    return {
+      ...d,
+      dash,
+      dashOffset,
+      tooltipX: cx + Math.cos(midAngle) * (R + strokeWidthBase / 2),
+      tooltipY: cy + Math.sin(midAngle) * (R + strokeWidthBase / 2),
+    };
+  });
+  const hoveredSegment = hoverIndex === null ? null : segments[hoverIndex];
 
   return (
-    <div className="flex flex-col sm:flex-row items-center gap-6 animate-fade-in">
-      <div className="relative w-40 h-40 shrink-0">
-        <svg viewBox="0 0 160 160" className="w-full h-full drop-shadow-sm" aria-label="Halka grafik">
-          {data.map((d, i) => {
-            const pct = d.value / total;
-            const dash = pct * circumference;
-            const dashOffset = circumference - offset * circumference;
-            offset += pct;
-            
+    <div className="flex flex-col items-center gap-6 animate-fade-in sm:flex-row">
+      <div className="relative h-40 w-40 shrink-0">
+        <svg viewBox={`0 0 ${W} ${H}`} className="h-full w-full drop-shadow-sm" aria-label="Halka grafik">
+          {segments.map((d, i) => {
             const isHovered = hoverIndex === i;
             const isFaded = hoverIndex !== null && !isHovered;
 
             return (
               <circle
-                key={i}
+                key={d.label}
                 cx={cx}
                 cy={cy}
                 r={R}
                 fill="none"
                 stroke={d.color}
                 strokeWidth={isHovered ? strokeWidthBase + 4 : strokeWidthBase}
-                strokeDasharray={`${dash} ${circumference - dash}`}
-                strokeDashoffset={dashOffset}
+                strokeDasharray={`${d.dash} ${circumference - d.dash}`}
+                strokeDashoffset={d.dashOffset}
                 className={`transition-all duration-300 ease-in-out ${onClick ? 'cursor-pointer' : ''} ${
                   isFaded ? 'opacity-40' : 'opacity-100'
                 }`}
@@ -50,10 +62,12 @@ export default function DoughnutChart({ data, onClick }: { data: DataPoint[], on
                 }}
                 onMouseEnter={() => setHoverIndex(i)}
                 onMouseLeave={() => setHoverIndex(null)}
-                onClick={() => onClick && onClick(d.label, d.value)}
-              >
-                <title>{`${d.label}: ${d.value}`}</title>
-              </circle>
+                onFocus={() => setHoverIndex(i)}
+                onBlur={() => setHoverIndex(null)}
+                onClick={() => onClick?.(d.label, d.value)}
+                role={onClick ? 'button' : undefined}
+                tabIndex={onClick ? 0 : undefined}
+              />
             );
           })}
           <text x={cx} y={cy - 6} textAnchor="middle" fontSize="11" className="fill-on-surface-variant transition-colors" fontFamily="inherit">
@@ -63,27 +77,37 @@ export default function DoughnutChart({ data, onClick }: { data: DataPoint[], on
             {hoverIndex !== null ? data[hoverIndex].value : total}
           </text>
         </svg>
+        {hoveredSegment ? (
+          <ChartTooltip
+            label={hoveredSegment.label}
+            value={hoveredSegment.value}
+            x={hoveredSegment.tooltipX}
+            y={hoveredSegment.tooltipY}
+            width={W}
+            height={H}
+          />
+        ) : null}
       </div>
-      <ul className="flex flex-col gap-2 text-sm w-full">
-        {data.map((d, i) => {
+      <ul className="flex w-full flex-col gap-2 text-sm">
+        {segments.map((d, i) => {
           const isHovered = hoverIndex === i;
           const isFaded = hoverIndex !== null && !isHovered;
-          
+
           return (
             <li
-              key={i}
-              className={`flex items-center gap-2 p-1.5 rounded-md transition-all duration-200 ${onClick ? 'cursor-pointer' : ''} ${
-                isHovered ? 'bg-surface-container-high shadow-sm scale-[1.02]' : isFaded ? 'opacity-50' : 'hover:bg-surface-container'
+              key={d.label}
+              className={`flex items-center gap-2 rounded-md p-1.5 transition-all duration-200 ${onClick ? 'cursor-pointer' : ''} ${
+                isHovered ? 'scale-[1.02] bg-surface-container-high shadow-sm' : isFaded ? 'opacity-50' : 'hover:bg-surface-container'
               }`}
               onMouseEnter={() => setHoverIndex(i)}
               onMouseLeave={() => setHoverIndex(null)}
-              onClick={() => onClick && onClick(d.label, d.value)}
+              onClick={() => onClick?.(d.label, d.value)}
             >
-              <span 
-                className={`inline-block h-3.5 w-3.5 rounded-full shrink-0 transition-transform ${isHovered ? 'scale-110' : ''}`} 
-                style={{ background: d.color }} 
+              <span
+                className={`inline-block h-3.5 w-3.5 shrink-0 rounded-full transition-transform ${isHovered ? 'scale-110' : ''}`}
+                style={{ background: d.color }}
               />
-              <span className={`transition-colors ${isHovered ? 'text-on-surface font-medium' : 'text-on-surface-variant'}`}>
+              <span className={`transition-colors ${isHovered ? 'font-medium text-on-surface' : 'text-on-surface-variant'}`}>
                 {d.label}
               </span>
               <span className={`ml-auto font-semibold transition-colors ${isHovered ? 'text-primary' : 'text-on-surface'}`}>

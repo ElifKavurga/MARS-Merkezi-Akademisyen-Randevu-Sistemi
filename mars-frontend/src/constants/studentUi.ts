@@ -39,6 +39,8 @@ export const STUDENT_UI = {
     'inline-flex items-center gap-1 rounded font-label-md text-label-md text-primary no-underline transition-colors hover:text-on-background hover:no-underline focus:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim',
   SEARCH_INPUT_CLASS:
     'h-11 w-full min-w-0 border-0 bg-transparent py-0 font-body-md text-body-md text-on-surface outline-none placeholder:text-on-surface-variant/70',
+  SEARCH_ICON_CLASS:
+    'material-symbols-outlined flex h-5 w-5 shrink-0 items-center justify-center text-[20px] leading-none text-on-surface-variant',
   FILTER_CONTROL_CLASS:
     'h-11 w-full min-w-0 rounded-lg border border-outline-variant/80 bg-surface-container-lowest px-3 font-body-md text-body-md text-on-surface outline-none transition-colors focus:border-primary-fixed-dim focus:ring-2 focus:ring-primary-fixed-dim/25',
   SEARCH_FIELD_WRAP_CLASS:

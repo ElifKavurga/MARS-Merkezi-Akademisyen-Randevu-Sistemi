@@ -44,7 +44,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     List<User> findActiveUsersByRoleName(@Param("roleName") String roleName);
 
     @Query("""
-            SELECT u FROM User u
+            SELECT DISTINCT u FROM User u
             JOIN FETCH u.role r
             JOIN FETCH u.department
             WHERE r.roleName IN :roleNames

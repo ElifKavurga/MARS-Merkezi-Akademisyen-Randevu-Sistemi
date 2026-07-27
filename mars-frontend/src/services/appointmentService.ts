@@ -63,9 +63,10 @@ export async function rejectStaffAppointment(
 
 export async function getStaffAppointmentRescheduleSlots(
   appointmentId: number,
+  scope: StaffAppointmentScope = 'academician',
 ): Promise<StudentAvailableSlot[]> {
   const { data } = await apiClient.get<StudentAvailableSlot[]>(
-    `/academician/appointments/${appointmentId}/reschedule-slots`,
+    `/${scope}/appointments/${appointmentId}/reschedule-slots`,
   );
   return Array.isArray(data) ? data : [];
 }
@@ -73,9 +74,10 @@ export async function getStaffAppointmentRescheduleSlots(
 export async function rescheduleStaffAppointment(
   appointmentId: number,
   payload: AppointmentReschedulePayload,
+  scope: StaffAppointmentScope = 'academician',
 ): Promise<AppointmentRescheduleApproval> {
   const { data } = await apiClient.patch<AppointmentRescheduleApproval>(
-    `/academician/appointments/${appointmentId}/reschedule`,
+    `/${scope}/appointments/${appointmentId}/reschedule`,
     payload,
   );
   return data;

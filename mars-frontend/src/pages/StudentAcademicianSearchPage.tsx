@@ -13,7 +13,7 @@ import {
 } from '../constants/studentAcademician';
 import { studentAcademicianProfilePath } from '../constants/routes';
 import { STUDENT_UI } from '../constants/studentUi';
-import { FORM_FIELD_CLASS, FORM_SELECT_CLASS } from '../constants/ui';
+import { FORM_FIELD_CLASS, FORM_SEARCH_ICON_CLASS, FORM_SELECT_CLASS } from '../constants/ui';
 import { useToast } from '../hooks/useToast';
 import {
   getStudentAcademicianTitles,
@@ -217,7 +217,7 @@ export default function StudentAcademicianSearchPage() {
               {STUDENT_ACADEMICIAN_MESSAGES.SEARCH_LABEL}
             </label>
             <span
-              className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant"
+              className={FORM_SEARCH_ICON_CLASS}
               aria-hidden="true"
             >
               search

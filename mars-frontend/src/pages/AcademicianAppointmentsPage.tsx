@@ -13,7 +13,7 @@ import {
 import { academicianAppointmentDetailPath } from '../constants/routes';
 import { STUDENT_UI } from '../constants/studentUi';
 import { getStaffAppointments } from '../services/appointmentService';
-import type { AppointmentStatus, StaffAppointment } from '../types/appointment';
+import type { AppointmentStatus, StaffAppointment, StaffAppointmentScope } from '../types/appointment';
 
 // ─── Tab tanımları ────────────────────────────────────────────────────────────
 type AcademicianTab = AppointmentStatus;
@@ -65,10 +65,19 @@ function sortAppointments(list: StaffAppointment[], key: SortKey): StaffAppointm
 }
 
 // ─── Bileşen ──────────────────────────────────────────────────────────────────
-const SCOPE = 'academician' as const;
 const EMPTY_LIST: StaffAppointment[] = [];
 
-export default function AcademicianAppointmentsPage() {
+type AcademicianAppointmentsPageProps = {
+  scope?: StaffAppointmentScope;
+  detailPath?: (appointmentId: number | string) => string;
+  searchInputId?: string;
+};
+
+export default function AcademicianAppointmentsPage({
+  scope = 'academician',
+  detailPath = academicianAppointmentDetailPath,
+  searchInputId = 'acad-appt-search',
+}: AcademicianAppointmentsPageProps) {
   const [activeTab, setActiveTab] = useState<AcademicianTab>('PENDING');
   const [byTab, setByTab] = useState<Partial<Record<AcademicianTab, StaffAppointment[]>>>({});
   const [loadingByTab, setLoadingByTab] = useState<Partial<Record<AcademicianTab, boolean>>>({ PENDING: true });
@@ -88,7 +97,7 @@ export default function AcademicianAppointmentsPage() {
     setLoadingByTab((p) => ({ ...p, [tab]: true }));
     setErrorByTab((p) => ({ ...p, [tab]: null }));
     try {
-      const data = await getStaffAppointments(SCOPE, tab);
+      const data = await getStaffAppointments(scope, tab);
       if (reqIdRef.current[tab] !== reqId) return;
       setByTab((p) => ({ ...p, [tab]: data }));
     } catch (err) {
@@ -103,7 +112,7 @@ export default function AcademicianAppointmentsPage() {
         setLoadingByTab((p) => ({ ...p, [tab]: false }));
       }
     }
-  }, []);
+  }, [scope]);
 
   useEffect(() => {
     void loadTab('PENDING');
@@ -121,8 +130,8 @@ export default function AcademicianAppointmentsPage() {
 
   // ── Detay ───────────────────────────────────────────────────────────────────
   const handleDetailClick = useCallback((appointmentId: number) => {
-    navigate(academicianAppointmentDetailPath(appointmentId));
-  }, [navigate]);
+    navigate(detailPath(appointmentId));
+  }, [detailPath, navigate]);
 
   // ── Filtreleme & sıralama ────────────────────────────────────────────────────
   const rawList = byTab[activeTab] ?? EMPTY_LIST;
@@ -169,7 +178,7 @@ export default function AcademicianAppointmentsPage() {
             </span>
             <input
               type="search"
-              id="acad-appt-search"
+              id={searchInputId}
               className={STUDENT_UI.SEARCH_INPUT_CLASS}
               placeholder={STAFF_APPOINTMENT_MESSAGES.SEARCH_PLACEHOLDER}
               value={search}

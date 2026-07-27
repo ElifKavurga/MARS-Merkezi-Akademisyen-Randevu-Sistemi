@@ -217,7 +217,7 @@ export default function StudentAppointmentsPage() {
           <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:gap-2.5">
             <div className={`${STUDENT_UI.SEARCH_FIELD_WRAP_CLASS} lg:min-w-[14rem] lg:flex-[1.35]`}>
               <span
-                className="material-symbols-outlined shrink-0 text-[20px] leading-none text-on-surface-variant"
+                className={STUDENT_UI.SEARCH_ICON_CLASS}
                 aria-hidden
               >
                 search

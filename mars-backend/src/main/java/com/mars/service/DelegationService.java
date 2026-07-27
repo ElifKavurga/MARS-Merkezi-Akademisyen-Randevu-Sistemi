@@ -73,13 +73,13 @@ public class DelegationService {
 
     @Transactional(readOnly = true)
     public List<DelegationTargetResponse> getDelegationTargets(Integer appointmentId) {
-        User academician = getCurrentAcademician();
-        Appointment appointment = getOwnedAppointment(appointmentId, academician);
+        User delegatingStaff = getCurrentDelegatingStaff();
+        Appointment appointment = getOwnedAppointment(appointmentId, delegatingStaff);
         validateAppointmentStatus(appointment.getAppointmentStatus());
 
-        return userRepository.findActiveUsersByRoleNamesExcludingUser(
-                        TARGET_ROLES, academician.getUserId())
+        return findDelegationTargetUsers(delegatingStaff)
                 .stream()
+                .filter(user -> !Objects.equals(user.getUserId(), delegatingStaff.getUserId()))
                 .map(user -> toTargetResponse(appointment, user))
                 .filter(Objects::nonNull)
                 .toList();
@@ -87,7 +87,7 @@ public class DelegationService {
 
     @Transactional
     public DelegationResponse createDelegation(CreateDelegationRequest request) {
-        User academician = getCurrentAcademician();
+        User delegatingStaff = getCurrentDelegatingStaff();
         if (request.getAppointmentId() == null) {
             throw new BadRequestException(DelegationMessages.APPOINTMENT_REQUIRED);
         }
@@ -96,12 +96,12 @@ public class DelegationService {
             throw new BadRequestException(DelegationMessages.TARGET_REQUIRED);
         }
 
-        Appointment appointment = getOwnedAppointmentForUpdate(request.getAppointmentId(), academician);
+        Appointment appointment = getOwnedAppointmentForUpdate(request.getAppointmentId(), delegatingStaff);
         validateAppointmentStatus(appointment.getAppointmentStatus());
 
         User target = userRepository.findByIdWithRoleAndDepartment(targetUserId)
                 .orElseThrow(() -> new ResourceNotFoundException(DelegationMessages.TARGET_NOT_FOUND));
-        validateTarget(target, academician);
+        validateTarget(target, delegatingStaff);
 
         boolean relatedCourseAssistant = isRelatedCourseAssistant(appointment, target);
         boolean approvalRequired = !relatedCourseAssistant;
@@ -135,7 +135,7 @@ public class DelegationService {
             throw new ConflictException(DelegationMessages.TARGET_SLOT_UNAVAILABLE);
         }
 
-        DelegationLog log = delegationMapper.toEntity(appointment, academician, target, now);
+        DelegationLog log = delegationMapper.toEntity(appointment, delegatingStaff, target, now);
         log.setTargetSlot(targetTemplate);
         log.setTargetSlotDate(selectedSlot.getSlotDate());
         log.setTargetStartTime(selectedSlot.getStartTime());
@@ -620,6 +620,34 @@ public class DelegationService {
                 || Objects.equals(target.getUserId(), academician.getUserId())) {
             throw new BadRequestException(DelegationMessages.INVALID_TARGET);
         }
+        if (RoleType.ASSISTANT.name().equals(academician.getRole().getRoleName())) {
+            boolean assistantTarget = RoleType.ASSISTANT.name().equals(target.getRole().getRoleName());
+            boolean sameDepartment = academician.getDepartment() != null
+                    && target.getDepartment() != null
+                    && Objects.equals(
+                            academician.getDepartment().getDepartmentId(),
+                            target.getDepartment().getDepartmentId());
+            if (!assistantTarget || !sameDepartment) {
+                throw new BadRequestException(DelegationMessages.INVALID_TARGET);
+            }
+        }
+    }
+
+    private List<User> findDelegationTargetUsers(User delegatingStaff) {
+        if (RoleType.ASSISTANT.name().equals(delegatingStaff.getRole().getRoleName())) {
+            Integer departmentId = delegatingStaff.getDepartment() == null
+                    ? null
+                    : delegatingStaff.getDepartment().getDepartmentId();
+            if (departmentId == null) {
+                return List.of();
+            }
+            return userRepository.findActiveUsersByDepartmentIdAndRoleNames(
+                    departmentId,
+                    Set.of(RoleType.ASSISTANT.name()));
+        }
+        return userRepository.findActiveUsersByRoleNamesExcludingUser(
+                TARGET_ROLES,
+                delegatingStaff.getUserId());
     }
 
     private boolean isRelatedCourseAssistant(Appointment appointment, User target) {
@@ -674,12 +702,18 @@ public class DelegationService {
         }
     }
 
-    private User getCurrentAcademician() {
-        return getCurrentUserWithRole(RoleType.ACADEMICIAN, DelegationMessages.ONLY_ACADEMICIAN);
-    }
-
-    private User getCurrentAssistant() {
-        return getCurrentUserWithRole(RoleType.ASSISTANT, DelegationMessages.ONLY_ASSISTANT);
+    private User getCurrentDelegatingStaff() {
+        User user = getAuthenticatedUser();
+        if (user.getRole() == null) {
+            throw new AccessDeniedException(DelegationMessages.ONLY_ACADEMICIAN);
+        }
+        String roleName = user.getRole().getRoleName();
+        if (!RoleType.ACADEMICIAN.name().equals(roleName)
+                && !RoleType.HOD.name().equals(roleName)
+                && !RoleType.ASSISTANT.name().equals(roleName)) {
+            throw new AccessDeniedException(DelegationMessages.ONLY_ACADEMICIAN);
+        }
+        return user;
     }
 
     private User getCurrentDecisionUser() {

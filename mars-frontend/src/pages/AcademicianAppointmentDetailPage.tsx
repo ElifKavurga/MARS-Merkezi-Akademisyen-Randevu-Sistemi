@@ -18,7 +18,7 @@ import { useToast } from '../hooks/useToast';
 import { useAuth } from '../hooks/useAuth';
 import { approveStaffAppointment, getStaffAppointment, rejectStaffAppointment } from '../services/appointmentService';
 import { getSentDelegations } from '../services/delegationService';
-import type { StaffAppointment } from '../types/appointment';
+import type { StaffAppointment, StaffAppointmentScope } from '../types/appointment';
 import {
   canDecideStaffAppointment,
   canRescheduleAcademicianAppointment,
@@ -83,7 +83,15 @@ function InfoCard({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-export default function AcademicianAppointmentDetailPage() {
+type AcademicianAppointmentDetailPageProps = {
+  scope?: StaffAppointmentScope;
+  backTo?: string;
+};
+
+export default function AcademicianAppointmentDetailPage({
+  scope = 'academician',
+  backTo = ROUTES.ACADEMICIAN_APPOINTMENTS,
+}: AcademicianAppointmentDetailPageProps) {
   const { appointmentId: appointmentIdParam } = useParams<{ appointmentId: string }>();
   const appointmentId = Number(appointmentIdParam);
   const isValidId = Number.isInteger(appointmentId) && appointmentId > 0;
@@ -124,7 +132,7 @@ export default function AcademicianAppointmentDetailPage() {
     setLoading(true);
     setError(null);
     try {
-      setAppointment(await getStaffAppointment('academician', appointmentId));
+      setAppointment(await getStaffAppointment(scope, appointmentId));
     } catch (err) {
       setAppointment(null);
       setError(
@@ -137,14 +145,14 @@ export default function AcademicianAppointmentDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [appointmentId, isValidId]);
+  }, [appointmentId, isValidId, scope]);
 
   useEffect(() => {
     void loadAppointment();
   }, [loadAppointment]);
 
   useEffect(() => {
-    if (!appointment || user?.role !== 'ACADEMICIAN') {
+    if (!appointment || !isOwnedStaffAppointment(appointment, scope, user)) {
       setHasActiveDelegation(false);
       return;
     }
@@ -167,10 +175,10 @@ export default function AcademicianAppointmentDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [appointment, user?.role]);
+  }, [appointment, scope, user]);
 
   const handleApproveClick = () => {
-    if (!appointment || !canDecideStaffAppointment(appointment, 'academician', user) || isApproving || isRejecting) {
+    if (!appointment || !canDecideStaffAppointment(appointment, scope, user) || isApproving || isRejecting) {
       return;
     }
     setApprovalError(null);
@@ -178,7 +186,7 @@ export default function AcademicianAppointmentDetailPage() {
   };
 
   const handleRejectClick = () => {
-    if (!appointment || !canDecideStaffAppointment(appointment, 'academician', user) || isApproving || isRejecting) {
+    if (!appointment || !canDecideStaffAppointment(appointment, scope, user) || isApproving || isRejecting) {
       return;
     }
     setRejectionError(null);
@@ -194,7 +202,7 @@ export default function AcademicianAppointmentDetailPage() {
     setApprovalError(null);
     try {
       const updatedAppointment = await approveStaffAppointment(
-        'academician',
+        scope,
         appointment.appointmentId,
       );
       setAppointment(updatedAppointment);
@@ -226,7 +234,7 @@ export default function AcademicianAppointmentDetailPage() {
     setRejectionError(null);
     try {
       const updatedAppointment = await rejectStaffAppointment(
-        'academician',
+        scope,
         appointment.appointmentId,
       );
       setAppointment(updatedAppointment);
@@ -258,31 +266,31 @@ export default function AcademicianAppointmentDetailPage() {
     ? `${formatTime(appointment.startTime)} – ${formatTime(appointment.endTime)}`
     : '';
   const isOwnedAppointment = appointment !== null
-    && isOwnedStaffAppointment(appointment, 'academician', user);
+    && isOwnedStaffAppointment(appointment, scope, user);
   const canDecide = appointment !== null
     && isOwnedAppointment
-    && canDecideStaffAppointment(appointment, 'academician', user);
+    && canDecideStaffAppointment(appointment, scope, user);
   const canReschedule = appointment !== null
-    && canRescheduleAcademicianAppointment(appointment, user);
+    && canRescheduleAcademicianAppointment(appointment, scope, user);
   const delegationUnavailableReason = appointment
     ? checkingDelegation
       ? 'Randevunun devredilebilirlik durumu kontrol ediliyor.'
       : getDelegationUnavailableReason(
           appointment,
-          'academician',
+          scope,
           user,
           hasActiveDelegation,
         )
     : null;
   const canDelegate = appointment !== null
     && delegationUnavailableReason === null
-    && canDelegateAppointment(appointment, 'academician', user);
+    && canDelegateAppointment(appointment, scope, user);
   const showDelegateAction = isOwnedAppointment;
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <StudentBackLink to={ROUTES.ACADEMICIAN_APPOINTMENTS} label="Geri Dön" />
+        <StudentBackLink to={backTo} label="Geri Dön" />
         {appointment ? (
           <div className="flex flex-wrap gap-2">
             {isOwnedAppointment ? (
@@ -361,7 +369,7 @@ export default function AcademicianAppointmentDetailPage() {
         <StudentErrorState
           message={error}
           onRetry={isValidId ? () => void loadAppointment() : undefined}
-          secondaryAction={{ label: 'Geri Dön', to: ROUTES.ACADEMICIAN_APPOINTMENTS }}
+          secondaryAction={{ label: 'Geri Dön', to: backTo }}
         />
       ) : appointment ? (
         <div className="flex flex-col gap-3 md:gap-4">
@@ -477,6 +485,7 @@ export default function AcademicianAppointmentDetailPage() {
       <AppointmentRescheduleModal
         appointment={appointment}
         open={showReschedule && canReschedule}
+        scope={scope}
         onClose={() => setShowReschedule(false)}
         onSuccess={() => {
           setShowReschedule(false);

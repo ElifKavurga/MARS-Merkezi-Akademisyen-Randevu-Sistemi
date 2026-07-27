@@ -10,6 +10,7 @@ import {
   academicianIncomingDelegationDetailPath,
   assistantDelegationDetailPath,
 } from '../constants/routes';
+import { ROLES } from '../constants/roles';
 import { FORM_FIELD_CLASS, FORM_SELECT_CLASS } from '../constants/ui';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
@@ -79,7 +80,18 @@ export default function DelegationManagementPage() {
   }, [toast]);
 
   useEffect(() => {
-    if (user?.role === 'ACADEMICIAN' || user?.role === 'ASSISTANT') void load();
+    if (
+      user?.role === ROLES.ACADEMICIAN
+      || user?.role === ROLES.HOD
+      || user?.role === ROLES.ASSISTANT
+    ) {
+      void load();
+      return;
+    }
+    if (user) {
+      setLoading(false);
+      setError('Randevu devri taleplerini görüntüleme yetkiniz bulunmuyor.');
+    }
   }, [load, user]);
 
   useEffect(() => {
@@ -147,7 +159,7 @@ export default function DelegationManagementPage() {
   };
 
   const openDetail = (delegationId: number) => {
-    navigate(user?.role === 'ASSISTANT'
+    navigate(user?.role === ROLES.ASSISTANT
       ? assistantDelegationDetailPath(delegationId)
       : academicianIncomingDelegationDetailPath(delegationId));
   };
@@ -195,7 +207,16 @@ export default function DelegationManagementPage() {
         {loading ? (
           <div className="flex justify-center py-16"><Loading label="Talepler yükleniyor..." /></div>
         ) : error ? (
-          <p className="px-6 py-12 text-center text-error" role="alert">{error}</p>
+          <div className="px-6 py-12 text-center" role="alert">
+            <p className="font-body-md text-body-md text-error">{error}</p>
+            <button
+              type="button"
+              className="mt-4 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2 font-label-md text-label-md text-primary transition-colors hover:bg-surface-container"
+              onClick={() => void load()}
+            >
+              Tekrar Dene
+            </button>
+          </div>
         ) : filtered.length === 0 ? (
           <p className="px-6 py-14 text-center text-on-surface-variant">
             {tab === 'incoming' ? 'Gelen randevu devri talebi bulunmuyor.' : 'Gönderilen randevu devri talebi bulunmuyor.'}

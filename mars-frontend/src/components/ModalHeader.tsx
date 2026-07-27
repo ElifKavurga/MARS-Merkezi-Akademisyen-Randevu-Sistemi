@@ -2,7 +2,7 @@ type ModalHeaderProps = {
   titleId: string;
   icon: string;
   title: string;
-  description: string;
+  description?: string;
 };
 
 export default function ModalHeader({ titleId, icon, title, description }: ModalHeaderProps) {
@@ -18,7 +18,9 @@ export default function ModalHeader({ titleId, icon, title, description }: Modal
         >
           {title}
         </h3>
-        <p className="font-body-md text-body-md text-on-surface-variant mt-1">{description}</p>
+        {description ? (
+          <p className="font-body-md text-body-md text-on-surface-variant mt-1">{description}</p>
+        ) : null}
       </div>
     </div>
   );

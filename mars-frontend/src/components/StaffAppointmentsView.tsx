@@ -23,7 +23,6 @@ import DelegationModal from './DelegationModal';
 import Loading from './Loading';
 import StaffAppointmentDetailModal from './StaffAppointmentDetailModal';
 import StudentSegmentedTabs from './StudentSegmentedTabs';
-import { STUDENT_UI } from '../constants/studentUi';
 import { canDecideStaffAppointment } from '../utils/staffAppointmentPermissions';
 
 type AppointmentView = 'PENDING' | 'ALL';
@@ -31,6 +30,15 @@ type AppointmentAction = {
   type: 'approve' | 'reject';
   appointment: StaffAppointment;
 };
+
+const TABLE_HEAD_CELL_CLASS =
+  'whitespace-nowrap px-3 py-2.5 text-left font-label-md text-label-md font-semibold text-on-surface-variant';
+const TABLE_CELL_CLASS = 'px-3 py-2.5 font-body-md text-sm text-on-background';
+const COMPACT_BUTTON_BASE_CLASS =
+  'inline-flex h-8 shrink-0 items-center justify-center gap-1 rounded-lg px-2.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim disabled:cursor-not-allowed disabled:opacity-50';
+const COMPACT_PRIMARY_BUTTON_CLASS = `${COMPACT_BUTTON_BASE_CLASS} bg-primary-container text-on-primary hover:opacity-90`;
+const COMPACT_SECONDARY_BUTTON_CLASS = `${COMPACT_BUTTON_BASE_CLASS} border border-outline-variant bg-surface text-primary no-underline hover:bg-surface-container`;
+const COMPACT_DANGER_BUTTON_CLASS = `${COMPACT_BUTTON_BASE_CLASS} border border-error/30 bg-error-container/40 text-error hover:bg-error-container/70`;
 
 function formatDate(date: string): string {
   return new Intl.DateTimeFormat('tr-TR', {
@@ -260,10 +268,7 @@ export default function StaffAppointmentsView({
                     'Durum',
                     '',
                   ].map((label) => (
-                    <th
-                      key={label || 'actions'}
-                      className="px-5 py-4 text-left font-label-md text-label-md font-semibold text-on-surface-variant"
-                    >
+                    <th key={label || 'actions'} className={TABLE_HEAD_CELL_CLASS}>
                       {label}
                     </th>
                   ))}
@@ -278,36 +283,36 @@ export default function StaffAppointmentsView({
                       key={appointment.appointmentId}
                       className="border-b border-outline-variant/40 transition-colors hover:bg-surface-container/30"
                     >
-                      <td className="px-5 py-4 font-label-md text-label-md font-semibold text-on-background">
+                      <td className="px-3 py-2.5 font-label-md text-label-md font-semibold text-on-background">
                         {appointment.studentName}
                       </td>
-                      <td className="px-5 py-4 font-body-md text-body-md text-on-background">
+                      <td className={TABLE_CELL_CLASS}>
                         {formatDate(appointment.appointmentDate)}
                       </td>
-                      <td className="whitespace-nowrap px-5 py-4 font-body-md text-body-md text-on-background">
+                      <td className={`${TABLE_CELL_CLASS} whitespace-nowrap`}>
                         {formatTime(appointment.startTime)} - {formatTime(appointment.endTime)}
                       </td>
-                      <td className="px-5 py-4 font-body-md text-body-md text-on-background">
+                      <td className={TABLE_CELL_CLASS}>
                         {appointment.categoryName}
                       </td>
-                      <td className="px-5 py-4 font-body-md text-body-md text-on-background">
+                      <td className={`${TABLE_CELL_CLASS} max-w-[220px]`}>
                         {appointment.courseName
                           ? `${appointment.courseCode ?? ''} ${appointment.courseName}`.trim()
                           : '-'}
                       </td>
-                      <td className="px-5 py-4 font-body-md text-body-md text-on-background">
+                      <td className={TABLE_CELL_CLASS}>
                         {getMeetingTypeLabel(appointment.meetingType)}
                       </td>
-                      <td className="px-5 py-4">
+                      <td className="px-3 py-2.5">
                         <AppointmentStatusBadge status={appointment.appointmentStatus} />
                       </td>
-                      <td className="px-5 py-4 text-right">
-                        <div className="flex flex-wrap items-center justify-end gap-2">
+                      <td className="whitespace-nowrap px-3 py-2.5 text-right">
+                        <div className="inline-flex flex-nowrap items-center justify-end gap-1.5">
                           {showDecisionActions ? (
                             <>
                               <button
                                 type="button"
-                                className={`${STUDENT_UI.PRIMARY_BUTTON_CLASS} py-1.5 px-3 text-[13px] gap-1.5`}
+                                className={COMPACT_PRIMARY_BUTTON_CLASS}
                                 disabled={actionLoading}
                                 onClick={() =>
                                   openActionConfirmation('approve', appointment)
@@ -318,7 +323,7 @@ export default function StaffAppointmentsView({
                               </button>
                               <button
                                 type="button"
-                                className={`${STUDENT_UI.DANGER_BUTTON_CLASS} py-1.5 px-3 text-[13px] gap-1.5`}
+                                className={COMPACT_DANGER_BUTTON_CLASS}
                                 disabled={actionLoading}
                                 onClick={() =>
                                   openActionConfirmation('reject', appointment)
@@ -332,7 +337,7 @@ export default function StaffAppointmentsView({
                           {showDelegate ? (
                             <button
                               type="button"
-                              className={`${STUDENT_UI.SECONDARY_BUTTON_CLASS} py-1.5 px-3 text-[13px] gap-1.5`}
+                              className={COMPACT_SECONDARY_BUTTON_CLASS}
                               disabled={actionLoading}
                               onClick={() => openDelegation(appointment)}
                             >
@@ -342,7 +347,7 @@ export default function StaffAppointmentsView({
                           ) : null}
                           <button
                             type="button"
-                            className={`${STUDENT_UI.SECONDARY_BUTTON_CLASS} py-1.5 px-3 text-[13px] gap-1.5`}
+                            className={COMPACT_SECONDARY_BUTTON_CLASS}
                             disabled={detailLoadingId !== null || actionLoading}
                             onClick={() =>
                               void handleShowDetail(appointment.appointmentId)

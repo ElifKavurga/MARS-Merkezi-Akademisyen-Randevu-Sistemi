@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import DashboardWelcomeBanner from '../components/DashboardWelcomeBanner';
 import StudentEmptyState from '../components/StudentEmptyState';
 import StudentLoadingState from '../components/StudentLoadingState';
-import StudentPageHeader from '../components/StudentPageHeader';
 import { STUDENT_UI } from '../constants/studentUi';
 import { ROUTES } from '../constants/routes';
 import { useAuth } from '../hooks/useAuth';
@@ -83,11 +82,6 @@ export default function StudentDashboard() {
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
-      <StudentPageHeader
-        title={STUDENT_UI.DASHBOARD_TITLE}
-        description={STUDENT_UI.DASHBOARD_SUBTITLE}
-      />
-
       <DashboardWelcomeBanner
         fullName={user.fullName}
         description={STUDENT_UI.DASHBOARD_SUBTITLE}

@@ -134,7 +134,7 @@ export default function NotificationCard({ notification, compact = false, onRead
           </div>
         )}
 
-        {notification.notificationType === 'STUDENT_APPROVAL_PENDING' && notification.relatedDelegationId && !notification.isRead && !actionResult && (
+        {notification.notificationType === 'STUDENT_APPROVAL_PENDING' && notification.relatedDelegationId && !actionResult && (
           <div className="mt-3 flex gap-2">
             <button
               type="button"

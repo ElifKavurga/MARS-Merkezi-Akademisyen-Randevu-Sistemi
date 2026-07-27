@@ -93,7 +93,8 @@ export const APPOINTMENT_STATUS_LABELS: Record<string, string> = {
 };
 
 export function getAppointmentStatusLabel(status: string): string {
-  return APPOINTMENT_STATUS_LABELS[status] ?? status;
+  const normalizedStatus = status.trim().toUpperCase();
+  return APPOINTMENT_STATUS_LABELS[normalizedStatus] ?? status;
 }
 
 export function getMeetingTypeLabel(meetingType: string): string {

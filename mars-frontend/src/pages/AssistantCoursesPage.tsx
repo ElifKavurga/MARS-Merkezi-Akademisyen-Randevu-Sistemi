@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { isAxiosError } from 'axios';
 import Loading from '../components/Loading';
 import { ASSISTANT_COURSE_MESSAGES } from '../constants/assistantCourse';
-import { FORM_FIELD_CLASS, FORM_SELECT_CLASS } from '../constants/ui';
+import { FORM_FIELD_CLASS, FORM_SEARCH_ICON_CLASS, FORM_SELECT_CLASS } from '../constants/ui';
 import { useToast } from '../hooks/useToast';
 import { getAssistantCourses } from '../services/assistantCourseService';
 import type { AssistantAssignedCourse } from '../types/assistantCourse';
@@ -73,7 +73,7 @@ export default function AssistantCoursesPage() {
         <div className="flex flex-col gap-3 border-b border-outline-variant p-4 sm:flex-row">
           <div className="relative min-w-0 flex-1">
             <span
-              className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant"
+              className={FORM_SEARCH_ICON_CLASS}
               aria-hidden="true"
             >
               search

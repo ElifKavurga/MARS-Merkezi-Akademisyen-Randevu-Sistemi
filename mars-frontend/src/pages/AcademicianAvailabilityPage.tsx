@@ -9,7 +9,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import CourseStatCard from '../components/CourseStatCard';
 import Loading from '../components/Loading';
 import RecurrenceRuleEditModal from '../components/RecurrenceRuleEditModal';
-import { FORM_FIELD_CLASS, FORM_SELECT_CLASS } from '../constants';
+import { FORM_FIELD_CLASS, FORM_SEARCH_ICON_CLASS, FORM_SELECT_CLASS } from '../constants';
 import {
   AVAILABILITY_MESSAGES,
   AVAILABILITY_SORT_FIELD,
@@ -343,7 +343,7 @@ export default function AcademicianAvailabilityPage({
 
             <div className="relative sm:col-span-2 xl:col-span-2">
               <span
-                className="pointer-events-none absolute inset-y-0 left-3 flex items-center material-symbols-outlined text-on-surface-variant text-[20px] leading-none"
+                className={FORM_SEARCH_ICON_CLASS}
                 aria-hidden="true"
               >
                 search

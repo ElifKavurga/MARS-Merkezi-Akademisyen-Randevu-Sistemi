@@ -4,7 +4,9 @@ import {
   DELEGATION_MESSAGES,
   formatCourseLabel,
 } from '../constants/delegation';
+import { ROLES } from '../constants/roles';
 import { FORM_FIELD_CLASS } from '../constants/ui';
+import { useAuth } from '../hooks/useAuth';
 import { createDelegation, getDelegationTargets } from '../services/delegationService';
 import type { StaffAppointment } from '../types/appointment';
 import type { DelegationTarget } from '../types/delegation';
@@ -44,6 +46,7 @@ export default function DelegationModal({
   onClose,
   onSuccess,
 }: DelegationModalProps) {
+  const { user } = useAuth();
   const [targets, setTargets] = useState<DelegationTarget[]>([]);
   const [targetUserId, setTargetUserId] = useState<number>(0);
   const [roleFilter, setRoleFilter] = useState<'ALL' | 'ACADEMICIAN' | 'ASSISTANT'>('ALL');
@@ -161,6 +164,17 @@ export default function DelegationModal({
 
   const selectedTarget = targets.find((item) => item.userId === targetUserId);
   const courseLabel = formatCourseLabel(appointment);
+  const assistantFlow = user?.role === ROLES.ASSISTANT;
+  const roleFilterOptions = assistantFlow
+    ? ([
+        ['ALL', 'Tümü'],
+        ['ASSISTANT', 'Asistan'],
+      ] as const)
+    : ([
+        ['ALL', 'Tümü'],
+        ['ACADEMICIAN', 'Akademisyen'],
+        ['ASSISTANT', 'Asistan'],
+      ] as const);
   const handleRoleFilterChange = (value: 'ALL' | 'ACADEMICIAN' | 'ASSISTANT') => {
     setRoleFilter(value);
     window.requestAnimationFrame(() => searchInputRef.current?.focus());
@@ -189,7 +203,7 @@ export default function DelegationModal({
           titleId="delegation-modal-title"
           icon="swap_horiz"
           title={DELEGATION_MESSAGES.MODAL_TITLE}
-          description={DELEGATION_MESSAGES.MODAL_DESCRIPTION}
+          description={assistantFlow ? undefined : DELEGATION_MESSAGES.MODAL_DESCRIPTION}
         />
 
         <dl className="mt-4 space-y-3">
@@ -202,6 +216,7 @@ export default function DelegationModal({
             </dd>
           </div>
 
+          {!assistantFlow ? (
           <div className="rounded-lg border border-outline-variant bg-surface-container-lowest p-4">
             <dt className="font-label-sm text-label-sm text-on-surface-variant">
               {DELEGATION_MESSAGES.SUMMARY_LABEL}
@@ -216,6 +231,7 @@ export default function DelegationModal({
                 : ''}
             </dd>
           </div>
+          ) : null}
         </dl>
 
         <fieldset className="mt-4 space-y-3 text-left">
@@ -223,11 +239,7 @@ export default function DelegationModal({
             Devredilecek kişi
           </legend>
           <div className="flex flex-wrap gap-2" aria-label="Personel türü">
-            {([
-              ['ALL', 'Tümü'],
-              ['ACADEMICIAN', 'Akademisyen'],
-              ['ASSISTANT', 'Asistan'],
-            ] as const).map(([value, label]) => (
+            {roleFilterOptions.map(([value, label]) => (
               <button key={value} type="button" onClick={() => handleRoleFilterChange(value)}
                 aria-pressed={roleFilter === value}
                 className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${

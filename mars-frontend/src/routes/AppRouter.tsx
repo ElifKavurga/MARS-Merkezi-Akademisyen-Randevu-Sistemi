@@ -133,6 +133,15 @@ export default function AppRouter() {
               element={<AssistantAppointmentsPage />}
             />
             <Route
+              path={ROUTES.ASSISTANT_APPOINTMENT_DETAIL}
+              element={
+                <AcademicianAppointmentDetailPage
+                  scope="assistant"
+                  backTo={ROUTES.ASSISTANT_APPOINTMENTS}
+                />
+              }
+            />
+            <Route
               path={ROUTES.ASSISTANT_INCOMING_DELEGATIONS}
               element={<DelegationManagementPage />}
             />
