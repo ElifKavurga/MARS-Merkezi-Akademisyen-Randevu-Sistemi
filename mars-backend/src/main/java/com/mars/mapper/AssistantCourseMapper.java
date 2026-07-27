@@ -19,7 +19,7 @@ public class AssistantCourseMapper {
                 .courseCode(course.getCourseCode())
                 .courseName(course.getCourseName())
                 .academicTerm(course.getAcademicTerm())
-                .ownerAcademicianName(owner != null ? owner.getFullName() : null)
+                .ownerAcademicianName(owner != null ? owner.getDisplayName() : null)
                 .build();
     }
 }

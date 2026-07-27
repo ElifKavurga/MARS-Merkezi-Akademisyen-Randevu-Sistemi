@@ -19,14 +19,14 @@ public class UserProfileService {
     @Transactional(readOnly = true)
     public UserProfileResponseDto getMyProfile(Integer userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı."));
+                .orElseThrow(() -> new ResourceNotFoundException("KullanÄ±cÄ± bulunamadÄ±."));
         return mapToDto(user);
     }
 
     private UserProfileResponseDto mapToDto(User user) {
         return UserProfileResponseDto.builder()
                 .userId(user.getUserId())
-                .fullName(user.getFullName())
+                .fullName(user.getDisplayName())
                 .institutionalEmail(user.getInstitutionalEmail())
                 .role(user.getRole().getRoleName())
                 .department(user.getDepartment().getDepartmentName())

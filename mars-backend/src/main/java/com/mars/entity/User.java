@@ -57,4 +57,11 @@ public class User {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    public String getDisplayName() {
+        if (academicTitle != null && !academicTitle.trim().isEmpty()) {
+            return academicTitle + " " + fullName;
+        }
+        return fullName;
+    }
 }

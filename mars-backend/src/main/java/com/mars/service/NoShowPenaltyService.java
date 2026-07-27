@@ -121,15 +121,15 @@ public class NoShowPenaltyService {
 
         // Publish No-Show Notification
         String nextProc = penaltyApplied 
-                ? "Mevcut ceza kuralları kapsamında randevu almanız geçici olarak kısıtlanmıştır."
-                : "Mevcut ceza kuralları kapsamında takip edilmektedir.";
+                ? "Mevcut ceza kurallarÄ± kapsamÄ±nda randevu almanÄ±z geÃ§ici olarak kÄ±sÄ±tlanmÄ±ÅŸtÄ±r."
+                : "Mevcut ceza kurallarÄ± kapsamÄ±nda takip edilmektedir.";
         try {
             noShowNotificationPublisher.publish(new NoShowNotificationRequest(
                     student.getUserId(),
                     appointment.getStaff().getUserId(),
                     appointmentId,
-                    student.getFullName(),
-                    appointment.getStaff().getFullName(),
+                    student.getDisplayName(),
+                    appointment.getStaff().getDisplayName(),
                     appointment.getSlot().getSlotDate(),
                     appointment.getSlot().getStartTime(),
                     appointment.getSlot().getEndTime(),
@@ -148,8 +148,8 @@ public class NoShowPenaltyService {
                         student.getUserId(),
                         student.getUserId(), // Using student ID as the reference as well
                         PenaltyNotificationEvent.APPLIED,
-                        student.getFullName(),
-                        "No-Show limiti aşıldı (" + rule.getMaxNoShowCount() + " kez katılım sağlanmadı)",
+                        student.getDisplayName(),
+                        "No-Show limiti aÅŸÄ±ldÄ± (" + rule.getMaxNoShowCount() + " kez katÄ±lÄ±m saÄŸlanmadÄ±)",
                         penaltyStatus.getRestrictionStartDate(),
                         penaltyStatus.getRestrictionEndDate(),
                         rule.getBanDurationDays()
@@ -193,8 +193,8 @@ public class NoShowPenaltyService {
                     status.getStudent().getUserId(),
                     status.getStudent().getUserId(),
                     PenaltyNotificationEvent.LIFTED,
-                    status.getStudent().getFullName(),
-                    "Ceza süresi doldu",
+                    status.getStudent().getDisplayName(),
+                    "Ceza sÃ¼resi doldu",
                     null,
                     null,
                     null

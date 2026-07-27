@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 public class AuthenticationService {
 
     private static final String RESET_PASSWORD_SUCCESS_MESSAGE =
-            "Şifre sıfırlama bağlantısı kurumsal e-posta adresinize gönderildi.";
+            "Åifre sÄ±fÄ±rlama baÄŸlantÄ±sÄ± kurumsal e-posta adresinize gÃ¶nderildi.";
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -47,7 +47,7 @@ public class AuthenticationService {
                 .token(token)
                 .type("Bearer")
                 .userId(user.getUserId())
-                .fullName(user.getFullName())
+                .fullName(user.getDisplayName())
                 .institutionalEmail(user.getInstitutionalEmail())
                 .role(user.getRole().getRoleName())
                 .department(user.getDepartment().getDepartmentName())
@@ -61,10 +61,10 @@ public class AuthenticationService {
                 : request.getInstitutionalEmail().trim();
 
         if (!InstitutionalEmailValidator.isValid(email)) {
-            throw new BadRequestException("Geçerli bir kurumsal (@...edu.tr) e-posta adresi giriniz.");
+            throw new BadRequestException("GeÃ§erli bir kurumsal (@...edu.tr) e-posta adresi giriniz.");
         }
 
-        // Dummy akış: gerçek e-posta gönderilmez. Kullanıcı var/yok ayırt edilmez.
+        // Dummy akÄ±ÅŸ: gerÃ§ek e-posta gÃ¶nderilmez. KullanÄ±cÄ± var/yok ayÄ±rt edilmez.
         return ResetPasswordResponse.builder()
                 .message(RESET_PASSWORD_SUCCESS_MESSAGE)
                 .build();

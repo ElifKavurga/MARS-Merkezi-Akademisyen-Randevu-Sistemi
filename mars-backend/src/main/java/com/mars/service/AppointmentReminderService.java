@@ -64,7 +64,7 @@ public class AppointmentReminderService {
         try {
             sendIfDue(appointment, recipient, now);
         } catch (RuntimeException ex) {
-            LOGGER.error("Randevu hatırlatma işlemi tamamlanamadı. appointmentId={}, errorType={}",
+            LOGGER.error("Randevu hatÄ±rlatma iÅŸlemi tamamlanamadÄ±. appointmentId={}, errorType={}",
                     appointment.getAppointmentId(), ex.getClass().getSimpleName());
         }
     }
@@ -129,8 +129,8 @@ public class AppointmentReminderService {
         String course = appointment.getCourse() == null ? null : "%s - %s".formatted(
                 appointment.getCourse().getCourseCode(), appointment.getCourse().getCourseName());
         return new AppointmentReminderMailContext(
-                recipient.getInstitutionalEmail(), recipient.getFullName(),
-                appointment.getStudent().getFullName(), appointment.getStaff().getFullName(),
+                recipient.getInstitutionalEmail(), recipient.getDisplayName(),
+                appointment.getStudent().getDisplayName(), appointment.getStaff().getDisplayName(),
                 appointment.getSlot().getSlotDate(), appointment.getSlot().getStartTime(),
                 appointment.getSlot().getEndTime(), meetingType(appointment.getMeetingType()),
                 appointment.getCategory().getCategoryName(), course, type);
@@ -138,23 +138,23 @@ public class AppointmentReminderService {
 
     private TemplateMailRequest toMailRequest(AppointmentReminderMailContext context) {
         boolean oneHour = context.reminderType() == AppointmentReminderType.ONE_HOUR;
-        String title = oneHour ? "Randevunuz 1 Saat Sonra Başlıyor" : "MARS Randevu Hatırlatması";
+        String title = oneHour ? "Randevunuz 1 Saat Sonra BaÅŸlÄ±yor" : "MARS Randevu HatÄ±rlatmasÄ±";
         String content = oneHour
-                ? "Yaklaşan randevunuz bir saat içinde başlayacaktır. Lütfen randevu saatini kaçırmamak için hazırlığınızı tamamlayınız."
-                : "Yaklaşan randevunuzu hatırlatmak isteriz. Lütfen randevu tarih ve saatini kontrol ediniz.";
+                ? "YaklaÅŸan randevunuz bir saat iÃ§inde baÅŸlayacaktÄ±r. LÃ¼tfen randevu saatini kaÃ§Ä±rmamak iÃ§in hazÄ±rlÄ±ÄŸÄ±nÄ±zÄ± tamamlayÄ±nÄ±z."
+                : "YaklaÅŸan randevunuzu hatÄ±rlatmak isteriz. LÃ¼tfen randevu tarih ve saatini kontrol ediniz.";
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("details", mailDetails.builder()
-                .add("Hatırlatma Alıcısı", context.recipientName())
-                .add("Öğrenci", context.studentName())
+                .add("HatÄ±rlatma AlÄ±cÄ±sÄ±", context.recipientName())
+                .add("Ã–ÄŸrenci", context.studentName())
                 .add("Akademisyen / Personel", context.staffName())
                 .add("Randevu Tarihi", context.appointmentDate())
                 .addTimeRange("Randevu Saati", context.startTime(), context.endTime())
-                .add("Görüşme Türü", context.meetingType())
+                .add("GÃ¶rÃ¼ÅŸme TÃ¼rÃ¼", context.meetingType())
                 .add("Kategori", context.categoryName())
                 .add("Ders", context.course())
                 .build());
         parameters.put("showSubtitle", true);
-        parameters.put("subtitle", oneHour ? "Randevunuz çok yakında başlayacak." : "Randevunuza 24 saat kaldı.");
+        parameters.put("subtitle", oneHour ? "Randevunuz Ã§ok yakÄ±nda baÅŸlayacak." : "Randevunuza 24 saat kaldÄ±.");
         parameters.put("showStatus", true);
         parameters.put("statusText", oneHour ? "1 SAAT KALDI" : "24 SAAT KALDI");
         parameters.put("statusColor", "#1d4ed8");
@@ -172,6 +172,6 @@ public class AppointmentReminderService {
         if (MeetingType.ONLINE.name().equals(value)) {
             return "Online";
         }
-        return MeetingType.FACE_TO_FACE.name().equals(value) ? "Yüz Yüze" : null;
+        return MeetingType.FACE_TO_FACE.name().equals(value) ? "YÃ¼z YÃ¼ze" : null;
     }
 }

@@ -22,7 +22,7 @@ public class UserMapper {
     public UserListResponse toUserListResponse(User user) {
         return UserListResponse.builder()
                 .userId(user.getUserId())
-                .fullName(user.getFullName())
+                .fullName(user.getDisplayName())
                 .institutionalEmail(user.getInstitutionalEmail())
                 .role(user.getRole().getRoleName())
                 .department(user.getDepartment().getDepartmentName())
@@ -34,7 +34,7 @@ public class UserMapper {
     public UserOptionResponseDto toUserOptionResponse(User user) {
         return UserOptionResponseDto.builder()
                 .userId(user.getUserId())
-                .fullName(user.getFullName())
+                .fullName(user.getDisplayName())
                 .institutionalEmail(user.getInstitutionalEmail())
                 .departmentName(user.getDepartment().getDepartmentName())
                 .build();
@@ -43,7 +43,7 @@ public class UserMapper {
     public StudentAcademicianResponseDto toStudentAcademicianResponse(User user) {
         return StudentAcademicianResponseDto.builder()
                 .userId(user.getUserId())
-                .fullName(user.getFullName())
+                .fullName(user.getDisplayName())
                 .academicTitle(user.getAcademicTitle())
                 .departmentName(user.getDepartment().getDepartmentName())
                 .institutionalEmail(user.getInstitutionalEmail())
@@ -66,7 +66,7 @@ public class UserMapper {
             List<StudentAcademicianCourseDto> courses) {
         return StudentAcademicianDetailResponseDto.builder()
                 .userId(user.getUserId())
-                .fullName(user.getFullName())
+                .fullName(user.getDisplayName())
                 .academicTitle(user.getAcademicTitle())
                 .departmentName(user.getDepartment().getDepartmentName())
                 .institutionalEmail(user.getInstitutionalEmail())
@@ -82,7 +82,7 @@ public class UserMapper {
     public UserResponse toUserResponse(User user) {
         return UserResponse.builder()
                 .userId(user.getUserId())
-                .fullName(user.getFullName())
+                .fullName(user.getDisplayName())
                 .institutionalEmail(user.getInstitutionalEmail())
                 .role(user.getRole().getRoleName())
                 .department(user.getDepartment().getDepartmentName())
