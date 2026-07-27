@@ -7,12 +7,12 @@ public final class AppointmentMessages {
     public static final String SLOT_NOT_FOUND = "Ofis saati bulunamadı.";
     public static final String CATEGORY_NOT_FOUND = "Randevu kategorisi bulunamadı.";
     public static final String COURSE_REQUIRED = "Bu kategori için ders seçimi zorunludur.";
-    public static final String COURSE_NOT_ALLOWED = "Bu kategori için ders se�ilemez.";
+    public static final String COURSE_NOT_ALLOWED = "Bu kategori için ders seçilemez.";
     public static final String COURSE_NOT_FOUND = "Ders bulunamadı.";
     public static final String COURSE_STAFF_MISMATCH =
-            "Se�ilen ders, ofis saatine ait akademisyene ait olmalıdır.";
+            "Seçilen ders, ofis saatine ait akademisyene ait olmalıdır.";
     public static final String SLOT_BLOCKED = "Engellenmiş ofis saati için randevu talebi oluşturulamaz.";
-    public static final String SLOT_PAST = "Ge�miş ofis saati için randevu talebi oluşturulamaz.";
+    public static final String SLOT_PAST = "Geçmiş ofis saati için randevu talebi oluşturulamaz.";
     public static final String SLOT_TOO_SOON =
             "Randevu, sistem saatinden en az 30 dakika sonrasına oluşturulabilir.";
     public static final String SLOT_TOO_FAR =
@@ -24,17 +24,17 @@ public final class AppointmentMessages {
     public static final String STAFF_NOT_ACCEPTING =
             "Bu akademisyen şu an yeni randevu kabul etmiyor.";
     public static final String STAFF_NOT_BOOKABLE =
-            "Se�ilen ofis saati randevu alınabilir bir akademisyene ait olmalıdır.";
+            "Seçilen ofis saati randevu alınabilir bir akademisyene ait olmalıdır.";
     public static final String SLOT_TAKEN = "Bu ofis saati başka bir Öğrenci tarafından alınmıştır.";
     public static final String STUDENT_RESTRICTED =
             "Aktif cezanız bulunduğu için yeni randevu talebi oluşturamazsınız.";
     public static final String TIME_OVERLAP =
             "Aynı saat aralığında başka bir randevu talebiniz bulunmaktadır.";
-    public static final String COURSE_INACTIVE = "Se�ilen ders aktif değil.";
-    public static final String MEETING_TYPE_REQUIRED = "G�r�şme tipi seçimi zorunludur.";
-    public static final String INVALID_MEETING_TYPE = "Ge�ersiz gör�şme tipi.";
+    public static final String COURSE_INACTIVE = "Seçilen ders aktif değil.";
+    public static final String MEETING_TYPE_REQUIRED = "Görüşme tipi seçimi zorunludur.";
+    public static final String INVALID_MEETING_TYPE = "Geçersiz görüşme tipi.";
     public static final String MEETING_TYPE_NOT_ALLOWED =
-            "Se�ilen gör�şme tipi bu ofis saati için uygun değildir.";
+            "Seçilen görüşme tipi bu ofis saati için uygun değildir.";
     public static final String ONLY_STUDENT = "Randevu talebi yalnızca Öğrenciler tarafından oluşturulabilir.";
     public static final String ONLY_ASSISTANT =
             "Bu randevu bilgileri yalnızca asistanlar tarafından görüntülenebilir.";
@@ -49,8 +49,8 @@ public final class AppointmentMessages {
             "Yalnızca bekleyen veya onaylanmış randevular iptal edilebilir.";
     public static final String CANCEL_ALREADY_CANCELLED = "Randevu zaten iptal edilmiş.";
     public static final String CANCEL_PAST =
-            "Ge�miş tarihli randevular iptal edilemez.";
-    public static final String INVALID_STATUS = "Ge�ersiz randevu durumu.";
+            "Geçmiş tarihli randevular iptal edilemez.";
+    public static final String INVALID_STATUS = "Geçersiz randevu durumu.";
     public static final String ALREADY_APPROVED = "Randevu zaten onaylanmış.";
     public static final String ALREADY_REJECTED = "Randevu zaten reddedilmiş.";
     public static final String NOT_PENDING =

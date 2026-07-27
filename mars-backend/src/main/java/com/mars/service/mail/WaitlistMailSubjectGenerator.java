@@ -10,7 +10,7 @@ public class WaitlistMailSubjectGenerator {
         return switch (event) {
             case ADDED -> "MARS Bekleme Listesi Kaydınız Oluşturuldu";
             case TURN_AVAILABLE -> "MARS Bekleme Listesinde Sıranız Geldi";
-            case REMOVED -> "MARS Bekleme Listesinden �ıkarıldınız";
+            case REMOVED -> "MARS Bekleme Listesinden Çıkarıldınız";
             case CANCELLED -> "MARS Bekleme Listesi Kaydınız İptal Edildi";
         };
     }

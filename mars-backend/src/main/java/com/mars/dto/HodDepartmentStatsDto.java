@@ -19,7 +19,7 @@ public class HodDepartmentStatsDto {
     /** Randevu kategori dağılımı */
     private List<CategoryCount> categoryDistribution;
 
-    /** Son 7 günl�k randevu yoğunluğu */
+    /** Son 7 günlük randevu yoğunluğu */
     private List<DayCount> weeklyTrend;
 
     /** Son 12 aylık randevu dağılımı */

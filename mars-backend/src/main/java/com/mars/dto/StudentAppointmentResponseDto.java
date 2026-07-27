@@ -32,9 +32,9 @@ public class StudentAppointmentResponseDto {
     private String meetingType;
     private String appointmentStatus;
     private LocalDateTime createdAt;
-    /** Y�z y�ze gör�şmede ofis bilgisi (henüz User�da yoksa null). */
+    /** Yüz yüze görüşmede ofis bilgisi (henüz User'da yoksa null). */
     private String officeName;
-    /** Y�z y�ze gör�şmede bina/konum bilgisi (henüz User�da yoksa null). */
+    /** Yüz yüze görüşmede bina/konum bilgisi (henüz User'da yoksa null). */
     private String officeLocation;
     private Boolean isDelegated;
     private String delegatedFromStaffName;

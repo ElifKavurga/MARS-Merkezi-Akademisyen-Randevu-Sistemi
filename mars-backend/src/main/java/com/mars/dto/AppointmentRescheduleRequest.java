@@ -17,7 +17,7 @@ import lombok.Setter;
 public class AppointmentRescheduleRequest {
 
     @NotNull(message = "Ofis saati seçimi zorunludur.")
-    @Positive(message = "Ge�erli bir ofis saati seçilmelidir.")
+    @Positive(message = "Geçerli bir ofis saati seçilmelidir.")
     private Integer slotId;
 
     @NotNull(message = "Randevu tarihi zorunludur.")

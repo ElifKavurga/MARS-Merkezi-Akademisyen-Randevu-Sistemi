@@ -22,11 +22,11 @@ public class NoShowNotificationPublisher {
     private final PublisherMailDetails mailDetails;
 
     // TODO Sprint No-Show: AppointmentService içindeki gelecekteki No-Show durum
-    // ge�işi ve ceza değerlendirmesi tamamlandıktan sonra bu metot �ağrılmalıdır.
+    // geçişi ve ceza değerlendirmesi tamamlandıktan sonra bu metot çağrılmalıdır.
     public List<NotificationResponse> publish(NoShowNotificationRequest request) {
         return List.of(
                 publishFor(request, request.studentUserId(), subjectGenerator.studentSubject(),
-                        "Randevuya katılım g�stermediğiniz için kayıt No-Show olarak işlendi. "
+                        "Randevuya katılım göstermediğiniz için kayıt No-Show olarak işlendi. "
                                 + safeNextProcess(request.nextProcessInformation()),
                         "Randevunuz No-Show olarak kaydedildi."),
                 publishFor(request, request.staffUserId(), subjectGenerator.staffSubject(),
@@ -59,13 +59,13 @@ public class NoShowNotificationPublisher {
                         .addTimeRange("Randevu Saati", request.startTime(), request.endTime())
                         .add("Kategori", request.categoryName())
                         .add("Ders", request.course())
-                        .add("Sonraki Süre�", request.nextProcessInformation())
+                        .add("Sonraki Süreç", request.nextProcessInformation())
                         .build())
                 .build());
     }
 
     private String safeNextProcess(String value) {
         return value == null || value.isBlank()
-                ? "Sonraki süre� mevcut ceza kurallarına göre değerlendirilecektir." : value;
+                ? "Sonraki süreç mevcut ceza kurallarına göre değerlendirilecektir." : value;
     }
 }

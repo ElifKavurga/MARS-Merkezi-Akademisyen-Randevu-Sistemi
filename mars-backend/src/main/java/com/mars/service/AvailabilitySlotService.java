@@ -42,8 +42,8 @@ import com.mars.exception.ResourceNotFoundException;
 import com.mars.mapper.AvailabilitySlotMapper;
 import com.mars.repository.AppointmentRepository;
 import com.mars.repository.AppointmentRescheduleRequestRepository;
-import com.mars.repository.DelegationLogRepository;
 import com.mars.repository.AvailabilitySlotRepository;
+import com.mars.repository.DelegationLogRepository;
 import com.mars.repository.OutOfOfficePeriodRepository;
 import com.mars.repository.WaitlistEntryRepository;
 import com.mars.security.CustomUserDetails;
@@ -146,13 +146,11 @@ public class AvailabilitySlotService {
             throw new BadRequestException("Akademisyen seçimi zorunludur.");
         }
         if (durationMinutes == null || durationMinutes < 1) {
-            throw new BadRequestException("Ge�erli bir gör�şme süresi zorunludur.");
+            throw new BadRequestException("Geçerli bir görüşme süresi zorunludur.");
         }
 
         LocalDateTime now = LocalDateTime.now(APP_ZONE);
         LocalDate today = now.toLocalDate();
-        // Regresyon d�zeltmesi: today+14 sert kesimi, OOO sonrası uygun haftalık
-        // occurrence'ları (�r. 6 Ağustos+) yanlışlıkla eliyordu. D�nem ufku geri.
         LocalDate rangeEnd = AcademicTermCalendar.resolveBookableHorizonEnd(today);
         LocalDateTime earliestBookable = now.plusMinutes(AppointmentConstraints.MINIMUM_BOOKING_NOTICE_MINUTES);
 
@@ -345,7 +343,6 @@ public class AvailabilitySlotService {
         }
 
         if (!RepeatType.WEEKLY.name().equalsIgnoreCase(rule.getRepeatType())) {
-            // Sistem yalnızca WEEKLY destekler (RecurrenceRuleService); sessizce boş d�nme.
             log.warn(
                     "available-slots slotId={} unsupported repeatType={} (only WEEKLY is expanded)",
                     slot.getSlotId(),

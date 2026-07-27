@@ -18,19 +18,19 @@ public final class DelegationMessages {
     public static final String ONLY_STUDENT =
             "Randevu devri onayı yalnızca ilgili Öğrenci tarafından verilebilir.";
     public static final String HISTORY_ACCESS_DENIED =
-            "Randevu devri ge�mişi yalnızca akademisyen veya asistan tarafından görüntülenebilir.";
+            "Randevu devri geçmişi yalnızca akademisyen veya asistan tarafından görüntülenebilir.";
     public static final String APPOINTMENT_NOT_FOUND = "Randevu bulunamadı.";
     public static final String DELEGATION_NOT_FOUND = "Randevu devri kaydı bulunamadı.";
-    public static final String INVALID_DELEGATION_ID = "Ge�ersiz delegasyon kimliği.";
+    public static final String INVALID_DELEGATION_ID = "Geçersiz delegasyon kimliği.";
     public static final String ACCESS_DENIED = "Bu delegasyon kaydına erişim yetkiniz yok.";
     public static final String OWNERSHIP_DENIED =
             "Yalnızca kendi randevularınız için delegasyon başlatabilirsiniz.";
     public static final String ASSISTANT_NOT_FOUND = "Asistan bulunamadı.";
     public static final String ASSISTANT_INACTIVE = "Pasif kullanıcıya delegasyon yapılamaz.";
     public static final String ASSISTANT_ROLE_REQUIRED =
-            "Delegasyon yalnızca ASSISTANT rol�ndeki kullanıcılara yapılabilir.";
+            "Delegasyon yalnızca ASSISTANT rolündeki kullanıcılara yapılabilir.";
     public static final String ASSISTANT_NOT_ASSIGNED =
-            "Se�ilen asistan, randevuya bağlı derse atanmış olmalıdır.";
+            "Seçilen asistan, randevuya bağlı derse atanmış olmalıdır.";
     public static final String PENDING_EXISTS =
             "Bu randevu için bekleyen bir randevu devri zaten bulunmaktadır.";
     public static final String DECISION_ACCESS_DENIED =
@@ -46,7 +46,7 @@ public final class DelegationMessages {
     public static final String STUDENT_APPROVAL_EXPIRED =
             "Randevu devri için iki saatlik Öğrenci onay süresi dolmuştur.";
     public static final String INVALID_STATUS_TRANSITION =
-            "Randevu devri için geçersiz durum ge�işi.";
+            "Randevu devri için geçersiz durum geçişi.";
 
     private DelegationMessages() {
     }

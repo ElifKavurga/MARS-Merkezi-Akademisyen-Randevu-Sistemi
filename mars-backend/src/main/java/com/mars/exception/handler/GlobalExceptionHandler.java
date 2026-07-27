@@ -54,7 +54,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleTypeMismatch(
             MethodArgumentTypeMismatchException ex,
             WebRequest request) {
-        return build(HttpStatus.BAD_REQUEST, "Ge�ersiz istek parametresi.", request);
+        return build(HttpStatus.BAD_REQUEST, "Geçersiz istek parametresi.", request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -65,7 +65,7 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.toMap(
                         FieldError::getField,
                         fieldError -> fieldError.getDefaultMessage() == null
-                                ? "Ge�ersiz değer"
+                                ? "Geçersiz değer"
                                 : fieldError.getDefaultMessage(),
                         (first, second) -> first,
                         LinkedHashMap::new));

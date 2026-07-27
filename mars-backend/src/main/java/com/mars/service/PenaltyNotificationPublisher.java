@@ -21,7 +21,7 @@ public class PenaltyNotificationPublisher {
     private final PublisherMailDetails mailDetails;
 
     // TODO Sprint Penalty: gelecekteki PenaltyService ceza uygulama ve ceza kaldırma
-    // işlemleri kalıcı hale getirildikten sonra bu metot �ağrılmalıdır.
+    // işlemleri kalıcı hale getirildikten sonra bu metot çağrılmalıdır.
     public NotificationResponse publish(PenaltyNotificationRequest request) {
         boolean applied = request.event() == PenaltyNotificationEvent.APPLIED;
         String subject = subjectGenerator.subject(request.event());

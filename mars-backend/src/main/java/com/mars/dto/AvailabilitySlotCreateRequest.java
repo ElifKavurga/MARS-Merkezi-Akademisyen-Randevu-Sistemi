@@ -27,9 +27,9 @@ public class AvailabilitySlotCreateRequest {
     /** Tek seferlik ofis saati tarihi. */
     private LocalDate slotDate;
 
-    /** Tekrarlayan ofis saati günleri (Pazartesi=1 � Cuma=5). */
+    /** Tekrarlayan ofis saati günleri (Pazartesi=1 - Cuma=5). */
     @Size(max = 5, message = "En fazla beş gün seçilebilir.")
-    private List<@NotNull @Min(value = 1, message = "Ge�ersiz gün.") @Max(value = 5, message = "Ge�ersiz gün.") Integer> daysOfWeek;
+    private List<@NotNull @Min(value = 1, message = "Geçersiz gün.") @Max(value = 5, message = "Geçersiz gün.") Integer> daysOfWeek;
 
     @NotNull(message = "Başlangıç saati zorunludur.")
     private LocalTime startTime;
@@ -37,12 +37,12 @@ public class AvailabilitySlotCreateRequest {
     @NotNull(message = "Bitiş saati zorunludur.")
     private LocalTime endTime;
 
-    /** TERM_END | UNTIL_DATE � yalnızca RECURRING iken anlamlıdır. */
+    /** TERM_END | UNTIL_DATE - yalnızca RECURRING iken anlamlıdır. */
     private String recurrenceEndMode;
 
-    /** UNTIL_DATE se�ildiğinde zorunludur. */
+    /** UNTIL_DATE seçildiğinde zorunludur. */
     private LocalDate recurrenceEndDate;
 
-    /** FACE_TO_FACE | ONLINE | BOTH � varsayılan FACE_TO_FACE. */
+    /** FACE_TO_FACE | ONLINE | BOTH - varsayılan FACE_TO_FACE. */
     private String meetingType;
 }

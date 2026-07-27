@@ -37,7 +37,7 @@ public class CreateDelegationRequest {
     @NotNull(message = "Hedef bitiş saati zorunludur.")
     private java.time.LocalTime targetEndTime;
 
-    @Size(max = 500, message = "A�ıklama en fazla 500 karakter olabilir.")
+    @Size(max = 500, message = "Açıklama en fazla 500 karakter olabilir.")
     private String description;
 
     public Integer resolveTargetUserId() {

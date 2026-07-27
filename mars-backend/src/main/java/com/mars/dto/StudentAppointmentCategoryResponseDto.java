@@ -15,7 +15,7 @@ public class StudentAppointmentCategoryResponseDto {
 
     private Integer categoryId;
     private String categoryName;
-    /** Modelde a�ıklama alanı yok; ileride eklenebilir. */
+    /** Modelde açıklama alanı yok; ileride eklenebilir. */
     private String description;
     private Integer durationMinutes;
     private String categoryGroup;
