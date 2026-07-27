@@ -1,11 +1,18 @@
 import type { AuthUser } from '../types/auth';
 import type { StaffAppointment, StaffAppointmentScope } from '../types/appointment';
+import { ROLES } from '../constants/roles';
 
 function hasScopeRole(
   scope: StaffAppointmentScope,
   user: AuthUser | null | undefined,
 ): boolean {
-  return Boolean(user && user.role === scope.toUpperCase());
+  if (!user) {
+    return false;
+  }
+  if (scope === 'academician') {
+    return user.role === ROLES.ACADEMICIAN || user.role === ROLES.HOD;
+  }
+  return user.role === scope.toUpperCase();
 }
 
 export function isOwnedStaffAppointment(

@@ -257,7 +257,10 @@ export default function AcademicianAppointmentDetailPage() {
   const timeLabel = appointment
     ? `${formatTime(appointment.startTime)} – ${formatTime(appointment.endTime)}`
     : '';
+  const isOwnedAppointment = appointment !== null
+    && isOwnedStaffAppointment(appointment, 'academician', user);
   const canDecide = appointment !== null
+    && isOwnedAppointment
     && canDecideStaffAppointment(appointment, 'academician', user);
   const canReschedule = appointment !== null
     && canRescheduleAcademicianAppointment(appointment, user);
@@ -274,8 +277,7 @@ export default function AcademicianAppointmentDetailPage() {
   const canDelegate = appointment !== null
     && delegationUnavailableReason === null
     && canDelegateAppointment(appointment, 'academician', user);
-  const showDelegateAction = appointment !== null
-    && isOwnedStaffAppointment(appointment, 'academician', user);
+  const showDelegateAction = isOwnedAppointment;
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
@@ -283,12 +285,12 @@ export default function AcademicianAppointmentDetailPage() {
         <StudentBackLink to={ROUTES.ACADEMICIAN_APPOINTMENTS} label="Geri Dön" />
         {appointment ? (
           <div className="flex flex-wrap gap-2">
-            {canDecide ? (
+            {isOwnedAppointment ? (
               <>
                 <button
                   type="button"
                   className={STUDENT_UI.PRIMARY_BUTTON_CLASS}
-                  disabled={isApproving || isRejecting}
+                  disabled={isApproving || isRejecting || !canDecide}
                   onClick={handleApproveClick}
                 >
                   <span className="material-symbols-outlined text-[18px]" aria-hidden="true">check</span>
@@ -297,7 +299,7 @@ export default function AcademicianAppointmentDetailPage() {
                 <button
                   type="button"
                   className="flex items-center gap-1.5 rounded-lg border border-outline bg-surface-container-lowest px-4 py-2.5 font-label-md text-label-md text-on-surface transition-colors duration-150 hover:bg-surface-container disabled:opacity-50"
-                  disabled={isApproving || isRejecting}
+                  disabled={isApproving || isRejecting || !canDecide}
                   onClick={handleRejectClick}
                 >
                   <span className="material-symbols-outlined text-[18px]" aria-hidden="true">close</span>
@@ -323,7 +325,7 @@ export default function AcademicianAppointmentDetailPage() {
                 <button
                   type="button"
                   className={`${STUDENT_UI.SECONDARY_BUTTON_CLASS} ${!canDelegate ? 'cursor-not-allowed opacity-50' : ''}`}
-                  disabled={isApproving || isRejecting}
+                  disabled={isApproving || isRejecting || !canDelegate}
                   aria-disabled={!canDelegate}
                   aria-describedby={!canDelegate ? delegationTooltipId : undefined}
                   onClick={() => {
