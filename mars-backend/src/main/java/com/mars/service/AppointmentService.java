@@ -111,7 +111,7 @@ public class AppointmentService {
 
         ensureStudentNotRestricted(student.getUserId());
 
-        // Race condition: slot satÄ±rÄ±nÄ± kilitle, ardÄ±ndan mÃ¼saitlik son kez doÄŸrulanÄ±r.
+        // Race condition: slot satÃ„Â±rÃ„Â±nÃ„Â± kilitle, ardÃ„Â±ndan mÃƒÂ¼saitlik son kez doÃ„Å¸rulanÃ„Â±r.
         AvailabilitySlot templateSlot = availabilitySlotRepository.findByIdWithStaffForUpdate(request.getSlotId())
                 .orElseThrow(() -> new ResourceNotFoundException(AppointmentMessages.SLOT_NOT_FOUND));
 
@@ -220,8 +220,8 @@ public class AppointmentService {
         if (!delegations.isEmpty()) {
             DelegationLog latest = delegations.get(0);
             dto.setIsDelegated(true);
-            dto.setDelegatedFromStaffName(latest.getDelegatedByUser().getDisplayName());
-            dto.setDelegatedToStaffName(latest.getDelegatedToUser().getDisplayName());
+            dto.setDelegatedFromStaffName(latest.getDelegatedByUser().getFullName());
+            dto.setDelegatedToStaffName(latest.getDelegatedToUser().getFullName());
             dto.setDelegationDate(latest.getUpdatedAt());
         } else {
             dto.setIsDelegated(false);
@@ -247,7 +247,7 @@ public class AppointmentService {
                 saved,
                 appointment.getStaff(),
                 NotificationType.APPOINTMENT_CANCELLED,
-                "Randevu Ä°ptal Edildi",
+                "Randevu Ã„Â°ptal Edildi",
                 buildStudentCancellationMessage(appointment));
         waitlistService.processWaitlistForSlot(saved.getSlot(), LocalDateTime.now(APP_ZONE));
         return appointmentRepository.findByIdAndStudentIdWithDetails(
@@ -479,7 +479,7 @@ public class AppointmentService {
             createAppointmentNotification(appointment, appointment.getStaff(), NotificationType.APPOINTMENT_RESCHEDULED,
                     "Yeniden Planlama Kabul Edildi", description, request.getRescheduleRequestId());
             createAppointmentNotification(appointment, student, NotificationType.APPOINTMENT_RESCHEDULED,
-                    "Randevu Yeniden PlanlandÄ±", description, request.getRescheduleRequestId());
+                    "Randevu Yeniden PlanlandÃ„Â±", description, request.getRescheduleRequestId());
         } else {
             request.setRequestStatus(RescheduleRequestStatus.REJECTED.name());
             appointment.setAppointmentStatus(AppointmentStatus.CANCELLED.name());
@@ -487,10 +487,10 @@ public class AppointmentService {
             appointmentRepository.save(appointment);
             String description = buildRescheduleDescription(request);
             createAppointmentNotification(appointment, appointment.getStaff(), NotificationType.APPOINTMENT_RESCHEDULE_REJECTED,
-                    "Yeniden Planlama Reddedildi ve Randevu Ä°ptal Edildi", description,
+                    "Yeniden Planlama Reddedildi ve Randevu Ã„Â°ptal Edildi", description,
                     request.getRescheduleRequestId());
             createAppointmentNotification(appointment, student, NotificationType.APPOINTMENT_CANCELLED,
-                    "Randevu Ä°ptal Edildi", description, request.getRescheduleRequestId());
+                    "Randevu Ã„Â°ptal Edildi", description, request.getRescheduleRequestId());
         }
         request.setUpdatedAt(now);
         return toRescheduleResponse(appointmentRescheduleRequestRepository.save(request));
@@ -511,9 +511,9 @@ public class AppointmentService {
         Appointment appointment = request.getAppointment();
         String description = buildRescheduleDescription(request);
         createAppointmentNotification(appointment, appointment.getStudent(), NotificationType.APPOINTMENT_RESCHEDULE_EXPIRED,
-                "Yeniden Planlama SÃ¼resi Doldu", description, request.getRescheduleRequestId());
+                "Yeniden Planlama SÃƒÂ¼resi Doldu", description, request.getRescheduleRequestId());
         createAppointmentNotification(appointment, appointment.getStaff(), NotificationType.APPOINTMENT_RESCHEDULE_EXPIRED,
-                "Yeniden Planlama SÃ¼resi Doldu", description, request.getRescheduleRequestId());
+                "Yeniden Planlama SÃƒÂ¼resi Doldu", description, request.getRescheduleRequestId());
     }
 
     private AppointmentRescheduleResponse toRescheduleResponse(AppointmentRescheduleApproval request) {
@@ -522,8 +522,8 @@ public class AppointmentService {
                 .rescheduleRequestId(request.getRescheduleRequestId())
                 .appointmentId(request.getAppointment().getAppointmentId())
                 .status(request.getRequestStatus())
-                .academicianName(request.getAppointment().getStaff().getDisplayName())
-                .studentName(request.getAppointment().getStudent().getDisplayName())
+                .academicianName(request.getAppointment().getStaff().getFullName())
+                .studentName(request.getAppointment().getStudent().getFullName())
                 .originalDate(request.getOriginalSlot().getSlotDate())
                 .originalStartTime(request.getOriginalSlot().getStartTime())
                 .originalEndTime(request.getOriginalSlot().getEndTime())
@@ -541,11 +541,11 @@ public class AppointmentService {
         AvailabilitySlot original = request.getOriginalSlot();
         AvailabilitySlot proposed = request.getProposedSlot();
         String meetingType = MeetingType.ONLINE.name().equals(request.getProposedMeetingType())
-                ? "Online" : "YÃ¼z YÃ¼ze";
-        return "%s ile %s arasÄ±ndaki %s randevusu; eski zaman: %s %s-%s, Ã¶nerilen zaman: %s %s-%s, gÃ¶rÃ¼ÅŸme tÃ¼rÃ¼: %s."
+                ? "Online" : "YÃƒÂ¼z YÃƒÂ¼ze";
+        return "%s ile %s arasÃ„Â±ndaki %s randevusu; eski zaman: %s %s-%s, ÃƒÂ¶nerilen zaman: %s %s-%s, gÃƒÂ¶rÃƒÂ¼Ã…Å¸me tÃƒÂ¼rÃƒÂ¼: %s."
                 .formatted(
-                        appointment.getStudent().getDisplayName(),
-                        appointment.getStaff().getDisplayName(),
+                        appointment.getStudent().getFullName(),
+                        appointment.getStaff().getFullName(),
                         appointment.getCategory().getCategoryName(),
                         original.getSlotDate().format(NOTIFICATION_DATE),
                         original.getStartTime().format(NOTIFICATION_TIME),
@@ -578,9 +578,9 @@ public class AppointmentService {
                 saved,
                 appointment.getStudent(),
                 notificationType,
-                targetStatus == AppointmentStatus.APPROVED ? "Randevu OnaylandÄ±" : "Randevu Reddedildi",
+                targetStatus == AppointmentStatus.APPROVED ? "Randevu OnaylandÃ„Â±" : "Randevu Reddedildi",
                 targetStatus == AppointmentStatus.APPROVED
-                        ? "Randevu talebiniz onaylandÄ±."
+                        ? "Randevu talebiniz onaylandÃ„Â±."
                         : "Randevu talebiniz reddedildi.");
         if (targetStatus == AppointmentStatus.REJECTED) {
             waitlistService.processWaitlistForSlot(saved.getSlot(), LocalDateTime.now(APP_ZONE));
@@ -621,12 +621,12 @@ public class AppointmentService {
         AvailabilitySlot slot = appointment.getSlot();
         String meetingType = MeetingType.ONLINE.name().equals(appointment.getMeetingType())
                 ? "Online" : MeetingType.FACE_TO_FACE.name().equals(appointment.getMeetingType())
-                        ? "YÃ¼z YÃ¼ze" : "-";
-        return "%s Akademisyen: %s, Ã¶ÄŸrenci: %s, tarih ve saat: %s %s-%s, gÃ¶rÃ¼ÅŸme tÃ¼rÃ¼: %s, kategori: %s."
+                        ? "YÃƒÂ¼z YÃƒÂ¼ze" : "-";
+        return "%s Akademisyen: %s, ÃƒÂ¶Ã„Å¸renci: %s, tarih ve saat: %s %s-%s, gÃƒÂ¶rÃƒÂ¼Ã…Å¸me tÃƒÂ¼rÃƒÂ¼: %s, kategori: %s."
                 .formatted(
                         message,
-                        appointment.getStaff() == null ? "-" : appointment.getStaff().getDisplayName(),
-                        appointment.getStudent() == null ? "-" : appointment.getStudent().getDisplayName(),
+                        appointment.getStaff() == null ? "-" : appointment.getStaff().getFullName(),
+                        appointment.getStudent() == null ? "-" : appointment.getStudent().getFullName(),
                         slot == null || slot.getSlotDate() == null ? "-" : slot.getSlotDate().format(NOTIFICATION_DATE),
                         slot == null || slot.getStartTime() == null ? "-" : slot.getStartTime().format(NOTIFICATION_TIME),
                         slot == null || slot.getEndTime() == null ? "-" : slot.getEndTime().format(NOTIFICATION_TIME),
@@ -638,7 +638,7 @@ public class AppointmentService {
         AvailabilitySlot slot = appointment.getSlot();
         return "%s, %s %s tarihli '%s' randevusunu iptal etti."
                 .formatted(
-                        appointment.getStudent().getDisplayName(),
+                        appointment.getStudent().getFullName(),
                         slot.getSlotDate().format(NOTIFICATION_DATE),
                         slot.getStartTime().format(NOTIFICATION_TIME),
                         appointment.getCategory().getCategoryName());

@@ -38,9 +38,9 @@ public class DelegationMapper {
                 .delegationId(delegationLog.getDelegationId())
                 .appointmentId(appointment != null ? appointment.getAppointmentId() : null)
                 .delegatedByUserId(delegatedByUser != null ? delegatedByUser.getUserId() : null)
-                .delegatedByUserName(delegatedByUser != null ? delegatedByUser.getDisplayName() : null)
+                .delegatedByUserName(delegatedByUser != null ? delegatedByUser.getFullName() : null)
                 .delegatedToUserId(delegatedToUser != null ? delegatedToUser.getUserId() : null)
-                .delegatedToUserName(delegatedToUser != null ? delegatedToUser.getDisplayName() : null)
+                .delegatedToUserName(delegatedToUser != null ? delegatedToUser.getFullName() : null)
                 .delegatedAt(delegationLog.getDelegatedAt())
                 .updatedAt(delegationLog.getUpdatedAt())
                 .delegationStatus(delegationLog.getDelegationStatus())
@@ -71,7 +71,7 @@ public class DelegationMapper {
                 .studentId(appointment != null && appointment.getStudent() != null
                         ? appointment.getStudent().getUserId() : null)
                 .studentName(appointment != null && appointment.getStudent() != null
-                        ? appointment.getStudent().getDisplayName() : null)
+                        ? appointment.getStudent().getFullName() : null)
                 .studentEmail(appointment != null && appointment.getStudent() != null
                         ? appointment.getStudent().getInstitutionalEmail() : null)
                 .durationMinutes(appointment != null && appointment.getCategory() != null

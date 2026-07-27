@@ -165,7 +165,7 @@ public class WaitlistService {
             .userId(student.getUserId())
             .notificationType(NotificationType.APPOINTMENT_APPROVED)
             .title("Bekleme Listesi Teklifi Kabul Edildi")
-            .message("Bekleme listesindeki teklifi kabul ettiniz. Randevunuz onaylandÄ±.")
+            .message("Bekleme listesindeki teklifi kabul ettiniz. Randevunuz onaylandÃ„Â±.")
             .relatedAppointmentId(appointment.getAppointmentId())
             .build());
 
@@ -173,8 +173,8 @@ public class WaitlistService {
         notificationService.createNotification(NotificationCreateRequest.builder()
             .userId(entry.getStaff().getUserId())
             .notificationType(NotificationType.NEW_APPOINTMENT_REQUEST)
-            .title("Bekleme Listesinden Randevu OluÅŸturuldu")
-            .message("Bekleme listesindeki Ã¶ÄŸrenci teklifi kabul etti. Yeni randevu oluÅŸturuldu.")
+            .title("Bekleme Listesinden Randevu OluÃ…Å¸turuldu")
+            .message("Bekleme listesindeki ÃƒÂ¶Ã„Å¸renci teklifi kabul etti. Yeni randevu oluÃ…Å¸turuldu.")
             .relatedAppointmentId(appointment.getAppointmentId())
             .build());
 
@@ -230,8 +230,8 @@ public class WaitlistService {
         notificationService.createNotification(NotificationCreateRequest.builder()
             .userId(entry.getStudent().getUserId())
             .notificationType(NotificationType.WAITLIST_CANCELLED)
-            .title("Teklif SÃ¼resi Doldu")
-            .message("Bekleme listesi teklif onay sÃ¼resi doldu.")
+            .title("Teklif SÃƒÂ¼resi Doldu")
+            .message("Bekleme listesi teklif onay sÃƒÂ¼resi doldu.")
             .build());
 
         // Trigger next offer on this slot
@@ -253,15 +253,15 @@ public class WaitlistService {
     }
 
     private void sendOfferNotifications(WaitlistEntry entry) {
-        String reservationInfo = "Rezervasyon hakkÄ±nÄ±zÄ± %s tarihine kadar onaylayabilirsiniz."
+        String reservationInfo = "Rezervasyon hakkÃ„Â±nÃ„Â±zÃ„Â± %s tarihine kadar onaylayabilirsiniz."
             .formatted(entry.getOfferedAt().plusMinutes(offerDurationMinutes).format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
 
         WaitlistNotificationRequest request = new WaitlistNotificationRequest(
             entry.getWaitlistEntryId(),
             entry.getStudent().getUserId(),
             WaitlistNotificationEvent.TURN_AVAILABLE,
-            entry.getStudent().getDisplayName(),
-            entry.getStaff().getDisplayName(),
+            entry.getStudent().getFullName(),
+            entry.getStaff().getFullName(),
             entry.getCategory().getCategoryName(),
             entry.getCourse() != null ? "%s - %s".formatted(entry.getCourse().getCourseCode(), entry.getCourse().getCourseName()) : null,
             entry.getSlot().getSlotDate(),

@@ -28,7 +28,7 @@ public class CourseAssignmentMapper {
         return CourseAssistantResponseDto.builder()
                 .assignmentId(assignment.getCourseAssignmentId())
                 .assistantId(assistant != null ? assistant.getUserId() : null)
-                .assistantName(assistant != null ? assistant.getDisplayName() : null)
+                .assistantName(assistant != null ? assistant.getFullName() : null)
                 .institutionalEmail(assistant != null ? assistant.getInstitutionalEmail() : null)
                 .departmentName(department != null ? department.getDepartmentName() : null)
                 .assignedAt(assignment.getAssignedAt())

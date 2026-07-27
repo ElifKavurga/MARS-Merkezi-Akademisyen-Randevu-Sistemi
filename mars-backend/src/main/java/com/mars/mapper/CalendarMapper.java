@@ -39,7 +39,7 @@ public class CalendarMapper {
                 .isBlocked(null)
                 .meetingType(appointment.getMeetingType())
                 .studentName(appointment.getStudent() != null
-                        ? appointment.getStudent().getDisplayName()
+                        ? appointment.getStudent().getFullName()
                         : null)
                 .categoryName(appointment.getCategory() != null
                         ? appointment.getCategory().getCategoryName()

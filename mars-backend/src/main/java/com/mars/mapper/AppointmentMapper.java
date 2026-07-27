@@ -64,7 +64,7 @@ public class AppointmentMapper {
                 .appointmentId(appointment.getAppointmentId())
                 .staffId(appointment.getStaff() != null ? appointment.getStaff().getUserId() : null)
                 .studentName(appointment.getStudent() != null
-                        ? appointment.getStudent().getDisplayName()
+                        ? appointment.getStudent().getFullName()
                         : null)
                 .studentEmail(appointment.getStudent() != null
                         ? appointment.getStudent().getInstitutionalEmail()
@@ -74,7 +74,7 @@ public class AppointmentMapper {
                         ? appointment.getStudent().getDepartment().getDepartmentName()
                         : null)
                 .staffName(appointment.getStaff() != null
-                        ? appointment.getStaff().getDisplayName()
+                        ? appointment.getStaff().getFullName()
                         : null)
                 .staffAcademicTitle(appointment.getStaff() != null
                         ? appointment.getStaff().getAcademicTitle()
@@ -114,7 +114,7 @@ public class AppointmentMapper {
         return StudentAppointmentResponseDto.builder()
                 .appointmentId(appointment.getAppointmentId())
                 .staffId(staff != null ? staff.getUserId() : null)
-                .staffName(staff != null ? staff.getDisplayName() : null)
+                .staffName(staff != null ? staff.getFullName() : null)
                 .academicTitle(staff != null ? staff.getAcademicTitle() : null)
                 .departmentName(staff != null && staff.getDepartment() != null
                         ? staff.getDepartment().getDepartmentName()
@@ -143,7 +143,7 @@ public class AppointmentMapper {
                 .meetingType(appointment.getMeetingType())
                 .appointmentStatus(appointment.getAppointmentStatus())
                 .createdAt(appointment.getCreatedAt())
-                // Ofis alanlarÄ± User entityâ€™de henÃ¼z yok; profil detayÄ± ile aynÄ± placeholder.
+                // Ofis alanlarÃ„Â± User entityÃ¢â‚¬â„¢de henÃƒÂ¼z yok; profil detayÃ„Â± ile aynÃ„Â± placeholder.
                 .officeName(null)
                 .officeLocation(null)
                 .build();

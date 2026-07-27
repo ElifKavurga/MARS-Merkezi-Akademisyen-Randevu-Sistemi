@@ -9,6 +9,7 @@ import ModalHeader from '../components/ModalHeader';
 import { LineChart, BarChart, DoughnutChart } from '../components/charts';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../constants/routes';
+import { getAppointmentStatusLabel } from '../constants/appointment';
 
 // ─── KPI Card ────────────────────────────────────────────────────────────────
 function KpiCard({
@@ -157,15 +158,7 @@ export default function HodStatisticsPage() {
     return <ErrorState message={error ?? 'Veriler yüklenemedi.'} onRetry={() => void loadData()} />;
   }
 
-  // Define colors and labels exactly here or in a constant file if needed.
-  const STATUS_LABELS: Record<string, string> = {
-    PENDING: 'Bekleyen',
-    APPROVED: 'Onaylanan',
-    REJECTED: 'Reddedilen',
-    COMPLETED: 'Tamamlanan',
-    NO_SHOW: 'No-Show',
-    CANCELLED: 'İptal',
-  };
+  // Define colors exactly here or in a constant file if needed.
   const STATUS_COLORS = ['#f59e0b', '#6366f1', '#ef4444', '#10b981', '#64748b', '#ec4899'];
 
   // Prepare chart data
@@ -173,7 +166,7 @@ export default function HodStatisticsPage() {
   const monthlyData = stats.monthlyTrend.map(d => ({ label: d.yearMonth, value: d.count }));
   const categoryData = stats.categoryDistribution.map(d => ({ label: d.categoryName, value: d.count }));
   const statusData = stats.statusDistribution.map((d, i) => ({
-    label: STATUS_LABELS[d.status] ?? d.status,
+    label: getAppointmentStatusLabel(d.status),
     value: d.count,
     color: STATUS_COLORS[i % STATUS_COLORS.length],
   }));
@@ -195,7 +188,7 @@ export default function HodStatisticsPage() {
         
         let count = 0;
         if (drillDown.chart === 'status') {
-          count = acStats.statusDistribution.find(s => (STATUS_LABELS[s.status] || s.status) === drillDown.label)?.count || 0;
+          count = acStats.statusDistribution.find(s => getAppointmentStatusLabel(s.status) === drillDown.label)?.count || 0;
         } else if (drillDown.chart === 'category') {
           count = acStats.categoryDistribution.find(c => c.categoryName === drillDown.label)?.count || 0;
         } else if (drillDown.chart === 'weekly') {

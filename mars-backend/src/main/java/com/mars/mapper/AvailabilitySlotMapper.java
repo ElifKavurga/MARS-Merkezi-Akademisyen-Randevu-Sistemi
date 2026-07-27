@@ -99,7 +99,7 @@ public class AvailabilitySlotMapper {
         return AvailableSlotResponseDto.builder()
                 .slotId(slot.getSlotId())
                 .staffId(staff != null ? staff.getUserId() : null)
-                .staffName(staff != null ? staff.getDisplayName() : null)
+                .staffName(staff != null ? staff.getFullName() : null)
                 .slotDate(occurrenceDate)
                 .startTime(windowStart)
                 .endTime(windowEnd)
