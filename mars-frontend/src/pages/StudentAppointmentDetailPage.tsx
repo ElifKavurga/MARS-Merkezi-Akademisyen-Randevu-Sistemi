@@ -66,8 +66,8 @@ function InfoCard({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-3.5 sm:p-4">
-      <h2 className="mb-3 font-headline-md text-[16px] leading-5 font-semibold text-on-background">
+    <section className="rounded-lg border border-outline-variant bg-surface-container-lowest p-3">
+      <h2 className="mb-2 font-headline-md text-[15px] leading-5 font-semibold text-on-background">
         {title}
       </h2>
       {children}
@@ -233,9 +233,68 @@ export default function StudentAppointmentDetailPage() {
           onRetry={isValidId ? () => void loadAppointment() : undefined}
         />
       ) : appointment ? (
-        <div className="flex flex-col gap-3 md:gap-4">
+        <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <InfoCard title={STUDENT_APPOINTMENT_MESSAGES.DETAIL_SECTION_ACADEMICIAN}>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <MetaRow
+                  icon="badge"
+                  label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_FULL_NAME}
+                  value={appointment.staffName}
+                />
+                <MetaRow
+                  icon="school"
+                  label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_ACADEMIC_TITLE}
+                  value={academicTitle}
+                />
+                <MetaRow
+                  icon="apartment"
+                  label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_DEPARTMENT}
+                  value={appointment.departmentName}
+                />
+              </div>
+            </InfoCard>
+
+            <InfoCard title={STUDENT_APPOINTMENT_MESSAGES.DETAIL_SECTION_APPOINTMENT}>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <MetaRow
+                  icon="event"
+                  label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_DATE}
+                  value={dateLabel}
+                />
+                <MetaRow
+                  icon="schedule"
+                  label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_TIME}
+                  value={timeLabel}
+                />
+                <MetaRow
+                  icon="category"
+                  label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_CATEGORY}
+                  value={appointment.categoryName}
+                />
+                <MetaRow
+                  icon="videocam"
+                  label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_MEETING_TYPE}
+                  value={getMeetingTypeLabel(appointment.meetingType)}
+                />
+                <MetaRow
+                  icon="flag"
+                  label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_STATUS}
+                  value={<AppointmentStatusBadge status={appointment.appointmentStatus} />}
+                />
+                {courseLabel ? (
+                  <MetaRow
+                    icon="menu_book"
+                    label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_COURSE}
+                    value={courseLabel}
+                  />
+                ) : null}
+              </div>
+            </InfoCard>
+          </div>
+
           {appointment.isDelegated && (
-            <section className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 sm:p-5" aria-label="Randevu devri bilgisi">
+            <section className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3" aria-label="Randevu devri bilgisi">
               <div className="flex items-start gap-3">
                 <span className="material-symbols-outlined mt-0.5 text-emerald-600 font-bold" aria-hidden>
                   check_circle
@@ -244,7 +303,7 @@ export default function StudentAppointmentDetailPage() {
                   <h2 className="font-headline-md text-[16px] leading-5 font-semibold text-emerald-800">Randevu Devri</h2>
                   <p className="mt-1 font-body-md text-sm text-emerald-700 font-medium">✓ Bu randevu devir işlemi sonucunda yeni akademisyene atanmıştır.</p>
                   
-                  <dl className="mt-3 grid gap-x-6 gap-y-2 font-body-md text-sm text-on-surface-variant sm:grid-cols-2">
+                  <dl className="mt-2 grid gap-x-5 gap-y-1.5 font-body-md text-sm text-on-surface-variant sm:grid-cols-2">
                     <div>
                       <dt className="font-semibold text-on-surface">Eski Akademisyen</dt>
                       <dd>{appointment.delegatedFromStaffName}</dd>
@@ -271,14 +330,14 @@ export default function StudentAppointmentDetailPage() {
           )}
 
           {appointment.pendingDelegationId ? (
-            <section className="rounded-xl border border-primary-container/30 bg-primary-fixed/35 p-4 sm:p-5" aria-label="Randevu devri onayı">
+            <section className="rounded-lg border border-primary-container/30 bg-primary-fixed/35 p-3" aria-label="Randevu devri onayı">
               <div className="flex items-start gap-3">
                 <span className="material-symbols-outlined mt-0.5 text-primary-container" aria-hidden>swap_horiz</span>
                 <div className="min-w-0 flex-1">
                   <h2 className="font-body-md text-base font-semibold text-on-surface">
                     Randevunuzun devredilmesi için onayınız bekleniyor.
                   </h2>
-                  <dl className="mt-3 grid gap-x-6 gap-y-2 font-body-md text-sm text-on-surface-variant sm:grid-cols-2">
+                  <dl className="mt-2 grid gap-x-5 gap-y-1.5 font-body-md text-sm text-on-surface-variant sm:grid-cols-2">
                     <div>
                       <dt className="font-semibold text-on-surface">Mevcut personel</dt>
                       <dd>{appointment.pendingDelegationFromStaffName ?? '-'}</dd>
@@ -294,7 +353,7 @@ export default function StudentAppointmentDetailPage() {
                       </div>
                     ) : null}
                   </dl>
-                  <div className="mt-4 flex flex-wrap gap-2">
+                  <div className="mt-3 flex flex-wrap gap-2">
                     <button
                       type="button"
                       disabled={delegationDecisionLoading}
@@ -318,12 +377,12 @@ export default function StudentAppointmentDetailPage() {
           ) : null}
 
           {rescheduleApproval ? (
-            <section className="rounded-xl border border-primary-container/30 bg-primary-fixed/35 p-4 sm:p-5" aria-label="Yeniden planlama onayı">
+            <section className="rounded-lg border border-primary-container/30 bg-primary-fixed/35 p-3" aria-label="Yeniden planlama onayı">
               <div className="flex items-start gap-3">
                 <span className="material-symbols-outlined mt-0.5 text-primary-container" aria-hidden>edit_calendar</span>
                 <div className="min-w-0 flex-1">
                   <h2 className="font-body-md text-base font-semibold text-on-surface">Akademisyen randevunuzu yeni bir tarihe taşımak istiyor.</h2>
-                  <dl className="mt-3 grid gap-x-6 gap-y-2 font-body-md text-sm text-on-surface-variant sm:grid-cols-2">
+                  <dl className="mt-2 grid gap-x-5 gap-y-1.5 font-body-md text-sm text-on-surface-variant sm:grid-cols-2">
                     <div><dt className="font-semibold text-on-surface">Akademisyen</dt><dd>{rescheduleApproval.academicianName}</dd></div>
                     <div><dt className="font-semibold text-on-surface">Öğrenci</dt><dd>{rescheduleApproval.studentName}</dd></div>
                     <div><dt className="font-semibold text-on-surface">Eski tarih ve saat</dt><dd>{formatStudentAppointmentDate(rescheduleApproval.originalDate)}, {formatStudentAppointmentTime(rescheduleApproval.originalStartTime)} – {formatStudentAppointmentTime(rescheduleApproval.originalEndTime)}</dd></div>
@@ -334,7 +393,7 @@ export default function StudentAppointmentDetailPage() {
                   <p className="mt-1 font-body-md text-xs text-outline">
                     Son yanıt zamanı: {new Date(rescheduleApproval.expiresAt).toLocaleString('tr-TR')}
                   </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
+                  <div className="mt-3 flex flex-wrap gap-2">
                     <button type="button" disabled={rescheduleDecisionLoading} onClick={() => void handleRescheduleDecision(true)} className={STUDENT_UI.PRIMARY_BUTTON_CLASS}>Kabul Et</button>
                     <button type="button" disabled={rescheduleDecisionLoading} onClick={() => void handleRescheduleDecision(false)} className={STUDENT_UI.SECONDARY_BUTTON_CLASS}>Reddet</button>
                   </div>
@@ -342,83 +401,6 @@ export default function StudentAppointmentDetailPage() {
               </div>
             </section>
           ) : null}
-          <InfoCard title={STUDENT_APPOINTMENT_MESSAGES.DETAIL_SECTION_ACADEMICIAN}>
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <div className="min-w-0">
-                <h3 className="truncate font-headline-md text-[16px] leading-5 font-semibold text-on-background">
-                  {appointment.staffName}
-                </h3>
-                <p className="mt-0.5 truncate font-label-sm text-label-sm text-on-surface-variant">
-                  {academicTitle}
-                  {appointment.departmentName ? ` · ${appointment.departmentName}` : ''}
-                </p>
-              </div>
-              <AppointmentStatusBadge status={appointment.appointmentStatus} />
-            </div>
-            <div className="mt-3 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-              <MetaRow
-                icon="badge"
-                label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_FULL_NAME}
-                value={appointment.staffName}
-              />
-              <MetaRow
-                icon="school"
-                label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_ACADEMIC_TITLE}
-                value={academicTitle}
-              />
-              <MetaRow
-                icon="apartment"
-                label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_DEPARTMENT}
-                value={appointment.departmentName}
-              />
-            </div>
-          </InfoCard>
-
-          <InfoCard title={STUDENT_APPOINTMENT_MESSAGES.DETAIL_SECTION_APPOINTMENT}>
-            <div
-              className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-surface-container/70 px-2.5 py-2"
-              aria-label={`${STUDENT_APPOINTMENT_MESSAGES.DETAIL_DATE}: ${dateLabel}, ${STUDENT_APPOINTMENT_MESSAGES.DETAIL_TIME}: ${timeLabel}`}
-            >
-              <div className="flex items-center gap-1.5 font-label-md text-label-md font-semibold text-on-surface">
-                <span className="material-symbols-outlined text-[18px] text-primary" aria-hidden>
-                  event
-                </span>
-                {dateLabel}
-              </div>
-              <div className="flex items-center gap-1.5 font-label-md text-label-md font-semibold text-on-surface">
-                <span className="material-symbols-outlined text-[18px] text-primary" aria-hidden>
-                  schedule
-                </span>
-                {timeLabel}
-              </div>
-            </div>
-
-            <div className="mt-2.5 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-              <MetaRow
-                icon="flag"
-                label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_STATUS}
-                value={<AppointmentStatusBadge status={appointment.appointmentStatus} />}
-              />
-              <MetaRow
-                icon="category"
-                label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_CATEGORY}
-                value={appointment.categoryName}
-              />
-              <MetaRow
-                icon="videocam"
-                label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_MEETING_TYPE}
-                value={getMeetingTypeLabel(appointment.meetingType)}
-              />
-              {courseLabel ? (
-                <MetaRow
-                  icon="menu_book"
-                  label={STUDENT_APPOINTMENT_MESSAGES.DETAIL_COURSE}
-                  value={courseLabel}
-                />
-              ) : null}
-            </div>
-          </InfoCard>
-
           <InfoCard title={STUDENT_APPOINTMENT_MESSAGES.DETAIL_SECTION_LOCATION}>
             {isOnline ? (
               <MetaRow

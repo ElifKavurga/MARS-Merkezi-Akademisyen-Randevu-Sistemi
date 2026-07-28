@@ -79,8 +79,8 @@ function MetaRow({
 
 function InfoCard({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-3.5 sm:p-4">
-      <h2 className="mb-3 font-headline-md text-[16px] font-semibold leading-5 text-on-background">
+    <section className="rounded-lg border border-outline-variant bg-surface-container-lowest p-3">
+      <h2 className="mb-2 font-headline-md text-[15px] font-semibold leading-5 text-on-background">
         {title}
       </h2>
       {children}
@@ -485,9 +485,10 @@ export default function AcademicianAppointmentDetailPage({
           onRetry={isValidId ? () => void loadAppointment() : undefined}
         />
       ) : appointment ? (
-        <div className="flex flex-col gap-3 md:gap-4">
-          <InfoCard title="Öğrenci">
-            <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+        <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+          <InfoCard title="Kişi Bilgileri">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <MetaRow icon="person" label="Ad Soyad" value={appointment.studentName} />
               <MetaRow
                 icon="mail"
@@ -499,34 +500,22 @@ export default function AcademicianAppointmentDetailPage({
                 label="Bölüm"
                 value={appointment.studentDepartmentName ?? '-'}
               />
+              <MetaRow icon="badge" label="Personel" value={appointment.staffName ?? '-'} />
+              <MetaRow icon="school" label="Ünvan" value={staffTitle} />
+              <MetaRow
+                icon="apartment"
+                label="Personel Bölümü"
+                value={appointment.staffDepartmentName ?? '-'}
+              />
             </div>
           </InfoCard>
 
-          <InfoCard title="Randevu">
-            <div
-              className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-surface-container/70 px-2.5 py-2"
-              aria-label={`Tarih: ${dateLabel}, Saat: ${timeLabel}`}
-            >
-              <div className="flex items-center gap-1.5 font-label-md text-label-md font-semibold text-on-surface">
-                <span className="material-symbols-outlined text-[18px] text-primary" aria-hidden>
-                  event
-                </span>
-                {dateLabel}
-              </div>
-              <div className="flex items-center gap-1.5 font-label-md text-label-md font-semibold text-on-surface">
-                <span className="material-symbols-outlined text-[18px] text-primary" aria-hidden>
-                  schedule
-                </span>
-                {timeLabel}
-              </div>
-            </div>
-
-            <div className="mt-2.5 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+          <InfoCard title="Randevu Bilgileri">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <MetaRow icon="event" label="Tarih" value={dateLabel} />
+              <MetaRow icon="schedule" label="Saat" value={timeLabel} />
               <MetaRow icon="category" label="Kategori" value={appointment.categoryName} />
               {courseLabel ? <MetaRow icon="menu_book" label="Ders" value={courseLabel} /> : null}
-              <MetaRow icon="event" label="Tarih" value={dateLabel} />
-              <MetaRow icon="schedule" label="Başlangıç Saati" value={formatTime(appointment.startTime)} />
-              <MetaRow icon="schedule" label="Bitiş Saati" value={formatTime(appointment.endTime)} />
               <MetaRow
                 icon="timer"
                 label="Süre"
@@ -544,18 +533,7 @@ export default function AcademicianAppointmentDetailPage({
               />
             </div>
           </InfoCard>
-
-          <InfoCard title="Personel">
-            <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-              <MetaRow icon="person" label="Akademisyen / Asistan" value={appointment.staffName ?? '-'} />
-              <MetaRow icon="school" label="Ünvan" value={staffTitle} />
-              <MetaRow
-                icon="apartment"
-                label="Bölüm"
-                value={appointment.staffDepartmentName ?? '-'}
-              />
-            </div>
-          </InfoCard>
+          </div>
         </div>
       ) : null}
 
