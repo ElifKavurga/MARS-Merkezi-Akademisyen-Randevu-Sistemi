@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import AppointmentStatusBadge from './AppointmentStatusBadge';
+import DelegationStatusBadge from './DelegationStatusBadge';
 import { getMeetingTypeLabel } from '../constants/appointment';
 import { studentAppointmentDetailPath } from '../constants/routes';
 import { STUDENT_APPOINTMENT_MESSAGES } from '../constants/studentAppointment';
@@ -72,8 +73,11 @@ export default function StudentAppointmentCard({
             {appointment.departmentName ? ` · ${appointment.departmentName}` : ''}
           </p>
         </div>
-        <div className="shrink-0">
+        <div className="flex shrink-0 flex-col items-end gap-1">
           <AppointmentStatusBadge status={appointment.appointmentStatus} />
+          {appointment.pendingDelegationStatus ? (
+            <DelegationStatusBadge status={appointment.pendingDelegationStatus} />
+          ) : null}
         </div>
       </div>
 

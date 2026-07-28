@@ -108,7 +108,6 @@ export default function AppRouter() {
               path={ROUTES.STUDENT_APPOINTMENT_DETAIL}
               element={<StudentAppointmentDetailPage />}
             />
-
             <Route path={ROUTES.STUDENT_PROFILE} element={<ProfilePage />} />
           </Route>
         </Route>

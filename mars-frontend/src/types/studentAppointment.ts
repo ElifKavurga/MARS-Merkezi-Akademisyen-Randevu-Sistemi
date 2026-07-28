@@ -67,4 +67,9 @@ export type StudentAppointmentListItem = {
   delegatedFromStaffName?: string | null;
   delegatedToStaffName?: string | null;
   delegationDate?: string | null;
+  pendingDelegationId?: number | null;
+  pendingDelegationStatus?: string | null;
+  pendingDelegationFromStaffName?: string | null;
+  pendingDelegationToStaffName?: string | null;
+  pendingDelegationExpiresAt?: string | null;
 };

@@ -17,6 +17,10 @@ import {
   getPendingRescheduleApproval,
   getStudentAppointment,
 } from '../services/studentAppointmentService';
+import {
+  acceptStudentDelegation,
+  rejectStudentDelegation,
+} from '../services/delegationService';
 import type { AppointmentRescheduleApproval } from '../types/appointment';
 import type { StudentAppointmentListItem } from '../types/studentAppointment';
 import { resolveStudentApiError } from '../utils/studentApiError';
@@ -83,6 +87,7 @@ export default function StudentAppointmentDetailPage() {
   const [cancelError, setCancelError] = useState<string | null>(null);
   const [rescheduleApproval, setRescheduleApproval] = useState<AppointmentRescheduleApproval | null>(null);
   const [rescheduleDecisionLoading, setRescheduleDecisionLoading] = useState(false);
+  const [delegationDecisionLoading, setDelegationDecisionLoading] = useState(false);
 
   const appointmentId = Number(appointmentIdParam);
   const isValidId = Number.isInteger(appointmentId) && appointmentId > 0;
@@ -141,6 +146,25 @@ export default function StudentAppointmentDetailPage() {
       toast.error(resolveStudentApiError(err, 'Yeniden planlama işlemi tamamlanamadı.'));
     } finally {
       setRescheduleDecisionLoading(false);
+    }
+  };
+
+  const handleDelegationDecision = async (accept: boolean) => {
+    if (!appointment?.pendingDelegationId || delegationDecisionLoading) return;
+    setDelegationDecisionLoading(true);
+    try {
+      if (accept) {
+        await acceptStudentDelegation(appointment.pendingDelegationId);
+        toast.success('Randevu devri kabul edildi.');
+      } else {
+        await rejectStudentDelegation(appointment.pendingDelegationId);
+        toast.success('Randevu devri reddedildi.');
+      }
+      await loadAppointment();
+    } catch (err) {
+      toast.error(resolveStudentApiError(err, 'Randevu devri işlemi tamamlanamadı.'));
+    } finally {
+      setDelegationDecisionLoading(false);
     }
   };
 
@@ -255,6 +279,53 @@ export default function StudentAppointmentDetailPage() {
               </div>
             </section>
           )}
+
+          {appointment.pendingDelegationId ? (
+            <section className="rounded-xl border border-primary-container/30 bg-primary-fixed/35 p-4 sm:p-5" aria-label="Randevu devri onayı">
+              <div className="flex items-start gap-3">
+                <span className="material-symbols-outlined mt-0.5 text-primary-container" aria-hidden>swap_horiz</span>
+                <div className="min-w-0 flex-1">
+                  <h2 className="font-body-md text-base font-semibold text-on-surface">
+                    Randevunuzun devredilmesi için onayınız bekleniyor.
+                  </h2>
+                  <dl className="mt-3 grid gap-x-6 gap-y-2 font-body-md text-sm text-on-surface-variant sm:grid-cols-2">
+                    <div>
+                      <dt className="font-semibold text-on-surface">Mevcut personel</dt>
+                      <dd>{appointment.pendingDelegationFromStaffName ?? '-'}</dd>
+                    </div>
+                    <div>
+                      <dt className="font-semibold text-on-surface">Yeni personel</dt>
+                      <dd>{appointment.pendingDelegationToStaffName ?? '-'}</dd>
+                    </div>
+                    {appointment.pendingDelegationExpiresAt ? (
+                      <div className="sm:col-span-2">
+                        <dt className="font-semibold text-on-surface">Son yanıt zamanı</dt>
+                        <dd>{new Date(appointment.pendingDelegationExpiresAt).toLocaleString('tr-TR')}</dd>
+                      </div>
+                    ) : null}
+                  </dl>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      disabled={delegationDecisionLoading}
+                      onClick={() => void handleDelegationDecision(true)}
+                      className={STUDENT_UI.PRIMARY_BUTTON_CLASS}
+                    >
+                      Kabul Et
+                    </button>
+                    <button
+                      type="button"
+                      disabled={delegationDecisionLoading}
+                      onClick={() => void handleDelegationDecision(false)}
+                      className={STUDENT_UI.DANGER_BUTTON_CLASS}
+                    >
+                      Reddet
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          ) : null}
 
           {rescheduleApproval ? (
             <section className="rounded-xl border border-primary-container/30 bg-primary-fixed/35 p-4 sm:p-5" aria-label="Yeniden planlama onayı">

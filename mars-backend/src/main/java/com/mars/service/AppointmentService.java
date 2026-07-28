@@ -191,7 +191,9 @@ public class AppointmentService {
         return appointmentRepository.findActiveByStudentIdWithDetails(
                         student.getUserId(), ACTIVE_APPOINTMENT_STATUSES)
                 .stream()
-                .map(appointmentMapper::toStudentResponse)
+                .map(appointment -> withStudentDelegationState(
+                        appointmentMapper.toStudentResponse(appointment),
+                        appointment.getAppointmentId()))
                 .toList();
     }
 
@@ -212,7 +214,9 @@ public class AppointmentService {
                         appointmentId, student.getUserId())
                 .orElseThrow(() -> ownershipException(
                         appointmentId, AppointmentMessages.STUDENT_APPOINTMENT_ACCESS_DENIED));
-        StudentAppointmentResponseDto dto = appointmentMapper.toStudentResponse(appointment);
+        StudentAppointmentResponseDto dto = withStudentDelegationState(
+                appointmentMapper.toStudentResponse(appointment),
+                appointmentId);
 
         List<DelegationLog> delegations = delegationLogRepository
                 .findByAppointment_AppointmentIdAndDelegationStatusOrderByUpdatedAtDesc(
@@ -227,6 +231,23 @@ public class AppointmentService {
             dto.setIsDelegated(false);
         }
 
+        return dto;
+    }
+
+    private StudentAppointmentResponseDto withStudentDelegationState(
+            StudentAppointmentResponseDto dto,
+            Integer appointmentId) {
+        List<DelegationLog> pending = delegationLogRepository
+                .findByAppointment_AppointmentIdAndDelegationStatusOrderByUpdatedAtDesc(
+                        appointmentId, "PENDING_STUDENT_APPROVAL");
+        if (!pending.isEmpty()) {
+            DelegationLog latest = pending.get(0);
+            dto.setPendingDelegationId(latest.getDelegationId());
+            dto.setPendingDelegationStatus(latest.getDelegationStatus());
+            dto.setPendingDelegationFromStaffName(latest.getDelegatedByUser().getFullName());
+            dto.setPendingDelegationToStaffName(latest.getDelegatedToUser().getFullName());
+            dto.setPendingDelegationExpiresAt(latest.getStudentApprovalExpiresAt());
+        }
         return dto;
     }
 

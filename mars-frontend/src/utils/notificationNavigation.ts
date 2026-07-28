@@ -21,8 +21,8 @@ export function getNotificationTarget(notification: NotificationItem, role?: str
     if (role === ROLES.ACADEMICIAN && notification.relatedDelegationId) {
       return academicianIncomingDelegationDetailPath(notification.relatedDelegationId);
     }
-    if (role === ROLES.STUDENT && notification.relatedDelegationId) {
-      return null;
+    if (role === ROLES.STUDENT && appointmentId) {
+      return studentAppointmentDetailPath(appointmentId);
     }
     return null;
   }

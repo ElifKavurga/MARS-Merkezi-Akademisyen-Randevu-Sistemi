@@ -40,4 +40,9 @@ public class StudentAppointmentResponseDto {
     private String delegatedFromStaffName;
     private String delegatedToStaffName;
     private LocalDateTime delegationDate;
+    private Integer pendingDelegationId;
+    private String pendingDelegationStatus;
+    private String pendingDelegationFromStaffName;
+    private String pendingDelegationToStaffName;
+    private LocalDateTime pendingDelegationExpiresAt;
 }
