@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import StudentAcceptingBadge from '../components/StudentAcceptingBadge';
-import StudentBackLink from '../components/StudentBackLink';
 import StudentEmptyState from '../components/StudentEmptyState';
 import StudentErrorState from '../components/StudentErrorState';
 import StudentLoadingState from '../components/StudentLoadingState';
@@ -11,7 +10,7 @@ import { MEETING_TYPE_OPTIONS } from '../constants/availability';
 import {
   STUDENT_ACADEMICIAN_MESSAGES,
 } from '../constants/studentAcademician';
-import { studentAppointmentCreatePath, ROUTES } from '../constants/routes';
+import { studentAppointmentCreatePath } from '../constants/routes';
 import { STUDENT_UI } from '../constants/studentUi';
 import { useToast } from '../hooks/useToast';
 import {
@@ -156,12 +155,6 @@ export default function StudentAcademicianProfilePage() {
           title={STUDENT_UI.PROFILE_TITLE}
           description={STUDENT_UI.PROFILE_SUBTITLE}
         />
-        <div className="mb-4">
-          <StudentBackLink
-            to={ROUTES.STUDENT_ACADEMICIAN_SEARCH}
-            label={STUDENT_ACADEMICIAN_MESSAGES.BACK_TO_SEARCH}
-          />
-        </div>
         {notFound ? (
           <StudentEmptyState
             icon="person_off"
@@ -174,10 +167,6 @@ export default function StudentAcademicianProfilePage() {
           <StudentErrorState
             message={error ?? STUDENT_UI.LOAD_ERROR_GENERIC}
             onRetry={() => void loadProfile()}
-            secondaryAction={{
-              label: STUDENT_ACADEMICIAN_MESSAGES.BACK_TO_SEARCH,
-              to: ROUTES.STUDENT_ACADEMICIAN_SEARCH,
-            }}
           />
         )}
       </div>
@@ -195,14 +184,7 @@ export default function StudentAcademicianProfilePage() {
         description={STUDENT_UI.PROFILE_SUBTITLE}
       />
 
-      <div className="mb-6">
-        <StudentBackLink
-          to={ROUTES.STUDENT_ACADEMICIAN_SEARCH}
-          label={STUDENT_ACADEMICIAN_MESSAGES.BACK_TO_SEARCH}
-        />
-      </div>
-
-      <section className="mb-6 rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-8">
+      <section className="mb-4 rounded-xl border border-outline-variant bg-surface-container-lowest p-4 sm:p-5">
         <div className="flex flex-col items-center gap-6 md:flex-row md:items-start">
           {profile.profilePhotoUrl ? (
             <img

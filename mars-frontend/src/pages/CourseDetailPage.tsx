@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import AdminActionButton from '../components/AdminActionButton';
 import ConfirmModal from '../components/ConfirmModal';
 import CourseAssignAssistantModal from '../components/CourseAssignAssistantModal';
@@ -12,7 +12,6 @@ import CourseStatCard from '../components/CourseStatCard';
 import CourseStatusBadge from '../components/CourseStatusBadge';
 import Loading from '../components/Loading';
 import { COURSE_COMING_SOON_MODULES, COURSE_MESSAGES } from '../constants/course';
-import { ROUTES } from '../constants/routes';
 import { useToast } from '../hooks/useToast';
 import {
   getCourseAssistants,
@@ -26,7 +25,6 @@ import { formatDateTime } from '../utils';
 export default function CourseDetailPage() {
   const { courseId: courseIdParam } = useParams<{ courseId: string }>();
   const courseId = Number(courseIdParam);
-  const navigate = useNavigate();
   const toast = useToast();
 
   const [course, setCourse] = useState<CourseDetail | null>(null);
@@ -151,7 +149,7 @@ export default function CourseDetailPage() {
   const pageTitle = course?.courseName ?? COURSE_MESSAGES.PAGE_TITLE_FALLBACK;
 
   return (
-    <div className="admin-page animate-fade-in space-y-6">
+    <div className="admin-page animate-fade-in space-y-4">
       <CourseDetailBreadcrumb courseName={course?.courseName} />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -163,13 +161,6 @@ export default function CourseDetailPage() {
             </p>
           ) : null}
         </div>
-        <AdminActionButton
-          variant="neutral"
-          icon="arrow_back"
-          onClick={() => navigate(ROUTES.ACADEMICIAN_COURSES)}
-        >
-          {COURSE_MESSAGES.BACK_TO_COURSES}
-        </AdminActionButton>
       </div>
 
       {loading ? (

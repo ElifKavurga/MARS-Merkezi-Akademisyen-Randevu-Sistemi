@@ -5,11 +5,9 @@ import AdminActionButton from '../components/AdminActionButton';
 import ConfirmModal from '../components/ConfirmModal';
 import DelegationStatusBadge from '../components/DelegationStatusBadge';
 import Loading from '../components/Loading';
-import StudentBackLink from '../components/StudentBackLink';
 import StudentPageHeader from '../components/StudentPageHeader';
 import { getMeetingTypeLabel } from '../constants/appointment';
 import { getDelegationStatusLabel } from '../constants/delegation';
-import { ROUTES } from '../constants/routes';
 import { useToast } from '../hooks/useToast';
 import { useAuth } from '../hooks/useAuth';
 import {
@@ -130,21 +128,16 @@ export default function AcademicianIncomingDelegationDetailPage() {
   const actionable = isTargetUser && (user?.role === 'ASSISTANT'
     ? item.delegationStatus === 'PENDING'
     : item.delegationStatus === 'PENDING_ACADEMICIAN_APPROVAL');
-  const backRoute = user?.role === 'ASSISTANT'
-    ? ROUTES.ASSISTANT_DELEGATION_HISTORY
-    : ROUTES.ACADEMICIAN_DELEGATION_HISTORY;
-
   return (
     <div className="w-full min-w-0 animate-fade-in flex flex-col gap-3 md:gap-4">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <StudentBackLink to={`${backRoute}?tab=incoming`} label="Gelen taleplere dön" />
-        {actionable ? (
+      {actionable ? (
+        <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
           <div className="flex flex-wrap gap-2">
             <AdminActionButton variant="primary" icon="check" onClick={() => setAction('accept')}>Kabul Et</AdminActionButton>
             <AdminActionButton variant="danger" icon="close" onClick={() => setAction('reject')}>Reddet</AdminActionButton>
           </div>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
 
       <StudentPageHeader
         title="Randevu Devri Detayı"

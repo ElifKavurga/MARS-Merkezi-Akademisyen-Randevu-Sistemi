@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import StudentAppointmentStepper from '../components/StudentAppointmentStepper';
-import StudentBackLink from '../components/StudentBackLink';
 import StudentEmptyState from '../components/StudentEmptyState';
 import StudentErrorState from '../components/StudentErrorState';
 import StudentLoadingState from '../components/StudentLoadingState';
@@ -25,7 +24,6 @@ import {
   STUDENT_APPOINTMENT_STEPS,
   STUDENT_POST_APPOINTMENT_REDIRECT,
 } from '../constants/studentAppointment';
-import { studentAcademicianProfilePath, ROUTES } from '../constants/routes';
 import { STUDENT_UI } from '../constants/studentUi';
 import { useAuth } from '../hooks/useAuth';
 import { toLocalIsoDate } from '../constants/calendar';
@@ -679,11 +677,6 @@ export default function StudentAppointmentCreatePage() {
   const stepHeadingRef = useRef<HTMLHeadingElement | null>(null);
 
   const academicianId = Number(academicianIdParam);
-  const profilePath =
-    Number.isInteger(academicianId) && academicianId >= 1
-      ? studentAcademicianProfilePath(academicianId)
-      : ROUTES.STUDENT_ACADEMICIAN_SEARCH;
-
   const persistDraft = useCallback(
     (draft: StudentAppointmentDraft) => {
       setSelectedDraft(draft);
@@ -1042,12 +1035,6 @@ export default function StudentAppointmentCreatePage() {
           title={STUDENT_APPOINTMENT_MESSAGES.TITLE}
           description={STUDENT_APPOINTMENT_MESSAGES.SUBTITLE}
         />
-        <div className="mb-4">
-          <StudentBackLink
-            to={profilePath}
-            label={STUDENT_APPOINTMENT_MESSAGES.BACK_TO_PROFILE}
-          />
-        </div>
         {notFound ? (
           <StudentEmptyState
             icon="person_off"
@@ -1058,10 +1045,6 @@ export default function StudentAppointmentCreatePage() {
           <StudentErrorState
             message={error ?? STUDENT_UI.LOAD_ERROR_GENERIC}
             onRetry={() => void loadAcademician()}
-            secondaryAction={{
-              label: STUDENT_APPOINTMENT_MESSAGES.BACK_TO_PROFILE,
-              to: profilePath,
-            }}
           />
         )}
       </div>
@@ -1075,12 +1058,6 @@ export default function StudentAppointmentCreatePage() {
           title={STUDENT_APPOINTMENT_MESSAGES.TITLE}
           description={STUDENT_APPOINTMENT_MESSAGES.SUBTITLE}
         />
-        <div className="mb-4">
-          <StudentBackLink
-            to={profilePath}
-            label={STUDENT_APPOINTMENT_MESSAGES.BACK_TO_PROFILE}
-          />
-        </div>
         <AcademicianSummary academician={academician} />
         <StudentEmptyState
           icon="event_busy"
@@ -1106,13 +1083,6 @@ export default function StudentAppointmentCreatePage() {
         title={STUDENT_APPOINTMENT_MESSAGES.TITLE}
         description={STUDENT_APPOINTMENT_MESSAGES.SUBTITLE}
       />
-
-      <div className="mb-6">
-        <StudentBackLink
-          to={profilePath}
-          label={STUDENT_APPOINTMENT_MESSAGES.BACK_TO_PROFILE}
-        />
-      </div>
 
       <AcademicianSummary academician={academician} />
       <StudentAppointmentStepper

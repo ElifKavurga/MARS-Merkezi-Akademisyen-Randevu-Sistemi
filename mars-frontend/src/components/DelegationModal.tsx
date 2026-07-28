@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { isAxiosError } from 'axios';
-import {
-  DELEGATION_MESSAGES,
-  formatCourseLabel,
-} from '../constants/delegation';
+import { DELEGATION_MESSAGES } from '../constants/delegation';
 import { ROLES } from '../constants/roles';
 import { FORM_FIELD_CLASS } from '../constants/ui';
 import { useAuth } from '../hooks/useAuth';
@@ -59,6 +56,7 @@ export default function DelegationModal({
 
   const open = appointment !== null;
   const appointmentId = appointment?.appointmentId;
+  const assistantFlow = user?.role === ROLES.ASSISTANT;
   useEffect(() => {
     if (!open || !appointmentId) {
       return;
@@ -75,12 +73,15 @@ export default function DelegationModal({
     void (async () => {
       try {
         const data = normalizeTargets(await getDelegationTargets(appointmentId));
+        const eligibleTargets = assistantFlow
+          ? data.filter((target) => target.role === 'ASSISTANT')
+          : data;
         if (cancelled) {
           return;
         }
-        setTargets(data);
-        if (data.length === 1) {
-          setTargetUserId(data[0].userId);
+        setTargets(eligibleTargets);
+        if (eligibleTargets.length === 1) {
+          setTargetUserId(eligibleTargets[0].userId);
         }
       } catch (err) {
         if (cancelled) {
@@ -98,17 +99,18 @@ export default function DelegationModal({
     return () => {
       cancelled = true;
     };
-  }, [open, appointmentId]);
+  }, [open, appointmentId, assistantFlow]);
 
   const filteredTargets = useMemo(() => {
     const query = search.trim().toLocaleLowerCase('tr-TR');
     return targets.filter((target) => {
+      if (assistantFlow && target.role !== 'ASSISTANT') return false;
       if (roleFilter !== 'ALL' && target.role !== roleFilter) return false;
       if (!query) return true;
       return [target.fullName, target.institutionalEmail, target.departmentName]
         .some((value) => value?.toLocaleLowerCase('tr-TR').includes(query));
     });
-  }, [roleFilter, search, targets]);
+  }, [assistantFlow, roleFilter, search, targets]);
 
   if (!appointment) {
     return null;
@@ -163,18 +165,11 @@ export default function DelegationModal({
   };
 
   const selectedTarget = targets.find((item) => item.userId === targetUserId);
-  const courseLabel = formatCourseLabel(appointment);
-  const assistantFlow = user?.role === ROLES.ASSISTANT;
-  const roleFilterOptions = assistantFlow
-    ? ([
-        ['ALL', 'Tümü'],
-        ['ASSISTANT', 'Asistan'],
-      ] as const)
-    : ([
-        ['ALL', 'Tümü'],
-        ['ACADEMICIAN', 'Akademisyen'],
-        ['ASSISTANT', 'Asistan'],
-      ] as const);
+  const roleFilterOptions = [
+    ['ALL', 'Tümü'],
+    ['ACADEMICIAN', 'Akademisyen'],
+    ['ASSISTANT', 'Asistan'],
+  ] as const;
   const handleRoleFilterChange = (value: 'ALL' | 'ACADEMICIAN' | 'ASSISTANT') => {
     setRoleFilter(value);
     window.requestAnimationFrame(() => searchInputRef.current?.focus());
@@ -206,17 +201,8 @@ export default function DelegationModal({
           description={assistantFlow ? undefined : DELEGATION_MESSAGES.MODAL_DESCRIPTION}
         />
 
+        {!assistantFlow ? (
         <dl className="mt-4 space-y-3">
-          <div className="rounded-lg border border-outline-variant bg-surface-container-lowest p-4">
-            <dt className="font-label-sm text-label-sm text-on-surface-variant">
-              {DELEGATION_MESSAGES.COURSE_LABEL}
-            </dt>
-            <dd className="mt-1 font-body-md text-body-md font-medium text-on-background">
-              {courseLabel}
-            </dd>
-          </div>
-
-          {!assistantFlow ? (
           <div className="rounded-lg border border-outline-variant bg-surface-container-lowest p-4">
             <dt className="font-label-sm text-label-sm text-on-surface-variant">
               {DELEGATION_MESSAGES.SUMMARY_LABEL}
@@ -231,13 +217,14 @@ export default function DelegationModal({
                 : ''}
             </dd>
           </div>
-          ) : null}
         </dl>
+        ) : null}
 
         <fieldset className="mt-4 space-y-3 text-left">
           <legend className="font-label-md text-label-md font-semibold text-on-surface">
             Devredilecek kişi
           </legend>
+          {!assistantFlow ? (
           <div className="flex flex-wrap gap-2" aria-label="Personel türü">
             {roleFilterOptions.map(([value, label]) => (
               <button key={value} type="button" onClick={() => handleRoleFilterChange(value)}
@@ -251,6 +238,7 @@ export default function DelegationModal({
               </button>
             ))}
           </div>
+          ) : null}
           <label htmlFor="delegation-target-search" className="sr-only">Kişi ara</label>
           <div className="relative">
             <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant" aria-hidden>search</span>

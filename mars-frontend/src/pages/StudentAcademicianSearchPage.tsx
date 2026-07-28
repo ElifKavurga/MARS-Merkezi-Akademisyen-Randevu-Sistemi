@@ -14,6 +14,8 @@ import {
 import { studentAcademicianProfilePath } from '../constants/routes';
 import { STUDENT_UI } from '../constants/studentUi';
 import { FORM_FIELD_CLASS, FORM_SEARCH_ICON_CLASS, FORM_SELECT_CLASS } from '../constants/ui';
+import { useAuth } from '../hooks/useAuth';
+import { useDepartments } from '../hooks/useDepartments';
 import { useToast } from '../hooks/useToast';
 import {
   getStudentAcademicianTitles,
@@ -37,7 +39,7 @@ type AppliedFilters = {
 function AcademicianCard({ academician }: { academician: StudentAcademician }) {
   return (
     <article
-      className="flex h-full min-w-0 flex-col gap-4 rounded-xl border border-outline-variant bg-surface-container-lowest p-5"
+      className="flex h-full min-w-0 flex-col gap-3 rounded-lg border border-outline-variant bg-surface-container-lowest p-4"
       data-academician-id={academician.userId}
     >
       <div className="flex items-start gap-4">
@@ -45,7 +47,7 @@ function AcademicianCard({ academician }: { academician: StudentAcademician }) {
           <img
             src={academician.profilePhotoUrl}
             alt=""
-            className="h-14 w-14 shrink-0 rounded-full border border-outline-variant object-cover"
+            className="h-12 w-12 shrink-0 rounded-full border border-outline-variant object-cover"
           />
         ) : (
           <UserAvatar fullName={academician.fullName} size="lg" />
@@ -69,7 +71,7 @@ function AcademicianCard({ academician }: { academician: StudentAcademician }) {
         </div>
       </div>
 
-      <dl className="space-y-2 border-t border-outline-variant pt-4">
+      <dl className="space-y-2 border-t border-outline-variant pt-3">
         <div className="flex items-start gap-2">
           <dt className="sr-only">{STUDENT_ACADEMICIAN_MESSAGES.DEPARTMENT_FIELD}</dt>
           <dd className="flex min-w-0 items-center gap-1.5 font-body-md text-body-md text-on-surface-variant">
@@ -108,16 +110,15 @@ function AcademicianCard({ academician }: { academician: StudentAcademician }) {
 
 export default function StudentAcademicianSearchPage() {
   const toast = useToast();
+  const { user } = useAuth();
+  const { departments, loading: departmentsLoading } = useDepartments();
   const [searchInput, setSearchInput] = useState('');
   const [departmentId, setDepartmentId] = useState(0);
   const [academicTitle, setAcademicTitle] = useState('');
   const [acceptingFilter, setAcceptingFilter] = useState('');
   const [sortInput, setSortInput] = useState<StudentAcademicianSort>('NAME_ASC');
   const [titleOptions, setTitleOptions] = useState<string[]>([]);
-  const [applied, setApplied] = useState<AppliedFilters>({
-    search: '',
-    sort: 'NAME_ASC',
-  });
+  const [applied, setApplied] = useState<AppliedFilters | null>(null);
   const [page, setPage] = useState(0);
   const [result, setResult] = useState<StudentAcademicianPage | null>(null);
   const [loading, setLoading] = useState(true);
@@ -145,6 +146,26 @@ export default function StudentAcademicianSearchPage() {
       cancelled = true;
     };
   }, [toast]);
+
+  useEffect(() => {
+    if (applied || departmentsLoading) {
+      return;
+    }
+
+    const normalizedUserDepartment = user?.department?.trim().toLocaleLowerCase('tr-TR');
+    const matchedDepartment = normalizedUserDepartment
+      ? departments.find((department) =>
+          department.departmentName.trim().toLocaleLowerCase('tr-TR') === normalizedUserDepartment)
+      : undefined;
+    const initialDepartmentId = matchedDepartment?.departmentId ?? 0;
+
+    setDepartmentId(initialDepartmentId);
+    setApplied({
+      search: '',
+      departmentId: initialDepartmentId > 0 ? initialDepartmentId : undefined,
+      sort: 'NAME_ASC',
+    });
+  }, [applied, departments, departmentsLoading, user?.department]);
 
   const loadAcademicians = useCallback(
     async (filters: AppliedFilters, pageIndex: number) => {
@@ -174,6 +195,9 @@ export default function StudentAcademicianSearchPage() {
   );
 
   useEffect(() => {
+    if (!applied) {
+      return;
+    }
     void loadAcademicians(applied, page);
   }, [applied, page, loadAcademicians]);
 
@@ -204,7 +228,7 @@ export default function StudentAcademicianSearchPage() {
         description={STUDENT_ACADEMICIAN_MESSAGES.SUBTITLE}
       />
 
-      <section className="mb-6 rounded-xl border border-outline-variant bg-surface-container-lowest p-4 sm:p-6">
+      <section className="mb-4 rounded-lg border border-outline-variant bg-surface-container-lowest p-4">
         <form
           className="flex flex-col gap-3"
           onSubmit={(event) => {
@@ -232,7 +256,7 @@ export default function StudentAcademicianSearchPage() {
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
             <div className="min-w-0">
               <label htmlFor="student-academician-department" className="sr-only">
                 {STUDENT_ACADEMICIAN_MESSAGES.DEPARTMENT_FILTER_LABEL}
@@ -325,7 +349,7 @@ export default function StudentAcademicianSearchPage() {
       ) : error ? (
         <StudentErrorState
           message={error}
-          onRetry={() => void loadAcademicians(applied, page)}
+          onRetry={applied ? () => void loadAcademicians(applied, page) : undefined}
         />
       ) : academicians.length === 0 ? (
         <StudentEmptyState
@@ -335,7 +359,7 @@ export default function StudentAcademicianSearchPage() {
         />
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {academicians.map((academician) => (
               <AcademicianCard key={academician.userId} academician={academician} />
             ))}

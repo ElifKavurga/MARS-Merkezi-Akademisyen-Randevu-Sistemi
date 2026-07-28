@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import AppointmentStatusBadge from '../components/AppointmentStatusBadge';
 import ConfirmModal from '../components/ConfirmModal';
 import StudentErrorState from '../components/StudentErrorState';
@@ -205,14 +205,8 @@ export default function StudentAppointmentDetailPage() {
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <Link to={ROUTES.STUDENT_APPOINTMENTS} className={STUDENT_UI.BACK_LINK_CLASS}>
-          <span className="material-symbols-outlined text-[18px]" aria-hidden>
-            arrow_back
-          </span>
-          {STUDENT_APPOINTMENT_MESSAGES.DETAIL_BACK}
-        </Link>
-        {appointment && canCancel ? (
+      {appointment && canCancel ? (
+        <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
           <button
             type="button"
             className={STUDENT_UI.DANGER_BUTTON_CLASS}
@@ -223,8 +217,8 @@ export default function StudentAppointmentDetailPage() {
           >
             {STUDENT_APPOINTMENT_MESSAGES.CANCEL_ACTION}
           </button>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
 
       <StudentPageHeader
         title={STUDENT_APPOINTMENT_MESSAGES.DETAIL_TITLE}
@@ -237,10 +231,6 @@ export default function StudentAppointmentDetailPage() {
         <StudentErrorState
           message={error}
           onRetry={isValidId ? () => void loadAppointment() : undefined}
-          secondaryAction={{
-            label: STUDENT_APPOINTMENT_MESSAGES.DETAIL_BACK,
-            to: ROUTES.STUDENT_APPOINTMENTS,
-          }}
         />
       ) : appointment ? (
         <div className="flex flex-col gap-3 md:gap-4">

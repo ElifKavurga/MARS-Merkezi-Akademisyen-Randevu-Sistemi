@@ -6,13 +6,11 @@ import AppointmentStatusBadge from '../components/AppointmentStatusBadge';
 import AppointmentRescheduleModal from '../components/AppointmentRescheduleModal';
 import ConfirmModal from '../components/ConfirmModal';
 import DelegationModal from '../components/DelegationModal';
-import StudentBackLink from '../components/StudentBackLink';
 import StudentErrorState from '../components/StudentErrorState';
 import StudentLoadingState from '../components/StudentLoadingState';
 import StudentPageHeader from '../components/StudentPageHeader';
 import { STAFF_APPOINTMENT_MESSAGES, getMeetingTypeLabel } from '../constants/appointment';
 import { canDelegateAppointment } from '../constants/delegation';
-import { ROUTES } from '../constants/routes';
 import { STUDENT_UI } from '../constants/studentUi';
 import { useToast } from '../hooks/useToast';
 import { useAuth } from '../hooks/useAuth';
@@ -90,7 +88,6 @@ type AcademicianAppointmentDetailPageProps = {
 
 export default function AcademicianAppointmentDetailPage({
   scope = 'academician',
-  backTo = ROUTES.ACADEMICIAN_APPOINTMENTS,
 }: AcademicianAppointmentDetailPageProps) {
   const { appointmentId: appointmentIdParam } = useParams<{ appointmentId: string }>();
   const appointmentId = Number(appointmentIdParam);
@@ -289,9 +286,8 @@ export default function AcademicianAppointmentDetailPage({
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <StudentBackLink to={backTo} label="Geri Dön" />
-        {appointment ? (
+      {appointment ? (
+        <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
           <div className="flex flex-wrap gap-2">
             {isOwnedAppointment ? (
               <>
@@ -355,8 +351,8 @@ export default function AcademicianAppointmentDetailPage({
               </span>
             ) : null}
           </div>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
 
       <StudentPageHeader
         title="Randevu Detayı"
@@ -369,7 +365,6 @@ export default function AcademicianAppointmentDetailPage({
         <StudentErrorState
           message={error}
           onRetry={isValidId ? () => void loadAppointment() : undefined}
-          secondaryAction={{ label: 'Geri Dön', to: backTo }}
         />
       ) : appointment ? (
         <div className="flex flex-col gap-3 md:gap-4">
