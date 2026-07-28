@@ -41,6 +41,15 @@ export function canRescheduleAcademicianAppointment(
     && !['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(appointment.appointmentStatus);
 }
 
+export function canEndStaffAppointment(
+  appointment: StaffAppointment,
+  scope: StaffAppointmentScope,
+  user: AuthUser | null | undefined,
+): boolean {
+  return isOwnedStaffAppointment(appointment, scope, user)
+    && appointment.appointmentStatus === 'APPROVED';
+}
+
 export function canDelegateAcademicianAppointment(
   appointment: StaffAppointment,
   scope: StaffAppointmentScope,

@@ -45,6 +45,8 @@ export {
   getStaffAppointment,
   approveStaffAppointment,
   rejectStaffAppointment,
+  completeStaffAppointment,
+  markStaffAppointmentNoShow,
 } from './appointmentService';
 export {
   createDelegation,

@@ -14,10 +14,17 @@ import { canDelegateAppointment } from '../constants/delegation';
 import { STUDENT_UI } from '../constants/studentUi';
 import { useToast } from '../hooks/useToast';
 import { useAuth } from '../hooks/useAuth';
-import { approveStaffAppointment, getStaffAppointment, rejectStaffAppointment } from '../services/appointmentService';
+import {
+  approveStaffAppointment,
+  completeStaffAppointment,
+  getStaffAppointment,
+  markStaffAppointmentNoShow,
+  rejectStaffAppointment,
+} from '../services/appointmentService';
 import { getSentDelegations } from '../services/delegationService';
 import type { StaffAppointment, StaffAppointmentScope } from '../types/appointment';
 import {
+  canEndStaffAppointment,
   canDecideStaffAppointment,
   canRescheduleAcademicianAppointment,
   getDelegationUnavailableReason,
@@ -101,6 +108,12 @@ export default function AcademicianAppointmentDetailPage({
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
   const [rejectionError, setRejectionError] = useState<string | null>(null);
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [completeError, setCompleteError] = useState<string | null>(null);
+  const [showNoShowConfirm, setShowNoShowConfirm] = useState(false);
+  const [isMarkingNoShow, setIsMarkingNoShow] = useState(false);
+  const [noShowError, setNoShowError] = useState<string | null>(null);
   const [showReschedule, setShowReschedule] = useState(false);
   const [showDelegation, setShowDelegation] = useState(false);
   const [hasActiveDelegation, setHasActiveDelegation] = useState(false);
@@ -190,6 +203,22 @@ export default function AcademicianAppointmentDetailPage({
     setShowRejectConfirm(true);
   };
 
+  const handleCompleteClick = () => {
+    if (!appointment || !canEndStaffAppointment(appointment, scope, user) || isCompleting || isMarkingNoShow) {
+      return;
+    }
+    setCompleteError(null);
+    setShowCompleteConfirm(true);
+  };
+
+  const handleNoShowClick = () => {
+    if (!appointment || !canEndStaffAppointment(appointment, scope, user) || isCompleting || isMarkingNoShow) {
+      return;
+    }
+    setNoShowError(null);
+    setShowNoShowConfirm(true);
+  };
+
   const handleApproveConfirm = async () => {
     if (!appointment || isApproving) {
       return;
@@ -254,6 +283,70 @@ export default function AcademicianAppointmentDetailPage({
     }
   };
 
+  const resolveEndActionError = (err: unknown): string => {
+    if (isAxiosError(err)) {
+      if (err.response?.status === 403) {
+        return STAFF_APPOINTMENT_MESSAGES.ACTION_ACCESS_DENIED;
+      }
+      if (err.response?.status === 404) {
+        return STAFF_APPOINTMENT_MESSAGES.ACTION_NOT_FOUND;
+      }
+      if (err.response?.status === 409) {
+        return STAFF_APPOINTMENT_MESSAGES.ACTION_NOT_APPROVED;
+      }
+      if (typeof err.response?.data?.message === 'string') {
+        return err.response.data.message;
+      }
+    }
+    return STAFF_APPOINTMENT_MESSAGES.ACTION_ERROR;
+  };
+
+  const handleCompleteConfirm = async () => {
+    if (!appointment || isCompleting) {
+      return;
+    }
+
+    setIsCompleting(true);
+    setCompleteError(null);
+    try {
+      const updatedAppointment = await completeStaffAppointment(
+        scope,
+        appointment.appointmentId,
+      );
+      setAppointment(updatedAppointment);
+      setShowCompleteConfirm(false);
+      toast.success(STAFF_APPOINTMENT_MESSAGES.COMPLETE_SUCCESS);
+      void refreshRelatedViews();
+    } catch (err) {
+      setCompleteError(resolveEndActionError(err));
+    } finally {
+      setIsCompleting(false);
+    }
+  };
+
+  const handleNoShowConfirm = async () => {
+    if (!appointment || isMarkingNoShow) {
+      return;
+    }
+
+    setIsMarkingNoShow(true);
+    setNoShowError(null);
+    try {
+      const updatedAppointment = await markStaffAppointmentNoShow(
+        scope,
+        appointment.appointmentId,
+      );
+      setAppointment(updatedAppointment);
+      setShowNoShowConfirm(false);
+      toast.success(STAFF_APPOINTMENT_MESSAGES.NO_SHOW_SUCCESS);
+      void refreshRelatedViews();
+    } catch (err) {
+      setNoShowError(resolveEndActionError(err));
+    } finally {
+      setIsMarkingNoShow(false);
+    }
+  };
+
   const courseLabel = appointment?.courseName
     ? `${appointment.courseCode ?? ''} ${appointment.courseName}`.trim()
     : null;
@@ -269,6 +362,9 @@ export default function AcademicianAppointmentDetailPage({
     && canDecideStaffAppointment(appointment, scope, user);
   const canReschedule = appointment !== null
     && canRescheduleAcademicianAppointment(appointment, scope, user);
+  const canEnd = appointment !== null
+    && canEndStaffAppointment(appointment, scope, user);
+  const actionBusy = isApproving || isRejecting || isCompleting || isMarkingNoShow;
   const delegationUnavailableReason = appointment
     ? checkingDelegation
       ? 'Randevunun devredilebilirlik durumu kontrol ediliyor.'
@@ -294,7 +390,7 @@ export default function AcademicianAppointmentDetailPage({
                 <button
                   type="button"
                   className={STUDENT_UI.PRIMARY_BUTTON_CLASS}
-                  disabled={isApproving || isRejecting || !canDecide}
+                  disabled={actionBusy || !canDecide}
                   onClick={handleApproveClick}
                 >
                   <span className="material-symbols-outlined text-[18px]" aria-hidden="true">check</span>
@@ -303,7 +399,7 @@ export default function AcademicianAppointmentDetailPage({
                 <button
                   type="button"
                   className="flex items-center gap-1.5 rounded-lg border border-outline bg-surface-container-lowest px-4 py-2.5 font-label-md text-label-md text-on-surface transition-colors duration-150 hover:bg-surface-container disabled:opacity-50"
-                  disabled={isApproving || isRejecting || !canDecide}
+                  disabled={actionBusy || !canDecide}
                   onClick={handleRejectClick}
                 >
                   <span className="material-symbols-outlined text-[18px]" aria-hidden="true">close</span>
@@ -311,11 +407,33 @@ export default function AcademicianAppointmentDetailPage({
                 </button>
               </>
             ) : null}
+            {canEnd ? (
+              <>
+                <button
+                  type="button"
+                  className={STUDENT_UI.PRIMARY_BUTTON_CLASS}
+                  disabled={actionBusy}
+                  onClick={handleCompleteClick}
+                >
+                  <span className="material-symbols-outlined text-[18px]" aria-hidden="true">task_alt</span>
+                  {isCompleting ? 'Tamamlanıyor...' : 'Tamamlandı'}
+                </button>
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 rounded-lg border border-outline bg-surface-container-lowest px-4 py-2.5 font-label-md text-label-md text-on-surface transition-colors duration-150 hover:bg-surface-container disabled:opacity-50"
+                  disabled={actionBusy}
+                  onClick={handleNoShowClick}
+                >
+                  <span className="material-symbols-outlined text-[18px]" aria-hidden="true">person_off</span>
+                  {isMarkingNoShow ? 'İşaretleniyor...' : 'No-Show'}
+                </button>
+              </>
+            ) : null}
             {canReschedule ? (
               <button
                 type="button"
                 className={STUDENT_UI.SECONDARY_BUTTON_CLASS}
-                disabled={isApproving || isRejecting}
+                disabled={actionBusy}
                 onClick={() => setShowReschedule(true)}
               >
                 <span className="material-symbols-outlined text-[18px]" aria-hidden>edit_calendar</span>
@@ -329,7 +447,7 @@ export default function AcademicianAppointmentDetailPage({
                 <button
                   type="button"
                   className={`${STUDENT_UI.SECONDARY_BUTTON_CLASS} ${!canDelegate ? 'cursor-not-allowed opacity-50' : ''}`}
-                  disabled={isApproving || isRejecting || !canDelegate}
+                  disabled={actionBusy || !canDelegate}
                   aria-disabled={!canDelegate}
                   aria-describedby={!canDelegate ? delegationTooltipId : undefined}
                   onClick={() => {
@@ -473,6 +591,42 @@ export default function AcademicianAppointmentDetailPage({
           if (!isRejecting) {
             setShowRejectConfirm(false);
             setRejectionError(null);
+          }
+        }}
+      />
+
+      <ConfirmModal
+        open={showCompleteConfirm && Boolean(appointment)}
+        title={STAFF_APPOINTMENT_MESSAGES.COMPLETE_TITLE}
+        description={STAFF_APPOINTMENT_MESSAGES.COMPLETE_DESCRIPTION}
+        confirmLabel="Tamamlandı"
+        loading={isCompleting}
+        error={completeError}
+        variant="primary"
+        zIndexClass="z-[60]"
+        onConfirm={() => void handleCompleteConfirm()}
+        onClose={() => {
+          if (!isCompleting) {
+            setShowCompleteConfirm(false);
+            setCompleteError(null);
+          }
+        }}
+      />
+
+      <ConfirmModal
+        open={showNoShowConfirm && Boolean(appointment)}
+        title={STAFF_APPOINTMENT_MESSAGES.NO_SHOW_TITLE}
+        description={STAFF_APPOINTMENT_MESSAGES.NO_SHOW_DESCRIPTION}
+        confirmLabel="No-Show"
+        loading={isMarkingNoShow}
+        error={noShowError}
+        variant="danger"
+        zIndexClass="z-[60]"
+        onConfirm={() => void handleNoShowConfirm()}
+        onClose={() => {
+          if (!isMarkingNoShow) {
+            setShowNoShowConfirm(false);
+            setNoShowError(null);
           }
         }}
       />

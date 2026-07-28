@@ -98,6 +98,8 @@ class AppointmentServiceTest {
     private WaitlistService waitlistService;
     @Mock
     private NotificationService notificationService;
+    @Mock
+    private NoShowPenaltyService noShowPenaltyService;
 
     private AppointmentService appointmentService;
 
@@ -163,7 +165,8 @@ class AppointmentServiceTest {
                 availabilitySlotService,
                 delegationLogRepository,
                 notificationService,
-                waitlistService
+                waitlistService,
+                noShowPenaltyService
         );
     }
 

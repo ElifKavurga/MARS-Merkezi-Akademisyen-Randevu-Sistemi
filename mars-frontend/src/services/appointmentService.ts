@@ -61,6 +61,26 @@ export async function rejectStaffAppointment(
   return data;
 }
 
+export async function completeStaffAppointment(
+  scope: StaffAppointmentScope,
+  appointmentId: number,
+): Promise<StaffAppointment> {
+  const { data } = await apiClient.patch<StaffAppointment>(
+    `/${scope}/appointments/${appointmentId}/complete`,
+  );
+  return data;
+}
+
+export async function markStaffAppointmentNoShow(
+  scope: StaffAppointmentScope,
+  appointmentId: number,
+): Promise<StaffAppointment> {
+  const { data } = await apiClient.patch<StaffAppointment>(
+    `/${scope}/appointments/${appointmentId}/no-show`,
+  );
+  return data;
+}
+
 export async function getStaffAppointmentRescheduleSlots(
   appointmentId: number,
   scope: StaffAppointmentScope = 'academician',

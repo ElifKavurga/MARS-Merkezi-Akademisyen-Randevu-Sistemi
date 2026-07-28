@@ -97,6 +97,7 @@ public class AppointmentService {
     private final DelegationLogRepository delegationLogRepository;
     private final NotificationService notificationService;
     private final WaitlistService waitlistService;
+    private final NoShowPenaltyService noShowPenaltyService;
 
     @Transactional
     public AppointmentResponseDto createAppointment(AppointmentCreateRequest request) {
@@ -318,6 +319,36 @@ public class AppointmentService {
             RoleType requiredRole) {
         return updateStaffAppointmentStatus(
                 appointmentId, AppointmentStatus.REJECTED, requiredRole);
+    }
+
+    @Transactional
+    public StaffAppointmentResponseDto completeStaffAppointment(
+            Integer appointmentId,
+            RoleType requiredRole) {
+        User staff = getCurrentStaff(requiredRole);
+        Appointment appointment = appointmentRepository.findByIdAndStaffIdForUpdate(
+                        appointmentId, staff.getUserId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(AppointmentMessages.APPOINTMENT_NOT_FOUND));
+
+        validateEndableStatus(appointment.getAppointmentStatus());
+        appointment.setAppointmentStatus(AppointmentStatus.COMPLETED.name());
+        appointment.setUpdatedAt(LocalDateTime.now(APP_ZONE));
+
+        Appointment saved = appointmentRepository.save(appointment);
+        return appointmentMapper.toStaffResponse(saved);
+    }
+
+    @Transactional
+    public StaffAppointmentResponseDto markStaffAppointmentNoShow(
+            Integer appointmentId,
+            RoleType requiredRole) {
+        User staff = getCurrentStaff(requiredRole);
+        Appointment appointment = noShowPenaltyService.markStaffAppointmentAsNoShow(
+                appointmentId,
+                staff.getUserId(),
+                LocalDateTime.now(APP_ZONE));
+        return appointmentMapper.toStaffResponse(appointment);
     }
 
     @Transactional(readOnly = true)
@@ -684,6 +715,13 @@ public class AppointmentService {
                 || AppointmentStatus.NO_SHOW.name().equals(currentStatus)) {
             throw new ConflictException(AppointmentMessages.RESCHEDULE_NOT_ALLOWED);
         }
+    }
+
+    private void validateEndableStatus(String currentStatus) {
+        if (AppointmentStatus.APPROVED.name().equals(currentStatus)) {
+            return;
+        }
+        throw new ConflictException(AppointmentMessages.END_NOT_APPROVED);
     }
 
     private AvailabilitySlot resolveRequestedAvailability(

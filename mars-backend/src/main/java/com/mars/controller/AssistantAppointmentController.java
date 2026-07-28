@@ -56,6 +56,20 @@ public class AssistantAppointmentController {
                 appointmentService.rejectStaffAppointment(appointmentId, RoleType.ASSISTANT));
     }
 
+    @PatchMapping("/{appointmentId}/complete")
+    public ResponseEntity<StaffAppointmentResponseDto> completeAppointment(
+            @PathVariable Integer appointmentId) {
+        return ResponseEntity.ok(
+                appointmentService.completeStaffAppointment(appointmentId, RoleType.ASSISTANT));
+    }
+
+    @PatchMapping("/{appointmentId}/no-show")
+    public ResponseEntity<StaffAppointmentResponseDto> markAppointmentNoShow(
+            @PathVariable Integer appointmentId) {
+        return ResponseEntity.ok(
+                appointmentService.markStaffAppointmentNoShow(appointmentId, RoleType.ASSISTANT));
+    }
+
     @GetMapping("/{appointmentId}/reschedule-slots")
     public ResponseEntity<List<AvailableSlotResponseDto>> getRescheduleSlots(
             @PathVariable Integer appointmentId) {

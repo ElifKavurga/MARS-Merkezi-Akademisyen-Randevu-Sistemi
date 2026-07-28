@@ -63,7 +63,15 @@ public interface UserRepository extends JpaRepository<User, Integer> {
                     JOIN u.department d
                     WHERE u.isActive = true
                       AND r.roleName IN :roleNames
-                      AND (:departmentId IS NULL OR d.departmentId = :departmentId)
+                      AND (
+                            :departmentId IS NULL
+                            OR d.departmentId = :departmentId
+                            OR d.departmentName = (
+                                SELECT selectedDepartment.departmentName
+                                FROM Department selectedDepartment
+                                WHERE selectedDepartment.departmentId = :departmentId
+                            )
+                          )
                       AND (:academicTitle IS NULL OR :academicTitle = '' OR u.academicTitle = :academicTitle)
                       AND (:isAcceptingAppointments IS NULL
                            OR u.isAcceptingAppointments = :isAcceptingAppointments)
@@ -80,7 +88,15 @@ public interface UserRepository extends JpaRepository<User, Integer> {
                     JOIN u.department d
                     WHERE u.isActive = true
                       AND r.roleName IN :roleNames
-                      AND (:departmentId IS NULL OR d.departmentId = :departmentId)
+                      AND (
+                            :departmentId IS NULL
+                            OR d.departmentId = :departmentId
+                            OR d.departmentName = (
+                                SELECT selectedDepartment.departmentName
+                                FROM Department selectedDepartment
+                                WHERE selectedDepartment.departmentId = :departmentId
+                            )
+                          )
                       AND (:academicTitle IS NULL OR :academicTitle = '' OR u.academicTitle = :academicTitle)
                       AND (:isAcceptingAppointments IS NULL
                            OR u.isAcceptingAppointments = :isAcceptingAppointments)

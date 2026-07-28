@@ -58,6 +58,22 @@ public class AcademicianAppointmentController {
                         appointmentId, RoleType.ACADEMICIAN));
     }
 
+    @PatchMapping("/{appointmentId}/complete")
+    public ResponseEntity<StaffAppointmentResponseDto> completeAppointment(
+            @PathVariable Integer appointmentId) {
+        return ResponseEntity.ok(
+                appointmentService.completeStaffAppointment(
+                        appointmentId, RoleType.ACADEMICIAN));
+    }
+
+    @PatchMapping("/{appointmentId}/no-show")
+    public ResponseEntity<StaffAppointmentResponseDto> markAppointmentNoShow(
+            @PathVariable Integer appointmentId) {
+        return ResponseEntity.ok(
+                appointmentService.markStaffAppointmentNoShow(
+                        appointmentId, RoleType.ACADEMICIAN));
+    }
+
     @GetMapping("/{appointmentId}/reschedule-slots")
     public ResponseEntity<List<AvailableSlotResponseDto>> getRescheduleSlots(
             @PathVariable Integer appointmentId) {

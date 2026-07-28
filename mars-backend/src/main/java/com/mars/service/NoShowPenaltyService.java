@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -13,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mars.AppointmentMessages;
 import com.mars.dto.notification.NoShowNotificationRequest;
 import com.mars.dto.notification.PenaltyNotificationRequest;
 import com.mars.entity.Appointment;
@@ -21,10 +23,11 @@ import com.mars.entity.StudentPenaltyStatus;
 import com.mars.entity.User;
 import com.mars.enums.AppointmentStatus;
 import com.mars.enums.PenaltyNotificationEvent;
+import com.mars.exception.ConflictException;
+import com.mars.exception.ResourceNotFoundException;
 import com.mars.repository.AppointmentRepository;
 import com.mars.repository.PenaltyRuleRepository;
 import com.mars.repository.StudentPenaltyStatusRepository;
-import com.mars.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -75,18 +78,45 @@ public class NoShowPenaltyService {
         return count;
     }
 
+    @Transactional
+    public Appointment markStaffAppointmentAsNoShow(Integer appointmentId, Integer staffId, LocalDateTime now) {
+        Appointment appointment = markAsNoShow(appointmentId, now, staffId, true);
+        if (appointment == null) {
+            throw new ResourceNotFoundException(AppointmentMessages.APPOINTMENT_NOT_FOUND);
+        }
+        return appointment;
+    }
+
     private boolean markAsNoShow(Integer appointmentId, LocalDateTime now) {
+        return markAsNoShow(appointmentId, now, null, false) != null;
+    }
+
+    private Appointment markAsNoShow(
+            Integer appointmentId,
+            LocalDateTime now,
+            Integer requiredStaffId,
+            boolean failOnInvalidStatus) {
         Appointment appointment = appointmentRepository.findByIdForUpdate(appointmentId).orElse(null);
         if (appointment == null) {
-            return false;
+            return null;
+        }
+
+        if (requiredStaffId != null && !Objects.equals(appointment.getStaff().getUserId(), requiredStaffId)) {
+            throw new ResourceNotFoundException(AppointmentMessages.APPOINTMENT_NOT_FOUND);
         }
 
         String currentStatus = appointment.getAppointmentStatus();
         if (!ACTIVE_STATUSES.contains(currentStatus)) {
-            return false;
+            if (failOnInvalidStatus) {
+                throw new ConflictException(AppointmentMessages.END_NOT_APPROVED);
+            }
+            return null;
         }
 
         appointment.setAppointmentStatus(AppointmentStatus.NO_SHOW.name());
+        if (requiredStaffId != null) {
+            appointment.setNoShowMarkedByUser(appointment.getStaff());
+        }
         appointment.setUpdatedAt(now);
         appointmentRepository.save(appointment);
 
@@ -159,7 +189,7 @@ public class NoShowPenaltyService {
             }
         }
 
-        return true;
+        return appointment;
     }
 
     @Transactional
