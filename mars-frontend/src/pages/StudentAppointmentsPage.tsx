@@ -358,20 +358,20 @@ export default function StudentAppointmentsPage() {
         description={STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_SUBTITLE}
       />
 
-
-
-      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+      <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <StudentSegmentedTabs
           value={activeTab}
           options={TAB_OPTIONS}
           ariaLabel={STUDENT_APPOINTMENT_MESSAGES.MY_APPOINTMENTS_TITLE}
           onChange={handleTabChange}
+          className="pb-0 sm:!w-auto"
         />
         <StudentSegmentedTabs
           value={viewMode}
           options={VIEW_OPTIONS}
           ariaLabel={STUDENT_APPOINTMENT_MESSAGES.VIEW_MODE_LABEL}
           onChange={setViewMode}
+          className="pb-0 sm:ml-auto sm:!w-auto"
         />
       </div>
 

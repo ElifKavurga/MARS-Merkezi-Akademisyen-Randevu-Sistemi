@@ -3,6 +3,9 @@ import { isAxiosError } from 'axios';
 import { useToast } from '../hooks/useToast';
 import { changeMyPassword } from '../services/profileService';
 import AdminActionButton from './AdminActionButton';
+import ModalFormFooter from './ModalFormFooter';
+import ModalHeader from './ModalHeader';
+import ModalShell from './ModalShell';
 
 type PasswordFormState = {
   currentPassword: string;
@@ -47,13 +50,31 @@ function validate(form: PasswordFormState): string | null {
 
 type ChangePasswordSecurityCardProps = {
   className?: string;
+  embedded?: boolean;
 };
 
-export default function ChangePasswordSecurityCard({ className = '' }: ChangePasswordSecurityCardProps) {
+export default function ChangePasswordSecurityCard({
+  className = '',
+  embedded = false,
+}: ChangePasswordSecurityCardProps) {
   const toast = useToast();
+  const [open, setOpen] = useState(false);
   const [form, setForm] = useState<PasswordFormState>(initialForm);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  const resetForm = () => {
+    setForm(initialForm);
+    setFormError(null);
+  };
+
+  const handleClose = () => {
+    if (saving) {
+      return;
+    }
+    setOpen(false);
+    resetForm();
+  };
 
   const updateField = (field: keyof PasswordFormState, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -72,8 +93,9 @@ export default function ChangePasswordSecurityCard({ className = '' }: ChangePas
     setFormError(null);
     try {
       await changeMyPassword(form);
-      setForm(initialForm);
       toast.success('Şifreniz başarıyla güncellendi.');
+      setOpen(false);
+      resetForm();
     } catch (error) {
       const message = resolveErrorMessage(error);
       setFormError(message);
@@ -83,69 +105,111 @@ export default function ChangePasswordSecurityCard({ className = '' }: ChangePas
     }
   };
 
+  const containerClassName = embedded
+    ? `border-t border-outline-variant/40 px-4 py-3 sm:px-5 ${className}`
+    : `overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm ${className}`;
+  const contentClassName = embedded
+    ? 'flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'
+    : 'flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5';
+
   return (
-    <section className={`overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm ${className}`}>
-      <div className="border-b border-outline-variant bg-surface-container-lowest/50 px-4 py-4 sm:px-5">
-        <h2 className="font-headline-md text-body-lg text-on-background">Güvenlik</h2>
-        <p className="mt-1 font-body-md text-body-md text-on-surface-variant">
-          Hesabınızda oturum açık kalırken şifrenizi güncelleyin.
-        </p>
-      </div>
-
-      <form onSubmit={(event) => void submit(event)} noValidate>
-        <div className="grid gap-3 px-4 py-4 sm:px-5">
-          <label className="grid gap-1.5">
-            <span className="font-label-md text-label-md text-on-surface-variant">Mevcut Şifre</span>
-            <input
-              type="password"
-              autoComplete="current-password"
-              value={form.currentPassword}
-              onChange={(event) => updateField('currentPassword', event.target.value)}
-              className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2.5 font-body-md text-body-md text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
-            />
-          </label>
-
-          <div className="grid gap-3 md:grid-cols-2">
-            <label className="grid gap-1.5">
-              <span className="font-label-md text-label-md text-on-surface-variant">Yeni Şifre</span>
-              <input
-                type="password"
-                autoComplete="new-password"
-                value={form.newPassword}
-                onChange={(event) => updateField('newPassword', event.target.value)}
-                className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2.5 font-body-md text-body-md text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
-              />
-            </label>
-
-            <label className="grid gap-1.5">
-              <span className="font-label-md text-label-md text-on-surface-variant">Yeni Şifre (Tekrar)</span>
-              <input
-                type="password"
-                autoComplete="new-password"
-                value={form.confirmNewPassword}
-                onChange={(event) => updateField('confirmNewPassword', event.target.value)}
-                className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2.5 font-body-md text-body-md text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
-              />
-            </label>
+    <>
+      <section className={containerClassName}>
+        <div className={contentClassName}>
+          <div className="min-w-0">
+            <h2 className="font-headline-md text-body-lg text-on-background">Güvenlik</h2>
+            <p className="mt-1 font-body-sm text-body-sm text-on-surface-variant">
+              Hesabınızın şifresini güvenli şekilde güncelleyin.
+            </p>
           </div>
-
-          <p className="font-body-sm text-body-sm text-on-surface-variant">
-            Yeni şifre 6-100 karakter arasında olmalıdır.
-          </p>
-
-          {formError ? (
-            <div className="rounded-lg border border-error/30 bg-error-container/40 px-3 py-2 font-body-sm text-body-sm text-error">
-              {formError}
-            </div>
-          ) : null}
-        </div>
-
-        <div className="flex justify-end border-t border-outline-variant bg-surface-container-lowest px-4 py-3 sm:px-5">
-          <AdminActionButton variant="primary" icon="save" disabled={saving} type="submit">
-            {saving ? 'Kaydediliyor' : 'Kaydet'}
+          <AdminActionButton
+            variant="primary"
+            icon="lock_reset"
+            type="button"
+            onClick={() => setOpen(true)}
+          >
+            Şifreyi Değiştir
           </AdminActionButton>
         </div>
-      </form>
-    </section>
+      </section>
+
+      <ModalShell
+        open={open}
+        titleId="change-password-modal-title"
+        onClose={handleClose}
+        onSubmit={(event) => void submit(event)}
+        disableBackdropClose={saving}
+        maxWidthClass="sm:max-w-xl"
+        footer={
+          <ModalFormFooter
+            submitting={saving}
+            onCancel={handleClose}
+            submitLabel="Kaydet"
+          />
+        }
+      >
+        <div className="px-4 py-5 sm:px-6">
+          <ModalHeader
+            titleId="change-password-modal-title"
+            icon="lock_reset"
+            title="Şifreyi Değiştir"
+            description="Mevcut şifrenizi doğrulayarak yeni şifrenizi belirleyin."
+          />
+
+          <div className="grid gap-3">
+            <label className="grid gap-1.5">
+              <span className="font-label-md text-label-md text-on-surface-variant">
+                Mevcut Şifre
+              </span>
+              <input
+                type="password"
+                autoComplete="current-password"
+                value={form.currentPassword}
+                onChange={(event) => updateField('currentPassword', event.target.value)}
+                className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2.5 font-body-md text-body-md text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+              />
+            </label>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              <label className="grid gap-1.5">
+                <span className="font-label-md text-label-md text-on-surface-variant">
+                  Yeni Şifre
+                </span>
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  value={form.newPassword}
+                  onChange={(event) => updateField('newPassword', event.target.value)}
+                  className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2.5 font-body-md text-body-md text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                />
+              </label>
+
+              <label className="grid gap-1.5">
+                <span className="font-label-md text-label-md text-on-surface-variant">
+                  Yeni Şifre (Tekrar)
+                </span>
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  value={form.confirmNewPassword}
+                  onChange={(event) => updateField('confirmNewPassword', event.target.value)}
+                  className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2.5 font-body-md text-body-md text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                />
+              </label>
+            </div>
+
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              Yeni şifre 6-100 karakter arasında olmalıdır.
+            </p>
+
+            {formError ? (
+              <div className="rounded-lg border border-error/30 bg-error-container/40 px-3 py-2 font-body-sm text-body-sm text-error">
+                {formError}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </ModalShell>
+    </>
   );
 }

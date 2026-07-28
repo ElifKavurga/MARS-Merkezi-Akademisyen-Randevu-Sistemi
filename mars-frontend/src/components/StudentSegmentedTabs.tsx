@@ -5,6 +5,7 @@ type StudentSegmentedTabsProps<T extends string> = {
   options: readonly { value: T; label: string }[];
   ariaLabel: string;
   onChange: (value: T) => void;
+  className?: string;
 };
 
 /** Segmented control with tablist semantics and arrow-key navigation. */
@@ -13,6 +14,7 @@ export default function StudentSegmentedTabs<T extends string>({
   options,
   ariaLabel,
   onChange,
+  className = '',
 }: StudentSegmentedTabsProps<T>) {
   const buttonRefs = useRef(new Map<T, HTMLButtonElement>());
 
@@ -47,7 +49,7 @@ export default function StudentSegmentedTabs<T extends string>({
   };
 
   return (
-    <div className="w-full overflow-x-auto pb-1 [scrollbar-width:thin]">
+    <div className={`w-full overflow-x-auto pb-1 [scrollbar-width:thin] ${className}`}>
       <div
         className="inline-flex min-w-full gap-1.5 rounded-2xl bg-surface-container/80 p-1.5 sm:min-w-0"
         role="tablist"
