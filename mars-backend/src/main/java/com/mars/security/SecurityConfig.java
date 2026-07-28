@@ -107,7 +107,7 @@ public class SecurityConfig {
                                 .hasAnyRole("ACADEMICIAN", "ASSISTANT")
                         .requestMatchers("/delegations", "/delegations/**")
                                 .hasRole("ACADEMICIAN")
-                        .requestMatchers("/users/me")
+                        .requestMatchers("/users/me", "/users/me/**")
                                 .authenticated()
                         .requestMatchers("/email-preferences", "/email-preferences/**")
                                 .authenticated()

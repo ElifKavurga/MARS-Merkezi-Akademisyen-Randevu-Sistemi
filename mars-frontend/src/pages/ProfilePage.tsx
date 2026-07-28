@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { getRoleLabel, UI_LABELS } from '../constants';
 import { getInitials } from '../utils/userDisplay';
 import Loading from '../components/Loading';
+import ChangePasswordSecurityCard from '../components/ChangePasswordSecurityCard';
 import EmailNotificationPreferences from '../components/EmailNotificationPreferences';
 import { getMyProfile, type UserProfile } from '../services/profileService';
 
@@ -98,6 +99,7 @@ export default function ProfilePage() {
         </dl>
       </div>
       
+      <ChangePasswordSecurityCard />
       <EmailNotificationPreferences />
     </div>
   );
