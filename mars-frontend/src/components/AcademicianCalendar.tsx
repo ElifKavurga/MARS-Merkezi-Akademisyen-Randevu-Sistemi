@@ -1,25 +1,9 @@
 import { useMemo } from 'react';
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import trLocale from '@fullcalendar/core/locales/tr';
-import type { DatesSetArg, EventClickArg, EventContentArg, EventInput, EventMountArg } from '@fullcalendar/core';
 import {
-  exclusiveEndToInclusiveIso,
-  formatCalendarEventTitle,
   formatCalendarEventTooltip,
-  formatCalendarTimeRange,
-  getAppointmentDurationMinutes,
   getCalendarEventStyle,
-  getCalendarVisualEndTime,
-  getMeetingTypeIcon,
-  toFullCalendarDateTime,
-  toLocalIsoDate,
 } from '../constants/calendar';
-import { getAppointmentStatusLabel, getMeetingTypeLabel } from '../constants/appointment';
 import type { CalendarDateRange, CalendarEvent } from '../types/calendar';
-
 
 type AcademicianCalendarProps = {
   events: CalendarEvent[];
@@ -28,66 +12,36 @@ type AcademicianCalendarProps = {
   onEventClick: (event: CalendarEvent) => void;
 };
 
-function EventBody({
-  event,
-  dense,
-}: {
-  event: CalendarEvent;
-  dense: boolean;
-}) {
-  const timeRange = formatCalendarTimeRange(event);
-  const isAppointment = event.eventType === 'APPOINTMENT';
-  const meetingIcon = getMeetingTypeIcon(event.meetingType);
-  const meetingLabel = getMeetingTypeLabel(event.meetingType);
-  const duration = getAppointmentDurationMinutes(event);
+const START_HOUR = 8;
+const END_HOUR = 17;
+const HOUR_COUNT = END_HOUR - START_HOUR;
+const HOURS = Array.from({ length: HOUR_COUNT }, (_, index) => START_HOUR + index);
 
-  if (isAppointment) {
-    if (duration < 30) {
-      return (
-        <div className="mars-cal-event-body mars-cal-event-body--short flex h-full w-full items-center justify-center overflow-hidden px-1.5 text-center leading-none">
-          <span className="truncate text-[10px] font-semibold sm:text-[11px]">{event.studentName?.trim() || 'Öğrenci'}</span>
-        </div>
-      );
-    }
-    return (
-      <div className="mars-cal-event-body flex h-full w-full flex-col items-center justify-center overflow-hidden px-1.5 py-px text-center leading-none">
-        <span className="truncate text-[9px] font-bold leading-[10px] sm:text-[10px]">{event.studentName?.trim() || 'Öğrenci'}</span>
-        <span className="line-clamp-2 w-full whitespace-normal break-words text-left text-[8px] leading-[9px] opacity-90 sm:text-[9px]">
-          {event.categoryName?.trim() || 'Randevu'}
-        </span>
-        {duration >= 60 ? (
-          <span className="flex min-w-0 items-center justify-center gap-1 text-[9px] opacity-90 sm:text-[10px]">
-            <span className="inline-flex min-w-0 items-center gap-0.5 truncate">
-              <span className="material-symbols-outlined text-[11px]" aria-hidden>{meetingIcon}</span>
-              <span className="truncate">{meetingLabel}</span>
-            </span>
-            <span className="truncate">· {getAppointmentStatusLabel(event.appointmentStatus ?? '')}</span>
-          </span>
-        ) : null}
-      </div>
-    );
-  }
+function parseTimeToMinutes(time: string): number {
+  const [hours, minutes] = time.split(':').map(Number);
+  return (hours || 0) * 60 + (minutes || 0);
+}
 
-  const availabilityLabel = event.isBlocked
-    ? 'Kullanıma Kapalı'
-    : event.recurrenceRuleId != null
-      ? 'Tekrarlayan müsait'
-      : 'Müsait';
+function formatHour(hour: number): string {
+  return `${String(hour).padStart(2, '0')}:00`;
+}
 
-  return (
-    <div className="mars-cal-event-body flex h-full min-h-0 w-full flex-col justify-start gap-0.5 overflow-hidden px-1 py-0.5 leading-tight">
-      <span className="truncate font-semibold">{timeRange}</span>
-      <span className="truncate">{availabilityLabel}</span>
-      {!dense ? (
-        <span className="inline-flex min-w-0 items-center gap-0.5 truncate opacity-90">
-          <span className="material-symbols-outlined text-[12px] leading-none" aria-hidden>
-            {meetingIcon}
-          </span>
-          <span className="truncate">{meetingLabel}</span>
-        </span>
-      ) : null}
-    </div>
-  );
+function formatDayLabel(isoDate: string): string {
+  const date = new Date(`${isoDate}T00:00:00`);
+  return date.toLocaleDateString('tr-TR', {
+    weekday: 'short',
+    day: '2-digit',
+    month: '2-digit',
+  });
+}
+
+function addDays(isoDate: string, days: number): string {
+  const date = new Date(`${isoDate}T00:00:00`);
+  date.setDate(date.getDate() + days);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function mergeAdjacentAvailability(events: CalendarEvent[]): CalendarEvent[] {
@@ -107,6 +61,7 @@ function mergeAdjacentAvailability(events: CalendarEvent[]): CalendarEvent[] {
       && previous.isBlocked === event.isBlocked
       && previous.recurrenceRuleId === event.recurrenceRuleId
       && previous.meetingType === event.meetingType;
+
     if (joinsPrevious) {
       merged[merged.length - 1] = { ...previous, endTime: event.endTime };
     } else {
@@ -117,183 +72,160 @@ function mergeAdjacentAvailability(events: CalendarEvent[]): CalendarEvent[] {
   return [...merged, ...appointments];
 }
 
-function timeToMinutes(time: string): number {
-  const [hours, minutes] = time.split(':').map(Number);
-  return (hours || 0) * 60 + (minutes || 0);
+function overlapsVisibleHours(event: CalendarEvent): boolean {
+  const dayStart = START_HOUR * 60;
+  const dayEnd = END_HOUR * 60;
+  return parseTimeToMinutes(event.startTime) < dayEnd
+    && parseTimeToMinutes(event.endTime) > dayStart;
 }
 
-function minutesToTime(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const remainder = minutes % 60;
-  return `${String(hours).padStart(2, '0')}:${String(remainder).padStart(2, '0')}:00`;
+function shouldRenderCalendarEvent(event: CalendarEvent): boolean {
+  return event.eventType !== 'APPOINTMENT' || event.appointmentStatus !== 'REJECTED';
 }
 
-function toCalendarInputs(events: CalendarEvent[]): EventInput[] {
-  const inputs: EventInput[] = [];
-  const renderEvents = mergeAdjacentAvailability(events);
-  const visualStarts = new Map<CalendarEvent, string>();
-  const visualEnds = new Map<CalendarEvent, string>();
-  const appointmentsByDate = new Map<string, CalendarEvent[]>();
+function getEventPosition(event: CalendarEvent) {
+  const dayStart = START_HOUR * 60;
+  const dayEnd = END_HOUR * 60;
+  const start = Math.max(dayStart, parseTimeToMinutes(event.startTime));
+  const end = Math.min(dayEnd, parseTimeToMinutes(event.endTime));
+  const total = dayEnd - dayStart;
+  const left = ((start - dayStart) / total) * 100;
+  const width = (Math.max(end - start, 20) / total) * 100;
+  return { left: `${left}%`, width: `${Math.min(width, 100 - left)}%` };
+}
 
-  for (const event of renderEvents) {
-    if (event.eventType !== 'APPOINTMENT') continue;
-    const dayEvents = appointmentsByDate.get(event.slotDate) ?? [];
-    dayEvents.push(event);
-    appointmentsByDate.set(event.slotDate, dayEvents);
+function CalendarEventChip({
+  event,
+  stackIndex,
+  onOpen,
+}: {
+  event: CalendarEvent;
+  stackIndex: number;
+  onOpen: (event: CalendarEvent) => void;
+}) {
+  const style = getCalendarEventStyle(event);
+  const position = getEventPosition(event);
+  const tooltip = formatCalendarEventTooltip(event);
+
+  if (event.eventType === 'AVAILABILITY') {
+    return (
+      <div
+        className="absolute top-1/2 h-[1.05rem] -translate-y-1/2 rounded border opacity-80"
+        style={{
+          ...position,
+          backgroundColor: style.backgroundColor,
+          borderColor: style.borderColor,
+        }}
+        title={tooltip}
+      />
+    );
   }
 
-  for (const dayEvents of appointmentsByDate.values()) {
-    dayEvents.sort((left, right) => left.startTime.localeCompare(right.startTime));
-    let cursor = 0;
-    dayEvents.forEach((event, index) => {
-      const next = dayEvents[index + 1];
-      const originalStart = timeToMinutes(event.startTime);
-      const originalEnd = timeToMinutes(event.endTime);
-      const visualStart = Math.max(originalStart, cursor);
-      const overlapsNext = next != null && timeToMinutes(next.startTime) < originalEnd;
-      const wasShifted = visualStart > originalStart;
-      const visualEnd = overlapsNext || wasShifted
-        ? visualStart + 10
-        : Math.max(originalEnd, visualStart + 10);
-      visualStarts.set(event, minutesToTime(visualStart));
-      visualEnds.set(event, minutesToTime(visualEnd));
-      cursor = visualEnd;
-    });
-  }
-
-  for (const event of renderEvents) {
-    const style = getCalendarEventStyle(event);
-    const eventKey = `${event.eventType}-${event.appointmentId ?? event.slotId}-${event.slotDate}-${event.startTime}`;
-
-    if (event.eventType === 'AVAILABILITY') {
-      if (event.isBlocked) continue;
-      inputs.push({
-        id: eventKey,
-        start: toFullCalendarDateTime(event.slotDate, event.startTime),
-        end: toFullCalendarDateTime(event.slotDate, event.endTime),
-        display: 'background',
-        backgroundColor: style.backgroundColor,
-        classNames: style.classNames,
-        extendedProps: { calendarEvent: event, isBusyLane: false },
-      });
-    } else {
-      inputs.push({
-        id: eventKey,
-        title: formatCalendarEventTitle(event),
-        start: toFullCalendarDateTime(
-          event.slotDate,
-          visualStarts.get(event) ?? event.startTime,
-        ),
-        end: toFullCalendarDateTime(
-          event.slotDate,
-          visualEnds.get(event) ?? getCalendarVisualEndTime(event),
-        ),
+  return (
+    <button
+      type="button"
+      className="absolute flex h-[1.55rem] min-w-[5.5rem] items-center overflow-hidden rounded-md border px-2 text-left text-[11px] font-semibold leading-none text-white shadow-sm transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim"
+      style={{
+        ...position,
+        top: `${0.35 + stackIndex * 1.8}rem`,
         backgroundColor: style.backgroundColor,
         borderColor: style.borderColor,
-        textColor: style.textColor,
-        classNames: style.classNames,
-        extendedProps: { calendarEvent: event, isBusyLane: false },
-      });
-    }
-  }
-
-  return inputs;
+        color: style.textColor,
+      }}
+      title={tooltip}
+      aria-label={tooltip.replaceAll('\n', ', ')}
+      onClick={() => onOpen(event)}
+    >
+      <span className="truncate">{event.studentName?.trim() || 'Öğrenci'}</span>
+    </button>
+  );
 }
 
 export default function AcademicianCalendar({
   events,
   initialDate,
-  onRangeChange,
+  onRangeChange: _onRangeChange,
   onEventClick,
 }: AcademicianCalendarProps) {
-  const calendarEvents = useMemo(() => toCalendarInputs(events), [events]);
+  const days = useMemo(
+    () => Array.from(
+      { length: 5 },
+      (_, index) => addDays(initialDate ?? new Date().toISOString().slice(0, 10), index),
+    ),
+    [initialDate],
+  );
 
-  const handleDatesSet = (arg: DatesSetArg) => {
-    onRangeChange({
-      from: toLocalIsoDate(arg.start),
-      to: exclusiveEndToInclusiveIso(arg.end),
-    });
-  };
+  const eventsByDate = useMemo(() => {
+    const grouped = new Map<string, CalendarEvent[]>();
+    for (const event of mergeAdjacentAvailability(events)) {
+      if (event.isBlocked || !overlapsVisibleHours(event) || !shouldRenderCalendarEvent(event)) continue;
+      const dayEvents = grouped.get(event.slotDate) ?? [];
+      dayEvents.push(event);
+      grouped.set(event.slotDate, dayEvents);
+    }
 
-  const handleEventClick = (arg: EventClickArg) => {
-    if (arg.event.display === 'background') {
-      return;
+    for (const dayEvents of grouped.values()) {
+      dayEvents.sort((left, right) => {
+        const byStart = left.startTime.localeCompare(right.startTime);
+        if (byStart !== 0) return byStart;
+        return left.eventType.localeCompare(right.eventType);
+      });
     }
-    const calendarEvent = arg.event.extendedProps.calendarEvent as CalendarEvent | undefined;
-    if (calendarEvent) {
-      onEventClick(calendarEvent);
-    }
-  };
 
-  const renderEventContent = (arg: EventContentArg) => {
-    if (arg.event.display === 'background') {
-      return true;
-    }
-    const calendarEvent = arg.event.extendedProps.calendarEvent as CalendarEvent | undefined;
-    if (!calendarEvent) {
-      return <span className="truncate px-1">{arg.event.title}</span>;
-    }
-    const dense = arg.view.type === 'dayGridMonth';
-    return <EventBody event={calendarEvent} dense={dense} />;
-  };
-
-  const handleEventDidMount = (arg: EventMountArg) => {
-    const calendarEvent = arg.event.extendedProps.calendarEvent as CalendarEvent | undefined;
-    if (!calendarEvent || calendarEvent.eventType !== 'APPOINTMENT') return;
-    const tooltip = formatCalendarEventTooltip(calendarEvent);
-    arg.el.title = tooltip;
-    arg.el.setAttribute('aria-label', tooltip.replaceAll('\n', ', '));
-    arg.el.setAttribute('role', 'button');
-    arg.el.tabIndex = 0;
-    arg.el.onkeydown = (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        onEventClick(calendarEvent);
-      }
-    };
-  };
+    return grouped;
+  }, [events]);
 
   return (
     <div className="mars-calendar academician-calendar h-full overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest p-1.5 sm:p-2">
-      <FullCalendar
-        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-        initialView={window.matchMedia('(max-width: 767px)').matches ? 'timeGridDay' : 'timeGridWeek'}
-        initialDate={initialDate}
-        headerToolbar={{
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay',
-        }}
-        buttonText={{
-          today: 'Bugün',
-          month: 'Aylık',
-          week: 'Haftalık',
-          day: 'Günlük',
-        }}
-        locale={trLocale}
-        height="100%"
-        slotDuration="00:10:00"
-        slotLabelInterval="01:00:00"
-        eventMinHeight={22}
-        eventShortHeight={22}
-        expandRows={false}
-        weekends
-        nowIndicator
-        editable={false}
-        selectable={false}
-        displayEventTime={false}
-        events={calendarEvents}
-        datesSet={handleDatesSet}
-        eventClick={handleEventClick}
-        eventContent={renderEventContent}
-        eventDidMount={handleEventDidMount}
-        slotEventOverlap={false}
-        slotMinTime="08:00:00"
-        slotMaxTime="22:00:00"
-        allDaySlot={false}
-        stickyHeaderDates
-        dayMaxEvents
-      />
+      <div className="grid h-full grid-rows-[auto_1fr] overflow-hidden rounded-md border border-outline-variant/70 bg-surface">
+        <div className="grid grid-cols-[6.5rem_repeat(9,minmax(0,1fr))] border-b border-outline-variant/70 bg-surface-container-lowest text-label-sm font-semibold text-on-surface-variant">
+          <div className="border-r border-outline-variant/70 px-2 py-2">Tarih</div>
+          {HOURS.map((hour) => (
+            <div key={hour} className="border-r border-outline-variant/40 px-1 py-2 text-center last:border-r-0">
+              {formatHour(hour)}
+            </div>
+          ))}
+        </div>
+
+        <div className="overflow-y-auto">
+          {days.map((day) => {
+            const dayEvents = eventsByDate.get(day) ?? [];
+            const availabilityEvents = dayEvents.filter((event) => event.eventType === 'AVAILABILITY');
+            const appointmentEvents = dayEvents.filter((event) => event.eventType === 'APPOINTMENT');
+            const rowMinHeight = `${Math.max(4.25, appointmentEvents.length * 1.8 + 0.9)}rem`;
+
+            return (
+              <div
+                key={day}
+                className="grid min-h-[4.25rem] grid-cols-[6.5rem_1fr] border-b border-outline-variant/50 last:border-b-0"
+                style={{ minHeight: rowMinHeight }}
+              >
+                <div className="flex items-center border-r border-outline-variant/70 bg-surface-container-lowest px-2 font-label-sm text-label-sm font-semibold text-on-surface">
+                  {formatDayLabel(day)}
+                </div>
+                <div className="relative min-w-0 bg-[linear-gradient(to_right,rgba(198,197,208,.45)_1px,transparent_1px)] bg-[length:calc(100%/9)_100%]">
+                  {availabilityEvents.map((event) => (
+                    <CalendarEventChip
+                      key={`${event.eventType}-${event.slotId}-${event.slotDate}-${event.startTime}`}
+                      event={event}
+                      stackIndex={0}
+                      onOpen={onEventClick}
+                    />
+                  ))}
+                  {appointmentEvents.map((event, index) => (
+                    <CalendarEventChip
+                      key={`${event.eventType}-${event.appointmentId ?? event.slotId}-${event.slotDate}-${event.startTime}`}
+                      event={event}
+                      stackIndex={index}
+                      onOpen={onEventClick}
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

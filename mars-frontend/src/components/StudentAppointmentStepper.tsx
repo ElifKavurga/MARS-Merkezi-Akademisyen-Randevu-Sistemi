@@ -6,8 +6,8 @@ import {
 
 type StudentAppointmentStepperProps = {
   activeStepIndex?: number;
-  /** Tamamlanmış / atlanmış adımlar (ör. ders gerektirmeyen kategoride Ders). */
   skippedStepIndices?: readonly number[];
+  className?: string;
 };
 
 function stepStatusLabel(options: {
@@ -34,6 +34,7 @@ function stepStatusLabel(options: {
 export default function StudentAppointmentStepper({
   activeStepIndex = STUDENT_APPOINTMENT_ACTIVE_STEP_INDEX,
   skippedStepIndices = [],
+  className = '',
 }: StudentAppointmentStepperProps) {
   const skipped = new Set(skippedStepIndices);
   const progressPercent =
@@ -42,15 +43,18 @@ export default function StudentAppointmentStepper({
       : (activeStepIndex / (STUDENT_APPOINTMENT_STEPS.length - 1)) * 100;
 
   return (
-    <nav aria-label="Randevu oluşturma adımları" className="mb-8">
+    <nav
+      aria-label="Randevu olusturma adimlari"
+      className={`rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-5 ${className}`}
+    >
       <div className="relative mx-auto max-w-3xl">
         <div
           aria-hidden="true"
-          className="absolute left-0 right-0 top-5 h-0.5 bg-surface-container"
+          className="absolute left-0 right-0 top-4 h-0.5 bg-surface-container"
         />
         <div
           aria-hidden="true"
-          className="absolute left-0 top-5 h-0.5 bg-primary transition-all duration-300"
+          className="absolute left-0 top-4 h-0.5 bg-primary transition-all duration-300"
           style={{ width: `${progressPercent}%` }}
         />
         <ol className="relative flex items-start justify-between gap-1">
@@ -69,13 +73,13 @@ export default function StudentAppointmentStepper({
             return (
               <li
                 key={step.id}
-                className="flex min-w-0 flex-1 flex-col items-center gap-2 text-center"
+                className="flex min-w-0 flex-1 flex-col items-center gap-1.5 text-center"
                 aria-current={isActive ? 'step' : undefined}
               >
                 <span
-                  className={`flex h-10 w-10 items-center justify-center rounded-full font-label-md text-label-md font-bold ${
+                  className={`flex h-8 w-8 items-center justify-center rounded-full font-label-sm text-label-sm font-bold ${
                     isActive || isCompleted
-                      ? 'bg-primary text-on-primary ring-4 ring-primary-fixed-dim/40'
+                      ? 'bg-primary text-on-primary ring-2 ring-primary-fixed-dim/40'
                       : 'border border-outline-variant bg-surface-container-lowest text-on-surface-variant'
                   }`}
                   aria-label={`${step.label}, ${status}`}
@@ -88,7 +92,7 @@ export default function StudentAppointmentStepper({
                   }
                 >
                   {isCompleted && !isActive ? (
-                    <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                    <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
                       {isSkipped ? 'remove' : 'check'}
                     </span>
                   ) : (
@@ -96,7 +100,7 @@ export default function StudentAppointmentStepper({
                   )}
                 </span>
                 <span
-                  className={`max-w-full truncate px-1 font-label-sm text-label-sm ${
+                  className={`max-w-full truncate px-1 font-label-sm text-[12px] ${
                     isActive
                       ? 'font-semibold text-primary'
                       : isLocked

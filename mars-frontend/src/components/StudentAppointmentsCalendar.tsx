@@ -184,9 +184,9 @@ export default function StudentAppointmentsCalendar({
         height="100%"
         slotDuration="00:10:00"
         slotLabelInterval="01:00:00"
-        eventMinHeight={22}
-        eventShortHeight={22}
-        weekends
+        eventMinHeight={18}
+        eventShortHeight={18}
+        weekends={false}
         nowIndicator
         editable={false}
         selectable={false}
@@ -196,7 +196,8 @@ export default function StudentAppointmentsCalendar({
         eventDidMount={handleEventDidMount}
         slotEventOverlap={false}
         slotMinTime="08:00:00"
-        slotMaxTime="22:00:00"
+        slotMaxTime="17:00:00"
+        scrollTime="08:00:00"
         allDaySlot={false}
         stickyHeaderDates
         dayMaxEvents

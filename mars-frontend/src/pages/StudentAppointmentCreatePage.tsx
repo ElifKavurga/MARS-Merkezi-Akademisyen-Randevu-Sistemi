@@ -76,31 +76,31 @@ function formatSlotTime(time: string): string {
 function AcademicianSummary({ academician }: { academician: StudentAcademicianDetail }) {
   return (
     <section
-      className="mb-6 rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-6"
+      className="h-full rounded-xl border border-outline-variant bg-surface-container-lowest p-4"
       aria-label="Seçilen akademisyen"
     >
-      <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+      <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center">
         {academician.profilePhotoUrl ? (
           <img
             src={academician.profilePhotoUrl}
             alt=""
-            className="h-20 w-20 shrink-0 rounded-full border-2 border-primary-container object-cover"
+            className="h-16 w-16 shrink-0 rounded-full border-2 border-primary-container object-cover"
           />
         ) : (
-          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-2 border-primary-container bg-surface-container">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-primary-container bg-surface-container">
             <UserAvatar fullName={academician.fullName} size="lg" />
           </div>
         )}
         <div className="min-w-0 flex-1 text-center sm:text-left">
-          <h2 className="font-headline-md text-headline-md text-on-background">
+          <h2 className="font-title-lg text-title-lg text-on-background">
             {academician.fullName}
           </h2>
-          <p className="mt-1 font-body-md text-body-md text-on-surface-variant">
+          <p className="mt-1 font-body-sm text-body-sm text-on-surface-variant">
             {academician.academicTitle?.trim()
               ? academician.academicTitle
               : STUDENT_APPOINTMENT_MESSAGES.NO_TITLE}
           </p>
-          <p className="mt-1 font-body-md text-body-md text-on-surface-variant">
+          <p className="font-body-sm text-body-sm text-on-surface-variant">
             {academician.departmentName}
           </p>
         </div>
@@ -144,15 +144,15 @@ function CategoryStepPanel({
   const canContinue = selectedCategoryId != null;
 
   return (
-    <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-6">
-      <h2 className="font-headline-md text-headline-md text-primary">
+    <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4">
+      <h2 className="font-title-lg text-title-lg text-primary">
         {STUDENT_APPOINTMENT_MESSAGES.STEP_CATEGORY_TITLE}
       </h2>
-      <p className="mt-2 font-body-md text-body-md text-on-surface-variant">
+      <p className="mt-1 font-body-sm text-body-sm text-on-surface-variant">
         {STUDENT_APPOINTMENT_MESSAGES.STEP_CATEGORY_DESCRIPTION}
       </p>
 
-      <div className="mt-6">
+      <div className="mt-4">
         {loading ? (
           <StudentLoadingState
             label={STUDENT_APPOINTMENT_MESSAGES.STEP_CATEGORY_LOADING}
@@ -169,7 +169,7 @@ function CategoryStepPanel({
           />
         ) : (
           <div
-            className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+            className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"
             role="radiogroup"
             aria-label={STUDENT_APPOINTMENT_MESSAGES.STEP_CATEGORY_TITLE}
           >
@@ -187,17 +187,17 @@ function CategoryStepPanel({
                   role="radio"
                   aria-checked={selected}
                   onClick={() => onSelect(category)}
-                  className={`flex min-w-0 flex-col items-start gap-2 rounded-xl border-2 p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim focus-visible:ring-offset-2 ${
+                  className={`flex min-h-[112px] min-w-0 flex-col items-start gap-1.5 rounded-lg border-2 p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim focus-visible:ring-offset-2 ${
                     selected
                       ? 'border-primary bg-surface-container'
                       : 'border-outline-variant bg-surface hover:border-primary/60'
                   }`}
                 >
-                  <span className="font-body-md text-body-md font-semibold text-primary">
+                  <span className="font-body-sm text-body-sm font-semibold text-primary">
                     {category.categoryName}
                   </span>
                   {description ? (
-                    <span className="font-body-md text-body-md text-on-surface-variant">
+                    <span className="font-body-sm text-body-sm text-on-surface-variant">
                       {description}
                     </span>
                   ) : (
@@ -217,7 +217,7 @@ function CategoryStepPanel({
         )}
       </div>
 
-      <div className="mt-6 flex justify-stretch sm:justify-end">
+      <div className="mt-4 flex justify-stretch sm:justify-end">
         <button
           type="button"
           className={`${STUDENT_UI.PRIMARY_BUTTON_CLASS} w-full sm:w-auto`}
@@ -1058,7 +1058,9 @@ export default function StudentAppointmentCreatePage() {
           title={STUDENT_APPOINTMENT_MESSAGES.TITLE}
           description={STUDENT_APPOINTMENT_MESSAGES.SUBTITLE}
         />
-        <AcademicianSummary academician={academician} />
+        <div className="mb-4">
+          <AcademicianSummary academician={academician} />
+        </div>
         <StudentEmptyState
           icon="event_busy"
           title={STUDENT_APPOINTMENT_MESSAGES.NOT_ACCEPTING_TITLE}
@@ -1084,11 +1086,14 @@ export default function StudentAppointmentCreatePage() {
         description={STUDENT_APPOINTMENT_MESSAGES.SUBTITLE}
       />
 
-      <AcademicianSummary academician={academician} />
-      <StudentAppointmentStepper
-        activeStepIndex={activeStepIndex}
-        skippedStepIndices={skippedStepIndices}
-      />
+      <div className="mb-4 grid grid-cols-1 gap-3 xl:grid-cols-[minmax(18rem,0.8fr)_minmax(32rem,1.2fr)]">
+        <AcademicianSummary academician={academician} />
+        <StudentAppointmentStepper
+          activeStepIndex={activeStepIndex}
+          skippedStepIndices={skippedStepIndices}
+          className="h-full"
+        />
+      </div>
 
       <p
         ref={stepHeadingRef}

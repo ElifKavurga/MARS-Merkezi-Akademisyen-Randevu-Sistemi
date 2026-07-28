@@ -10,7 +10,6 @@ import {
   CALENDAR_FILTER_OPTIONS,
   CALENDAR_MESSAGES,
   STAFF_CALENDAR_FILTER_OPTIONS,
-  formatCalendarRangeLabel,
   isCalendarAppointment,
   matchesCalendarFilter,
   shiftCalendarRange,
@@ -48,12 +47,24 @@ function initialWeekRange(): CalendarDateRange {
   const mondayOffset = day === 0 ? -6 : 1 - day;
   const monday = new Date(now);
   monday.setDate(now.getDate() + mondayOffset);
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
+  const friday = new Date(monday);
+  friday.setDate(monday.getDate() + 4);
   return {
     from: toLocalIsoDate(monday),
-    to: toLocalIsoDate(sunday),
+    to: toLocalIsoDate(friday),
   };
+}
+
+function formatCompactRangeLabel(range: CalendarDateRange): string {
+  const format = (isoDate: string) => {
+    const date = new Date(`${isoDate}T00:00:00`);
+    return date.toLocaleDateString('tr-TR', {
+      day: '2-digit',
+      month: 'short',
+    });
+  };
+  const year = new Date(`${range.to}T00:00:00`).getFullYear();
+  return `${format(range.from)} - ${format(range.to)} ${year}`;
 }
 
 type AcademicianCalendarPageProps = {
@@ -110,13 +121,6 @@ export default function AcademicianCalendarPage({
     });
   }, []);
 
-  const rangeSpanDays = useMemo(() => {
-    const from = new Date(`${range.from}T00:00:00`);
-    const to = new Date(`${range.to}T00:00:00`);
-    const diff = Math.round((to.getTime() - from.getTime()) / 86_400_000) + 1;
-    return Math.max(diff, 1);
-  }, [range]);
-
   const filteredEvents = useMemo(
     () => events.filter((event) => matchesCalendarFilter(event, filter)),
     [events, filter],
@@ -142,9 +146,9 @@ export default function AcademicianCalendarPage({
 
   return (
     <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-2 lg:h-[calc(100vh-6.25rem)] lg:overflow-hidden">
-      <div className="flex flex-col gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+      <div className="grid gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 shadow-sm lg:grid-cols-[auto_1fr_auto] lg:items-center">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <h1 className="mr-2 font-title-lg text-title-lg text-on-background">{title}</h1>
+          <h1 className="mr-1 font-title-md text-title-md text-on-background">{title}</h1>
           <StudentSegmentedTabs
             value={viewMode}
             options={VIEW_OPTIONS}
@@ -160,69 +164,69 @@ export default function AcademicianCalendarPage({
           ) : null}
         </div>
 
-        <label className="flex min-w-0 items-center gap-2 lg:w-[260px]">
-          <span className="shrink-0 font-label-md text-label-md text-on-surface-variant">Filtre</span>
-          {viewMode === 'calendar' ? (
-            <select
-              className={`${STUDENT_UI.FILTER_CONTROL_CLASS} h-10`}
-              value={filter}
-              onChange={(e) => setFilter(e.target.value as CalendarFilter)}
-              aria-label="Takvim filtresi"
-            >
-              {(includeAppointments
-                ? STAFF_CALENDAR_FILTER_OPTIONS
-                : CALENDAR_FILTER_OPTIONS
-              ).map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <select
-              className={`${STUDENT_UI.FILTER_CONTROL_CLASS} h-10`}
-              value={appointmentFilter}
-              onChange={(e) => setAppointmentFilter(e.target.value)}
-              aria-label="Randevu filtresi"
-            >
-              {APPOINTMENT_FILTER_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          )}
-        </label>
-      </div>
-
-      {viewMode === 'list' ? (
-        <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2">
+        <div className="flex min-w-0 items-center justify-center gap-2">
           <button
             type="button"
             className={`${STUDENT_UI.SECONDARY_BUTTON_CLASS} h-9 px-3 py-1.5`}
             aria-label={CALENDAR_MESSAGES.RANGE_PREV}
-            onClick={() => handleRangeChange(shiftCalendarRange(range, -rangeSpanDays))}
+            onClick={() => handleRangeChange(shiftCalendarRange(range, -7))}
           >
             <span className="material-symbols-outlined text-[18px]" aria-hidden>
               chevron_left
             </span>
           </button>
-          <p className="min-w-0 text-center font-label-md text-label-md text-on-surface sm:px-2">
+          <p className="min-w-[9.5rem] text-center font-label-md text-label-md text-on-surface">
             <span className="sr-only">{CALENDAR_MESSAGES.RANGE_LABEL}: </span>
-            {formatCalendarRangeLabel(range)}
+            {formatCompactRangeLabel(range)}
           </p>
           <button
             type="button"
             className={`${STUDENT_UI.SECONDARY_BUTTON_CLASS} h-9 px-3 py-1.5`}
             aria-label={CALENDAR_MESSAGES.RANGE_NEXT}
-            onClick={() => handleRangeChange(shiftCalendarRange(range, rangeSpanDays))}
+            onClick={() => handleRangeChange(shiftCalendarRange(range, 7))}
           >
             <span className="material-symbols-outlined text-[18px]" aria-hidden>
               chevron_right
             </span>
           </button>
         </div>
-      ) : null}
+
+        <div className="flex min-w-0 justify-end">
+          <label className="flex min-w-0 items-center gap-2 lg:w-[220px]">
+            <span className="shrink-0 font-label-md text-label-md text-on-surface-variant">Filtre</span>
+            {viewMode === 'calendar' ? (
+              <select
+                className={`${STUDENT_UI.FILTER_CONTROL_CLASS} h-10`}
+                value={filter}
+                onChange={(e) => setFilter(e.target.value as CalendarFilter)}
+                aria-label="Takvim filtresi"
+              >
+                {(includeAppointments
+                  ? STAFF_CALENDAR_FILTER_OPTIONS
+                  : CALENDAR_FILTER_OPTIONS
+                ).map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <select
+                className={`${STUDENT_UI.FILTER_CONTROL_CLASS} h-10`}
+                value={appointmentFilter}
+                onChange={(e) => setAppointmentFilter(e.target.value)}
+                aria-label="Randevu filtresi"
+              >
+                {APPOINTMENT_FILTER_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            )}
+          </label>
+        </div>
+      </div>
 
       <div className="relative min-h-[420px] lg:min-h-0 lg:flex-1">
         {loading ? (
