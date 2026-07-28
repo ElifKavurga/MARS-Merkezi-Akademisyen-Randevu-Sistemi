@@ -648,17 +648,25 @@
 
 .academician-calendar .fc .fc-toolbar-title,
 .student-appointments-calendar .fc .fc-toolbar-title {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #0b1641;
 }
 
 .academician-calendar .fc .fc-button,
 .student-appointments-calendar .fc .fc-button {
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   text-transform: none;
   border-radius: 0.5rem;
   box-shadow: none !important;
+  padding: 0.3rem 0.5rem;
+}
+
+.academician-calendar .fc .fc-toolbar,
+.student-appointments-calendar .fc .fc-toolbar {
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
 }
 
 .academician-calendar .fc .fc-event,
@@ -735,7 +743,7 @@
 .mars-calendar .fc .fc-col-header-cell {
   background: #f8f9fc;
   border-bottom: 2px solid #aeb3c0;
-  padding: 0.55rem 0.25rem;
+  padding: 0.35rem 0.2rem;
 }
 
 .mars-calendar .fc .fc-scroller {

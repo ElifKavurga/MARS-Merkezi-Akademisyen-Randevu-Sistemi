@@ -20,7 +20,11 @@ const preferenceLabels: Array<{
   { key: 'systemAnnouncements', description: 'Sistem güncellemeleri ve önemli duyuruları bildir' },
 ];
 
-export default function EmailNotificationPreferences() {
+type EmailNotificationPreferencesProps = {
+  className?: string;
+};
+
+export default function EmailNotificationPreferences({ className = '' }: EmailNotificationPreferencesProps) {
   const toast = useToast();
   const [preferences, setPreferences] = useState<EmailNotificationPreference | null>(null);
   const [loading, setLoading] = useState(true);
@@ -56,8 +60,8 @@ export default function EmailNotificationPreferences() {
   };
 
   return (
-    <section className="mt-8 max-w-3xl overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
-      <div className="border-b border-outline-variant px-5 py-5 sm:px-6 bg-surface-container-lowest/50">
+    <section className={`overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm ${className}`}>
+      <div className="border-b border-outline-variant bg-surface-container-lowest/50 px-4 py-4 sm:px-5">
         <h2 className="font-headline-md text-body-lg text-on-background">E-Posta Bildirim Tercihleri</h2>
         <p className="mt-1 font-body-md text-body-md text-on-surface-variant">
           Uygulama içi bildirimleriniz değişmeden, almak istediğiniz e-postaları yönetin.
@@ -73,7 +77,7 @@ export default function EmailNotificationPreferences() {
               <div 
                 key={item.key} 
                 onClick={() => toggle(item.key)}
-                className="flex cursor-pointer items-center justify-between gap-4 px-5 py-3 sm:px-6 bg-surface-container-lowest hover:bg-surface-container-low transition-colors"
+                className="flex cursor-pointer items-center justify-between gap-3 bg-surface-container-lowest px-4 py-2.5 transition-colors hover:bg-surface-container-low sm:px-5"
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(item.key); } }}
@@ -95,7 +99,7 @@ export default function EmailNotificationPreferences() {
               </div>
             ))}
           </div>
-          <div className="flex justify-end border-t border-outline-variant bg-surface-container-lowest px-5 py-4 sm:px-6">
+          <div className="flex justify-end border-t border-outline-variant bg-surface-container-lowest px-4 py-3 sm:px-5">
             <AdminActionButton
               variant="primary"
               icon="save"

@@ -38,12 +38,12 @@ export default function ProfilePage() {
   }
 
   const renderReadOnlyField = (label: string, value: string, icon: string) => (
-    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4 px-6 py-4">
-      <dt className="w-48 font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
+    <div className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:items-center sm:gap-3 sm:px-5">
+      <dt className="flex w-40 items-center gap-2 font-label-md text-label-md text-on-surface-variant">
         <span className="material-symbols-outlined text-[20px] opacity-70" aria-hidden="true">{icon}</span>
         {label}
       </dt>
-      <dd className="flex-1 break-words font-body-md text-body-md text-on-surface/80 bg-surface-container/30 px-3 py-2 rounded-lg border border-outline-variant/50">
+      <dd className="flex-1 break-words rounded-lg border border-outline-variant/50 bg-surface-container/30 px-3 py-2 font-body-md text-body-md text-on-surface/80">
         {value}
       </dd>
     </div>
@@ -51,56 +51,56 @@ export default function ProfilePage() {
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
-      <div className="mb-8">
+      <div className="mb-4">
         <h1 className="font-headline-lg text-headline-lg text-on-background">Profil Bilgileri</h1>
-        
       </div>
 
-      <div className="mb-8 max-w-3xl overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-5 border-b border-outline-variant p-6 bg-surface-container-lowest/50">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-primary/20 bg-primary-container font-headline-md text-xl text-on-primary-container shadow-sm">
-            {getInitials(profile.fullName) || '?'}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-headline-md text-body-lg text-on-background">
-              {profile.fullName}
-            </p>
-            <p className="truncate font-body-md text-body-md text-on-surface-variant">
-              {profile.institutionalEmail}
-            </p>
-            <div className="mt-2 flex items-center gap-2">
-              <span className="inline-flex items-center rounded-full bg-surface-container px-2.5 py-0.5 font-label-sm text-xs font-medium text-on-surface-variant border border-outline-variant/50">
-                {getRoleLabel(profile.role)}
-              </span>
-              <span
-                className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-label-sm text-xs font-medium border ${
-                  profile.isActive
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                    : 'bg-red-50 text-red-700 border-red-200'
-                }`}
-              >
-                {profile.isActive ? 'Aktif Hesap' : 'Pasif Hesap'}
-              </span>
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <section className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+          <div className="flex flex-col gap-4 border-b border-outline-variant bg-surface-container-lowest/50 p-4 sm:flex-row sm:items-center sm:p-5">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-primary/20 bg-primary-container font-headline-md text-lg text-on-primary-container shadow-sm">
+              {getInitials(profile.fullName) || '?'}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-headline-md text-body-lg text-on-background">
+                {profile.fullName}
+              </p>
+              <p className="truncate font-body-md text-body-md text-on-surface-variant">
+                {profile.institutionalEmail}
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center rounded-full border border-outline-variant/50 bg-surface-container px-2.5 py-0.5 font-label-sm text-xs font-medium text-on-surface-variant">
+                  {getRoleLabel(profile.role)}
+                </span>
+                <span
+                  className={`inline-flex items-center rounded-full border px-2.5 py-0.5 font-label-sm text-xs font-medium ${
+                    profile.isActive
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                      : 'border-red-200 bg-red-50 text-red-700'
+                  }`}
+                >
+                  {profile.isActive ? 'Aktif Hesap' : 'Pasif Hesap'}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <dl className="divide-y divide-outline-variant/40">
-          {renderReadOnlyField('Ad Soyad', profile.fullName, 'person')}
-          {renderReadOnlyField('Kurumsal E-Posta', profile.institutionalEmail, 'mail')}
-          
-          {profile.department && profile.department.trim() !== '' && 
-            renderReadOnlyField('Bölüm', profile.department, 'domain')
-          }
+          <dl className="divide-y divide-outline-variant/40">
+            {renderReadOnlyField('Ad Soyad', profile.fullName, 'person')}
+            {renderReadOnlyField('Kurumsal E-Posta', profile.institutionalEmail, 'mail')}
+            {profile.department && profile.department.trim() !== ''
+              ? renderReadOnlyField('Bölüm', profile.department, 'domain')
+              : null}
+            {profile.academicTitle && profile.academicTitle.trim() !== ''
+              ? renderReadOnlyField('Unvan', profile.academicTitle, 'school')
+              : null}
+          </dl>
+        </section>
 
-          {profile.academicTitle && profile.academicTitle.trim() !== '' && 
-            renderReadOnlyField('Unvan', profile.academicTitle, 'school')
-          }
-        </dl>
+        <EmailNotificationPreferences />
       </div>
-      
-      <ChangePasswordSecurityCard />
-      <EmailNotificationPreferences />
+
+      <ChangePasswordSecurityCard className="mt-4" />
     </div>
   );
 }

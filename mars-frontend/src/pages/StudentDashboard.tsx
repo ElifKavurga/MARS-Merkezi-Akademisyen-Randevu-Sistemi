@@ -116,25 +116,6 @@ export default function StudentDashboard() {
         </Link>
       ) : null}
 
-      <section className="mb-6 rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-6">
-        <div className="flex items-start gap-4">
-          <span
-            className="material-symbols-outlined shrink-0 text-[24px] text-primary"
-            aria-hidden="true"
-          >
-            info
-          </span>
-          <div className="min-w-0">
-            <h2 className="font-headline-md text-headline-md text-primary">
-              {STUDENT_UI.INFO_TITLE}
-            </h2>
-            <p className="mt-2 font-body-md text-body-md text-on-surface-variant">
-              {STUDENT_UI.INFO_DESCRIPTION}
-            </p>
-          </div>
-        </div>
-      </section>
-
       <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
         <section className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest">
           <div className="flex items-center justify-between gap-3 p-5 sm:p-6">

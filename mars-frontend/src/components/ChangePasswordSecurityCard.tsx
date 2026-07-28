@@ -45,7 +45,11 @@ function validate(form: PasswordFormState): string | null {
   return null;
 }
 
-export default function ChangePasswordSecurityCard() {
+type ChangePasswordSecurityCardProps = {
+  className?: string;
+};
+
+export default function ChangePasswordSecurityCard({ className = '' }: ChangePasswordSecurityCardProps) {
   const toast = useToast();
   const [form, setForm] = useState<PasswordFormState>(initialForm);
   const [saving, setSaving] = useState(false);
@@ -80,8 +84,8 @@ export default function ChangePasswordSecurityCard() {
   };
 
   return (
-    <section className="mt-8 max-w-3xl overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
-      <div className="border-b border-outline-variant px-5 py-5 sm:px-6 bg-surface-container-lowest/50">
+    <section className={`overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm ${className}`}>
+      <div className="border-b border-outline-variant bg-surface-container-lowest/50 px-4 py-4 sm:px-5">
         <h2 className="font-headline-md text-body-lg text-on-background">Güvenlik</h2>
         <p className="mt-1 font-body-md text-body-md text-on-surface-variant">
           Hesabınızda oturum açık kalırken şifrenizi güncelleyin.
@@ -89,7 +93,7 @@ export default function ChangePasswordSecurityCard() {
       </div>
 
       <form onSubmit={(event) => void submit(event)} noValidate>
-        <div className="grid gap-4 px-5 py-5 sm:px-6">
+        <div className="grid gap-3 px-4 py-4 sm:px-5">
           <label className="grid gap-1.5">
             <span className="font-label-md text-label-md text-on-surface-variant">Mevcut Şifre</span>
             <input
@@ -101,7 +105,7 @@ export default function ChangePasswordSecurityCard() {
             />
           </label>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-2">
             <label className="grid gap-1.5">
               <span className="font-label-md text-label-md text-on-surface-variant">Yeni Şifre</span>
               <input
@@ -136,7 +140,7 @@ export default function ChangePasswordSecurityCard() {
           ) : null}
         </div>
 
-        <div className="flex justify-end border-t border-outline-variant bg-surface-container-lowest px-5 py-4 sm:px-6">
+        <div className="flex justify-end border-t border-outline-variant bg-surface-container-lowest px-4 py-3 sm:px-5">
           <AdminActionButton variant="primary" icon="save" disabled={saving} type="submit">
             {saving ? 'Kaydediliyor' : 'Kaydet'}
           </AdminActionButton>

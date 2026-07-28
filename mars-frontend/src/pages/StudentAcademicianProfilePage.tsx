@@ -37,15 +37,6 @@ function getAvailabilityMeetingTypeLabel(meetingType: string): string {
   return MEETING_TYPE_OPTIONS.find((item) => item.value === meetingType)?.label ?? meetingType;
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="grid gap-1 sm:grid-cols-[10rem_1fr] sm:items-start">
-      <dt className="font-label-md text-label-md text-on-surface-variant">{label}</dt>
-      <dd className="break-words font-body-md text-body-md text-on-surface">{value}</dd>
-    </div>
-  );
-}
-
 export default function StudentAcademicianProfilePage() {
   const { userId: userIdParam } = useParams<{ userId: string }>();
   const toast = useToast();
@@ -174,94 +165,131 @@ export default function StudentAcademicianProfilePage() {
   }
 
   const accepting = profile.isAcceptingAppointments;
-  const hasOfficeInfo =
-    Boolean(profile.officeName?.trim()) || Boolean(profile.officeLocation?.trim());
-
   return (
-    <div className="w-full min-w-0 animate-fade-in">
-      <StudentPageHeader
-        title={STUDENT_UI.PROFILE_TITLE}
-        description={STUDENT_UI.PROFILE_SUBTITLE}
-      />
+    <div className="flex w-full min-w-0 animate-fade-in flex-col lg:-mt-2">
+      <div className="mb-1">
+        <h1 className="font-title-lg text-title-lg text-on-background">
+          {STUDENT_UI.PROFILE_TITLE}
+        </h1>
+      </div>
 
-      <section className="mb-4 rounded-xl border border-outline-variant bg-surface-container-lowest p-4 sm:p-5">
-        <div className="flex flex-col items-center gap-6 md:flex-row md:items-start">
-          {profile.profilePhotoUrl ? (
-            <img
-              src={profile.profilePhotoUrl}
-              alt=""
-              className="h-28 w-28 shrink-0 rounded-full border-2 border-primary-container object-cover"
-            />
-          ) : (
-            <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-full border-2 border-primary-container bg-surface-container font-headline-md text-2xl font-semibold text-primary">
-              <UserAvatar fullName={profile.fullName} size="lg" />
-            </div>
-          )}
-
-          <div className="min-w-0 flex-1 text-center md:text-left">
-            <h2 className="font-headline-lg text-headline-lg text-on-background">
-              {profile.fullName}
-            </h2>
-            <p className="mt-1 font-body-lg text-body-lg text-on-surface-variant">
-              {profile.academicTitle?.trim()
-                ? profile.academicTitle
-                : STUDENT_ACADEMICIAN_MESSAGES.NO_TITLE}
-            </p>
-            <p className="mt-2 font-body-md text-body-md text-on-surface-variant">
-              {profile.departmentName}
-            </p>
-
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-3 md:justify-start">
-              <StudentAcceptingBadge
-                accepting={accepting}
-                activeLabel={STUDENT_ACADEMICIAN_MESSAGES.STATUS_ACCEPTING}
-                inactiveLabel={STUDENT_ACADEMICIAN_MESSAGES.STATUS_NOT_ACCEPTING}
+      <div className="mb-2 grid grid-cols-1 gap-2 lg:grid-cols-2">
+        <section className="rounded-lg border border-outline-variant bg-surface-container-lowest p-2.5">
+          <div className="flex flex-col gap-2.5 md:flex-row md:items-start">
+            {profile.profilePhotoUrl ? (
+              <img
+                src={profile.profilePhotoUrl}
+                alt=""
+                className="h-12 w-12 shrink-0 rounded-full border-2 border-primary-container object-cover"
               />
-              <span className="inline-flex max-w-full items-center gap-1.5 rounded-lg bg-surface-container px-3 py-1.5 font-label-md text-label-md text-on-surface">
-                <span className="material-symbols-outlined shrink-0 text-[18px]" aria-hidden="true">
-                  mail
-                </span>
-                <span className="truncate">{profile.institutionalEmail}</span>
-              </span>
-            </div>
+            ) : (
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-primary-container bg-surface-container font-headline-md text-base font-semibold text-primary">
+                <UserAvatar fullName={profile.fullName} size="md" />
+              </div>
+            )}
 
-            <div className="mt-6">
-              {accepting ? (
-                <Link
-                  to={studentAppointmentCreatePath(profile.userId)}
-                  className={`${STUDENT_UI.PRIMARY_BUTTON_CLASS} w-full sm:w-auto`}
-                  style={{ textDecoration: 'none' }}
-                >
-                  <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
-                    event_available
+            <div className="min-w-0 flex-1">
+              <h2 className="font-title-lg text-title-lg text-on-background">
+                {profile.fullName}
+              </h2>
+              <p className="mt-0.5 font-body-md text-body-md text-on-surface-variant">
+                {profile.academicTitle?.trim()
+                  ? profile.academicTitle
+                  : STUDENT_ACADEMICIAN_MESSAGES.NO_TITLE}
+              </p>
+              <p className="mt-1 font-body-md text-body-md text-on-surface-variant">
+                {profile.departmentName}
+              </p>
+
+              <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                <StudentAcceptingBadge
+                  accepting={accepting}
+                  activeLabel={STUDENT_ACADEMICIAN_MESSAGES.STATUS_ACCEPTING}
+                  inactiveLabel={STUDENT_ACADEMICIAN_MESSAGES.STATUS_NOT_ACCEPTING}
+                />
+                <span className="inline-flex max-w-full items-start gap-1.5 rounded-lg bg-surface-container px-3 py-1.5 font-label-md text-label-md text-on-surface">
+                  <span className="material-symbols-outlined shrink-0 text-[18px]" aria-hidden="true">
+                    mail
                   </span>
-                  {STUDENT_ACADEMICIAN_MESSAGES.BOOK_APPOINTMENT}
-                </Link>
-              ) : (
-                <button
-                  type="button"
-                  disabled
+                  <span className="min-w-0 break-all leading-snug">{profile.institutionalEmail}</span>
+                </span>
+              </div>
+
+              <div className="mt-1.5">
+                {accepting ? (
+                  <Link
+                    to={studentAppointmentCreatePath(profile.userId)}
+                    className={`${STUDENT_UI.PRIMARY_BUTTON_CLASS} w-full px-4 py-1.5 sm:w-auto`}
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                      event_available
+                    </span>
+                    {STUDENT_ACADEMICIAN_MESSAGES.BOOK_APPOINTMENT}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
                   aria-disabled="true"
                   title={STUDENT_ACADEMICIAN_MESSAGES.BOOK_APPOINTMENT_DISABLED}
-                  className={`${STUDENT_UI.PRIMARY_BUTTON_CLASS} w-full sm:w-auto`}
-                >
-                  <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
-                    event_available
-                  </span>
-                  {STUDENT_ACADEMICIAN_MESSAGES.BOOK_APPOINTMENT}
-                </button>
-              )}
+                  className={`${STUDENT_UI.PRIMARY_BUTTON_CLASS} w-full px-4 py-1.5 sm:w-auto`}
+                  >
+                    <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                      event_available
+                    </span>
+                    {STUDENT_ACADEMICIAN_MESSAGES.BOOK_APPOINTMENT}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="mb-6 rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-6">
-        <div className="mb-4 flex items-center gap-2">
+        <section className="rounded-lg border border-outline-variant bg-surface-container-lowest p-2.5">
+          <div className="mb-1.5 flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary" aria-hidden="true">
+              school
+            </span>
+            <h2 className="font-title-md text-title-md text-primary">
+              {STUDENT_ACADEMICIAN_MESSAGES.COURSES_TITLE}
+            </h2>
+          </div>
+          {profile.courses.length === 0 ? (
+            <p className="font-body-md text-body-md text-on-surface-variant">
+              {STUDENT_ACADEMICIAN_MESSAGES.COURSES_EMPTY}
+            </p>
+          ) : (
+            <ul className="list-none divide-y divide-outline-variant rounded-lg border border-outline-variant bg-surface p-0">
+              {profile.courses.map((course) => (
+                <li
+                  key={course.courseId}
+                  className="flex flex-col gap-0.5 px-3 py-1 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <p className="font-body-md text-body-md font-semibold text-primary">
+                      {course.courseCode}
+                    </p>
+                    <p className="break-words font-body-md text-body-md text-on-surface">
+                      {course.courseName}
+                    </p>
+                  </div>
+                  <span className="shrink-0 rounded bg-surface-container px-2 py-0.5 font-label-sm text-label-sm text-on-surface-variant">
+                    {course.academicTerm}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
+
+      <section className="rounded-lg border border-outline-variant bg-surface-container-lowest p-2.5">
+        <div className="mb-1.5 flex items-center gap-2">
           <span className="material-symbols-outlined text-primary" aria-hidden="true">
             schedule
           </span>
-          <h2 className="font-headline-md text-headline-md text-primary">
+          <h2 className="font-title-md text-title-md text-primary">
             {STUDENT_ACADEMICIAN_MESSAGES.AVAILABILITY_TITLE}
           </h2>
         </div>
@@ -281,139 +309,32 @@ export default function StudentAcademicianProfilePage() {
             icon="event_busy"
             title={STUDENT_ACADEMICIAN_MESSAGES.AVAILABILITY_EMPTY_TITLE}
             description={STUDENT_ACADEMICIAN_MESSAGES.AVAILABILITY_EMPTY}
-            className="border-0 bg-surface px-4 py-8"
+            className="border-0 bg-surface px-4 py-6"
           />
         ) : (
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <ul className="grid list-none grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
             {visibleSlots.map((slot) => (
               <li
                 key={slot.slotId}
-                className="pointer-events-none select-none rounded-xl border border-outline-variant bg-surface p-4"
+                className="pointer-events-none select-none rounded-lg border border-outline-variant bg-surface p-1.5"
                 aria-disabled="true"
               >
-                <p className="font-label-sm text-label-sm uppercase tracking-wider text-outline">
-                  {STUDENT_ACADEMICIAN_MESSAGES.AVAILABILITY_DATE}
-                </p>
-                <p className="mt-1 font-body-md text-body-md font-semibold text-primary">
-                  {formatSlotDate(slot.slotDate)}
-                </p>
-                <div className="mt-3 grid grid-cols-2 gap-3">
-                  <div>
-                    <p className="font-label-sm text-label-sm text-on-surface-variant">
-                      {STUDENT_ACADEMICIAN_MESSAGES.AVAILABILITY_START}
-                    </p>
-                    <p className="font-body-md text-body-md text-on-surface">
-                      {formatSlotTime(slot.startTime)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-label-sm text-label-sm text-on-surface-variant">
-                      {STUDENT_ACADEMICIAN_MESSAGES.AVAILABILITY_END}
-                    </p>
-                    <p className="font-body-md text-body-md text-on-surface">
-                      {formatSlotTime(slot.endTime)}
-                    </p>
-                  </div>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-body-md text-body-md font-semibold text-primary">
+                    {formatSlotDate(slot.slotDate)}
+                  </p>
+                  <span className="shrink-0 rounded bg-surface-container px-2 py-0.5 font-label-sm text-label-sm text-on-surface-variant">
+                    {getAvailabilityMeetingTypeLabel(slot.meetingType)}
+                  </span>
                 </div>
-                <p className="mt-3 font-label-sm text-label-sm text-on-surface-variant">
-                  {STUDENT_ACADEMICIAN_MESSAGES.AVAILABILITY_MEETING_TYPE}
-                </p>
-                <p className="mt-1 font-body-md text-body-md text-on-surface">
-                  {getAvailabilityMeetingTypeLabel(slot.meetingType)}
+                <p className="mt-0.5 font-body-md text-body-md text-on-surface">
+                  {formatSlotTime(slot.startTime)} - {formatSlotTime(slot.endTime)}
                 </p>
               </li>
             ))}
           </ul>
         )}
       </section>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-6 lg:col-span-7">
-          <div className="mb-4 flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary" aria-hidden="true">
-              school
-            </span>
-            <h2 className="font-headline-md text-headline-md text-primary">
-              {STUDENT_ACADEMICIAN_MESSAGES.COURSES_TITLE}
-            </h2>
-          </div>
-          {profile.courses.length === 0 ? (
-            <p className="font-body-md text-body-md text-on-surface-variant">
-              {STUDENT_ACADEMICIAN_MESSAGES.COURSES_EMPTY}
-            </p>
-          ) : (
-            <ul className="divide-y divide-outline-variant rounded-lg border border-outline-variant bg-surface">
-              {profile.courses.map((course) => (
-                <li
-                  key={course.courseId}
-                  className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate font-body-md text-body-md font-semibold text-primary">
-                      {course.courseCode}
-                    </p>
-                    <p className="truncate font-body-md text-body-md text-on-surface">
-                      {course.courseName}
-                    </p>
-                  </div>
-                  <span className="shrink-0 rounded bg-surface-container px-2 py-0.5 font-label-sm text-label-sm text-on-surface-variant">
-                    {course.academicTerm}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <div className="flex flex-col gap-6 lg:col-span-5">
-          <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-6">
-            <div className="mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary" aria-hidden="true">
-                meeting_room
-              </span>
-              <h2 className="font-headline-md text-headline-md text-primary">
-                {STUDENT_ACADEMICIAN_MESSAGES.OFFICE_TITLE}
-              </h2>
-            </div>
-            {hasOfficeInfo ? (
-              <dl className="space-y-3">
-                {profile.officeName?.trim() ? (
-                  <InfoRow
-                    label={STUDENT_ACADEMICIAN_MESSAGES.OFFICE_NAME}
-                    value={profile.officeName}
-                  />
-                ) : null}
-                {profile.officeLocation?.trim() ? (
-                  <InfoRow
-                    label={STUDENT_ACADEMICIAN_MESSAGES.OFFICE_LOCATION}
-                    value={profile.officeLocation}
-                  />
-                ) : null}
-              </dl>
-            ) : (
-              <p className="font-body-md text-body-md text-on-surface-variant">
-                {STUDENT_ACADEMICIAN_MESSAGES.OFFICE_EMPTY}
-              </p>
-            )}
-          </section>
-
-          <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 sm:p-6">
-            <div className="mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary" aria-hidden="true">
-                info
-              </span>
-              <h2 className="font-headline-md text-headline-md text-primary">
-                {STUDENT_ACADEMICIAN_MESSAGES.ABOUT_TITLE}
-              </h2>
-            </div>
-            <p className="font-body-md text-body-md text-on-surface-variant">
-              {profile.about?.trim()
-                ? profile.about
-                : STUDENT_ACADEMICIAN_MESSAGES.ABOUT_EMPTY}
-            </p>
-          </section>
-        </div>
-      </div>
     </div>
   );
 }

@@ -166,7 +166,7 @@ export default function StudentAppointmentsCalendar({
 
   return (
     // Same filtered dataset as list view — no extra API fetch.
-    <div className="mars-calendar academician-calendar student-appointments-calendar overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest p-2 sm:p-4">
+    <div className="mars-calendar academician-calendar student-appointments-calendar h-full overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest p-1.5 sm:p-2">
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin]}
         initialView={window.matchMedia('(max-width: 767px)').matches ? 'timeGridDay' : 'timeGridWeek'}
@@ -181,7 +181,7 @@ export default function StudentAppointmentsCalendar({
           week: 'Haftalık',
         }}
         locale={trLocale}
-        height="min(780px, calc(100vh - 12rem))"
+        height="100%"
         slotDuration="00:10:00"
         slotLabelInterval="01:00:00"
         eventMinHeight={22}

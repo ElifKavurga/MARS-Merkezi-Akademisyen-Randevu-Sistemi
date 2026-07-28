@@ -39,22 +39,22 @@ type AppliedFilters = {
 function AcademicianCard({ academician }: { academician: StudentAcademician }) {
   return (
     <article
-      className="flex h-full min-w-0 flex-col gap-3 rounded-lg border border-outline-variant bg-surface-container-lowest p-4"
+      className="flex min-w-0 flex-col gap-2.5 rounded-lg border border-outline-variant bg-surface-container-lowest p-3"
       data-academician-id={academician.userId}
     >
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-3">
         {academician.profilePhotoUrl ? (
           <img
             src={academician.profilePhotoUrl}
             alt=""
-            className="h-12 w-12 shrink-0 rounded-full border border-outline-variant object-cover"
+            className="h-10 w-10 shrink-0 rounded-full border border-outline-variant object-cover"
           />
         ) : (
-          <UserAvatar fullName={academician.fullName} size="lg" />
+          <UserAvatar fullName={academician.fullName} size="md" />
         )}
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <h2 className="min-w-0 truncate font-headline-md text-body-lg text-primary">
+          <div className="flex flex-wrap items-start justify-between gap-1.5">
+            <h2 className="min-w-0 break-words font-headline-md text-body-md text-primary">
               {academician.fullName}
             </h2>
             <StudentAcceptingBadge
@@ -63,7 +63,7 @@ function AcademicianCard({ academician }: { academician: StudentAcademician }) {
               inactiveLabel={STUDENT_ACADEMICIAN_MESSAGES.STATUS_NOT_ACCEPTING}
             />
           </div>
-          <p className="mt-0.5 truncate font-label-sm text-label-sm text-on-surface-variant">
+          <p className="mt-0.5 break-words font-label-sm text-label-sm text-on-surface-variant">
             {academician.academicTitle?.trim()
               ? academician.academicTitle
               : STUDENT_ACADEMICIAN_MESSAGES.NO_TITLE}
@@ -71,31 +71,31 @@ function AcademicianCard({ academician }: { academician: StudentAcademician }) {
         </div>
       </div>
 
-      <dl className="space-y-2 border-t border-outline-variant pt-3">
-        <div className="flex items-start gap-2">
+      <dl className="grid grid-cols-1 gap-1.5 border-t border-outline-variant pt-2">
+        <div className="flex min-w-0 items-start gap-2">
           <dt className="sr-only">{STUDENT_ACADEMICIAN_MESSAGES.DEPARTMENT_FIELD}</dt>
-          <dd className="flex min-w-0 items-center gap-1.5 font-body-md text-body-md text-on-surface-variant">
-            <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+          <dd className="flex min-w-0 items-start gap-1.5 font-body-md text-body-md text-on-surface-variant">
+            <span className="material-symbols-outlined text-[17px]" aria-hidden="true">
               apartment
             </span>
-            <span className="truncate">{academician.departmentName}</span>
+            <span className="min-w-0 break-words leading-snug">{academician.departmentName}</span>
           </dd>
         </div>
-        <div className="flex items-start gap-2">
+        <div className="flex min-w-0 items-start gap-2">
           <dt className="sr-only">{STUDENT_ACADEMICIAN_MESSAGES.EMAIL_FIELD}</dt>
-          <dd className="flex min-w-0 items-center gap-1.5 font-body-md text-body-md text-on-surface-variant">
-            <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+          <dd className="flex min-w-0 items-start gap-1.5 font-body-md text-body-md text-on-surface-variant">
+            <span className="material-symbols-outlined text-[17px]" aria-hidden="true">
               mail
             </span>
-            <span className="truncate">{academician.institutionalEmail}</span>
+            <span className="min-w-0 break-all leading-snug">{academician.institutionalEmail}</span>
           </dd>
         </div>
       </dl>
 
-      <div className="mt-auto pt-2">
+      <div className="pt-1">
         <Link
           to={studentAcademicianProfilePath(academician.userId)}
-          className={`${STUDENT_UI.SECONDARY_BUTTON_CLASS} w-full`}
+          className={`${STUDENT_UI.SECONDARY_BUTTON_CLASS} min-h-9 w-full py-2`}
           style={{ textDecoration: 'none' }}
         >
           <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
@@ -228,7 +228,7 @@ export default function StudentAcademicianSearchPage() {
         description={STUDENT_ACADEMICIAN_MESSAGES.SUBTITLE}
       />
 
-      <section className="mb-4 rounded-lg border border-outline-variant bg-surface-container-lowest p-4">
+      <section className="mb-3 rounded-lg border border-outline-variant bg-surface-container-lowest p-3">
         <form
           className="flex flex-col gap-3"
           onSubmit={(event) => {
@@ -333,7 +333,7 @@ export default function StudentAcademicianSearchPage() {
         </form>
       </section>
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 font-body-lg text-body-lg font-bold text-on-background">
           {STUDENT_ACADEMICIAN_MESSAGES.RESULTS}
           {!loading && !error ? (
@@ -359,14 +359,14 @@ export default function StudentAcademicianSearchPage() {
         />
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
             {academicians.map((academician) => (
               <AcademicianCard key={academician.userId} academician={academician} />
             ))}
           </div>
 
           {totalPages > 1 ? (
-            <div className="mt-6 flex flex-col items-center justify-between gap-3 sm:flex-row">
+            <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
               <p className="font-label-sm text-label-sm text-on-surface-variant">
                 {STUDENT_ACADEMICIAN_MESSAGES.PAGE_OF(page + 1, totalPages)}
               </p>

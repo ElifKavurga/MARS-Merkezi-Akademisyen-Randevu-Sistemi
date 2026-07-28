@@ -6,8 +6,8 @@ import Loading from '../components/Loading';
 import StaffCalendarEventList from '../components/StaffCalendarEventList';
 import StudentSegmentedTabs from '../components/StudentSegmentedTabs';
 import {
-  CALENDAR_FILTER_OPTIONS,
   CALENDAR_EVENT_COLORS,
+  CALENDAR_FILTER_OPTIONS,
   CALENDAR_MESSAGES,
   STAFF_CALENDAR_FILTER_OPTIONS,
   formatCalendarRangeLabel,
@@ -122,7 +122,6 @@ export default function AcademicianCalendarPage({
     [events, filter],
   );
 
-  /** Liste: yalnızca Appointment — müsaitlik slotları asla listelenmez. */
   const listAppointments = useMemo(() => {
     const rawAppointments = events.filter(isCalendarAppointment);
     if (appointmentFilter === 'ALL') {
@@ -142,16 +141,30 @@ export default function AcademicianCalendarPage({
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-headline-lg text-headline-lg text-on-background">{title}</h1>
+    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-2 lg:h-[calc(100vh-6.25rem)] lg:overflow-hidden">
+      <div className="flex flex-col gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <h1 className="mr-2 font-title-lg text-title-lg text-on-background">{title}</h1>
+          <StudentSegmentedTabs
+            value={viewMode}
+            options={VIEW_OPTIONS}
+            ariaLabel={CALENDAR_MESSAGES.VIEW_MODE_LABEL}
+            onChange={setViewMode}
+          />
+          {includeAppointments && viewMode === 'calendar' ? (
+            <LegendItem
+              color={CALENDAR_EVENT_COLORS.NORMAL_SOFT}
+              borderColor={CALENDAR_EVENT_COLORS.NORMAL}
+              label="Müsaitlik"
+            />
+          ) : null}
         </div>
-        <label className="flex flex-col gap-1 sm:min-w-[200px]">
-          <span className="font-label-md text-label-md text-on-surface-variant">Filtre</span>
+
+        <label className="flex min-w-0 items-center gap-2 lg:w-[260px]">
+          <span className="shrink-0 font-label-md text-label-md text-on-surface-variant">Filtre</span>
           {viewMode === 'calendar' ? (
             <select
-              className={STUDENT_UI.FILTER_CONTROL_CLASS}
+              className={`${STUDENT_UI.FILTER_CONTROL_CLASS} h-10`}
               value={filter}
               onChange={(e) => setFilter(e.target.value as CalendarFilter)}
               aria-label="Takvim filtresi"
@@ -167,7 +180,7 @@ export default function AcademicianCalendarPage({
             </select>
           ) : (
             <select
-              className={STUDENT_UI.FILTER_CONTROL_CLASS}
+              className={`${STUDENT_UI.FILTER_CONTROL_CLASS} h-10`}
               value={appointmentFilter}
               onChange={(e) => setAppointmentFilter(e.target.value)}
               aria-label="Randevu filtresi"
@@ -182,55 +195,36 @@ export default function AcademicianCalendarPage({
         </label>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-        <StudentSegmentedTabs
-          value={viewMode}
-          options={VIEW_OPTIONS}
-          ariaLabel={CALENDAR_MESSAGES.VIEW_MODE_LABEL}
-          onChange={setViewMode}
-        />
-
-        {viewMode === 'list' ? (
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <button
-              type="button"
-              className={STUDENT_UI.SECONDARY_BUTTON_CLASS}
-              aria-label={CALENDAR_MESSAGES.RANGE_PREV}
-              onClick={() => handleRangeChange(shiftCalendarRange(range, -rangeSpanDays))}
-            >
-              <span className="material-symbols-outlined text-[18px]" aria-hidden>
-                chevron_left
-              </span>
-            </button>
-            <p className="min-w-0 flex-1 text-center font-label-md text-label-md text-on-surface sm:px-2">
-              <span className="sr-only">{CALENDAR_MESSAGES.RANGE_LABEL}: </span>
-              {formatCalendarRangeLabel(range)}
-            </p>
-            <button
-              type="button"
-              className={STUDENT_UI.SECONDARY_BUTTON_CLASS}
-              aria-label={CALENDAR_MESSAGES.RANGE_NEXT}
-              onClick={() => handleRangeChange(shiftCalendarRange(range, rangeSpanDays))}
-            >
-              <span className="material-symbols-outlined text-[18px]" aria-hidden>
-                chevron_right
-              </span>
-            </button>
-          </div>
-        ) : null}
-      </div>
-
-      {includeAppointments && viewMode === 'calendar' ? (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-outline-variant bg-surface-container-lowest px-3 py-2 font-label-sm text-label-sm text-on-surface-variant sm:px-4">
-          <LegendItem
-            color={CALENDAR_EVENT_COLORS.NORMAL_SOFT}
-            borderColor={CALENDAR_EVENT_COLORS.NORMAL}
-            label="Müsaitlik"
-          />
+      {viewMode === 'list' ? (
+        <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2">
+          <button
+            type="button"
+            className={`${STUDENT_UI.SECONDARY_BUTTON_CLASS} h-9 px-3 py-1.5`}
+            aria-label={CALENDAR_MESSAGES.RANGE_PREV}
+            onClick={() => handleRangeChange(shiftCalendarRange(range, -rangeSpanDays))}
+          >
+            <span className="material-symbols-outlined text-[18px]" aria-hidden>
+              chevron_left
+            </span>
+          </button>
+          <p className="min-w-0 text-center font-label-md text-label-md text-on-surface sm:px-2">
+            <span className="sr-only">{CALENDAR_MESSAGES.RANGE_LABEL}: </span>
+            {formatCalendarRangeLabel(range)}
+          </p>
+          <button
+            type="button"
+            className={`${STUDENT_UI.SECONDARY_BUTTON_CLASS} h-9 px-3 py-1.5`}
+            aria-label={CALENDAR_MESSAGES.RANGE_NEXT}
+            onClick={() => handleRangeChange(shiftCalendarRange(range, rangeSpanDays))}
+          >
+            <span className="material-symbols-outlined text-[18px]" aria-hidden>
+              chevron_right
+            </span>
+          </button>
         </div>
       ) : null}
 
-      <div className="relative min-h-[420px]">
+      <div className="relative min-h-[420px] lg:min-h-0 lg:flex-1">
         {loading ? (
           <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-surface/70">
             <Loading label="Takvim yükleniyor..." />
@@ -252,7 +246,7 @@ export default function AcademicianCalendarPage({
         )}
 
         {!loading && viewMode === 'calendar' && filteredEvents.length === 0 ? (
-          <p className="mt-4 text-center font-body-md text-body-md text-on-surface-variant">
+          <p className="mt-3 text-center font-body-md text-body-md text-on-surface-variant">
             {CALENDAR_MESSAGES.EMPTY_RANGE}
           </p>
         ) : null}
@@ -282,7 +276,7 @@ function LegendItem({
   dashed?: boolean;
 }) {
   return (
-    <span className="inline-flex items-center gap-2">
+    <span className="inline-flex items-center gap-2 font-label-sm text-label-sm text-on-surface-variant">
       <span
         className="h-3 w-3 rounded-sm"
         style={{

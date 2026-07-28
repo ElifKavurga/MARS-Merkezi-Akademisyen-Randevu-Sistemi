@@ -254,7 +254,7 @@ export default function AcademicianCalendar({
   };
 
   return (
-    <div className="mars-calendar academician-calendar overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest p-2 sm:p-3">
+    <div className="mars-calendar academician-calendar h-full overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest p-1.5 sm:p-2">
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView={window.matchMedia('(max-width: 767px)').matches ? 'timeGridDay' : 'timeGridWeek'}
@@ -271,7 +271,7 @@ export default function AcademicianCalendar({
           day: 'Günlük',
         }}
         locale={trLocale}
-        height="min(780px, calc(100vh - 10rem))"
+        height="100%"
         slotDuration="00:10:00"
         slotLabelInterval="01:00:00"
         eventMinHeight={22}

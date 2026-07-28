@@ -31,7 +31,7 @@ const STATUS_CODES_BY_LABEL = Object.fromEntries(
 const STATUS_COLORS = ['#f59e0b', '#6366f1', '#ef4444', '#10b981', '#64748b', '#ec4899'];
 
 type DrillDownState = {
-  chart: 'weekly' | 'monthly' | 'status' | 'category';
+  chart: 'weekly' | 'monthly' | 'status' | 'category' | 'total' | 'pending' | 'today' | 'office-hours';
   label: string;
 };
 
@@ -40,29 +40,54 @@ function KpiCard({
   label,
   value,
   accent,
+  active = false,
+  onClick,
 }: {
   icon: string;
   label: string;
   value: number;
   accent?: string;
+  active?: boolean;
+  onClick?: () => void;
 }) {
-  return (
-    <div className="flex h-full min-h-[92px] gap-3 rounded-lg border border-outline-variant/40 bg-surface-container-lowest p-3 shadow-sm">
-      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${accent ?? 'bg-surface-container'}`}>
-        <span className="material-symbols-outlined text-[22px] text-primary" aria-hidden="true">{icon}</span>
+  const content = (
+    <>
+      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${accent ?? 'bg-surface-container'}`}>
+        <span className="material-symbols-outlined text-[21px] text-primary" aria-hidden="true">{icon}</span>
       </div>
       <div className="min-w-0">
         <p className="font-label-md text-label-md text-on-surface-variant">{label}</p>
-        <p className="mt-1 font-headline-md text-headline-md leading-tight text-on-surface">{value}</p>
+        <p className="mt-0.5 font-headline-sm text-headline-sm leading-tight text-on-surface">{value}</p>
       </div>
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        className={`flex h-full min-h-[76px] w-full gap-2.5 rounded-lg border bg-surface-container-lowest p-3 text-left shadow-sm transition hover:border-primary/50 hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim ${
+          active ? 'border-primary/60 ring-2 ring-primary/15' : 'border-outline-variant/40'
+        }`}
+        onClick={onClick}
+        aria-pressed={active}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex h-full min-h-[76px] gap-2.5 rounded-lg border border-outline-variant/40 bg-surface-container-lowest p-3 shadow-sm">
+      {content}
     </div>
   );
 }
 
 function InfoRow({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (
-    <div className="flex items-start gap-2 py-2">
-      <span className="material-symbols-outlined mt-0.5 shrink-0 text-[20px] text-on-surface-variant" aria-hidden="true">{icon}</span>
+    <div className="flex items-start gap-2 py-1.5">
+      <span className="material-symbols-outlined mt-0.5 shrink-0 text-[19px] text-on-surface-variant" aria-hidden="true">{icon}</span>
       <div className="min-w-0">
         <p className="font-label-md text-label-md text-on-surface-variant">{label}</p>
         <p className="mt-0.5 break-words font-body-md text-body-md text-on-surface">{value}</p>
@@ -73,14 +98,12 @@ function InfoRow({ icon, label, value }: { icon: string; label: string; value: s
 
 function ChartCard({ title, icon, children }: { title: string; icon: string; children: ReactNode }) {
   return (
-    <div className="flex flex-col rounded-lg border border-outline-variant/40 bg-surface-container-lowest p-4 shadow-sm">
-      <div className="mb-3 flex items-center gap-2">
+    <div className="flex flex-col rounded-lg border border-outline-variant/40 bg-surface-container-lowest p-3 shadow-sm">
+      <div className="mb-2 flex items-center gap-2">
         <span className="material-symbols-outlined text-[20px] text-primary" aria-hidden="true">{icon}</span>
         <h3 className="font-title-md text-title-md text-on-surface">{title}</h3>
       </div>
-      <div className="flex flex-1 flex-col justify-end">
-        {children}
-      </div>
+      <div className="flex flex-1 flex-col justify-end">{children}</div>
     </div>
   );
 }
@@ -113,22 +136,22 @@ function AppointmentRows({ appointments }: { appointments: HodRecentAppointmentD
     <>
       {appointments.map((app) => (
         <tr key={app.appointmentId} className="hover:bg-surface-container-lowest/50">
-          <td className="px-4 py-3">
+          <td className="px-3 py-2">
             <div className="font-medium text-on-surface">{app.date}</div>
             <div className="text-body-sm text-on-surface-variant">{app.startTime} - {app.endTime}</div>
           </td>
-          <td className="px-4 py-3 text-on-surface">{app.studentName}</td>
-          <td className="px-4 py-3">
-            <span className="inline-flex items-center rounded-full bg-primary-container/30 px-2.5 py-1 text-label-sm font-medium text-primary">
+          <td className="px-3 py-2 text-on-surface">{app.studentName}</td>
+          <td className="px-3 py-2">
+            <span className="inline-flex items-center rounded-full bg-primary-container/30 px-2.5 py-0.5 text-label-sm font-medium text-primary">
               {app.categoryName}
             </span>
           </td>
-          <td className="px-4 py-3">
+          <td className="px-3 py-2">
             <div className="text-on-surface">{getMeetingTypeLabel(app.meetingType)}</div>
             <div className="text-body-sm text-on-surface-variant">{app.durationMinutes} dk</div>
           </td>
-          <td className="px-4 py-3">
-            <span className="inline-flex items-center rounded-full bg-surface-container-high px-2.5 py-1 text-label-sm font-medium text-on-surface">
+          <td className="px-3 py-2">
+            <span className="inline-flex items-center rounded-full bg-surface-container-high px-2.5 py-0.5 text-label-sm font-medium text-on-surface">
               {getAppointmentStatusLabel(app.status)}
             </span>
           </td>
@@ -191,25 +214,24 @@ export default function HodAcademicianDetailPage() {
     value: d.count,
     color: STATUS_COLORS[i % STATUS_COLORS.length],
   })) ?? [];
+  const today = new Date().toISOString().slice(0, 10);
 
   const drillDownAppointments = useMemo(() => {
-    if (!drillDown) {
-      return [];
-    }
+    if (!drillDown) return [];
 
     return recentAppointments.filter((appointment) => {
+      if (drillDown.chart === 'total') return true;
+      if (drillDown.chart === 'pending') return appointment.status === 'PENDING';
+      if (drillDown.chart === 'today') return appointment.date === today;
       if (drillDown.chart === 'status') {
         return appointment.status === (STATUS_CODES_BY_LABEL[drillDown.label] ?? drillDown.label);
       }
-      if (drillDown.chart === 'category') {
-        return appointment.categoryName === drillDown.label;
-      }
-      if (drillDown.chart === 'weekly') {
-        return appointment.date === drillDown.label;
-      }
-      return appointment.date.startsWith(drillDown.label);
+      if (drillDown.chart === 'category') return appointment.categoryName === drillDown.label;
+      if (drillDown.chart === 'weekly') return appointment.date === drillDown.label;
+      if (drillDown.chart === 'monthly') return appointment.date.startsWith(drillDown.label);
+      return false;
     });
-  }, [drillDown, recentAppointments]);
+  }, [drillDown, recentAppointments, today]);
 
   if (loading) {
     return (
@@ -234,22 +256,22 @@ export default function HodAcademicianDetailPage() {
   }
 
   return (
-    <div className="w-full min-w-0 animate-fade-in pb-8">
+    <div className="w-full min-w-0 animate-fade-in pb-6">
       <HodPageHeader
         title="Akademisyen Detayı"
         description="Bölümünüzdeki akademisyenin profil ve randevu bilgileri."
       />
 
-      <section className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-12">
-        <div className="rounded-lg border border-outline-variant/40 bg-surface-container-lowest p-4 shadow-sm lg:col-span-5">
-          <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-            <UserAvatar fullName={academician.fullName} size="xl" />
+      <section className="mb-3 grid grid-cols-1 gap-3 lg:grid-cols-12">
+        <div className="rounded-lg border border-outline-variant/40 bg-surface-container-lowest p-3 shadow-sm lg:col-span-5">
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start">
+            <UserAvatar fullName={academician.fullName} size="lg" />
             <div className="min-w-0 flex-1 text-center sm:text-left">
               <h2 className="font-headline-md text-headline-md text-on-background">{academician.fullName}</h2>
               <p className="mt-1 font-body-md text-body-md text-on-surface-variant">
                 {academician.academicTitle?.trim() ? academician.academicTitle : 'Unvan belirtilmemiş'}
               </p>
-              <div className="mt-3 divide-y divide-outline-variant/30">
+              <div className="mt-2 divide-y divide-outline-variant/30">
                 <InfoRow icon="school" label="Bölüm" value={academician.departmentName} />
                 <InfoRow icon="mail" label="Kurumsal E-posta" value={academician.institutionalEmail} />
               </div>
@@ -262,23 +284,51 @@ export default function HodAcademicianDetailPage() {
             <span className="material-symbols-outlined text-primary" aria-hidden="true">bar_chart</span>
             <h2 className="font-headline-md text-headline-md text-primary">İstatistikler</h2>
           </div>
-          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-            <KpiCard icon="event_available" label="Toplam Randevu" value={academician.totalAppointmentsCount} accent="bg-surface-container-high" />
-            <KpiCard icon="pending" label="Bekleyen Randevu" value={academician.pendingAppointmentsCount} accent="bg-amber-100 text-amber-700" />
-            <KpiCard icon="today" label="Bugünkü Randevu" value={academician.todayAppointmentsCount} accent="bg-surface-container-high" />
-            <KpiCard icon="schedule" label="Aktif Ofis Saati" value={academician.activeOfficeHoursCount} accent="bg-surface-container-high" />
+          <div className="grid grid-cols-2 gap-3">
+            <KpiCard
+              icon="event_available"
+              label="Toplam Randevu"
+              value={academician.totalAppointmentsCount}
+              accent="bg-surface-container-high"
+              active={drillDown?.chart === 'total'}
+              onClick={() => setDrillDown({ chart: 'total', label: 'Toplam Randevu' })}
+            />
+            <KpiCard
+              icon="pending"
+              label="Bekleyen"
+              value={academician.pendingAppointmentsCount}
+              accent="bg-amber-100 text-amber-700"
+              active={drillDown?.chart === 'pending'}
+              onClick={() => setDrillDown({ chart: 'pending', label: 'Bekleyen Randevular' })}
+            />
+            <KpiCard
+              icon="today"
+              label="Bugünkü"
+              value={academician.todayAppointmentsCount}
+              accent="bg-surface-container-high"
+              active={drillDown?.chart === 'today'}
+              onClick={() => setDrillDown({ chart: 'today', label: 'Bugünkü Randevular' })}
+            />
+            <KpiCard
+              icon="schedule"
+              label="Aktif Ofis Saati"
+              value={academician.activeOfficeHoursCount}
+              accent="bg-surface-container-high"
+              active={drillDown?.chart === 'office-hours'}
+              onClick={() => setDrillDown({ chart: 'office-hours', label: 'Aktif Ofis Saatleri' })}
+            />
           </div>
         </div>
       </section>
 
       {stats ? (
-        <section className="mb-4">
+        <section className="mb-3">
           <div className="mb-2 flex items-center gap-2">
             <span className="material-symbols-outlined text-primary" aria-hidden="true">analytics</span>
             <h2 className="font-headline-md text-headline-md text-primary">Performans Grafikleri</h2>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             <ChartCard title="Haftalık Randevu Yoğunluğu" icon="show_chart">
               <p className="-mt-1 font-body-sm text-body-sm text-on-surface-variant">Son 7 günlük kişisel randevu sayısı</p>
               <LineChart data={weeklyData} onClick={(label) => setDrillDown({ chart: 'weekly', label })} />
@@ -303,12 +353,12 @@ export default function HodAcademicianDetailPage() {
       ) : null}
 
       {drillDown ? (
-        <section className="mb-4 rounded-lg border border-primary/20 bg-surface-container-lowest p-4 shadow-sm">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <section className="mb-3 rounded-lg border border-primary/20 bg-surface-container-lowest p-3 shadow-sm">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <div>
               <h2 className="font-headline-md text-headline-md text-primary">{drillDown.label} kayıtları</h2>
               <p className="font-body-sm text-body-sm text-on-surface-variant">
-                Grafik seçimine göre görüntülenen randevu kayıtları
+                Seçilen kart veya grafik filtresine göre görüntülenen kayıtlar
               </p>
             </div>
             <button
@@ -319,27 +369,43 @@ export default function HodAcademicianDetailPage() {
               Temizle
             </button>
           </div>
-          <div className="overflow-x-auto rounded-lg border border-outline-variant/40">
-            <table className="w-full text-left font-body-md">
-              <thead className="border-b border-outline-variant/40 bg-surface-container-lowest text-label-md text-on-surface-variant">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Tarih / Saat</th>
-                  <th className="px-4 py-3 font-medium">Öğrenci</th>
-                  <th className="px-4 py-3 font-medium">Kategori</th>
-                  <th className="px-4 py-3 font-medium">Tür / Süre</th>
-                  <th className="px-4 py-3 font-medium">Durum</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-outline-variant/30">
-                <AppointmentRows appointments={drillDownAppointments} />
-              </tbody>
-            </table>
-          </div>
+          {drillDown.chart === 'office-hours' ? (
+            <div className="rounded-lg border border-outline-variant/40 bg-surface p-4">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-primary" aria-hidden="true">schedule</span>
+                <div>
+                  <p className="font-headline-sm text-headline-sm text-on-surface">
+                    {academician.activeOfficeHoursCount} aktif ofis saati
+                  </p>
+                  <p className="mt-1 font-body-sm text-body-sm text-on-surface-variant">
+                    Mevcut detay verisi aktif ofis saatlerini liste olarak taşımadığı için yeni veri üretilmeden toplam görünüm açılır.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border border-outline-variant/40">
+              <table className="w-full text-left font-body-md">
+                <thead className="border-b border-outline-variant/40 bg-surface-container-lowest text-label-md text-on-surface-variant">
+                  <tr>
+                    <th className="px-3 py-2 font-medium">Tarih / Saat</th>
+                    <th className="px-3 py-2 font-medium">Öğrenci</th>
+                    <th className="px-3 py-2 font-medium">Kategori</th>
+                    <th className="px-3 py-2 font-medium">Tür / Süre</th>
+                    <th className="px-3 py-2 font-medium">Durum</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-outline-variant/30">
+                  <AppointmentRows appointments={drillDownAppointments} />
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
       ) : null}
 
       {performance ? (
-        <section className="mb-4">
+        <section className="mb-3">
           <div className="mb-2 flex items-center gap-2">
             <span className="material-symbols-outlined text-primary" aria-hidden="true">speed</span>
             <h2 className="font-headline-md text-headline-md text-primary">Analizler</h2>
@@ -359,7 +425,7 @@ export default function HodAcademicianDetailPage() {
         </section>
       ) : null}
 
-      <section className="mb-4">
+      <section className="mb-3">
         <div className="mb-2 flex items-center gap-2">
           <span className="material-symbols-outlined text-primary" aria-hidden="true">history</span>
           <h2 className="font-headline-md text-headline-md text-primary">Son Randevular</h2>
@@ -370,11 +436,11 @@ export default function HodAcademicianDetailPage() {
             <table className="w-full text-left font-body-md">
               <thead className="border-b border-outline-variant/40 bg-surface-container-lowest text-label-md text-on-surface-variant">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Tarih / Saat</th>
-                  <th className="px-4 py-3 font-medium">Öğrenci</th>
-                  <th className="px-4 py-3 font-medium">Kategori</th>
-                  <th className="px-4 py-3 font-medium">Tür / Süre</th>
-                  <th className="px-4 py-3 font-medium">Durum</th>
+                  <th className="px-3 py-2 font-medium">Tarih / Saat</th>
+                  <th className="px-3 py-2 font-medium">Öğrenci</th>
+                  <th className="px-3 py-2 font-medium">Kategori</th>
+                  <th className="px-3 py-2 font-medium">Tür / Süre</th>
+                  <th className="px-3 py-2 font-medium">Durum</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/30">
