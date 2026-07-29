@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardDailySchedule from '../components/DashboardDailySchedule';
-import DashboardDelegationStats from '../components/DashboardDelegationStats';
 import DashboardEntityListCard from '../components/DashboardEntityListCard';
 import DashboardPendingRequests from '../components/DashboardPendingRequests';
 import DashboardWelcomeBanner from '../components/DashboardWelcomeBanner';
@@ -24,12 +23,14 @@ import type { NotificationItem } from '../types/notification';
 const PREVIEW_LIMIT = 5;
 const STATUS_COLORS = ['#f59e0b', '#6366f1', '#ef4444', '#10b981', '#64748b', '#ec4899'];
 const ACADEMICIAN_STATUS_LABELS: Record<string, string> = {
-  PENDING: 'Bekleyen',
-  APPROVED: 'Onaylanan',
-  REJECTED: 'Reddedilen',
-  COMPLETED: 'Tamamlanan',
-  NO_SHOW: 'No-Show',
-  CANCELLED: 'İptal',
+  PENDING: 'Bekleyen öğrenciler',
+  APPROVED: 'Onaylanan öğrenciler',
+  REJECTED: 'Reddedilen öğrenciler',
+  COMPLETED: 'Tamamlanan öğrenciler',
+  NO_SHOW: 'Katılmayan öğrenciler',
+  CANCELLED: 'İptal edilen öğrenciler',
+  CANCELLED_BY_STUDENT: 'Öğrenci iptalleri',
+  CANCELLED_BY_ACADEMICIAN: 'Akademisyen iptalleri',
 };
 const APPOINTMENT_STATUS_FILTERS = new Set([
   'PENDING',
@@ -52,6 +53,34 @@ function getStatusCount(stats: HodDepartmentStatsDto | null, status: string): nu
   return stats?.statusDistribution.find((item) => item.status === status)?.count ?? 0;
 }
 
+function getStatusStudentLabel(status: string): string {
+  const normalizedStatus = status.trim().toUpperCase();
+  if (ACADEMICIAN_STATUS_LABELS[normalizedStatus]) {
+    return ACADEMICIAN_STATUS_LABELS[normalizedStatus];
+  }
+  if (normalizedStatus.startsWith('CANCELLED_BY_STUDENT')) {
+    return 'Öğrenci iptalleri';
+  }
+  if (normalizedStatus.startsWith('CANCELLED_BY_ACADEMICIAN')) {
+    return 'Akademisyen iptalleri';
+  }
+  if (normalizedStatus.startsWith('CANCELLED')) {
+    return 'İptal edilen öğrenciler';
+  }
+  return status;
+}
+
+function getAppointmentStatusFilter(status: string): string {
+  const normalizedStatus = status.trim().toUpperCase();
+  if (APPOINTMENT_STATUS_FILTERS.has(normalizedStatus)) {
+    return normalizedStatus;
+  }
+  if (normalizedStatus.startsWith('CANCELLED')) {
+    return 'CANCELLED';
+  }
+  return 'ALL';
+}
+
 function AppointmentKpiCard({
   icon,
   label,
@@ -67,7 +96,7 @@ function AppointmentKpiCard({
     <button
       type="button"
       onClick={onClick}
-      className="flex min-w-0 items-center gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:bg-surface-container/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-container/40 active:scale-[0.98]"
+      className="flex h-20 min-w-0 items-center gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:bg-surface-container/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-container/40 active:scale-[0.98]"
       aria-label={`${label}: ${value}`}
     >
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-container text-primary-container">
@@ -76,7 +105,7 @@ function AppointmentKpiCard({
         </span>
       </span>
       <span className="min-w-0">
-        <span className="block font-label-sm text-label-sm text-on-surface-variant">{label}</span>
+        <span className="block line-clamp-2 font-label-sm text-label-sm text-on-surface-variant">{label}</span>
         <span className="mt-0.5 block font-headline-sm text-headline-sm font-bold text-on-background">
           {value}
         </span>
@@ -193,7 +222,7 @@ export default function AcademicianDashboard() {
   const weeklyData = stats?.weeklyTrend.map(d => ({ label: d.date, value: d.count })) ?? [];
   const categoryData = stats?.categoryDistribution.map(d => ({ label: d.categoryName, value: d.count })) ?? [];
   const statusData = stats?.statusDistribution.map((d, i) => ({
-    label: ACADEMICIAN_STATUS_LABELS[d.status] ?? d.status,
+    label: getStatusStudentLabel(d.status),
     value: d.count,
     color: STATUS_COLORS[i % STATUS_COLORS.length],
   })) ?? [];
@@ -231,34 +260,6 @@ export default function AcademicianDashboard() {
         }
       />
 
-      <DashboardDelegationStats
-        loading={loading}
-        cards={
-          summary
-            ? [
-                {
-                  label: 'Bekleyen Randevu Devirleri',
-                  value: summary.pendingDelegationCount,
-                  to: academicianDelegationHistoryPath('PENDING'),
-                  icon: 'hourglass_top',
-                },
-                {
-                  label: 'Kabul Edilen Randevu Devirleri',
-                  value: summary.acceptedDelegationCount,
-                  to: academicianDelegationHistoryPath('ACCEPTED'),
-                  icon: 'check_circle',
-                },
-                {
-                  label: 'Reddedilen Randevu Devirleri',
-                  value: summary.rejectedDelegationCount,
-                  to: academicianDelegationHistoryPath('REJECTED'),
-                  icon: 'cancel',
-                },
-              ]
-            : []
-        }
-      />
-
       {error ? (
         <section className="mb-6 rounded-xl border border-error/30 bg-error-container/40 p-6">
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
@@ -274,50 +275,76 @@ export default function AcademicianDashboard() {
         </section>
       ) : null}
 
-      {stats ? (
+      {stats || summary ? (
         <section className="mb-5" aria-label="Randevu istatistikleri">
           <div className="mb-3 flex items-center gap-2">
             <span className="material-symbols-outlined text-primary" aria-hidden="true">event</span>
             <h2 className="font-headline-md text-headline-md text-on-background">Randevu İstatistikleri</h2>
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6">
-            <AppointmentKpiCard
-              icon="event_note"
-              label="Toplam Randevu"
-              value={totalAppointmentCount}
-              onClick={() => navigate(appointmentListPath({ status: 'ALL' }))}
-            />
-            <AppointmentKpiCard
-              icon="pending"
-              label="Bekleyen"
-              value={getStatusCount(stats, 'PENDING')}
-              onClick={() => navigate(appointmentListPath({ status: 'PENDING' }))}
-            />
-            <AppointmentKpiCard
-              icon="task_alt"
-              label="Onaylanan"
-              value={getStatusCount(stats, 'APPROVED')}
-              onClick={() => navigate(appointmentListPath({ status: 'APPROVED' }))}
-            />
-            <AppointmentKpiCard
-              icon="check_circle"
-              label="Tamamlanan"
-              value={getStatusCount(stats, 'COMPLETED')}
-              onClick={() => navigate(appointmentListPath({ status: 'COMPLETED' }))}
-            />
-            <AppointmentKpiCard
-              icon="person_cancel"
-              label="No-Show"
-              value={getStatusCount(stats, 'NO_SHOW')}
-              onClick={() => navigate(appointmentListPath({ status: 'NO_SHOW' }))}
-            />
-            {waitlistCount > 0 ? (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+            {stats ? (
+              <>
+                <AppointmentKpiCard
+                  icon="event_note"
+                  label="Toplam Randevu"
+                  value={totalAppointmentCount}
+                  onClick={() => navigate(appointmentListPath({ status: 'ALL' }))}
+                />
+                <AppointmentKpiCard
+                  icon="pending"
+                  label="Bekleyen"
+                  value={getStatusCount(stats, 'PENDING')}
+                  onClick={() => navigate(appointmentListPath({ status: 'PENDING' }))}
+                />
+                <AppointmentKpiCard
+                  icon="task_alt"
+                  label="Onaylanan"
+                  value={getStatusCount(stats, 'APPROVED')}
+                  onClick={() => navigate(appointmentListPath({ status: 'APPROVED' }))}
+                />
+                <AppointmentKpiCard
+                  icon="check_circle"
+                  label="Tamamlanan"
+                  value={getStatusCount(stats, 'COMPLETED')}
+                  onClick={() => navigate(appointmentListPath({ status: 'COMPLETED' }))}
+                />
+                <AppointmentKpiCard
+                  icon="person_cancel"
+                  label="Katılmayan"
+                  value={getStatusCount(stats, 'NO_SHOW')}
+                  onClick={() => navigate(appointmentListPath({ status: 'NO_SHOW' }))}
+                />
+              </>
+            ) : null}
+            {waitlistCount > 0 && stats ? (
               <AppointmentKpiCard
                 icon="group_add"
                 label="Bekleme Listesi"
                 value={waitlistCount}
                 onClick={() => navigate(appointmentListPath({ status: 'ALL' }))}
               />
+            ) : null}
+            {summary ? (
+              <>
+                <AppointmentKpiCard
+                  icon="hourglass_top"
+                  label="Bekleyen Devir"
+                  value={summary.pendingDelegationCount}
+                  onClick={() => navigate(academicianDelegationHistoryPath('PENDING'))}
+                />
+                <AppointmentKpiCard
+                  icon="check_circle"
+                  label="Kabul Edilen Devir"
+                  value={summary.acceptedDelegationCount}
+                  onClick={() => navigate(academicianDelegationHistoryPath('ACCEPTED'))}
+                />
+                <AppointmentKpiCard
+                  icon="cancel"
+                  label="Reddedilen Devir"
+                  value={summary.rejectedDelegationCount}
+                  onClick={() => navigate(academicianDelegationHistoryPath('REJECTED'))}
+                />
+              </>
             ) : null}
           </div>
         </section>
@@ -375,7 +402,7 @@ export default function AcademicianDashboard() {
           </div>
 
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-            <div className="flex h-full flex-col gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-4 shadow-sm">
+            <div className="flex h-full flex-col gap-3 overflow-hidden rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-4 shadow-sm">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[20px] text-primary" aria-hidden="true">show_chart</span>
                 <h3 className="font-title-md text-title-md text-on-surface">Son 7 Gün</h3>
@@ -388,7 +415,7 @@ export default function AcademicianDashboard() {
               </div>
             </div>
 
-            <div className="flex h-full flex-col gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-4 shadow-sm">
+            <div className="flex h-full flex-col gap-3 overflow-hidden rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-4 shadow-sm">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[20px] text-primary" aria-hidden="true">donut_large</span>
                 <h3 className="font-title-md text-title-md text-on-surface">Durum Dağılımı</h3>
@@ -398,11 +425,11 @@ export default function AcademicianDashboard() {
                   data={statusData}
                   onClick={(label) => {
                     const status = stats.statusDistribution.find(
-                      (item) => (ACADEMICIAN_STATUS_LABELS[item.status] ?? item.status) === label,
+                      (item) => getStatusStudentLabel(item.status) === label,
                     )?.status;
                     if (status) {
                       navigate(appointmentListPath({
-                        status: APPOINTMENT_STATUS_FILTERS.has(status) ? status : 'ALL',
+                        status: getAppointmentStatusFilter(status),
                       }));
                     }
                   }}
@@ -410,7 +437,7 @@ export default function AcademicianDashboard() {
               </div>
             </div>
 
-            <div className="flex h-full flex-col gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-4 shadow-sm">
+            <div className="flex h-full flex-col gap-3 overflow-hidden rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-4 shadow-sm">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[20px] text-primary" aria-hidden="true">category</span>
                 <h3 className="font-title-md text-title-md text-on-surface">Kategoriler</h3>

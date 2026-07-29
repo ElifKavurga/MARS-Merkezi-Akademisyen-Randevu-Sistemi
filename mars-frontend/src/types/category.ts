@@ -14,7 +14,17 @@ export type AppointmentCategoryPayload = {
 };
 
 export const CATEGORY_GROUP_OPTIONS = [
-  { value: 'ACADEMIC', label: 'ACADEMIC' },
-  { value: 'COURSE_EXAM', label: 'COURSE_EXAM' },
-  { value: 'ADMINISTRATIVE', label: 'ADMINISTRATIVE' },
+  { value: 'ACADEMIC', label: 'Akademik' },
+  { value: 'COURSE_EXAM', label: 'Ders / Sınav' },
+  { value: 'ADMINISTRATIVE', label: 'İdari' },
 ] as const;
+
+export const CATEGORY_GROUP_LABELS: Record<string, string> = {
+  ACADEMIC: 'Akademik',
+  COURSE_EXAM: 'Ders / Sınav',
+  ADMINISTRATIVE: 'İdari',
+};
+
+export function getCategoryGroupLabel(categoryGroup: string): string {
+  return CATEGORY_GROUP_LABELS[categoryGroup] ?? categoryGroup;
+}

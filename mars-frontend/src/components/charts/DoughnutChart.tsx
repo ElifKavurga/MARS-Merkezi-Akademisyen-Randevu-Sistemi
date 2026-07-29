@@ -35,7 +35,7 @@ export default function DoughnutChart({ data, onClick }: { data: DataPoint[], on
   const hoveredSegment = hoverIndex === null ? null : segments[hoverIndex];
 
   return (
-    <div className="flex flex-col items-center gap-6 animate-fade-in sm:flex-row">
+    <div className="flex min-w-0 flex-col items-center gap-4 animate-fade-in sm:flex-row">
       <div className="relative h-40 w-40 shrink-0">
         <svg viewBox={`0 0 ${W} ${H}`} className="h-full w-full drop-shadow-sm" aria-label="Halka grafik">
           {segments.map((d, i) => {
@@ -71,7 +71,7 @@ export default function DoughnutChart({ data, onClick }: { data: DataPoint[], on
             );
           })}
           <text x={cx} y={cy - 6} textAnchor="middle" fontSize="11" className="fill-on-surface-variant transition-colors" fontFamily="inherit">
-            {hoverIndex !== null ? data[hoverIndex].label.substring(0, 10) : 'Toplam'}
+            {hoverIndex !== null ? data[hoverIndex].label.substring(0, 12) : 'Toplam'}
           </text>
           <text x={cx} y={cy + 10} textAnchor="middle" fontSize="16" fontWeight="bold" className="fill-on-surface transition-all" fontFamily="inherit">
             {hoverIndex !== null ? data[hoverIndex].value : total}
@@ -88,7 +88,7 @@ export default function DoughnutChart({ data, onClick }: { data: DataPoint[], on
           />
         ) : null}
       </div>
-      <ul className="flex w-full flex-col gap-2 text-sm">
+      <ul className="flex min-w-0 flex-1 flex-col gap-1.5 text-sm">
         {segments.map((d, i) => {
           const isHovered = hoverIndex === i;
           const isFaded = hoverIndex !== null && !isHovered;
@@ -96,7 +96,7 @@ export default function DoughnutChart({ data, onClick }: { data: DataPoint[], on
           return (
             <li
               key={d.label}
-              className={`flex items-center gap-2 rounded-md p-1.5 transition-all duration-200 ${onClick ? 'cursor-pointer' : ''} ${
+              className={`flex min-w-0 items-center gap-2 rounded-md p-1.5 transition-all duration-200 ${onClick ? 'cursor-pointer' : ''} ${
                 isHovered ? 'scale-[1.02] bg-surface-container-high shadow-sm' : isFaded ? 'opacity-50' : 'hover:bg-surface-container'
               }`}
               onMouseEnter={() => setHoverIndex(i)}
@@ -107,10 +107,13 @@ export default function DoughnutChart({ data, onClick }: { data: DataPoint[], on
                 className={`inline-block h-3.5 w-3.5 shrink-0 rounded-full transition-transform ${isHovered ? 'scale-110' : ''}`}
                 style={{ background: d.color }}
               />
-              <span className={`transition-colors ${isHovered ? 'font-medium text-on-surface' : 'text-on-surface-variant'}`}>
+              <span
+                className={`min-w-0 flex-1 truncate transition-colors ${isHovered ? 'font-medium text-on-surface' : 'text-on-surface-variant'}`}
+                title={d.label}
+              >
                 {d.label}
               </span>
-              <span className={`ml-auto font-semibold transition-colors ${isHovered ? 'text-primary' : 'text-on-surface'}`}>
+              <span className={`w-6 shrink-0 text-right font-semibold transition-colors ${isHovered ? 'text-primary' : 'text-on-surface'}`}>
                 {d.value}
               </span>
             </li>

@@ -36,12 +36,7 @@ export default function AdminPenaltyRulesPage() {
       if (isAxiosError(err) && err.response?.status === 403) {
         setError('Bu sayfaya erişim yetkiniz yok.');
       } else if (isAxiosError(err)) {
-        const backendMessage = err.response?.data?.message;
-        setError(
-          typeof backendMessage === 'string' && backendMessage.length > 0
-            ? backendMessage
-            : 'Ceza kuralları yüklenemedi.',
-        );
+        setError('Ceza kuralları yüklenemedi.');
       } else {
         setError('Ceza kuralları yüklenemedi.');
       }
@@ -76,11 +71,7 @@ export default function AdminPenaltyRulesPage() {
       await loadPenaltyRule();
     } catch (err) {
       if (isAxiosError(err)) {
-        const backendMessage = err.response?.data?.message;
-        const message =
-          typeof backendMessage === 'string' && backendMessage.length > 0
-            ? backendMessage
-            : 'Ceza kuralları kaydedilemedi.';
+        const message = 'Ceza kuralları kaydedilemedi.';
         setError(message);
         toast.error(message);
       } else {
@@ -108,10 +99,8 @@ export default function AdminPenaltyRulesPage() {
           <Loading label="Ceza kuralları yükleniyor..." />
         ) : (
           <>
-            <div className="relative overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest p-6 md:p-8">
-              <div className="pointer-events-none absolute -right-32 -top-32 h-64 w-64 rounded-full bg-primary-fixed-dim/20 blur-3xl" />
-
-              <form className="relative z-10 space-y-8" onSubmit={(e) => void handleSubmit(e)}>
+            <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-6 md:p-8">
+              <form className="space-y-8" onSubmit={(e) => void handleSubmit(e)}>
                 <div className="space-y-6">
                   <div>
                     <label
@@ -124,7 +113,7 @@ export default function AdminPenaltyRulesPage() {
                       >
                         warning
                       </span>
-                      No-Show Limiti (Max No Show)
+                      No-Show Limiti
                     </label>
                     <p className="mb-3 text-sm font-body-md text-body-md text-on-surface-variant">
                       Bir öğrencinin randevusuna gelmediği durumlar için izin verilen maksimum sayı.
@@ -168,7 +157,7 @@ export default function AdminPenaltyRulesPage() {
                       >
                         schedule
                       </span>
-                      Ceza Süresi (Ban Duration Days)
+                      Ceza Süresi (Gün)
                     </label>
                     <p className="mb-3 text-sm font-body-md text-body-md text-on-surface-variant">
                       Maksimum sınıra ulaşıldığında uygulanacak randevu alma kısıtlamasının süresi
@@ -274,11 +263,10 @@ export default function AdminPenaltyRulesPage() {
                   Cezalar Nasıl Uygulanır?
                 </h2>
                 <p className="text-sm leading-relaxed font-body-md text-body-md text-on-surface-variant">
-                  Yapılandırılan kurallar, kaydedildiği andan itibaren gerçekleşecek yeni
-                  &quot;No-Show&quot; durumları için geçerli olacaktır. Geçmişteki randevular için
-                  geriye dönük bir ceza işlemi uygulanmaz. Sistem durumunu &quot;Pasif&quot; konuma
-                  getirdiğinizde, halihazırda cezalı olan kullanıcıların cezaları kaldırılmaz,
-                  sadece yeni ceza atanması durdurulur.
+                  Yapılandırılan kurallar yalnızca kaydedildikten sonra oluşacak yeni No-Show
+                  durumları için uygulanır. Geçmiş randevular geriye dönük değerlendirilmez.
+                  Sistem pasif duruma alındığında mevcut cezalar kaldırılmaz; yalnızca yeni ceza
+                  oluşturulması durdurulur.
                 </p>
               </div>
             </div>

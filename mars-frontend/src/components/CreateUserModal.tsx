@@ -60,10 +60,7 @@ export default function CreateUserModal({ open, onClose, onCreated }: CreateUser
       onClose();
     } catch (err) {
       if (isAxiosError(err)) {
-        const backendMessage = err.response?.data?.message;
-        if (typeof backendMessage === 'string' && backendMessage.length > 0) {
-          setError(backendMessage);
-        } else if (err.response?.status === 409) {
+        if (err.response?.status === 409) {
           setError('Bu e-posta adresi zaten kayıtlı.');
         } else {
           setError('Kullanıcı oluşturulamadı. Lütfen tekrar deneyin.');

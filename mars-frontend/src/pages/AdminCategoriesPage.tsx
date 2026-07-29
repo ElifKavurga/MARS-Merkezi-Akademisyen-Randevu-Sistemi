@@ -6,7 +6,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import Loading from '../components/Loading';
 import { useToast } from '../hooks/useToast';
 import { deleteAdminCategory, getAdminCategories } from '../services/adminCategoryService';
-import type { AppointmentCategory } from '../types/category';
+import { getCategoryGroupLabel, type AppointmentCategory } from '../types/category';
 
 export default function AdminCategoriesPage() {
   const toast = useToast();
@@ -60,12 +60,7 @@ export default function AdminCategoriesPage() {
       if (isAxiosError(err) && err.response?.status === 409) {
         setDeleteError('Kategori mevcut randevularda kullanıldığı için silinemez.');
       } else if (isAxiosError(err)) {
-        const backendMessage = err.response?.data?.message;
-        setDeleteError(
-          typeof backendMessage === 'string' && backendMessage.length > 0
-            ? backendMessage
-            : 'Kategori silinemedi.',
-        );
+        setDeleteError('Kategori silinemedi.');
       } else {
         setDeleteError('Kategori silinemedi.');
       }
@@ -150,7 +145,7 @@ export default function AdminCategoriesPage() {
                     </td>
                     <td className="py-4 px-6">
                       <span className="bg-surface-container px-2 py-1 rounded font-label-sm text-label-sm text-on-surface-variant">
-                        {category.categoryGroup}
+                        {getCategoryGroupLabel(category.categoryGroup)}
                       </span>
                     </td>
                     <td className="py-4 px-6 font-body-md text-body-md text-on-surface">

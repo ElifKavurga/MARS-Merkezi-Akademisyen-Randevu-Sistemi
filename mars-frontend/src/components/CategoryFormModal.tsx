@@ -81,12 +81,11 @@ export default function CategoryFormModal({
       onClose();
     } catch (err) {
       if (isAxiosError(err)) {
-        const backendMessage = err.response?.data?.message;
-        if (typeof backendMessage === 'string' && backendMessage.length > 0) {
-          setError(backendMessage);
-        } else {
-          setError('Kategori kaydedilemedi. Lütfen tekrar deneyin.');
-        }
+        setError(
+          err.response?.status === 409
+            ? 'Bu kategori mevcut kayıtlarla çakışıyor.'
+            : 'Kategori kaydedilemedi. Lütfen tekrar deneyin.',
+        );
       } else {
         setError('Kategori kaydedilemedi. Lütfen tekrar deneyin.');
       }

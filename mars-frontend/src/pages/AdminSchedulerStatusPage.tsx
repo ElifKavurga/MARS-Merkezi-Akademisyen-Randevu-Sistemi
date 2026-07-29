@@ -38,14 +38,44 @@ const STATUS_CONFIG: Record<
 };
 
 const SCHEDULER_NAME_MAP: Record<string, string> = {
+  AppointmentStatusUpdate: 'Randevu Durumu Güncelleme Servisi',
+  AppointmentStatusUpdateScheduler: 'Randevu Durumu Güncelleme Servisi',
   AppointmentReminder: 'Randevu Hatırlatma Servisi',
+  AppointmentReminderScheduler: 'Randevu Hatırlatma Servisi',
+  NoShowDetection: 'No-Show Tespit Servisi',
+  NoShowPenaltyScheduler: 'No-Show Tespit Servisi',
   DelegationExpiry: 'Randevu Devri Süre Sonu Kontrolü',
+  DelegationScheduler: 'Randevu Devri Süre Sonu Kontrolü',
   DelegationSync: 'Randevu Devri Senkronizasyonu',
-  WaitlistOfferExpiry: 'Bekleme Listesi Teklif Süre Kontrolü',
+  DelegationSynchronization: 'Randevu Devri Senkronizasyonu',
+  WaitlistOfferExpiry: 'Bekleme Listesi Süre Kontrolü',
+  WaitlistOfferScheduler: 'Bekleme Listesi Süre Kontrolü',
 };
 
 function getSchedulerDisplayName(technicalName: string): string {
-  return SCHEDULER_NAME_MAP[technicalName] || technicalName;
+  const normalizedName = technicalName.trim();
+  if (SCHEDULER_NAME_MAP[normalizedName]) {
+    return SCHEDULER_NAME_MAP[normalizedName];
+  }
+  if (/Appointment.*Status.*Update/i.test(normalizedName)) {
+    return 'Randevu Durumu Güncelleme Servisi';
+  }
+  if (/Appointment.*Reminder/i.test(normalizedName)) {
+    return 'Randevu Hatırlatma Servisi';
+  }
+  if (/NoShow|No.?Show/i.test(normalizedName)) {
+    return 'No-Show Tespit Servisi';
+  }
+  if (/Delegation.*Sync|Sync.*Delegation/i.test(normalizedName)) {
+    return 'Randevu Devri Senkronizasyonu';
+  }
+  if (/Delegation.*Expiry|Delegation.*Expire|Expiry.*Delegation/i.test(normalizedName)) {
+    return 'Randevu Devri Süre Sonu Kontrolü';
+  }
+  if (/Waitlist|Wait.?List/i.test(normalizedName)) {
+    return 'Bekleme Listesi Süre Kontrolü';
+  }
+  return 'Sistem Görevi';
 }
 
 function formatDateTime(iso: string | null): string {
@@ -131,7 +161,7 @@ export default function AdminSchedulerStatusPage() {
       setSchedulers(data);
       setLastRefreshed(new Date());
     } catch {
-      setError('Scheduler durumları yüklenemedi. Lütfen tekrar deneyin.');
+      setError('Sistem görevleri yüklenemedi. Lütfen tekrar deneyin.');
     } finally {
       if (showLoader) setLoading(false);
     }
@@ -199,7 +229,7 @@ export default function AdminSchedulerStatusPage() {
         <div className="rounded-xl border border-slate-200 bg-slate-50 px-6 py-12 text-center">
           <span className="material-symbols-outlined text-4xl text-slate-300">monitor_heart</span>
           <p className="mt-3 text-sm text-slate-500">
-            Henüz hiçbir scheduler çalışmamış. Veriler ilk çalışmadan sonra görünür.
+            Henüz hiçbir sistem görevi çalışmamış. Veriler ilk çalışmadan sonra görünür.
           </p>
         </div>
       )}

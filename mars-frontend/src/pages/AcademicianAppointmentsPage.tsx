@@ -69,6 +69,15 @@ function sortAppointments(list: StaffAppointment[], key: SortKey): StaffAppointm
 // ─── Bileşen ──────────────────────────────────────────────────────────────────
 const EMPTY_LIST: StaffAppointment[] = [];
 const TAB_VALUES = new Set<AcademicianTab>(TABS.map((tab) => tab.value));
+const QUERY_STATUS_TITLES: Partial<Record<AcademicianTab, string>> = {
+  ALL: 'Tüm Öğrenciler',
+  PENDING: 'Bekleyen Öğrenciler',
+  APPROVED: 'Onaylanan Öğrenciler',
+  REJECTED: 'Reddedilen Öğrenciler',
+  COMPLETED: 'Tamamlanan Öğrenciler',
+  NO_SHOW: 'Katılmayan Öğrenciler',
+  CANCELLED: 'İptal Edilen Öğrenciler',
+};
 
 function resolveInitialTab(status: string | null, category: string | null, date: string | null): AcademicianTab {
   const normalizedStatus = status?.trim().toUpperCase();
@@ -186,13 +195,21 @@ export default function AcademicianAppointmentsPage({
   const isLoading = Boolean(loadingByTab[activeTab]);
   const error = errorByTab[activeTab] ?? null;
   const tabLoaded = byTab[activeTab] !== undefined;
+  const pageTitle = queryCategory
+    ? `${queryCategory} Öğrencileri`
+    : queryDate
+      ? `${queryDate} Randevuları`
+      : QUERY_STATUS_TITLES[activeTab] ?? STAFF_APPOINTMENT_MESSAGES.TITLE;
+  const pageDescription = queryCategory || queryDate || queryStatus
+    ? 'Seçilen filtreye ait randevular listeleniyor.'
+    : STAFF_APPOINTMENT_MESSAGES.SUBTITLE;
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="w-full min-w-0 animate-fade-in">
       <StudentPageHeader
-        title={STAFF_APPOINTMENT_MESSAGES.TITLE}
-        description={STAFF_APPOINTMENT_MESSAGES.SUBTITLE}
+        title={pageTitle}
+        description={pageDescription}
       />
 
       {/* ── Sekme çubuğu ── */}

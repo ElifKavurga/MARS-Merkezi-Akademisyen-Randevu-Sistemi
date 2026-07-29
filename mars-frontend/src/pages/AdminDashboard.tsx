@@ -86,12 +86,7 @@ export default function AdminDashboard() {
       await loadUsers();
     } catch (err) {
       if (isAxiosError(err)) {
-        const backendMessage = err.response?.data?.message;
-        setStatusError(
-          typeof backendMessage === 'string' && backendMessage.length > 0
-            ? backendMessage
-            : 'Kullanıcı durumu güncellenemedi.',
-        );
+        setStatusError('Kullanıcı durumu güncellenemedi.');
       } else {
         setStatusError('Kullanıcı durumu güncellenemedi.');
       }

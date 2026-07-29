@@ -7,6 +7,8 @@ const STATUS_CLASSES: Record<string, string> = {
   COMPLETED: 'bg-blue-100 text-blue-800',
   NO_SHOW: 'bg-slate-200 text-slate-700',
   CANCELLED: 'bg-slate-200 text-slate-700',
+  CANCELLED_BY_STUDENT: 'bg-slate-200 text-slate-700',
+  CANCELLED_BY_ACADEMICIAN: 'bg-slate-200 text-slate-700',
 };
 
 const STATUS_DOT_CLASSES: Record<string, string> = {
@@ -16,6 +18,8 @@ const STATUS_DOT_CLASSES: Record<string, string> = {
   COMPLETED: 'bg-blue-500',
   NO_SHOW: 'bg-slate-500',
   CANCELLED: 'bg-slate-500',
+  CANCELLED_BY_STUDENT: 'bg-slate-500',
+  CANCELLED_BY_ACADEMICIAN: 'bg-slate-500',
 };
 
 type AppointmentStatusBadgeProps = {
@@ -23,19 +27,21 @@ type AppointmentStatusBadgeProps = {
 };
 
 export default function AppointmentStatusBadge({ status }: AppointmentStatusBadgeProps) {
+  const normalizedStatus = status.trim().toUpperCase();
+
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 font-label-sm text-label-sm ${
-        STATUS_CLASSES[status] ?? 'bg-surface-container text-on-surface-variant'
+        STATUS_CLASSES[normalizedStatus] ?? 'bg-surface-container text-on-surface-variant'
       }`}
     >
       <span
         className={`inline-block h-2 w-2 rounded-full ${
-          STATUS_DOT_CLASSES[status] ?? 'bg-on-surface-variant'
+          STATUS_DOT_CLASSES[normalizedStatus] ?? 'bg-on-surface-variant'
         }`}
         aria-hidden
       />
-      {getAppointmentStatusLabel(status)}
+      {getAppointmentStatusLabel(normalizedStatus)}
     </span>
   );
 }
