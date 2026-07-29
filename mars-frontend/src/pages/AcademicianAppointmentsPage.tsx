@@ -1,6 +1,6 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { isAxiosError } from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import AcademicianAppointmentCard from '../components/AcademicianAppointmentCard';
 import StudentEmptyState from '../components/StudentEmptyState';
 import StudentErrorState from '../components/StudentErrorState';
@@ -16,9 +16,10 @@ import { getStaffAppointments } from '../services/appointmentService';
 import type { AppointmentStatus, StaffAppointment, StaffAppointmentScope } from '../types/appointment';
 
 // ─── Tab tanımları ────────────────────────────────────────────────────────────
-type AcademicianTab = AppointmentStatus;
+type AcademicianTab = AppointmentStatus | 'ALL';
 
 const TABS: readonly { value: AcademicianTab; label: string }[] = [
+  { value: 'ALL',       label: STAFF_APPOINTMENT_MESSAGES.ALL_TAB },
   { value: 'PENDING',   label: STAFF_APPOINTMENT_MESSAGES.TAB_PENDING },
   { value: 'APPROVED',  label: STAFF_APPOINTMENT_MESSAGES.TAB_APPROVED },
   { value: 'REJECTED',  label: STAFF_APPOINTMENT_MESSAGES.TAB_REJECTED },
@@ -28,6 +29,7 @@ const TABS: readonly { value: AcademicianTab; label: string }[] = [
 ];
 
 const EMPTY_MAP: Record<AcademicianTab, string> = {
+  ALL:       STAFF_APPOINTMENT_MESSAGES.ALL_EMPTY,
   PENDING:   STAFF_APPOINTMENT_MESSAGES.EMPTY_PENDING,
   APPROVED:  STAFF_APPOINTMENT_MESSAGES.EMPTY_APPROVED,
   REJECTED:  STAFF_APPOINTMENT_MESSAGES.EMPTY_REJECTED,
@@ -66,6 +68,15 @@ function sortAppointments(list: StaffAppointment[], key: SortKey): StaffAppointm
 
 // ─── Bileşen ──────────────────────────────────────────────────────────────────
 const EMPTY_LIST: StaffAppointment[] = [];
+const TAB_VALUES = new Set<AcademicianTab>(TABS.map((tab) => tab.value));
+
+function resolveInitialTab(status: string | null, category: string | null, date: string | null): AcademicianTab {
+  const normalizedStatus = status?.trim().toUpperCase();
+  if (normalizedStatus && TAB_VALUES.has(normalizedStatus as AcademicianTab)) {
+    return normalizedStatus as AcademicianTab;
+  }
+  return category || date ? 'ALL' : 'PENDING';
+}
 
 type AcademicianAppointmentsPageProps = {
   scope?: StaffAppointmentScope;
@@ -78,9 +89,17 @@ export default function AcademicianAppointmentsPage({
   detailPath = academicianAppointmentDetailPath,
   searchInputId = 'acad-appt-search',
 }: AcademicianAppointmentsPageProps) {
-  const [activeTab, setActiveTab] = useState<AcademicianTab>('PENDING');
+  const [searchParams] = useSearchParams();
+  const queryStatus = searchParams.get('status');
+  const queryCategory = searchParams.get('category');
+  const queryDate = searchParams.get('date');
+  const [activeTab, setActiveTab] = useState<AcademicianTab>(() =>
+    resolveInitialTab(queryStatus, queryCategory, queryDate),
+  );
   const [byTab, setByTab] = useState<Partial<Record<AcademicianTab, StaffAppointment[]>>>({});
-  const [loadingByTab, setLoadingByTab] = useState<Partial<Record<AcademicianTab, boolean>>>({ PENDING: true });
+  const [loadingByTab, setLoadingByTab] = useState<Partial<Record<AcademicianTab, boolean>>>({
+    [activeTab]: true,
+  });
   const [errorByTab, setErrorByTab] = useState<Partial<Record<AcademicianTab, string | null>>>({});
   const reqIdRef = useRef<Partial<Record<AcademicianTab, number>>>({});
 
@@ -97,7 +116,7 @@ export default function AcademicianAppointmentsPage({
     setLoadingByTab((p) => ({ ...p, [tab]: true }));
     setErrorByTab((p) => ({ ...p, [tab]: null }));
     try {
-      const data = await getStaffAppointments(scope, tab);
+      const data = await getStaffAppointments(scope, tab === 'ALL' ? undefined : tab);
       if (reqIdRef.current[tab] !== reqId) return;
       setByTab((p) => ({ ...p, [tab]: data }));
     } catch (err) {
@@ -115,8 +134,15 @@ export default function AcademicianAppointmentsPage({
   }, [scope]);
 
   useEffect(() => {
-    void loadTab('PENDING');
-  }, [loadTab]);
+    void loadTab(activeTab);
+  }, [activeTab, loadTab]);
+
+  useEffect(() => {
+    const requestedTab = resolveInitialTab(queryStatus, queryCategory, queryDate);
+    if (requestedTab !== activeTab) {
+      setActiveTab(requestedTab);
+    }
+  }, [activeTab, queryCategory, queryDate, queryStatus]);
 
   const handleTabChange = (tab: AcademicianTab) => {
     if (tab === activeTab) return;
@@ -137,11 +163,25 @@ export default function AcademicianAppointmentsPage({
   const rawList = byTab[activeTab] ?? EMPTY_LIST;
   const filtered = useMemo(() => {
     const q = deferredSearch.trim().toLocaleLowerCase('tr-TR');
-    const result = q
-      ? rawList.filter((a) => a.studentName.toLocaleLowerCase('tr-TR').includes(q))
-      : rawList;
+    const categoryFilter = queryCategory?.trim().toLocaleLowerCase('tr-TR') ?? '';
+    const dateFilter = queryDate?.trim() ?? '';
+    const result = rawList.filter((appointment) => {
+      if (q && !appointment.studentName.toLocaleLowerCase('tr-TR').includes(q)) {
+        return false;
+      }
+      if (
+        categoryFilter
+        && appointment.categoryName.toLocaleLowerCase('tr-TR') !== categoryFilter
+      ) {
+        return false;
+      }
+      if (dateFilter && appointment.appointmentDate !== dateFilter) {
+        return false;
+      }
+      return true;
+    });
     return sortAppointments(result, sort);
-  }, [rawList, deferredSearch, sort]);
+  }, [rawList, deferredSearch, queryCategory, queryDate, sort]);
 
   const isLoading = Boolean(loadingByTab[activeTab]);
   const error = errorByTab[activeTab] ?? null;

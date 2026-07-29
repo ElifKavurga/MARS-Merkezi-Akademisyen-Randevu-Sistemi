@@ -15,7 +15,7 @@ type AcademicianCalendarProps = {
 const START_HOUR = 8;
 const END_HOUR = 17;
 const HOUR_COUNT = END_HOUR - START_HOUR;
-const HOURS = Array.from({ length: HOUR_COUNT }, (_, index) => START_HOUR + index);
+const HOUR_MARKERS = Array.from({ length: HOUR_COUNT + 1 }, (_, index) => START_HOUR + index);
 
 function parseTimeToMinutes(time: string): number {
   const [hours, minutes] = time.split(':').map(Number);
@@ -80,7 +80,13 @@ function overlapsVisibleHours(event: CalendarEvent): boolean {
 }
 
 function shouldRenderCalendarEvent(event: CalendarEvent): boolean {
-  return event.eventType !== 'APPOINTMENT' || event.appointmentStatus !== 'REJECTED';
+  if (event.eventType !== 'APPOINTMENT') {
+    return true;
+  }
+  return event.appointmentStatus !== 'REJECTED'
+    && event.appointmentStatus !== 'CANCELLED'
+    && event.appointmentStatus !== 'CANCELLED_BY_STUDENT'
+    && event.appointmentStatus !== 'CANCELLED_BY_ACADEMICIAN';
 }
 
 function getEventPosition(event: CalendarEvent) {
@@ -110,7 +116,7 @@ function CalendarEventChip({
   if (event.eventType === 'AVAILABILITY') {
     return (
       <div
-        className="absolute top-1/2 h-[1.05rem] -translate-y-1/2 rounded border opacity-80"
+        className="absolute top-1/2 h-[1.35rem] -translate-y-1/2 rounded border opacity-100 shadow-[inset_0_0_0_1px_rgba(255,255,255,.35)]"
         style={{
           ...position,
           backgroundColor: style.backgroundColor,
@@ -176,19 +182,33 @@ export default function AcademicianCalendar({
   }, [events]);
 
   return (
-    <div className="mars-calendar academician-calendar h-full overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest p-1.5 sm:p-2">
-      <div className="grid h-full grid-rows-[auto_1fr] overflow-hidden rounded-md border border-outline-variant/70 bg-surface">
-        <div className="grid grid-cols-[6.5rem_repeat(9,minmax(0,1fr))] border-b border-outline-variant/70 bg-surface-container-lowest text-label-sm font-semibold text-on-surface-variant">
+    <div className="mars-calendar academician-calendar overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest p-1.5 sm:p-2">
+      <div className="grid overflow-hidden rounded-md border border-outline-variant/70 bg-surface">
+        <div className="grid grid-cols-[6.5rem_1fr] border-b border-outline-variant/70 bg-surface-container-lowest text-label-sm font-semibold text-on-surface-variant">
           <div className="border-r border-outline-variant/70 px-2 py-2">Tarih</div>
-          {HOURS.map((hour) => (
-            <div key={hour} className="border-r border-outline-variant/40 px-1 py-2 text-center last:border-r-0">
-              {formatHour(hour)}
-            </div>
-          ))}
+          <div className="relative h-9 border-r border-outline-variant/40">
+            {HOUR_MARKERS.map((hour, index) => (
+              <span
+                key={hour}
+                className={`absolute top-1/2 -translate-y-1/2 px-1 ${
+                  index === 0 || index === HOUR_COUNT ? '' : '-translate-x-1/2'
+                }`}
+                style={
+                  index === 0
+                    ? { left: 0 }
+                    : index === HOUR_COUNT
+                      ? { right: 0 }
+                      : { left: `${(index / HOUR_COUNT) * 100}%` }
+                }
+              >
+                {formatHour(hour)}
+              </span>
+            ))}
+          </div>
         </div>
 
-        <div className="overflow-y-auto">
-          {days.map((day) => {
+        <div>
+          {days.map((day, dayIndex) => {
             const dayEvents = eventsByDate.get(day) ?? [];
             const availabilityEvents = dayEvents.filter((event) => event.eventType === 'AVAILABILITY');
             const appointmentEvents = dayEvents.filter((event) => event.eventType === 'APPOINTMENT');
@@ -197,13 +217,21 @@ export default function AcademicianCalendar({
             return (
               <div
                 key={day}
-                className="grid min-h-[4.25rem] grid-cols-[6.5rem_1fr] border-b border-outline-variant/50 last:border-b-0"
+                className="grid min-h-[4.25rem] grid-cols-[6.5rem_1fr] border-b border-outline last:border-b-0"
                 style={{ minHeight: rowMinHeight }}
               >
-                <div className="flex items-center border-r border-outline-variant/70 bg-surface-container-lowest px-2 font-label-sm text-label-sm font-semibold text-on-surface">
+                <div
+                  className={`flex items-center border-r border-outline-variant px-2 font-label-sm text-label-sm font-semibold text-on-surface ${
+                    dayIndex % 2 === 0 ? 'bg-surface-container' : 'bg-surface-container-lowest'
+                  }`}
+                >
                   {formatDayLabel(day)}
                 </div>
-                <div className="relative min-w-0 bg-[linear-gradient(to_right,rgba(198,197,208,.45)_1px,transparent_1px)] bg-[length:calc(100%/9)_100%]">
+                <div
+                  className={`relative min-w-0 bg-[linear-gradient(to_right,rgba(198,197,208,.55)_1px,transparent_1px)] bg-[length:calc(100%/9)_100%] ${
+                    dayIndex % 2 === 0 ? 'bg-[#f0f4fb]' : 'bg-surface-container-lowest'
+                  }`}
+                >
                   {availabilityEvents.map((event) => (
                     <CalendarEventChip
                       key={`${event.eventType}-${event.slotId}-${event.slotDate}-${event.startTime}`}

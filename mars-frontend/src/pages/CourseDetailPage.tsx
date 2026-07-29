@@ -4,14 +4,13 @@ import { useParams } from 'react-router-dom';
 import AdminActionButton from '../components/AdminActionButton';
 import ConfirmModal from '../components/ConfirmModal';
 import CourseAssignAssistantModal from '../components/CourseAssignAssistantModal';
-import CourseDetailBreadcrumb from '../components/CourseDetailBreadcrumb';
 import CourseDetailField from '../components/CourseDetailField';
 import CourseEditAssistantModal from '../components/CourseEditAssistantModal';
 import CourseSectionCard from '../components/CourseSectionCard';
 import CourseStatCard from '../components/CourseStatCard';
 import CourseStatusBadge from '../components/CourseStatusBadge';
 import Loading from '../components/Loading';
-import { COURSE_COMING_SOON_MODULES, COURSE_MESSAGES } from '../constants/course';
+import { COURSE_MESSAGES } from '../constants/course';
 import { useToast } from '../hooks/useToast';
 import {
   getCourseAssistants,
@@ -149,14 +148,12 @@ export default function CourseDetailPage() {
   const pageTitle = course?.courseName ?? COURSE_MESSAGES.PAGE_TITLE_FALLBACK;
 
   return (
-    <div className="admin-page animate-fade-in space-y-4">
-      <CourseDetailBreadcrumb courseName={course?.courseName} />
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div className="admin-page animate-fade-in space-y-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="font-headline-lg text-headline-lg text-on-background">{pageTitle}</h1>
           {course ? (
-            <p className="mt-2 max-w-2xl font-body-lg text-body-lg text-on-surface-variant">
+            <p className="mt-1 max-w-2xl font-body-md text-body-md text-on-surface-variant">
               {course.courseCode} · {course.academicTerm}
             </p>
           ) : null}
@@ -173,11 +170,11 @@ export default function CourseDetailPage() {
         </div>
       ) : course && stats ? (
         <>
-          <section aria-labelledby="course-stats-heading" className="space-y-3">
+          <section aria-labelledby="course-stats-heading" className="space-y-2">
             <h2 id="course-stats-heading" className="font-label-md text-label-md text-on-background">
               {COURSE_MESSAGES.SECTION_STATS}
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2.5">
               <CourseStatCard
                 label={COURSE_MESSAGES.STAT_ASSISTANTS}
                 value={stats.totalAssistantCount}
@@ -201,114 +198,94 @@ export default function CourseDetailPage() {
             </div>
           </section>
 
-          <CourseSectionCard title={COURSE_MESSAGES.SECTION_GENERAL}>
-            <CourseDetailField label="Ders Kodu">{course.courseCode}</CourseDetailField>
-            <CourseDetailField label="Ders Adı">{course.courseName}</CourseDetailField>
-            <CourseDetailField label="Akademik Dönem">{course.academicTerm}</CourseDetailField>
-            <CourseDetailField label="Bölüm">{course.departmentName}</CourseDetailField>
-            <CourseDetailField label="Durum">
-              <CourseStatusBadge isActive={course.isActive} />
-            </CourseDetailField>
-            <CourseDetailField label="Oluşturulma Tarihi">
-              {formatDateTime(course.createdAt)}
-            </CourseDetailField>
-            <CourseDetailField label="Son Güncellenme Tarihi">
-              {formatDateTime(course.updatedAt)}
-            </CourseDetailField>
-          </CourseSectionCard>
+          <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(18rem,0.85fr)_minmax(0,1.35fr)]">
+            <CourseSectionCard title={COURSE_MESSAGES.SECTION_GENERAL}>
+              <CourseDetailField label="Ders Adı">{course.courseName}</CourseDetailField>
+              <CourseDetailField label="Ders Kodu">{course.courseCode}</CourseDetailField>
+              <CourseDetailField label="Akademik Dönem">{course.academicTerm}</CourseDetailField>
+              <CourseDetailField label="Bölüm">{course.departmentName}</CourseDetailField>
+              <CourseDetailField label="Durum">
+                <CourseStatusBadge isActive={course.isActive} />
+              </CourseDetailField>
+              <CourseDetailField label="Toplam Asistan">{stats.totalAssistantCount}</CourseDetailField>
+              <CourseDetailField label="Oluşturulma Tarihi">
+                {formatDateTime(course.createdAt)}
+              </CourseDetailField>
+              <CourseDetailField label="Son Güncellenme Tarihi">
+                {formatDateTime(course.updatedAt)}
+              </CourseDetailField>
+            </CourseSectionCard>
 
-          <CourseSectionCard
-            title={COURSE_MESSAGES.SECTION_ASSISTANTS}
-            action={
-              course.isActive ? (
-                <AdminActionButton
-                  variant="primary"
-                  icon="person_add"
-                  onClick={() => setAssignOpen(true)}
-                >
-                  Asistan Ata
-                </AdminActionButton>
-              ) : null
-            }
-          >
-            {assistants.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-outline-variant bg-surface-container/30 px-4 py-8 text-center">
-                <p className="font-body-md text-body-md text-on-surface-variant">
-                  {COURSE_MESSAGES.ASSISTANTS_EMPTY}
-                </p>
-              </div>
-            ) : (
-              <ul className="divide-y divide-outline-variant/40">
-                {assistants.map((assistant) => (
-                  <li
-                    key={assistant.assignmentId}
-                    className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 lg:flex-row lg:items-center lg:justify-between"
+            <CourseSectionCard
+              title={COURSE_MESSAGES.SECTION_ASSISTANTS}
+              action={
+                course.isActive ? (
+                  <AdminActionButton
+                    variant="primary"
+                    icon="person_add"
+                    onClick={() => setAssignOpen(true)}
                   >
-                    <div className="min-w-0 flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
-                      <div>
-                        <p className="font-body-md text-body-md text-on-background">
-                          {assistant.assistantName}
-                        </p>
-                        <p className="mt-0.5 font-label-sm text-label-sm text-on-surface-variant break-all">
-                          {assistant.institutionalEmail}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="font-label-sm text-label-sm text-on-surface-variant">
-                          {assistant.departmentName}
-                        </p>
-                        <p className="mt-0.5 font-label-sm text-label-sm text-on-surface-variant">
-                          Atanma: {formatDateTime(assistant.assignedAt)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex flex-row flex-nowrap items-center justify-end gap-2 ml-auto shrink-0">
-                      <AdminActionButton
-                        variant="neutral"
-                        icon="edit"
-                        onClick={() => setEditTarget(assistant)}
-                      >
-                        Düzenle
-                      </AdminActionButton>
-                      <AdminActionButton
-                        variant="danger"
-                        icon="person_remove"
-                        onClick={() => {
-                          setRemoveError(null);
-                          setRemoveTarget(assistant);
-                        }}
-                      >
-                        Kaldır
-                      </AdminActionButton>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CourseSectionCard>
-
-          <section aria-labelledby="course-future-heading" className="space-y-3">
-            <h2 id="course-future-heading" className="font-label-md text-label-md text-on-background">
-              {COURSE_MESSAGES.SECTION_FUTURE}
-            </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-              {COURSE_COMING_SOON_MODULES.map((module) => (
-                <CourseSectionCard
-                  key={module.title}
-                  title={module.title}
-                  action={
-                    <span className="material-symbols-outlined text-on-surface-variant" aria-hidden="true">
-                      {module.icon}
-                    </span>
-                  }
-                >
+                    Asistan Ata
+                  </AdminActionButton>
+                ) : null
+              }
+            >
+              {assistants.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-outline-variant bg-surface-container/30 px-4 py-6 text-center">
                   <p className="font-body-md text-body-md text-on-surface-variant">
-                    {COURSE_MESSAGES.COMING_SOON}
+                    {COURSE_MESSAGES.ASSISTANTS_EMPTY}
                   </p>
-                </CourseSectionCard>
-              ))}
-            </div>
-          </section>
+                </div>
+              ) : (
+                <ul className="divide-y divide-outline-variant/40">
+                  {assistants.map((assistant) => (
+                    <li
+                      key={assistant.assignmentId}
+                      className="flex flex-col gap-3 py-3 first:pt-0 last:pb-0 lg:flex-row lg:items-center lg:justify-between"
+                    >
+                      <div className="min-w-0 flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
+                        <div>
+                          <p className="font-body-md text-body-md text-on-background">
+                            {assistant.assistantName}
+                          </p>
+                          <p className="mt-0.5 font-label-sm text-label-sm text-on-surface-variant break-all">
+                            {assistant.institutionalEmail}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="font-label-sm text-label-sm text-on-surface-variant">
+                            {assistant.departmentName}
+                          </p>
+                          <p className="mt-0.5 font-label-sm text-label-sm text-on-surface-variant">
+                            Atanma: {formatDateTime(assistant.assignedAt)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-row flex-nowrap items-center justify-end gap-2 ml-auto shrink-0">
+                        <AdminActionButton
+                          variant="neutral"
+                          icon="edit"
+                          onClick={() => setEditTarget(assistant)}
+                        >
+                          Düzenle
+                        </AdminActionButton>
+                        <AdminActionButton
+                          variant="danger"
+                          icon="person_remove"
+                          onClick={() => {
+                            setRemoveError(null);
+                            setRemoveTarget(assistant);
+                          }}
+                        >
+                          Kaldır
+                        </AdminActionButton>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CourseSectionCard>
+          </div>
         </>
       ) : null}
 

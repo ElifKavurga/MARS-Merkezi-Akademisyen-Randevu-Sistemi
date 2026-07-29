@@ -228,7 +228,7 @@ export default function AcademicianCalendarPage({
         </div>
       </div>
 
-      <div className="relative min-h-[420px] lg:min-h-0 lg:flex-1">
+      <div className="relative">
         {loading ? (
           <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-surface/70">
             <Loading label="Takvim yükleniyor..." />
@@ -248,12 +248,6 @@ export default function AcademicianCalendarPage({
             onEventClick={openEvent}
           />
         )}
-
-        {!loading && viewMode === 'calendar' && filteredEvents.length === 0 ? (
-          <p className="mt-3 text-center font-body-md text-body-md text-on-surface-variant">
-            {CALENDAR_MESSAGES.EMPTY_RANGE}
-          </p>
-        ) : null}
       </div>
 
       <CalendarEventDetailModal

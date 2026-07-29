@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardDailySchedule from '../components/DashboardDailySchedule';
 import DashboardDelegationStats from '../components/DashboardDelegationStats';
 import DashboardEntityListCard from '../components/DashboardEntityListCard';
@@ -21,12 +22,73 @@ import type { AcademicianDashboardSummary } from '../types/dashboard';
 import type { NotificationItem } from '../types/notification';
 
 const PREVIEW_LIMIT = 5;
+const STATUS_COLORS = ['#f59e0b', '#6366f1', '#ef4444', '#10b981', '#64748b', '#ec4899'];
+const ACADEMICIAN_STATUS_LABELS: Record<string, string> = {
+  PENDING: 'Bekleyen',
+  APPROVED: 'Onaylanan',
+  REJECTED: 'Reddedilen',
+  COMPLETED: 'Tamamlanan',
+  NO_SHOW: 'No-Show',
+  CANCELLED: 'İptal',
+};
+const APPOINTMENT_STATUS_FILTERS = new Set([
+  'PENDING',
+  'APPROVED',
+  'REJECTED',
+  'COMPLETED',
+  'NO_SHOW',
+  'CANCELLED',
+]);
+
 const isDashboardNotification = (notification: NotificationItem) =>
   notification.relatedAppointmentId != null || notification.relatedDelegationId != null;
+
+function appointmentListPath(params: Record<string, string>): string {
+  const searchParams = new URLSearchParams(params);
+  return `${ROUTES.ACADEMICIAN_APPOINTMENTS}?${searchParams.toString()}`;
+}
+
+function getStatusCount(stats: HodDepartmentStatsDto | null, status: string): number {
+  return stats?.statusDistribution.find((item) => item.status === status)?.count ?? 0;
+}
+
+function AppointmentKpiCard({
+  icon,
+  label,
+  value,
+  onClick,
+}: {
+  icon: string;
+  label: string;
+  value: number;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex min-w-0 items-center gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:bg-surface-container/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-container/40 active:scale-[0.98]"
+      aria-label={`${label}: ${value}`}
+    >
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-container text-primary-container">
+        <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+          {icon}
+        </span>
+      </span>
+      <span className="min-w-0">
+        <span className="block font-label-sm text-label-sm text-on-surface-variant">{label}</span>
+        <span className="mt-0.5 block font-headline-sm text-headline-sm font-bold text-on-background">
+          {value}
+        </span>
+      </span>
+    </button>
+  );
+}
 
 export default function AcademicianDashboard() {
   const { user } = useAuth();
   const toast = useToast();
+  const navigate = useNavigate();
   const dailySchedule = useDashboardDailySchedule();
   const retryDailySchedule = dailySchedule.retry;
   const [summary, setSummary] = useState<AcademicianDashboardSummary | null>(null);
@@ -128,23 +190,17 @@ export default function AcademicianDashboard() {
     return null;
   }
 
-  const STATUS_LABELS: Record<string, string> = {
-    PENDING: 'Bekleyen',
-    APPROVED: 'Onaylanan',
-    REJECTED: 'Reddedilen',
-    COMPLETED: 'Tamamlanan',
-    NO_SHOW: 'No-Show',
-    CANCELLED: 'İptal',
-  };
-  const STATUS_COLORS = ['#f59e0b', '#6366f1', '#ef4444', '#10b981', '#64748b', '#ec4899'];
-
   const weeklyData = stats?.weeklyTrend.map(d => ({ label: d.date, value: d.count })) ?? [];
   const categoryData = stats?.categoryDistribution.map(d => ({ label: d.categoryName, value: d.count })) ?? [];
   const statusData = stats?.statusDistribution.map((d, i) => ({
-    label: STATUS_LABELS[d.status] ?? d.status,
+    label: ACADEMICIAN_STATUS_LABELS[d.status] ?? d.status,
     value: d.count,
     color: STATUS_COLORS[i % STATUS_COLORS.length],
   })) ?? [];
+  const totalAppointmentCount = stats?.statusDistribution.reduce((sum, item) => sum + item.count, 0) ?? 0;
+  const waitlistCount = stats?.statusDistribution.find((item) =>
+    ['WAITING', 'WAITLIST'].includes(item.status),
+  )?.count ?? 0;
 
   return (
     <div className="w-full min-w-0 animate-fade-in pb-12">
@@ -158,7 +214,7 @@ export default function AcademicianDashboard() {
                 {
                   label: 'Bekleyen',
                   value: summary.pendingAppointmentCount,
-                  to: ROUTES.ACADEMICIAN_APPOINTMENTS,
+                  to: appointmentListPath({ status: 'PENDING' }),
                 },
                 {
                   label: 'Yaklaşan',
@@ -218,7 +274,56 @@ export default function AcademicianDashboard() {
         </section>
       ) : null}
 
-      <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-12">
+      {stats ? (
+        <section className="mb-5" aria-label="Randevu istatistikleri">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary" aria-hidden="true">event</span>
+            <h2 className="font-headline-md text-headline-md text-on-background">Randevu İstatistikleri</h2>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6">
+            <AppointmentKpiCard
+              icon="event_note"
+              label="Toplam Randevu"
+              value={totalAppointmentCount}
+              onClick={() => navigate(appointmentListPath({ status: 'ALL' }))}
+            />
+            <AppointmentKpiCard
+              icon="pending"
+              label="Bekleyen"
+              value={getStatusCount(stats, 'PENDING')}
+              onClick={() => navigate(appointmentListPath({ status: 'PENDING' }))}
+            />
+            <AppointmentKpiCard
+              icon="task_alt"
+              label="Onaylanan"
+              value={getStatusCount(stats, 'APPROVED')}
+              onClick={() => navigate(appointmentListPath({ status: 'APPROVED' }))}
+            />
+            <AppointmentKpiCard
+              icon="check_circle"
+              label="Tamamlanan"
+              value={getStatusCount(stats, 'COMPLETED')}
+              onClick={() => navigate(appointmentListPath({ status: 'COMPLETED' }))}
+            />
+            <AppointmentKpiCard
+              icon="person_cancel"
+              label="No-Show"
+              value={getStatusCount(stats, 'NO_SHOW')}
+              onClick={() => navigate(appointmentListPath({ status: 'NO_SHOW' }))}
+            />
+            {waitlistCount > 0 ? (
+              <AppointmentKpiCard
+                icon="group_add"
+                label="Bekleme Listesi"
+                value={waitlistCount}
+                onClick={() => navigate(appointmentListPath({ status: 'ALL' }))}
+              />
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
+      <div className="mb-5 grid grid-cols-1 gap-5 lg:grid-cols-12">
         <DashboardDailySchedule
           className="lg:col-span-6"
           selectedDate={dailySchedule.selectedDate}
@@ -237,11 +342,11 @@ export default function AcademicianDashboard() {
           appointments={summary?.pendingAppointments ?? []}
           loading={loading}
           errorMessage={error}
-          appointmentsPath={ROUTES.ACADEMICIAN_APPOINTMENTS}
+          appointmentsPath={appointmentListPath({ status: 'PENDING' })}
         />
       </div>
 
-      <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="mb-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
         <DashboardEntityListCard
           title="Derslerim"
           items={courseItems}
@@ -263,40 +368,58 @@ export default function AcademicianDashboard() {
       </div>
 
       {stats && (
-        <div className="mt-8">
-          <div className="mb-4 flex items-center gap-2">
+        <div className="mt-6">
+          <div className="mb-3 flex items-center gap-2">
             <span className="material-symbols-outlined text-primary" aria-hidden="true">analytics</span>
             <h2 className="font-headline-md text-headline-md text-primary">Kişisel İstatistiklerim</h2>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="flex h-full flex-col gap-4 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-sm">
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+            <div className="flex h-full flex-col gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-4 shadow-sm">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[20px] text-primary" aria-hidden="true">show_chart</span>
                 <h3 className="font-title-md text-title-md text-on-surface">Son 7 Gün</h3>
               </div>
               <div className="mt-auto">
-                <LineChart data={weeklyData} />
+                <LineChart
+                  data={weeklyData}
+                  onClick={(label) => navigate(appointmentListPath({ date: label }))}
+                />
               </div>
             </div>
 
-            <div className="flex h-full flex-col gap-4 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-sm">
+            <div className="flex h-full flex-col gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-4 shadow-sm">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[20px] text-primary" aria-hidden="true">donut_large</span>
                 <h3 className="font-title-md text-title-md text-on-surface">Durum Dağılımı</h3>
               </div>
               <div className="mt-auto">
-                <DoughnutChart data={statusData} />
+                <DoughnutChart
+                  data={statusData}
+                  onClick={(label) => {
+                    const status = stats.statusDistribution.find(
+                      (item) => (ACADEMICIAN_STATUS_LABELS[item.status] ?? item.status) === label,
+                    )?.status;
+                    if (status) {
+                      navigate(appointmentListPath({
+                        status: APPOINTMENT_STATUS_FILTERS.has(status) ? status : 'ALL',
+                      }));
+                    }
+                  }}
+                />
               </div>
             </div>
 
-            <div className="flex h-full flex-col gap-4 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-sm">
+            <div className="flex h-full flex-col gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-4 shadow-sm">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[20px] text-primary" aria-hidden="true">category</span>
                 <h3 className="font-title-md text-title-md text-on-surface">Kategoriler</h3>
               </div>
               <div className="mt-auto">
-                <BarChart data={categoryData} />
+                <BarChart
+                  data={categoryData}
+                  onClick={(label) => navigate(appointmentListPath({ category: label }))}
+                />
               </div>
             </div>
           </div>
