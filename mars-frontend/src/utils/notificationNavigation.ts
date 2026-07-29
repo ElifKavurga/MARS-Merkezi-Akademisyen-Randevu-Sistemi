@@ -1,8 +1,8 @@
 import { ROLES } from '../constants/roles';
 import {
-  ROUTES,
   academicianAppointmentDetailPath,
   academicianIncomingDelegationDetailPath,
+  assistantAppointmentDetailPath,
   assistantDelegationDetailPath,
   studentAppointmentDetailPath,
 
@@ -11,6 +11,7 @@ import type { NotificationItem } from '../types/notification';
 
 export function getNotificationTarget(notification: NotificationItem, role?: string): string | null {
   const appointmentId = notification.relatedAppointmentId;
+  const academicianLikeRole = role === ROLES.ACADEMICIAN || role === ROLES.HOD;
   const delegationType = notification.notificationType.startsWith('DELEGATION_')
     || notification.notificationType === 'STUDENT_APPROVAL_PENDING';
 
@@ -18,7 +19,7 @@ export function getNotificationTarget(notification: NotificationItem, role?: str
     if (role === ROLES.ASSISTANT && notification.relatedDelegationId) {
       return assistantDelegationDetailPath(notification.relatedDelegationId);
     }
-    if (role === ROLES.ACADEMICIAN && notification.relatedDelegationId) {
+    if (academicianLikeRole && notification.relatedDelegationId) {
       return academicianIncomingDelegationDetailPath(notification.relatedDelegationId);
     }
     if (role === ROLES.STUDENT && appointmentId) {
@@ -29,7 +30,7 @@ export function getNotificationTarget(notification: NotificationItem, role?: str
 
   if (!appointmentId) return null;
   if (role === ROLES.STUDENT) return studentAppointmentDetailPath(appointmentId);
-  if (role === ROLES.ACADEMICIAN) return academicianAppointmentDetailPath(appointmentId);
-  if (role === ROLES.ASSISTANT) return ROUTES.ASSISTANT_APPOINTMENTS;
+  if (academicianLikeRole) return academicianAppointmentDetailPath(appointmentId);
+  if (role === ROLES.ASSISTANT) return assistantAppointmentDetailPath(appointmentId);
   return null;
 }

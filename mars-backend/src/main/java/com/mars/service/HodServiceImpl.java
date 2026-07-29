@@ -286,7 +286,7 @@ public class HodServiceImpl implements HodService {
         long pendingAppointments = appointmentRepository.countByStaff_Department_DepartmentIdAndAppointmentStatus(departmentId, "PENDING");
         long completedAppointments = appointmentRepository.countByStaff_Department_DepartmentIdAndAppointmentStatus(departmentId, "COMPLETED");
         long noShowCount = appointmentRepository.countByStaff_Department_DepartmentIdAndAppointmentStatus(departmentId, "NO_SHOW");
-        long waitlistStudentCount = 12L; // Placeholder data
+        long waitlistStudentCount = waitlistEntryRepository.countByStaff_Department_DepartmentId(departmentId);
 
         return HodDepartmentKpiDto.builder()
                 .totalAcademicians(totalAcademicians)
