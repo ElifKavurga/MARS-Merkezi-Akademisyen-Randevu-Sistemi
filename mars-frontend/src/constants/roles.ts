@@ -22,7 +22,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   [ROLES.ADMIN]: 'Yönetici',
   [ROLES.HOD]: 'Bölüm Başkanı',
   [ROLES.ACADEMICIAN]: 'Akademisyen',
-  [ROLES.ASSISTANT]: 'Asistan',
+  [ROLES.ASSISTANT]: 'Araştırma Görevlisi',
   [ROLES.STUDENT]: 'Öğrenci',
 };
 

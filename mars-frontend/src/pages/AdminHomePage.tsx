@@ -91,7 +91,7 @@ export default function AdminHomePage() {
         icon: 'school',
       },
       {
-        label: 'Asistan',
+        label: 'Araştırma Görevlisi',
         value: countByRole(users, ROLES.ASSISTANT),
         to: ROUTES.ADMIN_USERS,
         icon: 'support_agent',

@@ -49,7 +49,7 @@ export default function CourseAssignAssistantModal({
         if (cancelled) {
           return;
         }
-        let message = 'Asistan listesi yüklenemedi.';
+        let message = 'Araştırma görevlisi listesi yüklenemedi.';
         if (isAxiosError(err)) {
           const backendMessage = err.response?.data?.message;
           if (typeof backendMessage === 'string' && backendMessage.length > 0) {
@@ -92,7 +92,7 @@ export default function CourseAssignAssistantModal({
     setError(null);
 
     if (!assistantId) {
-      setError('Asistan seçimi zorunludur.');
+      setError('Araştırma görevlisi seçimi zorunludur.');
       return;
     }
 
@@ -108,11 +108,11 @@ export default function CourseAssignAssistantModal({
         if (typeof backendMessage === 'string' && backendMessage.length > 0) {
           setError(backendMessage);
         } else if (err.response?.status === 409) {
-          setError('Bu asistan bu derse zaten atanmış.');
+          setError('Bu araştırma görevlisi bu derse zaten atanmış.');
         } else if (err.response?.status === 404) {
           setError('Kullanıcı veya ders bulunamadı.');
         } else if (err.response?.status === 403) {
-          setError('Bu derse asistan atama yetkiniz yok.');
+          setError('Bu derse araştırma görevlisi atama yetkiniz yok.');
         } else {
           setError(COURSE_MESSAGES.ASSIGN_ERROR);
         }
@@ -138,8 +138,8 @@ export default function CourseAssignAssistantModal({
         <ModalHeader
           titleId="course-assign-assistant-modal-title"
           icon="person_add"
-          title="Asistan Ata"
-          description="Derse atanacak asistanı seçin."
+          title="Araştırma Görevlisi Ata"
+          description="Derse atanacak araştırma görevlisini seçin."
         />
 
         <div className="mt-4 space-y-1.5 text-left">
@@ -147,10 +147,10 @@ export default function CourseAssignAssistantModal({
             htmlFor="assistantId"
             className="block font-label-md text-label-md text-on-surface-variant"
           >
-            Asistan
+            Araştırma Görevlisi
           </label>
           {loadingOptions ? (
-            <Loading variant="inline" label="Asistanlar yükleniyor..." />
+            <Loading variant="inline" label="Araştırma görevlileri yükleniyor..." />
           ) : (
             <select
               id="assistantId"
@@ -159,9 +159,9 @@ export default function CourseAssignAssistantModal({
               disabled={submitting || assistants.length === 0}
               value={assistantId || ''}
               onChange={(event) => setAssistantId(Number(event.target.value))}
-              aria-label="Asistan"
+              aria-label="Araştırma Görevlisi"
             >
-              <option value="">Asistan seçin</option>
+              <option value="">Araştırma görevlisi seçin</option>
               {assistants.map((assistant) => (
                 <option key={assistant.userId} value={assistant.userId}>
                   {assistant.fullName} — {assistant.institutionalEmail} — {assistant.departmentName}
@@ -171,7 +171,7 @@ export default function CourseAssignAssistantModal({
           )}
           {!loadingOptions && assistants.length === 0 && !error ? (
             <p className="font-label-sm text-label-sm text-on-surface-variant">
-              Atanabilir aktif asistan bulunamadı.
+              Atanabilir aktif araştırma görevlisi bulunamadı.
             </p>
           ) : null}
         </div>

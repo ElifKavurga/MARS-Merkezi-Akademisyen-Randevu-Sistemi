@@ -1,7 +1,7 @@
 export const STUDENT_ACADEMICIAN_MESSAGES = {
   TITLE: 'Randevu Al',
   SUBTITLE:
-    'Sistemde kayıtlı akademisyen ve asistanları ad, soyad veya bölüme göre arayın; ünvan ve randevu kabul durumuna göre filtreleyin.',
+    'Sistemde kayıtlı akademisyen ve araştırma görevlilerini ad, soyad veya bölüme göre arayın; ünvan ve randevu kabul durumuna göre filtreleyin.',
   SEARCH_PLACEHOLDER: 'Ad, soyad veya bölüm ara...',
   DEPARTMENT_ALL: 'Tüm Bölümler',
   TITLE_ALL: 'Tüm Ünvanlar',

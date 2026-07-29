@@ -11,7 +11,7 @@ export const ASSISTANT_COURSE_MESSAGES = {
 } as const;
 
 export const ASSISTANT_DASHBOARD_MESSAGES = {
-  PANEL_LABEL: 'Asistan Paneli',
+  PANEL_LABEL: 'Araştırma Görevlisi Paneli',
   COURSES_STAT: 'Atandığım Dersler',
   ACADEMICIANS_STAT: 'Çalıştığım Akademisyenler',
   PREVIEW_TITLE: 'Atandığım Dersler',

@@ -49,7 +49,7 @@ export default function CourseEditAssistantModal({
         if (cancelled) {
           return;
         }
-        let message = 'Asistan listesi yüklenemedi.';
+        let message = 'Araştırma görevlisi listesi yüklenemedi.';
         if (isAxiosError(err)) {
           const backendMessage = err.response?.data?.message;
           if (typeof backendMessage === 'string' && backendMessage.length > 0) {
@@ -91,7 +91,7 @@ export default function CourseEditAssistantModal({
     setError(null);
 
     if (!assistantId) {
-      setError('Asistan seçimi zorunludur.');
+      setError('Araştırma görevlisi seçimi zorunludur.');
       return;
     }
 
@@ -106,7 +106,7 @@ export default function CourseEditAssistantModal({
         if (typeof backendMessage === 'string' && backendMessage.length > 0) {
           setError(backendMessage);
         } else if (err.response?.status === 409) {
-          setError('Bu asistan bu derse zaten atanmış.');
+          setError('Bu araştırma görevlisi bu derse zaten atanmış.');
         } else if (err.response?.status === 404) {
           setError('Atama bulunamadı.');
         } else if (err.response?.status === 403) {
@@ -136,8 +136,8 @@ export default function CourseEditAssistantModal({
         <ModalHeader
           titleId="course-edit-assistant-modal-title"
           icon="edit"
-          title="Asistanı Düzenle"
-          description="Derse atanmış asistanı değiştirin."
+          title="Araştırma Görevlisini Düzenle"
+          description="Derse atanmış araştırma görevlisini değiştirin."
         />
 
         <div className="mt-4 space-y-1.5 text-left">
@@ -145,10 +145,10 @@ export default function CourseEditAssistantModal({
             htmlFor="edit-assistantId"
             className="block font-label-md text-label-md text-on-surface-variant"
           >
-            Asistan
+            Araştırma Görevlisi
           </label>
           {loadingOptions ? (
-            <Loading variant="inline" label="Asistanlar yükleniyor..." />
+            <Loading variant="inline" label="Araştırma görevlileri yükleniyor..." />
           ) : (
             <select
               id="edit-assistantId"
@@ -157,9 +157,9 @@ export default function CourseEditAssistantModal({
               disabled={submitting || assistants.length === 0}
               value={assistantId || ''}
               onChange={(event) => setAssistantId(Number(event.target.value))}
-              aria-label="Asistan"
+              aria-label="Araştırma Görevlisi"
             >
-              <option value="">Asistan seçin</option>
+              <option value="">Araştırma görevlisi seçin</option>
               {assistants.map((option) => (
                 <option key={option.userId} value={option.userId}>
                   {option.fullName} — {option.institutionalEmail} — {option.departmentName}

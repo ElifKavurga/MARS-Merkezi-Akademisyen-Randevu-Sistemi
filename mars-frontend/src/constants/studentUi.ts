@@ -10,7 +10,7 @@ export const STUDENT_UI = {
   DASHBOARD_LOADING: 'Ana sayfa yükleniyor...',
   INFO_TITLE: 'Bilgilendirme',
   INFO_DESCRIPTION:
-    'Akademisyen veya asistanlardan randevu almak için Randevu Al menüsünü kullanabilirsiniz.',
+    'Akademisyen veya araştırma görevlilerinden randevu almak için Randevu Al menüsünü kullanabilirsiniz.',
   UPCOMING_TITLE: 'Yaklaşan Randevular',
   UPCOMING_EMPTY_TITLE: 'Yaklaşan randevu yok',
   UPCOMING_EMPTY_DESCRIPTION: 'Yaklaşan randevularınız burada görüntülenecek.',

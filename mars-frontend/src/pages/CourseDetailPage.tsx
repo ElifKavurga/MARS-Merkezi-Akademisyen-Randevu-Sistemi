@@ -207,7 +207,7 @@ export default function CourseDetailPage() {
               <CourseDetailField label="Durum">
                 <CourseStatusBadge isActive={course.isActive} />
               </CourseDetailField>
-              <CourseDetailField label="Toplam Asistan">{stats.totalAssistantCount}</CourseDetailField>
+                <CourseDetailField label="Toplam Araştırma Görevlisi">{stats.totalAssistantCount}</CourseDetailField>
               <CourseDetailField label="Oluşturulma Tarihi">
                 {formatDateTime(course.createdAt)}
               </CourseDetailField>
@@ -225,7 +225,7 @@ export default function CourseDetailPage() {
                     icon="person_add"
                     onClick={() => setAssignOpen(true)}
                   >
-                    Asistan Ata
+                    Araştırma Görevlisi Ata
                   </AdminActionButton>
                 ) : null
               }

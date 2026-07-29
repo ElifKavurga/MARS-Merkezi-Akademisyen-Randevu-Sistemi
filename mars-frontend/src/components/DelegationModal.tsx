@@ -168,7 +168,7 @@ export default function DelegationModal({
   const roleFilterOptions = [
     ['ALL', 'Tümü'],
     ['ACADEMICIAN', 'Akademisyen'],
-    ['ASSISTANT', 'Asistan'],
+    ['ASSISTANT', 'Araştırma Görevlisi'],
   ] as const;
   const handleRoleFilterChange = (value: 'ALL' | 'ACADEMICIAN' | 'ASSISTANT') => {
     setRoleFilter(value);
@@ -265,7 +265,7 @@ export default function DelegationModal({
                       <span className="block font-semibold text-on-surface">
                         {target.fullName}
                         <span className="ml-2 rounded-full bg-surface-container px-2 py-0.5 text-xs font-medium text-on-surface-variant">
-                          {target.role === 'ACADEMICIAN' ? 'Akademisyen' : 'Asistan'}
+                          {target.role === 'ACADEMICIAN' ? 'Akademisyen' : 'Araştırma Görevlisi'}
                         </span>
                       </span>
                       <span className="mt-0.5 block truncate text-sm text-on-surface-variant">
@@ -274,7 +274,7 @@ export default function DelegationModal({
                       <span className="mt-1 block text-xs font-medium text-on-surface-variant">
                         {target.requiresStudentApproval
                           ? 'Hedef kabulünden sonra öğrenci onayı gerekli'
-                          : 'İlgili dersin yetkili asistanı · Öğrenci onayı gerektirmez'}
+                          : 'İlgili dersin yetkili araştırma görevlisi · Öğrenci onayı gerektirmez'}
                       </span>
                     </span>
                   </label>

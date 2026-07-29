@@ -285,7 +285,7 @@ export default function DelegationHistoryPage() {
                   {[
                     'Durum',
                     'Akademisyen',
-                    'Asistan',
+                    'Araştırma Görevlisi',
                     'Ders',
                     'Kategori',
                     'Tarih',

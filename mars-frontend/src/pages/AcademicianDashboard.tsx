@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardDailySchedule from '../components/DashboardDailySchedule';
 import DashboardEntityListCard from '../components/DashboardEntityListCard';
+import DashboardKpiCard from '../components/DashboardKpiCard';
 import DashboardPendingRequests from '../components/DashboardPendingRequests';
 import DashboardWelcomeBanner from '../components/DashboardWelcomeBanner';
 import {
@@ -79,39 +80,6 @@ function getAppointmentStatusFilter(status: string): string {
     return 'CANCELLED';
   }
   return 'ALL';
-}
-
-function AppointmentKpiCard({
-  icon,
-  label,
-  value,
-  onClick,
-}: {
-  icon: string;
-  label: string;
-  value: number;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex h-20 min-w-0 items-center gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:bg-surface-container/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-container/40 active:scale-[0.98]"
-      aria-label={`${label}: ${value}`}
-    >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-container text-primary-container">
-        <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
-          {icon}
-        </span>
-      </span>
-      <span className="min-w-0">
-        <span className="block line-clamp-2 font-label-sm text-label-sm text-on-surface-variant">{label}</span>
-        <span className="mt-0.5 block font-headline-sm text-headline-sm font-bold text-on-background">
-          {value}
-        </span>
-      </span>
-    </button>
-  );
 }
 
 export default function AcademicianDashboard() {
@@ -284,31 +252,31 @@ export default function AcademicianDashboard() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
             {stats ? (
               <>
-                <AppointmentKpiCard
+                <DashboardKpiCard
                   icon="event_note"
                   label="Toplam Randevu"
                   value={totalAppointmentCount}
                   onClick={() => navigate(appointmentListPath({ status: 'ALL' }))}
                 />
-                <AppointmentKpiCard
+                <DashboardKpiCard
                   icon="pending"
                   label="Bekleyen"
                   value={getStatusCount(stats, 'PENDING')}
                   onClick={() => navigate(appointmentListPath({ status: 'PENDING' }))}
                 />
-                <AppointmentKpiCard
+                <DashboardKpiCard
                   icon="task_alt"
                   label="Onaylanan"
                   value={getStatusCount(stats, 'APPROVED')}
                   onClick={() => navigate(appointmentListPath({ status: 'APPROVED' }))}
                 />
-                <AppointmentKpiCard
+                <DashboardKpiCard
                   icon="check_circle"
                   label="Tamamlanan"
                   value={getStatusCount(stats, 'COMPLETED')}
                   onClick={() => navigate(appointmentListPath({ status: 'COMPLETED' }))}
                 />
-                <AppointmentKpiCard
+                <DashboardKpiCard
                   icon="person_cancel"
                   label="Katılmayan"
                   value={getStatusCount(stats, 'NO_SHOW')}
@@ -317,7 +285,7 @@ export default function AcademicianDashboard() {
               </>
             ) : null}
             {waitlistCount > 0 && stats ? (
-              <AppointmentKpiCard
+              <DashboardKpiCard
                 icon="group_add"
                 label="Bekleme Listesi"
                 value={waitlistCount}
@@ -326,19 +294,19 @@ export default function AcademicianDashboard() {
             ) : null}
             {summary ? (
               <>
-                <AppointmentKpiCard
+                <DashboardKpiCard
                   icon="hourglass_top"
                   label="Bekleyen Devir"
                   value={summary.pendingDelegationCount}
                   onClick={() => navigate(academicianDelegationHistoryPath('PENDING'))}
                 />
-                <AppointmentKpiCard
+                <DashboardKpiCard
                   icon="check_circle"
                   label="Kabul Edilen Devir"
                   value={summary.acceptedDelegationCount}
                   onClick={() => navigate(academicianDelegationHistoryPath('ACCEPTED'))}
                 />
-                <AppointmentKpiCard
+                <DashboardKpiCard
                   icon="cancel"
                   label="Reddedilen Devir"
                   value={summary.rejectedDelegationCount}
@@ -384,12 +352,12 @@ export default function AcademicianDashboard() {
           actionPath={ROUTES.ACADEMICIAN_COURSES}
         />
         <DashboardEntityListCard
-          title="Asistanlarım"
+          title="Araştırma Görevlilerim"
           items={assistantItems}
           loading={listsLoading}
-          emptyMessage="Atanmış asistanınız bulunmuyor."
+          emptyMessage="Atanmış araştırma görevliniz bulunmuyor."
           emptyIcon="group"
-          actionLabel="Tüm Asistanları Gör"
+          actionLabel="Tüm Araştırma Görevlilerini Gör"
           actionPath={ROUTES.ACADEMICIAN_COURSES}
         />
       </div>

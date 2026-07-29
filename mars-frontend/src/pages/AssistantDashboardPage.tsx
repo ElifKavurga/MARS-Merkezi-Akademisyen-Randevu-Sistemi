@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
+import { useNavigate } from 'react-router-dom';
 import DashboardDailySchedule from '../components/DashboardDailySchedule';
-import DashboardDelegationStats from '../components/DashboardDelegationStats';
 import DashboardEntityListCard from '../components/DashboardEntityListCard';
+import DashboardKpiCard from '../components/DashboardKpiCard';
 import DashboardPendingRequests from '../components/DashboardPendingRequests';
 import DashboardWelcomeBanner from '../components/DashboardWelcomeBanner';
 import { ASSISTANT_DASHBOARD_MESSAGES } from '../constants/assistantCourse';
@@ -24,6 +25,7 @@ const isDashboardNotification = (notification: NotificationItem) =>
 export default function AssistantDashboardPage() {
   const { user } = useAuth();
   const toast = useToast();
+  const navigate = useNavigate();
   const dailySchedule = useDashboardDailySchedule();
   const retryDailySchedule = dailySchedule.retry;
   const [summary, setSummary] = useState<AssistantDashboardSummary | null>(null);
@@ -95,34 +97,6 @@ export default function AssistantDashboardPage() {
         }
       />
 
-      <DashboardDelegationStats
-        loading={loading}
-        cards={
-          summary
-            ? [
-                {
-                  label: 'Bekleyen Randevu Devirleri',
-                  value: summary.pendingDelegationCount,
-                  to: ROUTES.ASSISTANT_INCOMING_DELEGATIONS,
-                  icon: 'hourglass_top',
-                },
-                {
-                  label: 'Kabul Ettiklerim',
-                  value: summary.acceptedDelegationCount,
-                  to: assistantDelegationHistoryPath('ACCEPTED'),
-                  icon: 'check_circle',
-                },
-                {
-                  label: 'Reddettiklerim',
-                  value: summary.rejectedDelegationCount,
-                  to: assistantDelegationHistoryPath('REJECTED'),
-                  icon: 'cancel',
-                },
-              ]
-            : []
-        }
-      />
-
       {error ? (
         <section className="mb-6 rounded-xl border border-error/30 bg-error-container/40 p-6">
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
@@ -138,9 +112,56 @@ export default function AssistantDashboardPage() {
         </section>
       ) : null}
 
-      <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-12">
+      {summary ? (
+        <section className="mb-5" aria-label="Randevu istatistikleri">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary" aria-hidden="true">event</span>
+            <h2 className="font-headline-md text-headline-md text-on-background">Randevu İstatistikleri</h2>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+            <DashboardKpiCard
+              icon="pending"
+              label="Bekleyen"
+              value={summary.pendingAppointmentCount}
+              onClick={() => navigate(`${ROUTES.ASSISTANT_APPOINTMENTS}?status=PENDING`)}
+            />
+            <DashboardKpiCard
+              icon="today"
+              label="Yaklaşan"
+              value={summary.upcomingAppointmentCount}
+              onClick={() => navigate(ROUTES.ASSISTANT_CALENDAR)}
+            />
+            <DashboardKpiCard
+              icon="menu_book"
+              label="Atanan Ders"
+              value={summary.assignedCourseCount}
+              onClick={() => navigate(ROUTES.ASSISTANT_COURSES)}
+            />
+            <DashboardKpiCard
+              icon="hourglass_top"
+              label="Bekleyen Devir"
+              value={summary.pendingDelegationCount}
+              onClick={() => navigate(ROUTES.ASSISTANT_INCOMING_DELEGATIONS)}
+            />
+            <DashboardKpiCard
+              icon="check_circle"
+              label="Kabul Edilen Devir"
+              value={summary.acceptedDelegationCount}
+              onClick={() => navigate(assistantDelegationHistoryPath('ACCEPTED'))}
+            />
+            <DashboardKpiCard
+              icon="cancel"
+              label="Reddedilen Devir"
+              value={summary.rejectedDelegationCount}
+              onClick={() => navigate(assistantDelegationHistoryPath('REJECTED'))}
+            />
+          </div>
+        </section>
+      ) : null}
+
+      <div className="mb-5 grid grid-cols-1 gap-5 lg:grid-cols-12">
         <DashboardDailySchedule
-          className="lg:col-span-8"
+          className="lg:col-span-6"
           selectedDate={dailySchedule.selectedDate}
           events={dailySchedule.events}
           loading={dailySchedule.loading}
@@ -153,7 +174,7 @@ export default function AssistantDashboardPage() {
         />
 
         <DashboardPendingRequests
-          className="lg:col-span-4"
+          className="lg:col-span-6"
           appointments={summary?.pendingAppointments ?? []}
           loading={loading}
           errorMessage={error}
@@ -161,7 +182,7 @@ export default function AssistantDashboardPage() {
         />
       </div>
 
-      <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="mb-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
         <DashboardEntityListCard
           title="Atandığım Dersler"
           items={courseItems}
