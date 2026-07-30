@@ -48,6 +48,7 @@ class WaitlistServiceTest {
     @Mock private AvailabilitySlotRepository availabilitySlotRepository;
     @Mock private NotificationService notificationService;
     @Mock private WaitlistNotificationPublisher waitlistNotificationPublisher;
+    @Mock private NoShowPenaltyService noShowPenaltyService;
 
     private WaitlistService service;
     private WaitlistOfferScheduler scheduler;
@@ -63,7 +64,8 @@ class WaitlistServiceTest {
             availabilitySlotRepository,
             notificationService,
             waitlistNotificationPublisher,
-            mapper
+            mapper,
+            noShowPenaltyService
         );
         scheduler = new WaitlistOfferScheduler(waitlistEntryRepository, service, null);
 

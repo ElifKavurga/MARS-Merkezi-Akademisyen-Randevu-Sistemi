@@ -7,6 +7,8 @@ export type DailyScheduleAppointment = {
   event: CalendarEvent;
   rowStart: number;
   rowSpan: number;
+  overlapIndex: number;
+  overlapCount: number;
 };
 
 export type DailyScheduleAvailabilityRegion = {
@@ -87,6 +89,62 @@ function mergeRanges(ranges: Array<{ start: number; end: number }>): Array<{ sta
   return merged;
 }
 
+type PositionedDailyScheduleAppointment = DailyScheduleAppointment & {
+  start: number;
+  end: number;
+};
+
+function assignAppointmentColumns(
+  appointments: PositionedDailyScheduleAppointment[],
+): DailyScheduleAppointment[] {
+  if (appointments.length === 0) {
+    return [];
+  }
+
+  const sorted = [...appointments].sort(
+    (left, right) => left.start - right.start || left.end - right.end,
+  );
+  const groups: PositionedDailyScheduleAppointment[][] = [];
+  let currentGroup: PositionedDailyScheduleAppointment[] = [];
+  let currentGroupEnd = -1;
+
+  sorted.forEach((appointment) => {
+    if (currentGroup.length === 0 || appointment.start < currentGroupEnd) {
+      currentGroup.push(appointment);
+      currentGroupEnd = Math.max(currentGroupEnd, appointment.end);
+      return;
+    }
+
+    groups.push(currentGroup);
+    currentGroup = [appointment];
+    currentGroupEnd = appointment.end;
+  });
+
+  if (currentGroup.length > 0) {
+    groups.push(currentGroup);
+  }
+
+  return groups
+    .flatMap((group) => {
+      const columnEnds: number[] = [];
+      const placed = group.map((appointment) => {
+        const availableColumn = columnEnds.findIndex((end) => end <= appointment.start);
+        const columnIndex = availableColumn === -1 ? columnEnds.length : availableColumn;
+        columnEnds[columnIndex] = appointment.end;
+        return {
+          ...appointment,
+          overlapIndex: columnIndex,
+        };
+      });
+      const overlapCount = Math.max(1, columnEnds.length);
+      return placed.map(({ start, end, ...appointment }) => ({
+        ...appointment,
+        overlapCount,
+      }));
+    })
+    .sort((left, right) => left.rowStart - right.rowStart || left.overlapIndex - right.overlapIndex);
+}
+
 export function buildDailyScheduleLayout(events: CalendarEvent[]): DailyScheduleLayout | null {
   const availabilityEvents = events.filter(
     (event) =>
@@ -156,8 +214,8 @@ export function buildDailyScheduleLayout(events: CalendarEvent[]): DailySchedule
     };
   });
 
-  const appointments = appointmentEvents
-    .map((event): DailyScheduleAppointment | null => {
+  const appointments = assignAppointmentColumns(appointmentEvents
+    .map((event): PositionedDailyScheduleAppointment | null => {
       const range = getEventRange(event);
       if (!range) {
         return null;
@@ -170,9 +228,17 @@ export function buildDailyScheduleLayout(events: CalendarEvent[]): DailySchedule
         1,
         Math.ceil((clippedEnd - clippedStart) / DAILY_SCHEDULE_SLOT_MINUTES),
       );
-      return { event, rowStart, rowSpan };
+      return {
+        event,
+        rowStart,
+        rowSpan,
+        start: clippedStart,
+        end: clippedEnd,
+        overlapIndex: 0,
+        overlapCount: 1,
+      };
     })
-    .filter((appointment): appointment is DailyScheduleAppointment => appointment !== null);
+    .filter((appointment): appointment is PositionedDailyScheduleAppointment => appointment !== null));
 
   return {
     startMinutes,

@@ -11,8 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mars.dto.NotificationCreateRequest;
 import com.mars.entity.Appointment;
 import com.mars.enums.AppointmentStatus;
+import com.mars.enums.NotificationType;
 import com.mars.repository.AppointmentRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 public class AppointmentStatusUpdateService {
 
     private final AppointmentRepository appointmentRepository;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public List<Integer> findCandidates(LocalDateTime cutoffDateTime, Collection<String> statuses, int batchSize) {
@@ -49,7 +52,14 @@ public class AppointmentStatusUpdateService {
 
         appointment.setAppointmentStatus(AppointmentStatus.COMPLETED.name());
         appointment.setUpdatedAt(now);
-        appointmentRepository.save(appointment);
+        Appointment saved = appointmentRepository.save(appointment);
+        notificationService.createNotification(NotificationCreateRequest.builder()
+                .userId(saved.getStudent().getUserId())
+                .notificationType(NotificationType.APPOINTMENT_COMPLETED)
+                .title("Randevu Tamamlandı")
+                .message("Randevunuz tamamlandı olarak işaretlendi.")
+                .relatedAppointmentId(saved.getAppointmentId())
+                .build());
         return true;
     }
 }

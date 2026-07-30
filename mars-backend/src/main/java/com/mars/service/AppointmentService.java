@@ -74,6 +74,9 @@ public class AppointmentService {
             AppointmentStatus.PENDING.name(),
             AppointmentStatus.APPROVED.name());
 
+    private static final Set<String> APPROVED_APPOINTMENT_STATUSES = Set.of(
+            AppointmentStatus.APPROVED.name());
+
     private static final Set<String> PAST_APPOINTMENT_STATUSES = Set.of(
             AppointmentStatus.COMPLETED.name(),
             AppointmentStatus.CANCELLED.name(),
@@ -343,6 +346,12 @@ public class AppointmentService {
         appointment.setUpdatedAt(LocalDateTime.now(APP_ZONE));
 
         Appointment saved = appointmentRepository.save(appointment);
+        createAppointmentNotification(
+                saved,
+                appointment.getStudent(),
+                NotificationType.APPOINTMENT_COMPLETED,
+                "Randevu Tamamlandı",
+                "Randevunuz tamamlandı olarak işaretlendi.");
         return appointmentMapper.toStaffResponse(saved);
     }
 
@@ -529,6 +538,15 @@ public class AppointmentService {
                     targetSlot.getSlotId(), appointment.getAppointmentId(), ACTIVE_APPOINTMENT_STATUSES)) {
                 throw new ConflictException(AppointmentMessages.SLOT_TAKEN);
             }
+            if (appointmentRepository.existsOverlappingActiveAppointmentForStaffExcludingAppointment(
+                    appointment.getStaff().getUserId(),
+                    targetSlot.getSlotDate(),
+                    targetSlot.getStartTime(),
+                    targetSlot.getEndTime(),
+                    appointment.getAppointmentId(),
+                    ACTIVE_APPOINTMENT_STATUSES)) {
+                throw new ConflictException(AppointmentMessages.SLOT_TAKEN);
+            }
             appointment.setSlot(targetSlot);
             appointment.setMeetingType(request.getProposedMeetingType());
             appointment.setUpdatedAt(now);
@@ -626,6 +644,9 @@ public class AppointmentService {
                         new ResourceNotFoundException(AppointmentMessages.APPOINTMENT_NOT_FOUND));
 
         validatePendingStatus(appointment.getAppointmentStatus());
+        if (targetStatus == AppointmentStatus.APPROVED) {
+            ensureNoApprovedStaffConflict(appointment);
+        }
         appointment.setAppointmentStatus(targetStatus.name());
         appointment.setUpdatedAt(LocalDateTime.now(APP_ZONE));
 
@@ -714,6 +735,21 @@ public class AppointmentService {
             throw new ConflictException(AppointmentMessages.ALREADY_REJECTED);
         }
         throw new ConflictException(AppointmentMessages.NOT_PENDING);
+    }
+
+    private void ensureNoApprovedStaffConflict(Appointment appointment) {
+        AvailabilitySlot slot = appointment.getSlot();
+        if (appointmentRepository.existsActiveAppointmentForSlotExcludingAppointment(
+                slot.getSlotId(), appointment.getAppointmentId(), APPROVED_APPOINTMENT_STATUSES)
+                || appointmentRepository.existsOverlappingActiveAppointmentForStaffExcludingAppointment(
+                        appointment.getStaff().getUserId(),
+                        slot.getSlotDate(),
+                        slot.getStartTime(),
+                        slot.getEndTime(),
+                        appointment.getAppointmentId(),
+                        APPROVED_APPOINTMENT_STATUSES)) {
+            throw new ConflictException(AppointmentMessages.SLOT_TAKEN);
+        }
     }
 
     private void validateReschedulableStatus(String currentStatus) {

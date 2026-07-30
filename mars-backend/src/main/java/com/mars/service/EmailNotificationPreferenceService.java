@@ -60,7 +60,7 @@ public class EmailNotificationPreferenceService {
     private EmailNotificationCategory category(NotificationType type) {
         return switch (type) {
             case NEW_APPOINTMENT_REQUEST -> EmailNotificationCategory.APPOINTMENT_REQUEST;
-            case APPOINTMENT_APPROVED -> EmailNotificationCategory.APPOINTMENT_APPROVAL;
+            case APPOINTMENT_APPROVED, APPOINTMENT_COMPLETED -> EmailNotificationCategory.APPOINTMENT_APPROVAL;
             case APPOINTMENT_REJECTED -> EmailNotificationCategory.APPOINTMENT_REJECTION;
             case APPOINTMENT_CANCELLED -> EmailNotificationCategory.APPOINTMENT_CANCELLATION;
             case APPOINTMENT_RESCHEDULED, APPOINTMENT_RESCHEDULE_REQUESTED,

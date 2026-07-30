@@ -53,7 +53,7 @@ function appointmentClass(status: string | null): string {
 function AvailabilityRegion({ region }: { region: DailyScheduleAvailabilityRegion }) {
   return (
     <div
-      className="pointer-events-none z-[1] m-0.5 overflow-hidden rounded-md bg-primary-fixed/30 px-2 py-1"
+      className="pointer-events-none z-[1] m-0.5 overflow-hidden rounded-md bg-primary-fixed/20 px-2 py-1"
       style={{
         gridColumn: 2,
         gridRow: `${region.rowStart} / span ${region.rowSpan}`,
@@ -77,31 +77,38 @@ function AppointmentBlock({
   const { event, rowStart, rowSpan } = appointment;
   const studentName = event.studentName?.trim() || 'Öğrenci';
   const timeLabel = `${formatTimeLabel(event.startTime)} - ${formatTimeLabel(event.endTime)}`;
+  const isCompact = rowSpan <= 2;
+  const hasOverlap = appointment.overlapCount > 1;
+  const overlapWidth = `${100 / appointment.overlapCount}%`;
+  const overlapOffset = `${(appointment.overlapIndex * 100) / appointment.overlapCount}%`;
 
   return (
     <button
       type="button"
-      className={`z-10 m-0.5 min-w-0 overflow-hidden rounded-lg border px-2 py-1.5 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim focus-visible:ring-inset ${appointmentClass(event.appointmentStatus)}`}
+      className={`z-10 m-0.5 min-h-0 min-w-0 overflow-hidden rounded-lg border text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim focus-visible:ring-inset ${isCompact ? 'px-2 py-0.5' : 'px-2.5 py-1.5'} ${appointmentClass(event.appointmentStatus)}`}
       style={{
         gridColumn: 2,
         gridRow: `${rowStart} / span ${rowSpan}`,
+        marginLeft: hasOverlap ? `calc(${overlapOffset} + 2px)` : undefined,
+        marginRight: hasOverlap ? '2px' : undefined,
+        width: hasOverlap ? `calc(${overlapWidth} - 4px)` : undefined,
       }}
       onClick={() => onClick(event)}
       aria-label={`${studentName} randevusu, ${timeLabel}`}
     >
-      <div className="flex h-full min-h-0 flex-col justify-start gap-0.5 overflow-hidden text-left">
+      <div className={`flex h-full min-h-0 overflow-hidden text-left ${isCompact ? 'items-center gap-1' : 'flex-col justify-start gap-0.5'}`}>
         <p
-          className="m-0 w-full truncate font-label-md text-[12px] font-semibold leading-4"
+          className={`m-0 min-w-0 truncate font-label-md text-[12px] font-semibold ${isCompact ? 'flex-1 leading-5' : 'w-full leading-4'}`}
           title={studentName}
         >
           {studentName}
         </p>
         {rowSpan >= 2 ? (
-          <p className="m-0 w-full truncate font-label-sm text-[12px] leading-4 opacity-80" title={timeLabel}>
+          <p className={`m-0 truncate font-label-sm text-[12px] opacity-80 ${isCompact ? 'shrink-0 leading-5' : 'w-full leading-4'}`} title={timeLabel}>
             {timeLabel}
           </p>
         ) : null}
-        {rowSpan >= 3 && event.categoryName ? (
+        {rowSpan >= 4 && event.categoryName ? (
           <p
             className="m-0 w-full truncate font-label-sm text-[12px] leading-4 opacity-80"
             title={event.categoryName}

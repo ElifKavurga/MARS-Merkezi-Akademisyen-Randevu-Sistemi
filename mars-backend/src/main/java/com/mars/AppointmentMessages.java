@@ -27,7 +27,7 @@ public final class AppointmentMessages {
             "Seçilen ofis saati randevu alınabilir bir akademisyene ait olmalıdır.";
     public static final String SLOT_TAKEN = "Bu ofis saati başka bir Öğrenci tarafından alınmıştır.";
     public static final String STUDENT_RESTRICTED =
-            "Aktif cezanız bulunduğu için yeni randevu talebi oluşturamazsınız.";
+            "Cezanız nedeniyle şu an yeni randevu oluşturamazsınız.";
     public static final String TIME_OVERLAP =
             "Aynı saat aralığında başka bir randevu talebiniz bulunmaktadır.";
     public static final String COURSE_INACTIVE = "Seçilen ders aktif değil.";

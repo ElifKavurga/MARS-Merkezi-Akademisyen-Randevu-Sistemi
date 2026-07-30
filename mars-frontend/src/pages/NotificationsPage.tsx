@@ -5,7 +5,7 @@ import NotificationCard from '../components/NotificationCard';
 import StudentSegmentedTabs from '../components/StudentSegmentedTabs';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
-import { getMyNotifications } from '../services/notificationService';
+import { getMyNotificationsPage } from '../services/notificationService';
 import type { NotificationItem, NotificationType } from '../types/notification';
 import { getNotificationTarget } from '../utils/notificationNavigation';
 
@@ -37,6 +37,7 @@ const appointmentTypes = new Set<NotificationType>([
   'APPOINTMENT_RESCHEDULE_REQUESTED',
   'APPOINTMENT_RESCHEDULE_REJECTED',
   'APPOINTMENT_RESCHEDULE_EXPIRED',
+  'APPOINTMENT_COMPLETED',
   'NO_SHOW_RECORDED',
 ]);
 
@@ -90,7 +91,20 @@ export default function NotificationsPage() {
     setLoading(true);
     setError(false);
     try {
-      setNotifications(sortNotifications(await getMyNotifications()));
+      const firstPage = await getMyNotificationsPage(0, PAGE_SIZE);
+      const remainingPageNumbers = Array.from(
+        { length: Math.max(0, firstPage.totalPages - 1) },
+        (_, index) => index + 1,
+      );
+      const remainingPages = await Promise.all(
+        remainingPageNumbers.map((pageNumber) =>
+          getMyNotificationsPage(pageNumber, PAGE_SIZE),
+        ),
+      );
+      setNotifications(sortNotifications([
+        ...firstPage.content,
+        ...remainingPages.flatMap((item) => item.content),
+      ]));
     } catch {
       setError(true);
     } finally {

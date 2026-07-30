@@ -1,5 +1,7 @@
-import { useState, type MouseEvent } from 'react';
+import { useState } from 'react';
 import { acceptWaitlistOffer, rejectWaitlistOffer } from '../services/waitlistService';
+import WarningModal from './WarningModal';
+import type { AppointmentRestrictionDetails } from '../types/appointment';
 import type { NotificationItem } from '../types/notification';
 import { formatNotificationTime, getNotificationVisual } from '../utils/notification';
 
@@ -21,6 +23,8 @@ export default function NotificationCard({
   const visual = getNotificationVisual(notification.notificationType);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionResult, setActionResult] = useState<'accepted' | 'rejected' | null>(null);
+  const [restrictionDetails, setRestrictionDetails] =
+    useState<AppointmentRestrictionDetails | null>(null);
 
   const getWaitlistEntryId = () => {
     if (!notification.eventKey) return null;
@@ -34,8 +38,12 @@ export default function NotificationCard({
 
   const waitlistEntryId = getWaitlistEntryId();
 
-  const handleAccept = async (event: MouseEvent) => {
-    event.stopPropagation();
+  const resolveRestrictionDetails = (err: any): AppointmentRestrictionDetails | null => {
+    const details = err?.response?.data?.data;
+    return details?.penaltyActive === true ? details : null;
+  };
+
+  const handleAccept = async () => {
     if (!waitlistEntryId || actionLoading) return;
     setActionLoading(true);
     try {
@@ -44,14 +52,18 @@ export default function NotificationCard({
       onRead?.(notification);
       onActionComplete?.();
     } catch (err: any) {
-      alert(err?.response?.data?.message || 'Teklif kabul edilirken bir hata oluştu.');
+      const restriction = resolveRestrictionDetails(err);
+      if (restriction) {
+        setRestrictionDetails(restriction);
+      } else {
+        alert(err?.response?.data?.message || 'Teklif kabul edilirken bir hata oluştu.');
+      }
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleReject = async (event: MouseEvent) => {
-    event.stopPropagation();
+  const handleReject = async () => {
     if (!waitlistEntryId || actionLoading) return;
     setActionLoading(true);
     try {
@@ -66,33 +78,40 @@ export default function NotificationCard({
     }
   };
 
+  const handleOpen = () => {
+    onRead?.(notification);
+    onOpen?.(notification);
+  };
+
   return (
-    <button
-      type="button"
-      className={`group flex w-full items-start gap-3 border-0 text-left transition-colors hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-fixed-dim ${compact ? 'px-4 py-3' : 'p-4 sm:gap-4 sm:p-5'} ${notification.isRead ? 'bg-surface-container-lowest' : 'bg-primary-fixed/35'}`}
-      onClick={() => {
-        onRead?.(notification);
-        onOpen?.(notification);
-      }}
-      aria-label={`${notification.title}, ${notification.isRead ? 'okundu' : 'okunmadı'}`}
-    >
-      <span className={`flex shrink-0 items-center justify-center rounded-full transition-transform group-hover:scale-105 ${visual.containerClass} ${compact ? 'h-9 w-9' : 'h-11 w-11 sm:h-12 sm:w-12'}`}>
-        <span className={`material-symbols-outlined ${visual.iconClass} ${compact ? 'text-[20px]' : 'text-[24px]'}`} aria-hidden="true">
-          {visual.icon}
-        </span>
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="flex items-start gap-2">
-          <span className={`min-w-0 flex-1 font-label-md text-label-md text-on-surface ${notification.isRead ? 'font-medium' : 'font-bold'}`}>
-            {notification.title}
+    <>
+      <article
+        className={`group flex w-full items-start gap-3 border-0 text-left transition-colors hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-fixed-dim ${compact ? 'px-4 py-3' : 'p-4 sm:gap-4 sm:p-5'} ${notification.isRead ? 'bg-surface-container-lowest' : 'bg-primary-fixed/35'}`}
+      >
+        <span className={`flex shrink-0 items-center justify-center rounded-full transition-transform group-hover:scale-105 ${visual.containerClass} ${compact ? 'h-9 w-9' : 'h-11 w-11 sm:h-12 sm:w-12'}`}>
+          <span className={`material-symbols-outlined ${visual.iconClass} ${compact ? 'text-[20px]' : 'text-[24px]'}`} aria-hidden="true">
+            {visual.icon}
           </span>
-          {!notification.isRead ? (
-            <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary-container" title="Okunmadı" />
-          ) : null}
         </span>
-        <span className={`mt-1 block break-words text-on-surface-variant ${compact ? 'line-clamp-2 font-label-sm text-label-sm' : 'font-body-md text-sm sm:text-base'}`}>
-          {notification.message}
-        </span>
+        <span className="min-w-0 flex-1">
+          <button
+            type="button"
+            className="block w-full border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-fixed-dim"
+            onClick={handleOpen}
+            aria-label={`${notification.title}, ${notification.isRead ? 'okundu' : 'okunmadı'}`}
+          >
+            <span className="flex items-start gap-2">
+              <span className={`min-w-0 flex-1 font-label-md text-label-md text-on-surface ${notification.isRead ? 'font-medium' : 'font-bold'}`}>
+                {notification.title}
+              </span>
+              {!notification.isRead ? (
+                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary-container" title="Okunmadı" />
+              ) : null}
+            </span>
+            <span className={`mt-1 block break-words text-on-surface-variant ${compact ? 'line-clamp-2 font-label-sm text-label-sm' : 'font-body-md text-sm sm:text-base'}`}>
+              {notification.message}
+            </span>
+          </button>
 
         {notification.notificationType === 'WAITLIST_TURN_AVAILABLE' && waitlistEntryId && !notification.isRead && !actionResult ? (
           <div className="mt-3 flex gap-2">
@@ -129,7 +148,24 @@ export default function NotificationCard({
         <span className="mt-1.5 block font-label-sm text-label-sm text-outline">
           {formatNotificationTime(notification.createdAt)}
         </span>
-      </span>
-    </button>
+        </span>
+      </article>
+      <WarningModal
+        open={restrictionDetails !== null}
+        title="Randevu Oluşturulamıyor"
+        description="Cezanız nedeniyle şu an yeni randevu oluşturamazsınız."
+        onClose={() => setRestrictionDetails(null)}
+      >
+        {restrictionDetails ? (
+          <div className="space-y-3">
+            {typeof restrictionDetails.remainingDays === 'number' ? (
+              <p className="rounded-lg border border-outline-variant bg-surface-container-low px-4 py-3 font-body-md text-body-md text-on-surface">
+                Kalan ceza süresi: {restrictionDetails.remainingDays} gün
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </WarningModal>
+    </>
   );
 }

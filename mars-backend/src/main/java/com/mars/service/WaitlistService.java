@@ -15,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mars.AppointmentMessages;
 import com.mars.dto.NotificationCreateRequest;
+import com.mars.dto.StudentAppointmentRestrictionResponse;
 import com.mars.dto.WaitlistEntryResponseDto;
 import com.mars.dto.notification.WaitlistNotificationRequest;
 import com.mars.entity.Appointment;
@@ -29,6 +31,7 @@ import com.mars.enums.WaitlistNotificationEvent;
 import com.mars.enums.WaitlistStatus;
 import com.mars.exception.ConflictException;
 import com.mars.exception.ResourceNotFoundException;
+import com.mars.exception.StudentAppointmentRestrictedException;
 import com.mars.mapper.WaitlistEntryMapper;
 import com.mars.repository.AppointmentRepository;
 import com.mars.repository.AvailabilitySlotRepository;
@@ -44,7 +47,10 @@ import lombok.extern.slf4j.Slf4j;
 public class WaitlistService {
 
     private static final ZoneId APP_ZONE = ZoneId.of("Europe/Istanbul");
-    private static final List<String> ACTIVE_APPOINTMENT_STATUSES = List.of("PENDING", "APPROVED", "RESCHEDULED_APPROVED");
+    private static final List<String> ACTIVE_APPOINTMENT_STATUSES = List.of(
+            AppointmentStatus.PENDING.name(),
+            AppointmentStatus.APPROVED.name(),
+            "RESCHEDULED_APPROVED");
 
     private final WaitlistEntryRepository waitlistEntryRepository;
     private final AppointmentRepository appointmentRepository;
@@ -52,6 +58,7 @@ public class WaitlistService {
     private final NotificationService notificationService;
     private final WaitlistNotificationPublisher waitlistNotificationPublisher;
     private final WaitlistEntryMapper waitlistEntryMapper;
+    private final NoShowPenaltyService noShowPenaltyService;
 
     @Value("${mars.waitlist.offer-duration-minutes:60}")
     private long offerDurationMinutes;
@@ -119,17 +126,22 @@ public class WaitlistService {
     public WaitlistEntryResponseDto acceptOffer(Integer waitlistEntryId) {
         User student = getCurrentStudent();
         WaitlistEntry entry = waitlistEntryRepository.findById(waitlistEntryId)
-            .orElseThrow(() -> new ResourceNotFoundException("Waitlist entry not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Bekleme listesi kaydı bulunamadı."));
 
         if (!entry.getStudent().getUserId().equals(student.getUserId())) {
-            throw new AccessDeniedException("You cannot accept this offer");
+            throw new AccessDeniedException("Bu bekleme listesi teklifini kabul etme yetkiniz yok.");
         }
 
         if (!WaitlistStatus.NOTIFIED.name().equals(entry.getWaitlistStatus())) {
-            throw new ConflictException("No active offer for this waitlist entry");
+            throw new ConflictException("Bu bekleme listesi kaydı için aktif teklif bulunmuyor.");
         }
 
         LocalDateTime now = LocalDateTime.now(APP_ZONE);
+        noShowPenaltyService.resolveActiveRestriction(student, now.toLocalDate())
+            .map(this::waitlistRestriction)
+            .ifPresent(exception -> {
+                throw exception;
+            });
         if (entry.getOfferedAt().plusMinutes(offerDurationMinutes).isBefore(now)) {
             // Expire it
             entry.setWaitlistStatus(WaitlistStatus.EXPIRED.name());
@@ -138,8 +150,11 @@ public class WaitlistService {
             // Trigger next offer on this slot
             processWaitlistForSlot(entry.getSlot(), now);
             
-            throw new ConflictException("Waitlist offer has expired");
+            throw new ConflictException("Bekleme listesi teklifinin süresi doldu.");
         }
+
+        AvailabilitySlot slot = entry.getSlot();
+        ensureWaitlistOfferStillBookable(entry, student, slot);
 
         // Accept it:
         // 1. Mark waitlist entry as CONVERTED
@@ -152,9 +167,9 @@ public class WaitlistService {
         appointment.setStaff(entry.getStaff());
         appointment.setCategory(entry.getCategory());
         appointment.setCourse(entry.getCourse());
-        appointment.setSlot(entry.getSlot());
+        appointment.setSlot(slot);
         appointment.setAppointmentStatus(AppointmentStatus.APPROVED.name()); // Automatically APPROVED
-        appointment.setMeetingType(entry.getSlot().getMeetingType());
+        appointment.setMeetingType(slot.getMeetingType());
         appointment.setIsLimitedDuration(false);
         appointment.setCreatedAt(now);
         appointment.setUpdatedAt(now);
@@ -181,18 +196,45 @@ public class WaitlistService {
         return waitlistEntryMapper.toResponseDto(entry, offerDurationMinutes);
     }
 
+    private void ensureWaitlistOfferStillBookable(
+            WaitlistEntry entry,
+            User student,
+            AvailabilitySlot slot) {
+        if (slot == null) {
+            throw new ResourceNotFoundException(AppointmentMessages.SLOT_NOT_FOUND);
+        }
+        if (appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(
+                slot.getSlotId(), ACTIVE_APPOINTMENT_STATUSES)
+                || appointmentRepository.existsOverlappingActiveAppointmentForStaff(
+                        entry.getStaff().getUserId(),
+                        slot.getSlotDate(),
+                        slot.getStartTime(),
+                        slot.getEndTime(),
+                        ACTIVE_APPOINTMENT_STATUSES)) {
+            throw new ConflictException(AppointmentMessages.SLOT_TAKEN);
+        }
+        if (appointmentRepository.existsOverlappingActiveAppointmentForStudent(
+                student.getUserId(),
+                slot.getSlotDate(),
+                slot.getStartTime(),
+                slot.getEndTime(),
+                ACTIVE_APPOINTMENT_STATUSES)) {
+            throw new ConflictException(AppointmentMessages.TIME_OVERLAP);
+        }
+    }
+
     @Transactional
     public WaitlistEntryResponseDto rejectOffer(Integer waitlistEntryId) {
         User student = getCurrentStudent();
         WaitlistEntry entry = waitlistEntryRepository.findById(waitlistEntryId)
-            .orElseThrow(() -> new ResourceNotFoundException("Waitlist entry not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Bekleme listesi kaydı bulunamadı."));
 
         if (!entry.getStudent().getUserId().equals(student.getUserId())) {
-            throw new AccessDeniedException("You cannot reject this offer");
+            throw new AccessDeniedException("Bu bekleme listesi teklifini reddetme yetkiniz yok.");
         }
 
         if (!WaitlistStatus.NOTIFIED.name().equals(entry.getWaitlistStatus())) {
-            throw new ConflictException("No active offer for this waitlist entry");
+            throw new ConflictException("Bu bekleme listesi kaydı için aktif teklif bulunmuyor.");
         }
 
         LocalDateTime now = LocalDateTime.now(APP_ZONE);
@@ -284,5 +326,10 @@ public class WaitlistService {
             throw new AccessDeniedException("Only students can perform this action");
         }
         return user;
+    }
+
+    private StudentAppointmentRestrictedException waitlistRestriction(
+            StudentAppointmentRestrictionResponse restriction) {
+        return new StudentAppointmentRestrictedException(restriction);
     }
 }

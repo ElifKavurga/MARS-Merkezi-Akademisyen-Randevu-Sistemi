@@ -24,6 +24,7 @@ import org.springframework.data.domain.PageRequest;
 
 import com.mars.entity.Appointment;
 import com.mars.entity.AvailabilitySlot;
+import com.mars.entity.User;
 import com.mars.enums.AppointmentStatus;
 import com.mars.repository.AppointmentRepository;
 
@@ -33,13 +34,16 @@ class AppointmentStatusUpdateServiceTest {
     @Mock
     private AppointmentRepository appointmentRepository;
 
+    @Mock
+    private NotificationService notificationService;
+
     private AppointmentStatusUpdateService service;
     private AppointmentStatusUpdateScheduler scheduler;
     private LocalDateTime now;
 
     @BeforeEach
     void setUp() {
-        service = new AppointmentStatusUpdateService(appointmentRepository);
+        service = new AppointmentStatusUpdateService(appointmentRepository, notificationService);
         scheduler = new AppointmentStatusUpdateScheduler(service, null, 15);
 
         now = LocalDateTime.of(2026, 7, 23, 13, 0);
@@ -51,6 +55,7 @@ class AppointmentStatusUpdateServiceTest {
         when(appointmentRepository.findStatusUpdateCandidateIds(any(), any(), any(), eq(PageRequest.of(0, 100))))
                 .thenReturn(List.of(1));
         when(appointmentRepository.findByIdForUpdate(1)).thenReturn(Optional.of(appointment));
+        when(appointmentRepository.save(any(Appointment.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         scheduler.runStatusUpdate();
 
@@ -111,8 +116,16 @@ class AppointmentStatusUpdateServiceTest {
         appointment.setAppointmentId(id);
         appointment.setAppointmentStatus(status);
         appointment.setSlot(slot);
+        appointment.setStudent(createStudent());
         appointment.setCreatedAt(now.minusHours(5));
         appointment.setUpdatedAt(now.minusHours(5));
         return appointment;
+    }
+
+    private User createStudent() {
+        User student = new User();
+        student.setUserId(10);
+        student.setFullName("Student User");
+        return student;
     }
 }
