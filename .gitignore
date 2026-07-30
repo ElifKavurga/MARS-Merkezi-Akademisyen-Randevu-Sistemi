@@ -14,6 +14,11 @@ build/
 # IDE
 .idea/
 .vscode/
+.cursor/
+.agents/
+.codex/
+.claude/
+.history/
 *.iml
 *.ipr
 *.iws
@@ -40,6 +45,7 @@ credentials.*
 logs/
 mars-backend/run-out.txt
 mars-backend/run-err.txt
+mars-backend/src/main/resources/application-local.yml
 
 # Maven
 mars-backend/.mvn/wrapper/maven-wrapper.jar.bak
@@ -50,6 +56,12 @@ coverage/
 .nyc_output/
 
 # Misc
+tmp/
+temp/
+cache/
+out/
+.github/copilot*
+.github/modernize/
 *.swp
 *.swo
 *~
