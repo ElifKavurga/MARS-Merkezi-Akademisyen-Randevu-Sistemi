@@ -15,10 +15,10 @@ export default function DashboardKpiCard({
     <button
       type="button"
       onClick={onClick}
-      className="flex h-20 min-w-0 items-center gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:bg-surface-container/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-container/40 active:scale-[0.98]"
+      className="flex h-24 min-w-0 items-center gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:bg-surface-container/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-container/40 active:scale-[0.98]"
       aria-label={`${label}: ${value}`}
     >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-container text-primary-container">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-container text-primary-container">
         <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
           {icon}
         </span>

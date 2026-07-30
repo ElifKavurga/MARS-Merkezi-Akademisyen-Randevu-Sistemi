@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import DashboardEmptyState from '../components/DashboardEmptyState';
+import DashboardKpiCard from '../components/DashboardKpiCard';
 import DashboardSectionHeader from '../components/DashboardSectionHeader';
+import DashboardWelcomeBanner from '../components/DashboardWelcomeBanner';
 import Loading from '../components/Loading';
 import { getRoleLabel, ROUTES, ROLES } from '../constants';
 import { useAuth } from '../hooks/useAuth';
@@ -41,6 +43,7 @@ function countByRole(users: UserListItem[], role: string): number {
 export default function AdminHomePage() {
   const { user } = useAuth();
   const toast = useToast();
+  const navigate = useNavigate();
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [categoryCount, setCategoryCount] = useState(0);
   const [departmentCount, setDepartmentCount] = useState(0);
@@ -133,7 +136,7 @@ export default function AdminHomePage() {
       .map((item) => ({
         id: `user-${item.userId}`,
         title: `Yeni kullanıcı: ${item.fullName}`,
-        subtitle: `${getRoleLabel(item.role)} · ${item.department}`,
+        subtitle: `${getRoleLabel(item.role)} - ${item.department}`,
         when: formatDateTime(item.createdAt),
       }));
   }, [users]);
@@ -153,7 +156,7 @@ export default function AdminHomePage() {
         items.push({
           id: `inactive-${item.userId}`,
           title: item.fullName,
-          subtitle: `${getRoleLabel(item.role)} · Pasif`,
+          subtitle: `${getRoleLabel(item.role)} - Pasif`,
           to: ROUTES.ADMIN_USERS,
         });
       });
@@ -171,34 +174,18 @@ export default function AdminHomePage() {
     return items.slice(0, 5);
   }, [users, categoryCount]);
 
-  const todayLabel = new Intl.DateTimeFormat('tr-TR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).format(new Date());
-
   if (!user) {
     return null;
   }
 
   return (
     <div className="w-full min-w-0 animate-fade-in">
-      <section className="relative mb-8 overflow-hidden rounded-xl bg-primary-container p-6 text-on-primary md:p-8">
-        <div className="relative z-[1]">
-          <p className="font-label-sm text-label-sm uppercase tracking-wider text-on-primary/60">
-            {todayLabel}
-          </p>
-          <h1 className="mt-2 font-headline-lg text-headline-lg">
-            Hoş Geldiniz{user.fullName ? `, ${user.fullName}` : ''}
-          </h1>
-          
-          <p className="mt-1 max-w-2xl font-body-md text-body-md text-on-primary/70">
-            Sistem kullanıcılarını, kategorileri ve ceza kurallarını buradan yönetebilirsiniz.
-          </p>
-        </div>
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-white/10 to-transparent" />
-      </section>
+      <DashboardWelcomeBanner
+        fullName={user.fullName}
+        description="Sistem kullanıcılarını, kategorileri ve ceza kurallarını buradan yönetebilirsiniz."
+        stats={[]}
+        showStats={false}
+      />
 
       {error ? (
         <section className="mb-6 rounded-xl border border-error/30 bg-error-container/40 p-6">
@@ -206,7 +193,7 @@ export default function AdminHomePage() {
             <p className="font-body-md text-body-md text-on-error-container">{error}</p>
             <button
               type="button"
-              className="bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-primary/90 transition-colors"
+              className="rounded-lg bg-primary px-4 py-2 font-label-md text-label-md text-on-primary transition-colors hover:bg-primary/90"
               onClick={() => void loadData()}
             >
               Tekrar Dene
@@ -224,41 +211,30 @@ export default function AdminHomePage() {
             <Loading label="Özet yükleniyor..." />
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {summaryCards.map((card) => (
-              <Link
+              <DashboardKpiCard
                 key={card.label}
-                to={card.to}
-                className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 no-underline transition-colors hover:bg-surface-container hover:no-underline focus:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim"
-              >
-                <span
-                  className="material-symbols-outlined text-[22px] text-primary"
-                  aria-hidden="true"
-                >
-                  {card.icon}
-                </span>
-                <p className="mt-3 font-label-sm text-label-sm text-on-surface-variant">
-                  {card.label}
-                </p>
-                <p className="mt-1 font-headline-md text-headline-md font-bold text-on-background">
-                  {card.value}
-                </p>
-              </Link>
+                icon={card.icon}
+                label={card.label}
+                value={card.value}
+                onClick={() => navigate(card.to)}
+              />
             ))}
           </div>
         )}
       </section>
 
-      <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-12">
+      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-12">
         <section className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest lg:col-span-7">
           <DashboardSectionHeader
             title="Son Sistem Hareketleri"
             actionLabel="Kullanıcıları Gör"
             actionPath={ROUTES.ADMIN_USERS}
           />
-          <div className="px-4 pb-4 sm:px-6 sm:pb-6">
+          <div className="px-4 pb-4">
             {loading ? (
-              <div className="flex min-h-40 items-center justify-center">
+              <div className="flex min-h-32 items-center justify-center">
                 <Loading label="Hareketler yükleniyor..." />
               </div>
             ) : recentActivities.length === 0 ? (
@@ -267,9 +243,9 @@ export default function AdminHomePage() {
                 message="Görüntülenecek sistem hareketi bulunmuyor."
               />
             ) : (
-              <ul className="divide-y divide-outline-variant rounded-lg border border-outline-variant bg-surface">
+              <ul className="divide-y divide-outline-variant">
                 {recentActivities.map((item) => (
-                  <li key={item.id} className="px-4 py-3">
+                  <li key={item.id} className="py-2.5">
                     <p className="truncate font-body-md text-body-md font-semibold text-primary">
                       {item.title}
                     </p>
@@ -290,9 +266,9 @@ export default function AdminHomePage() {
             actionLabel="Yönetime Git"
             actionPath={ROUTES.ADMIN_USERS}
           />
-          <div className="px-4 pb-4 sm:px-6 sm:pb-6">
+          <div className="px-4 pb-4">
             {loading ? (
-              <div className="flex min-h-40 items-center justify-center">
+              <div className="flex min-h-32 items-center justify-center">
                 <Loading label="İşlemler yükleniyor..." />
               </div>
             ) : pendingItems.length === 0 ? (
@@ -301,17 +277,17 @@ export default function AdminHomePage() {
                 message="Bekleyen yönetici işlemi bulunmuyor."
               />
             ) : (
-              <ul className="space-y-3">
+              <ul className="divide-y divide-outline-variant">
                 {pendingItems.map((item) => (
                   <li key={item.id}>
                     <Link
                       to={item.to}
-                      className="block rounded-lg border border-outline-variant bg-surface p-4 no-underline transition-colors hover:bg-surface-container hover:no-underline focus:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim"
+                      className="block py-2.5 no-underline transition-colors hover:text-primary hover:no-underline focus:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed-dim"
                     >
                       <p className="truncate font-body-md text-body-md font-semibold text-primary">
                         {item.title}
                       </p>
-                      <p className="mt-1 truncate font-label-sm text-label-sm text-on-surface-variant">
+                      <p className="mt-0.5 truncate font-label-sm text-label-sm text-on-surface-variant">
                         {item.subtitle}
                       </p>
                     </Link>

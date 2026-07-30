@@ -205,6 +205,7 @@ export default function AcademicianDashboard() {
         fullName={user.fullName}
         description="Randevularınızı, derslerinizi ve akademik programınızı tek yerden takip edin."
         loading={loading}
+        showStats={false}
         stats={
           summary && !loading
             ? [
@@ -249,7 +250,7 @@ export default function AcademicianDashboard() {
             <span className="material-symbols-outlined text-primary" aria-hidden="true">event</span>
             <h2 className="font-headline-md text-headline-md text-on-background">Randevu İstatistikleri</h2>
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {stats ? (
               <>
                 <DashboardKpiCard

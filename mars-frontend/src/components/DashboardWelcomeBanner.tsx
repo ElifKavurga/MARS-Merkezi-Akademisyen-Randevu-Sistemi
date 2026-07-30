@@ -1,5 +1,5 @@
-import Loading from './Loading';
 import { Link } from 'react-router-dom';
+import Loading from './Loading';
 
 export type DashboardWelcomeStat = {
   label: string;
@@ -11,31 +11,46 @@ type DashboardWelcomeBannerProps = {
   fullName: string;
   description: string;
   stats: readonly DashboardWelcomeStat[];
+  showStats?: boolean;
   loading?: boolean;
   loadingLabel?: string;
 };
 
 export default function DashboardWelcomeBanner({
   fullName,
-  description: _description,
+  description,
   stats,
+  showStats = true,
   loading = false,
-  loadingLabel = 'Özet yükleniyor...',
+  loadingLabel = 'Ozet yukleniyor...',
 }: DashboardWelcomeBannerProps) {
+  const todayLabel = new Intl.DateTimeFormat('tr-TR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date());
+
   return (
-    <section className="relative mb-8 overflow-hidden rounded-xl bg-primary-container p-6 text-on-primary md:p-8">
-      <div className="relative z-[1] flex flex-col justify-between gap-6 md:flex-row md:items-center">
-        <div>
-          <h1 className="font-headline-lg text-headline-lg">
-            Hoş Geldiniz{fullName ? `, ${fullName}` : ''}
+    <section className="relative mb-6 overflow-hidden rounded-xl bg-primary-container p-5 text-on-primary md:p-6">
+      <div className="relative z-[1] flex flex-col justify-between gap-5 md:flex-row md:items-center">
+        <div className="max-w-3xl">
+          <p className="font-label-sm text-label-sm uppercase tracking-wider text-on-primary/60">
+            {todayLabel}
+          </p>
+          <h1 className="mt-2 font-headline-lg text-headline-lg">
+            Hos Geldiniz{fullName ? `, ${fullName}` : ''}
           </h1>
+          <p className="mt-1 font-body-md text-body-md text-on-primary/70">
+            {description}
+          </p>
         </div>
 
-        {loading ? (
+        {showStats && loading ? (
           <div className="flex min-h-20 min-w-52 items-center justify-center rounded-lg bg-white/10">
             <Loading label={loadingLabel} variant="inline" />
           </div>
-        ) : stats.length > 0 ? (
+        ) : showStats && stats.length > 0 ? (
           <div
             className={`grid w-full gap-2 sm:w-auto sm:gap-3 ${
               stats.length === 2

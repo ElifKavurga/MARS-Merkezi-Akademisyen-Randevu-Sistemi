@@ -73,6 +73,7 @@ export default function AssistantDashboardPage() {
         fullName={user?.fullName ?? ''}
         description="Atandığınız dersleri, randevularınızı ve müsaitliklerinizi tek yerden takip edin."
         loading={loading}
+        showStats={false}
         loadingLabel="Akademik görev özetiniz yükleniyor..."
         stats={
           summary && !loading
@@ -118,7 +119,7 @@ export default function AssistantDashboardPage() {
             <span className="material-symbols-outlined text-primary" aria-hidden="true">event</span>
             <h2 className="font-headline-md text-headline-md text-on-background">Randevu İstatistikleri</h2>
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <DashboardKpiCard
               icon="pending"
               label="Bekleyen"
