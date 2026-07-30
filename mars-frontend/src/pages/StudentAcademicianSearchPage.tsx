@@ -13,7 +13,7 @@ import {
 } from '../constants/studentAcademician';
 import { studentAcademicianProfilePath } from '../constants/routes';
 import { STUDENT_UI } from '../constants/studentUi';
-import { FORM_FIELD_CLASS, FORM_SEARCH_ICON_CLASS, FORM_SELECT_CLASS } from '../constants/ui';
+import { FORM_FIELD_CLASS, FORM_SELECT_CLASS } from '../constants/ui';
 import { useAuth } from '../hooks/useAuth';
 import { useDepartments } from '../hooks/useDepartments';
 import { useToast } from '../hooks/useToast';
@@ -240,12 +240,20 @@ export default function StudentAcademicianSearchPage() {
             <label htmlFor="student-academician-search" className="sr-only">
               {STUDENT_ACADEMICIAN_MESSAGES.SEARCH_LABEL}
             </label>
-            <span
-              className={FORM_SEARCH_ICON_CLASS}
+            <svg
+              className="pointer-events-none absolute left-3 h-5 w-5 text-on-surface-variant"
+              style={{ top: '50%', transform: 'translateY(-50%)' }}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
               aria-hidden="true"
             >
-              search
-            </span>
+              <circle cx="11" cy="11" r="7" />
+              <path d="m16.5 16.5 4 4" />
+            </svg>
             <input
               id="student-academician-search"
               type="search"
