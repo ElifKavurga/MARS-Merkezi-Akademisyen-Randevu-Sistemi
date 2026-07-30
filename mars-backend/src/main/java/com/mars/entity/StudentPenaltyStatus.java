@@ -11,10 +11,13 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import org.springframework.data.domain.Persistable;
 
 @Entity
 @Table(name = "student_penalty_status")
@@ -22,7 +25,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class StudentPenaltyStatus {
+public class StudentPenaltyStatus implements Persistable<Integer> {
 
     @Id
     @Column(name = "student_id")
@@ -48,4 +51,21 @@ public class StudentPenaltyStatus {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "penalty_rule_id", nullable = false)
     private PenaltyRule penaltyRule;
+
+    @Transient
+    private boolean newRecord;
+
+    @Override
+    public Integer getId() {
+        return studentId;
+    }
+
+    @Override
+    public boolean isNew() {
+        return newRecord;
+    }
+
+    public void markNew() {
+        this.newRecord = true;
+    }
 }

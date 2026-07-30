@@ -1,5 +1,10 @@
 import { apiClient } from './apiClient';
-import type { Appointment, AppointmentCreatePayload, AppointmentRescheduleApproval } from '../types/appointment';
+import type {
+  Appointment,
+  AppointmentCreatePayload,
+  AppointmentRescheduleApproval,
+  StudentPenaltyStatus,
+} from '../types/appointment';
 import type { StudentAppointmentListItem } from '../types/studentAppointment';
 
 export async function getStudentActiveAppointments(): Promise<StudentAppointmentListItem[]> {
@@ -12,6 +17,13 @@ export async function getStudentPastAppointments(): Promise<StudentAppointmentLi
     '/students/appointments/past',
   );
   return Array.isArray(data) ? data : [];
+}
+
+export async function getStudentPenaltyStatus(): Promise<StudentPenaltyStatus> {
+  const { data } = await apiClient.get<StudentPenaltyStatus>(
+    '/students/appointments/penalty-status',
+  );
+  return data;
 }
 
 export async function getStudentAppointment(

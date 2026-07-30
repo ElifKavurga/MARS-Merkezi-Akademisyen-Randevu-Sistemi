@@ -195,6 +195,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
 
     long countByStaff_UserIdAndAppointmentStatus(Integer staffId, String appointmentStatus);
 
+    long countByStudent_UserIdAndAppointmentStatus(Integer studentId, String appointmentStatus);
+
     @Query("""
             SELECT COUNT(a)
             FROM Appointment a

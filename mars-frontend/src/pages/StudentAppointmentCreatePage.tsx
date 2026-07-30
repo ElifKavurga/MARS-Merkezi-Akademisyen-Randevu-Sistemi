@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { isAxiosError } from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 import StudentAppointmentStepper from '../components/StudentAppointmentStepper';
 import StudentEmptyState from '../components/StudentEmptyState';
@@ -8,6 +9,7 @@ import StudentPageHeader from '../components/StudentPageHeader';
 import AppointmentSlotPicker from '../components/AppointmentSlotPicker';
 import { appointmentSlotSelectionKey } from '../utils/appointmentSlot';
 import UserAvatar from '../components/UserAvatar';
+import WarningModal from '../components/WarningModal';
 import { getMeetingTypeLabel } from '../constants/appointment';
 import {
   APPOINTMENT_MEETING_TYPE_OPTIONS,
@@ -15,6 +17,7 @@ import {
 } from '../constants/availability';
 import {
   STUDENT_APPOINTMENT_CATEGORY_GROUP_LABELS,
+  STUDENT_APPOINTMENT_ERROR_CODES,
   STUDENT_APPOINTMENT_MESSAGES,
   STUDENT_APPOINTMENT_STEP_CATEGORY,
   STUDENT_APPOINTMENT_STEP_CONFIRM,
@@ -35,6 +38,7 @@ import {
   getStudentAcademicianDetail,
 } from '../services/studentAcademicianService';
 import { createStudentAppointment } from '../services/studentAppointmentService';
+import type { AppointmentRestrictionDetails } from '../types/appointment';
 import type { StudentAcademicianCourse, StudentAcademicianDetail } from '../types/studentAcademician';
 import type {
   StudentAppointmentCategory,
@@ -61,6 +65,12 @@ const CLEARED_SLOT_FIELDS = {
   meetingType: null,
 } as const;
 
+const HTTP_STATUS_CONFLICT = 409;
+
+type AppointmentRestrictionApiResponse = {
+  data?: AppointmentRestrictionDetails | null;
+};
+
 function formatSlotDateLabel(slotDate: string): string {
   return new Date(`${slotDate}T00:00:00`).toLocaleDateString('tr-TR', {
     day: 'numeric',
@@ -71,6 +81,82 @@ function formatSlotDateLabel(slotDate: string): string {
 
 function formatSlotTime(time: string): string {
   return time.slice(0, 5);
+}
+
+function formatRestrictionDate(date: string): string {
+  return new Date(`${date}T00:00:00`).toLocaleDateString('tr-TR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+function resolveAppointmentRestrictionDetails(err: unknown): AppointmentRestrictionDetails | null {
+  if (!isAxiosError<AppointmentRestrictionApiResponse>(err)) {
+    return null;
+  }
+  if (err.response?.status !== HTTP_STATUS_CONFLICT) {
+    return null;
+  }
+
+  const details = err.response.data?.data;
+  if (
+    details?.penaltyActive === true
+    && details.errorCode === STUDENT_APPOINTMENT_ERROR_CODES.STUDENT_RESTRICTED
+  ) {
+    return details;
+  }
+  return null;
+}
+
+function AppointmentRestrictionModalContent({
+  details,
+}: {
+  details: AppointmentRestrictionDetails;
+}) {
+  const rows: { label: string; value: string }[] = [];
+
+  if (details.restrictionEndDate) {
+    rows.push({
+      label: STUDENT_APPOINTMENT_MESSAGES.RESTRICTION_END_DATE,
+      value: formatRestrictionDate(details.restrictionEndDate),
+    });
+  }
+
+  if (typeof details.penaltyDurationDays === 'number') {
+    rows.push({
+      label: STUDENT_APPOINTMENT_MESSAGES.RESTRICTION_DURATION,
+      value: STUDENT_APPOINTMENT_MESSAGES.RESTRICTION_DURATION_VALUE(
+        details.penaltyDurationDays,
+      ),
+    });
+  }
+
+  return (
+    <div className="space-y-4">
+      {typeof details.remainingDays === 'number' ? (
+        <p className="rounded-lg border border-outline-variant bg-surface-container-low px-4 py-3 font-body-md text-body-md text-on-surface">
+          {STUDENT_APPOINTMENT_MESSAGES.RESTRICTION_REMAINING_DAYS(
+            details.remainingDays,
+          )}
+        </p>
+      ) : null}
+      {rows.length > 0 ? (
+        <dl className="space-y-3 rounded-lg border border-outline-variant bg-surface p-4">
+          {rows.map((row) => (
+            <div key={row.label} className="flex flex-wrap justify-between gap-2">
+              <dt className="font-label-sm text-label-sm text-on-surface-variant">
+                {row.label}
+              </dt>
+              <dd className="max-w-full text-right font-body-md text-body-md text-on-surface">
+                {row.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+    </div>
+  );
 }
 
 function AcademicianSummary({ academician }: { academician: StudentAcademicianDetail }) {
@@ -674,6 +760,8 @@ export default function StudentAppointmentCreatePage() {
   const [selectedDraft, setSelectedDraft] = useState<StudentAppointmentDraft | null>(null);
   const [activeStepIndex, setActiveStepIndex] = useState(STUDENT_APPOINTMENT_STEP_CATEGORY);
   const [submitting, setSubmitting] = useState(false);
+  const [restrictionDetails, setRestrictionDetails] =
+    useState<AppointmentRestrictionDetails | null>(null);
   const stepHeadingRef = useRef<HTMLHeadingElement | null>(null);
 
   const academicianId = Number(academicianIdParam);
@@ -1001,6 +1089,11 @@ export default function StudentAppointmentCreatePage() {
       toast.success(STUDENT_APPOINTMENT_MESSAGES.STEP_CONFIRM_SUCCESS);
       navigate(STUDENT_POST_APPOINTMENT_REDIRECT, { replace: true });
     } catch (err) {
+      const restriction = resolveAppointmentRestrictionDetails(err);
+      if (restriction) {
+        setRestrictionDetails(restriction);
+        return;
+      }
       const message = resolveStudentApiError(
         err,
         STUDENT_APPOINTMENT_MESSAGES.STEP_CONFIRM_ERROR,
@@ -1153,6 +1246,17 @@ export default function StudentAppointmentCreatePage() {
           onContinue={handleContinueFromCategory}
         />
       )}
+
+      <WarningModal
+        open={restrictionDetails !== null}
+        title={STUDENT_APPOINTMENT_MESSAGES.RESTRICTION_MODAL_TITLE}
+        description={STUDENT_APPOINTMENT_MESSAGES.RESTRICTION_MODAL_DESCRIPTION}
+        onClose={() => setRestrictionDetails(null)}
+      >
+        {restrictionDetails ? (
+          <AppointmentRestrictionModalContent details={restrictionDetails} />
+        ) : null}
+      </WarningModal>
     </div>
   );
 }

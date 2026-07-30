@@ -16,6 +16,10 @@ export const STUDENT_APPOINTMENT_STEP_SLOT = 2;
 export const STUDENT_APPOINTMENT_STEP_MEETING_TYPE = 3;
 export const STUDENT_APPOINTMENT_STEP_CONFIRM = 4;
 
+export const STUDENT_APPOINTMENT_ERROR_CODES = {
+  STUDENT_RESTRICTED: 'STUDENT_RESTRICTED',
+} as const;
+
 /** Sprint 22.1 uyumluluğu — kategori adımı indeksi. */
 export const STUDENT_APPOINTMENT_ACTIVE_STEP_INDEX = STUDENT_APPOINTMENT_STEP_CATEGORY;
 
@@ -89,6 +93,16 @@ export const STUDENT_APPOINTMENT_MESSAGES = {
   STEP_CONFIRM_SUCCESS:
     'Randevu talebiniz başarıyla oluşturuldu. Randevularım sayfasına yönlendiriliyorsunuz.',
   STEP_CONFIRM_ERROR: 'Randevu talebi oluşturulamadı. Lütfen tekrar deneyin.',
+  RESTRICTION_MODAL_TITLE: 'Randevu Oluşturulamıyor',
+  RESTRICTION_MODAL_DESCRIPTION:
+    'Randevuya üst üste katılmadığınız için geçici olarak yeni randevu oluşturamazsınız.',
+  RESTRICTION_REMAINING_DAYS: (days: number) =>
+    days > 0
+      ? `Yeni randevu oluşturabilmeniz için ${days} gün beklemeniz gerekmektedir.`
+      : 'Ceza süreniz bugün sona ermektedir.',
+  RESTRICTION_END_DATE: 'Ceza bitiş tarihi',
+  RESTRICTION_DURATION: 'Admin tarafından belirlenen ceza süresi',
+  RESTRICTION_DURATION_VALUE: (days: number) => `${days} gün`,
   BACK_TO_COURSE: 'Derse Dön',
   STEP_LOCKED: 'Bu adım henüz aktif değil.',
   STEP_STATUS_CURRENT: 'mevcut adım',

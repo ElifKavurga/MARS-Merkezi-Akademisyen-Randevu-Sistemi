@@ -7,9 +7,13 @@ import { STUDENT_UI } from '../constants/studentUi';
 import { ROUTES } from '../constants/routes';
 import { useAuth } from '../hooks/useAuth';
 import { useNotificationRealtimeRefresh } from '../hooks/useNotificationRealtimeRefresh';
-import { getStudentActiveAppointments } from '../services/studentAppointmentService';
+import {
+  getStudentActiveAppointments,
+  getStudentPenaltyStatus,
+} from '../services/studentAppointmentService';
 import { getPendingStudentDelegations } from '../services/delegationService';
 import type { NotificationItem } from '../types/notification';
+import type { StudentPenaltyStatus } from '../types/appointment';
 import { formatStudentAppointmentDate, formatStudentAppointmentTime } from '../utils/studentAppointmentFormat';
 
 const isAppointmentNotification = (notification: NotificationItem) =>
@@ -58,6 +62,109 @@ function PlaceholderCard({
   );
 }
 
+function formatPenaltyDate(date: string): string {
+  return new Date(`${date}T00:00:00`).toLocaleDateString('tr-TR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+function PenaltyStatusCard({
+  status,
+  loading,
+}: {
+  status: StudentPenaltyStatus | null;
+  loading: boolean;
+}) {
+  const active = status?.penaltyActive === true;
+
+  return (
+    <section className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest">
+      <div className="flex items-center justify-between gap-3 p-5 sm:p-6">
+        <div className="flex min-w-0 items-center gap-3">
+          <span
+            className={`material-symbols-outlined text-[22px] ${
+              active ? 'text-error' : 'text-primary'
+            }`}
+            aria-hidden="true"
+          >
+            gavel
+          </span>
+          <h2 className="font-headline-md text-headline-md text-primary">
+            {STUDENT_UI.PENALTY_TITLE}
+          </h2>
+        </div>
+        {status ? (
+          <span
+            className={`rounded-full px-2.5 py-1 font-label-sm text-label-sm ${
+              active
+                ? 'bg-error-container text-error'
+                : 'bg-primary-fixed text-on-primary-fixed'
+            }`}
+          >
+            {active ? 'Aktif' : `${status.totalNoShowCount}/${status.maxNoShowCount}`}
+          </span>
+        ) : null}
+      </div>
+      <div className="px-4 pb-4 sm:px-6 sm:pb-6">
+        {loading ? (
+          <StudentLoadingState label={STUDENT_UI.PENALTY_LOADING} compact />
+        ) : !status ? (
+          <StudentEmptyState
+            icon="gavel"
+            title={STUDENT_UI.PENALTY_EMPTY_TITLE}
+            description={STUDENT_UI.PENALTY_EMPTY_DESCRIPTION}
+            className="border-0 bg-surface px-4 py-8"
+          />
+        ) : active ? (
+          <div className="space-y-3 rounded-lg border border-error/30 bg-error-container/30 p-4">
+            <p className="font-body-md text-body-md font-semibold text-error">
+              Yeni randevu oluşturmanız geçici olarak kısıtlandı.
+            </p>
+            {typeof status.remainingDays === 'number' ? (
+              <p className="font-body-md text-body-md text-on-surface">
+                {status.remainingDays > 0
+                  ? `${status.remainingDays} gün sonra tekrar randevu oluşturabilirsiniz.`
+                  : 'Ceza süreniz bugün sona ermektedir.'}
+              </p>
+            ) : null}
+            <dl className="space-y-2">
+              {status.restrictionEndDate ? (
+                <div className="flex flex-wrap justify-between gap-2">
+                  <dt className="font-label-sm text-label-sm text-on-surface-variant">
+                    Ceza bitiş tarihi
+                  </dt>
+                  <dd className="font-body-md text-body-md text-on-surface">
+                    {formatPenaltyDate(status.restrictionEndDate)}
+                  </dd>
+                </div>
+              ) : null}
+              <div className="flex flex-wrap justify-between gap-2">
+                <dt className="font-label-sm text-label-sm text-on-surface-variant">
+                  Ceza süresi
+                </dt>
+                <dd className="font-body-md text-body-md text-on-surface">
+                  {status.penaltyDurationDays} gün
+                </dd>
+              </div>
+            </dl>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-outline-variant bg-surface p-4">
+            <p className="font-body-md text-body-md text-on-surface">
+              Aktif cezanız bulunmuyor.
+            </p>
+            <p className="mt-2 font-body-md text-body-md text-on-surface-variant">
+              Randevuya katılmama sayınız: {status.totalNoShowCount}/{status.maxNoShowCount}
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export default function StudentDashboard() {
   const { user } = useAuth();
   const appointmentsQuery = useQuery({
@@ -69,6 +176,11 @@ export default function StudentDashboard() {
   const delegationsQuery = useQuery({
     queryKey: ['student-pending-delegations', user?.userId],
     queryFn: getPendingStudentDelegations,
+    enabled: user != null,
+  });
+  const penaltyQuery = useQuery({
+    queryKey: ['student-penalty-status', user?.userId],
+    queryFn: getStudentPenaltyStatus,
     enabled: user != null,
   });
   const pendingDelegations = delegationsQuery.data ?? [];
@@ -148,13 +260,9 @@ export default function StudentDashboard() {
           loading={loading}
           loadingLabel={STUDENT_UI.WAITLIST_LOADING}
         />
-        <PlaceholderCard
-          title={STUDENT_UI.PENALTY_TITLE}
-          icon="gavel"
-          emptyTitle={STUDENT_UI.PENALTY_EMPTY_TITLE}
-          emptyMessage={STUDENT_UI.PENALTY_EMPTY_DESCRIPTION}
-          loading={loading}
-          loadingLabel={STUDENT_UI.PENALTY_LOADING}
+        <PenaltyStatusCard
+          status={penaltyQuery.data ?? null}
+          loading={penaltyQuery.isPending}
         />
       </div>
     </div>

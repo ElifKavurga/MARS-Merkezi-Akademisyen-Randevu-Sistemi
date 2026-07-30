@@ -28,6 +28,7 @@ import com.mars.dto.AppointmentResponseDto;
 import com.mars.dto.NotificationCreateRequest;
 import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.StaffAppointmentResponseDto;
+import com.mars.dto.StudentPenaltyStatusResponse;
 import com.mars.dto.StudentAppointmentResponseDto;
 import com.mars.entity.Appointment;
 import com.mars.entity.AppointmentRescheduleApproval;
@@ -35,7 +36,6 @@ import com.mars.entity.AppointmentCategory;
 import com.mars.entity.AvailabilitySlot;
 import com.mars.entity.Course;
 import com.mars.entity.DelegationLog;
-import com.mars.entity.StudentPenaltyStatus;
 import com.mars.entity.User;
 import com.mars.enums.AppointmentStatus;
 import com.mars.enums.RescheduleRequestStatus;
@@ -45,6 +45,7 @@ import com.mars.enums.RoleType;
 import com.mars.exception.BadRequestException;
 import com.mars.exception.ConflictException;
 import com.mars.exception.ResourceNotFoundException;
+import com.mars.exception.StudentAppointmentRestrictedException;
 import com.mars.mapper.AppointmentMapper;
 import com.mars.repository.AppointmentCategoryRepository;
 import com.mars.repository.AppointmentRepository;
@@ -110,7 +111,7 @@ public class AppointmentService {
             throw new BadRequestException(AppointmentMessages.CATEGORY_REQUIRED);
         }
 
-        ensureStudentNotRestricted(student.getUserId());
+        ensureStudentNotRestricted(student);
 
         // Race condition: slot satırını kilitle, ardından müsaitlik son kez doğrulanır.
         AvailabilitySlot templateSlot = availabilitySlotRepository.findByIdWithStaffForUpdate(request.getSlotId())
@@ -206,6 +207,12 @@ public class AppointmentService {
                 .stream()
                 .map(appointmentMapper::toStudentResponse)
                 .toList();
+    }
+
+    @Transactional
+    public StudentPenaltyStatusResponse getCurrentStudentPenaltyStatus() {
+        User student = getCurrentStudent();
+        return noShowPenaltyService.getStudentPenaltyStatus(student, LocalDate.now(APP_ZONE));
     }
 
     @Transactional(readOnly = true)
@@ -893,18 +900,11 @@ public class AppointmentService {
         }
     }
 
-    private void ensureStudentNotRestricted(Integer studentId) {
-        studentPenaltyStatusRepository.findById(studentId).ifPresent(this::assertNotActivelyRestricted);
-    }
-
-    private void assertNotActivelyRestricted(StudentPenaltyStatus status) {
-        if (!Boolean.TRUE.equals(status.getIsRestricted())) {
-            return;
-        }
-        LocalDate endDate = status.getRestrictionEndDate();
-        if (endDate == null || !endDate.isBefore(LocalDate.now(APP_ZONE))) {
-            throw new ConflictException(AppointmentMessages.STUDENT_RESTRICTED);
-        }
+    private void ensureStudentNotRestricted(User student) {
+        noShowPenaltyService.resolveActiveRestriction(student, LocalDate.now(APP_ZONE))
+                .ifPresent(restriction -> {
+                    throw new StudentAppointmentRestrictedException(restriction);
+                });
     }
 
     private boolean isSlotInPast(AvailabilitySlot slot) {

@@ -33,6 +33,23 @@ export type AppointmentCreatePayload = {
   endTime?: string | null;
 };
 
+export type AppointmentRestrictionDetails = {
+  errorCode?: string;
+  penaltyActive?: boolean;
+  remainingDays?: number | null;
+  restrictionEndDate?: string | null;
+  penaltyDurationDays?: number | null;
+};
+
+export type StudentPenaltyStatus = {
+  penaltyActive: boolean;
+  totalNoShowCount: number;
+  maxNoShowCount: number;
+  remainingDays?: number | null;
+  restrictionEndDate?: string | null;
+  penaltyDurationDays: number;
+};
+
 export type AppointmentStatus =
   | 'PENDING'
   | 'APPROVED'

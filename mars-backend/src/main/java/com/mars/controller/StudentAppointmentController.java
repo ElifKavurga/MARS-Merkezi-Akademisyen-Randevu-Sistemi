@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.mars.dto.AppointmentCreateRequest;
 import com.mars.dto.AppointmentResponseDto;
 import com.mars.dto.AppointmentRescheduleResponse;
+import com.mars.dto.StudentPenaltyStatusResponse;
 import com.mars.dto.StudentAppointmentResponseDto;
 import com.mars.service.AppointmentService;
 
@@ -40,6 +41,11 @@ public class StudentAppointmentController {
     @GetMapping("/past")
     public ResponseEntity<List<StudentAppointmentResponseDto>> getPastAppointments() {
         return ResponseEntity.ok(appointmentService.getStudentPastAppointments());
+    }
+
+    @GetMapping("/penalty-status")
+    public ResponseEntity<StudentPenaltyStatusResponse> getPenaltyStatus() {
+        return ResponseEntity.ok(appointmentService.getCurrentStudentPenaltyStatus());
     }
 
     @GetMapping("/{appointmentId}")

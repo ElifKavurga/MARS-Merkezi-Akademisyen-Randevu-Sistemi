@@ -38,6 +38,7 @@ import com.mars.dto.AppointmentRescheduleResponse;
 import com.mars.dto.AppointmentResponseDto;
 import com.mars.dto.AvailableSlotResponseDto;
 import com.mars.dto.StaffAppointmentResponseDto;
+import com.mars.dto.StudentAppointmentRestrictionResponse;
 import com.mars.dto.StudentAppointmentResponseDto;
 import com.mars.entity.Appointment;
 import com.mars.entity.DelegationLog;
@@ -47,12 +48,14 @@ import com.mars.entity.AvailabilitySlot;
 import com.mars.entity.Role;
 import com.mars.entity.StudentPenaltyStatus;
 import com.mars.entity.User;
+import com.mars.enums.AppointmentErrorCode;
 import com.mars.enums.AppointmentStatus;
 import com.mars.enums.MeetingType;
 import com.mars.enums.RoleType;
 import com.mars.exception.BadRequestException;
 import com.mars.exception.ConflictException;
 import com.mars.exception.ResourceNotFoundException;
+import com.mars.exception.StudentAppointmentRestrictedException;
 import com.mars.mapper.AppointmentMapper;
 import com.mars.repository.AppointmentCategoryRepository;
 import com.mars.repository.AppointmentRepository;
@@ -151,6 +154,11 @@ class AppointmentServiceTest {
 
         lenient().when(outOfOfficePeriodRepository.existsOverlappingPeriod(any(), any(), any()))
                 .thenReturn(false);
+        lenient().when(delegationLogRepository.findByAppointment_AppointmentIdAndDelegationStatusOrderByUpdatedAtDesc(
+                any(), eq("PENDING_STUDENT_APPROVAL")))
+                .thenReturn(List.of());
+        lenient().when(noShowPenaltyService.resolveActiveRestriction(any(), any()))
+                .thenReturn(Optional.empty());
 
         appointmentService = new AppointmentService(
                 appointmentRepository,
@@ -185,7 +193,7 @@ class AppointmentServiceTest {
                 .meetingType(MeetingType.FACE_TO_FACE.name())
                 .build();
 
-        when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
+        lenient().when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
         when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
         when(appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(5, ACTIVE_STATUSES))
                 .thenReturn(false);
@@ -208,7 +216,7 @@ class AppointmentServiceTest {
     @Test
     void createAppointment_blockedSlot_throwsConflict() {
         slot.setIsBlocked(true);
-        when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
+        lenient().when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
         when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
 
         assertThatThrownBy(() -> appointmentService.createAppointment(baseRequest))
@@ -219,7 +227,7 @@ class AppointmentServiceTest {
 
     @Test
     void createAppointment_takenSlot_throwsConflict() {
-        when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
+        lenient().when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
         when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
         when(appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(5, ACTIVE_STATUSES))
                 .thenReturn(true);
@@ -232,7 +240,7 @@ class AppointmentServiceTest {
     @Test
     void createAppointment_pastSlot_throwsBadRequest() {
         slot.setSlotDate(LocalDate.now().minusDays(1));
-        when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
+        lenient().when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
         when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
 
         assertThatThrownBy(() -> appointmentService.createAppointment(baseRequest))
@@ -242,14 +250,28 @@ class AppointmentServiceTest {
 
     @Test
     void createAppointment_restrictedStudent_throwsConflict() {
-        StudentPenaltyStatus penalty = new StudentPenaltyStatus();
-        penalty.setIsRestricted(true);
-        penalty.setRestrictionEndDate(LocalDate.now().plusDays(5));
-        when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.of(penalty));
+        LocalDate endDate = LocalDate.now(ZoneId.of("Europe/Istanbul")).plusDays(5);
+        when(noShowPenaltyService.resolveActiveRestriction(eq(student), any()))
+                .thenReturn(Optional.of(StudentAppointmentRestrictionResponse.builder()
+                        .errorCode(AppointmentErrorCode.STUDENT_RESTRICTED)
+                        .penaltyActive(true)
+                        .remainingDays(5)
+                        .restrictionEndDate(endDate)
+                        .penaltyDurationDays(7)
+                        .build()));
 
         assertThatThrownBy(() -> appointmentService.createAppointment(baseRequest))
-                .isInstanceOf(ConflictException.class)
-                .hasMessage(AppointmentMessages.STUDENT_RESTRICTED);
+                .isInstanceOf(StudentAppointmentRestrictedException.class)
+                .hasMessage(AppointmentMessages.STUDENT_RESTRICTED)
+                .satisfies(exception -> {
+                    StudentAppointmentRestrictedException restricted =
+                            (StudentAppointmentRestrictedException) exception;
+                    assertThat(restricted.getRestriction().getPenaltyActive()).isTrue();
+                    assertThat(restricted.getRestriction().getRemainingDays()).isEqualTo(5);
+                    assertThat(restricted.getRestriction().getRestrictionEndDate())
+                            .isEqualTo(endDate);
+                    assertThat(restricted.getRestriction().getPenaltyDurationDays()).isEqualTo(7);
+                });
         verify(availabilitySlotRepository, never()).findByIdWithStaffForUpdate(any());
     }
 
@@ -260,7 +282,7 @@ class AppointmentServiceTest {
         slot.setSlotDate(now.toLocalDate());
         slot.setStartTime(now.toLocalTime().plusMinutes(10).withSecond(0).withNano(0));
         slot.setEndTime(slot.getStartTime().plusMinutes(10));
-        when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
+        lenient().when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
         when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
 
         assertThatThrownBy(() -> appointmentService.createAppointment(baseRequest))
@@ -273,7 +295,7 @@ class AppointmentServiceTest {
     void createAppointment_slotBeyondHorizon_throwsBadRequest() {
         java.time.ZoneId zone = java.time.ZoneId.of("Europe/Istanbul");
         slot.setSlotDate(java.time.LocalDate.now(zone).plusDays(15));
-        when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
+        lenient().when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
         when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
 
         assertThatThrownBy(() -> appointmentService.createAppointment(baseRequest))
@@ -284,7 +306,7 @@ class AppointmentServiceTest {
 
     @Test
     void createAppointment_outOfOffice_throwsConflict() {
-        when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
+        lenient().when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
         when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
         when(outOfOfficePeriodRepository.existsOverlappingPeriod(
                         10, slot.getSlotDate(), slot.getSlotDate()))
@@ -299,7 +321,7 @@ class AppointmentServiceTest {
     @Test
     void createAppointment_inactiveStaff_throwsConflict() {
         staff.setIsActive(false);
-        when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
+        lenient().when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
         when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
 
         assertThatThrownBy(() -> appointmentService.createAppointment(baseRequest))
@@ -311,7 +333,7 @@ class AppointmentServiceTest {
     @Test
     void createAppointment_staffNotAccepting_throwsConflict() {
         staff.setIsAcceptingAppointments(false);
-        when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
+        lenient().when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
         when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
 
         assertThatThrownBy(() -> appointmentService.createAppointment(baseRequest))
@@ -325,7 +347,7 @@ class AppointmentServiceTest {
         Role studentRole = new Role();
         studentRole.setRoleName(RoleType.STUDENT.name());
         staff.setRole(studentRole);
-        when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
+        lenient().when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
         when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
 
         assertThatThrownBy(() -> appointmentService.createAppointment(baseRequest))
@@ -336,7 +358,7 @@ class AppointmentServiceTest {
 
     @Test
     void createAppointment_overlappingTime_throwsConflict() {
-        when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
+        lenient().when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
         when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
         when(appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(5, ACTIVE_STATUSES))
                 .thenReturn(false);
@@ -353,7 +375,7 @@ class AppointmentServiceTest {
     void createAppointment_faceToFaceSlot_assignsFaceToFace() {
         slot.setMeetingType(MeetingType.FACE_TO_FACE.name());
         Appointment appointment = new Appointment();
-        when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
+        lenient().when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
         when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
         when(appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(5, ACTIVE_STATUSES))
                 .thenReturn(false);
@@ -375,7 +397,7 @@ class AppointmentServiceTest {
     void createAppointment_onlineSlot_assignsOnline() {
         slot.setMeetingType(MeetingType.ONLINE.name());
         Appointment appointment = new Appointment();
-        when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
+        lenient().when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
         when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
         when(appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(5, ACTIVE_STATUSES))
                 .thenReturn(false);
@@ -395,7 +417,7 @@ class AppointmentServiceTest {
     @Test
     void createAppointment_bothSlot_requiresStudentChoice() {
         slot.setMeetingType(MeetingType.BOTH.name());
-        when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
+        lenient().when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
         when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
         when(appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(5, ACTIVE_STATUSES))
                 .thenReturn(false);
@@ -413,7 +435,7 @@ class AppointmentServiceTest {
         slot.setMeetingType(MeetingType.BOTH.name());
         baseRequest.setMeetingType(MeetingType.ONLINE.name());
         Appointment appointment = new Appointment();
-        when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
+        lenient().when(studentPenaltyStatusRepository.findById(20)).thenReturn(Optional.empty());
         when(availabilitySlotRepository.findByIdWithStaffForUpdate(5)).thenReturn(Optional.of(slot));
         when(appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(5, ACTIVE_STATUSES))
                 .thenReturn(false);

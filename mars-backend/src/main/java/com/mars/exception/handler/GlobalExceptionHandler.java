@@ -19,9 +19,11 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import com.mars.dto.ApiResponse;
+import com.mars.dto.StudentAppointmentRestrictionResponse;
 import com.mars.exception.BadRequestException;
 import com.mars.exception.ConflictException;
 import com.mars.exception.ResourceNotFoundException;
+import com.mars.exception.StudentAppointmentRestrictedException;
 import com.mars.security.SecurityMessages;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -35,6 +37,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ApiResponse<Void>> handleConflict(ConflictException ex, WebRequest request) {
         return build(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(StudentAppointmentRestrictedException.class)
+    public ResponseEntity<ApiResponse<StudentAppointmentRestrictionResponse>> handleStudentAppointmentRestricted(
+            StudentAppointmentRestrictedException ex,
+            WebRequest request) {
+        ApiResponse<StudentAppointmentRestrictionResponse> body = ApiResponse.failure(
+                HttpStatus.CONFLICT.value(),
+                ex.getMessage(),
+                resolvePath(request),
+                ex.getRestriction());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
     @ExceptionHandler({ResourceNotFoundException.class, EntityNotFoundException.class})

@@ -4,27 +4,30 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.mars.AppointmentMessages;
+import com.mars.dto.StudentAppointmentRestrictionResponse;
+import com.mars.dto.StudentPenaltyStatusResponse;
 import com.mars.dto.notification.NoShowNotificationRequest;
 import com.mars.dto.notification.PenaltyNotificationRequest;
 import com.mars.entity.Appointment;
 import com.mars.entity.PenaltyRule;
 import com.mars.entity.StudentPenaltyStatus;
 import com.mars.entity.User;
+import com.mars.enums.AppointmentErrorCode;
 import com.mars.enums.AppointmentStatus;
 import com.mars.enums.PenaltyNotificationEvent;
 import com.mars.exception.ConflictException;
@@ -33,6 +36,7 @@ import com.mars.repository.AppointmentRepository;
 import com.mars.repository.PenaltyRuleRepository;
 import com.mars.repository.StudentPenaltyStatusRepository;
 
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -50,7 +54,7 @@ public class NoShowPenaltyService {
     private final AppointmentRepository appointmentRepository;
     private final StudentPenaltyStatusRepository studentPenaltyStatusRepository;
     private final PenaltyRuleRepository penaltyRuleRepository;
-    private final PlatformTransactionManager transactionManager;
+    private final EntityManager entityManager;
     
     private final NoShowNotificationPublisher noShowNotificationPublisher;
     private final PenaltyNotificationPublisher penaltyNotificationPublisher;
@@ -126,33 +130,29 @@ public class NoShowPenaltyService {
         }
         appointment.setUpdatedAt(now);
         appointmentRepository.save(appointment);
-        runAfterCommitInNewTransaction(() -> processPenaltyAndNotifications(appointmentId, now));
+        processPenaltyAndNotifications(appointment, now);
 
         return appointment;
     }
 
-    private void processPenaltyAndNotifications(Integer appointmentId, LocalDateTime now) {
-        Appointment appointment = appointmentRepository.findByIdForUpdate(appointmentId).orElse(null);
+    private void processPenaltyAndNotifications(Appointment appointment, LocalDateTime now) {
         if (appointment == null || !AppointmentStatus.NO_SHOW.name().equals(appointment.getAppointmentStatus())) {
             return;
         }
 
         User student = appointment.getStudent();
         StudentPenaltyStatus penaltyStatus = studentPenaltyStatusRepository.findById(student.getUserId())
-                .orElseGet(() -> {
-                    StudentPenaltyStatus newStatus = new StudentPenaltyStatus();
-                    newStatus.setStudentId(student.getUserId());
-                    newStatus.setStudent(student);
-                    newStatus.setIsRestricted(false);
-                    newStatus.setTotalNoShowCount(0);
-                    newStatus.setPenaltyRule(resolvePenaltyRule());
-                    return newStatus;
-                });
+                .orElseGet(() -> newPenaltyStatus(student, resolvePenaltyRule()));
 
         int currentNoShowCount = penaltyStatus.getTotalNoShowCount() == null
                 ? 0
                 : penaltyStatus.getTotalNoShowCount();
-        penaltyStatus.setTotalNoShowCount(currentNoShowCount + 1);
+        long historicalNoShowCount = appointmentRepository.countByStudent_UserIdAndAppointmentStatus(
+                student.getUserId(), AppointmentStatus.NO_SHOW.name());
+        int synchronizedNoShowCount = (int) Math.min(
+                Integer.MAX_VALUE,
+                Math.max(currentNoShowCount + 1L, historicalNoShowCount));
+        penaltyStatus.setTotalNoShowCount(synchronizedNoShowCount);
 
         PenaltyRule rule = penaltyStatus.getPenaltyRule();
         if (rule == null) {
@@ -184,7 +184,7 @@ public class NoShowPenaltyService {
         NoShowNotificationRequest noShowNotification = new NoShowNotificationRequest(
                 student.getUserId(),
                 appointment.getStaff().getUserId(),
-                appointmentId,
+                appointment.getAppointmentId(),
                 student.getFullName(),
                 appointment.getStaff().getFullName(),
                 appointment.getSlot().getSlotDate(),
@@ -198,7 +198,8 @@ public class NoShowPenaltyService {
             try {
                 noShowNotificationPublisher.publish(noShowNotification);
             } catch (Exception e) {
-                LOGGER.error("Failed to send missed appointment notifications for appointmentId={}", appointmentId, e);
+                LOGGER.error("Failed to send missed appointment notifications for appointmentId={}",
+                        appointment.getAppointmentId(), e);
             }
         });
 
@@ -234,6 +235,116 @@ public class NoShowPenaltyService {
                 });
     }
 
+    @Transactional
+    public Optional<StudentAppointmentRestrictionResponse> resolveActiveRestriction(User student, LocalDate today) {
+        StudentPenaltyStatus status = resolveCurrentPenaltyStatus(student, today);
+        if (!Boolean.TRUE.equals(status.getIsRestricted())) {
+            return Optional.empty();
+        }
+        return Optional.of(toRestrictionResponse(status, today));
+    }
+
+    @Transactional
+    public StudentPenaltyStatusResponse getStudentPenaltyStatus(User student, LocalDate today) {
+        StudentPenaltyStatus status = resolveCurrentPenaltyStatus(student, today);
+        PenaltyRule rule = status.getPenaltyRule() == null ? resolvePenaltyRule() : status.getPenaltyRule();
+        boolean active = Boolean.TRUE.equals(status.getIsRestricted());
+        return StudentPenaltyStatusResponse.builder()
+                .penaltyActive(active)
+                .totalNoShowCount(status.getTotalNoShowCount() == null ? 0 : status.getTotalNoShowCount())
+                .maxNoShowCount(resolveMaxNoShowCount(rule))
+                .remainingDays(active ? calculateRemainingPenaltyDays(today, status.getRestrictionEndDate()) : null)
+                .restrictionEndDate(active ? status.getRestrictionEndDate() : null)
+                .penaltyDurationDays(resolveBanDurationDays(rule))
+                .build();
+    }
+
+    private StudentPenaltyStatus resolveCurrentPenaltyStatus(User student, LocalDate today) {
+        PenaltyRule rule = resolvePenaltyRule();
+        Optional<StudentPenaltyStatus> existing = studentPenaltyStatusRepository.findById(student.getUserId());
+        StudentPenaltyStatus status = existing.orElseGet(() -> {
+            long historicalNoShowCount = appointmentRepository.countByStudent_UserIdAndAppointmentStatus(
+                    student.getUserId(), AppointmentStatus.NO_SHOW.name());
+            StudentPenaltyStatus newStatus = newPenaltyStatus(student, rule);
+            newStatus.setTotalNoShowCount((int) Math.min(Integer.MAX_VALUE, historicalNoShowCount));
+            return newStatus;
+        });
+
+        if (status.getPenaltyRule() == null) {
+            status.setPenaltyRule(rule);
+        }
+
+        if (Boolean.TRUE.equals(status.getIsRestricted())) {
+            LocalDate endDate = status.getRestrictionEndDate();
+            if (endDate != null && endDate.isBefore(today)) {
+                clearExpiredPenalty(status);
+                return studentPenaltyStatusRepository.save(status);
+            }
+            return status;
+        }
+
+        int trackedNoShowCount = status.getTotalNoShowCount() == null ? 0 : status.getTotalNoShowCount();
+        long historicalNoShowCount = appointmentRepository.countByStudent_UserIdAndAppointmentStatus(
+                student.getUserId(), AppointmentStatus.NO_SHOW.name());
+        trackedNoShowCount = (int) Math.min(Integer.MAX_VALUE, Math.max(trackedNoShowCount, historicalNoShowCount));
+        status.setTotalNoShowCount(trackedNoShowCount);
+
+        if (Boolean.TRUE.equals(status.getPenaltyRule().getIsActive())
+                && trackedNoShowCount >= resolveMaxNoShowCount(status.getPenaltyRule())) {
+            status.setIsRestricted(true);
+            status.setRestrictionStartDate(today);
+            status.setRestrictionEndDate(today.plusDays(resolveBanDurationDays(status.getPenaltyRule())));
+        }
+
+        if (existing.isEmpty() && trackedNoShowCount == 0 && !Boolean.TRUE.equals(status.getIsRestricted())) {
+            return status;
+        }
+        return studentPenaltyStatusRepository.save(status);
+    }
+
+    private StudentPenaltyStatus newPenaltyStatus(User student, PenaltyRule rule) {
+        StudentPenaltyStatus newStatus = new StudentPenaltyStatus();
+        newStatus.setStudentId(student.getUserId());
+        newStatus.setStudent(entityManager.getReference(User.class, student.getUserId()));
+        newStatus.setIsRestricted(false);
+        newStatus.setTotalNoShowCount(0);
+        newStatus.setPenaltyRule(rule);
+        newStatus.markNew();
+        return newStatus;
+    }
+
+    private StudentAppointmentRestrictionResponse toRestrictionResponse(
+            StudentPenaltyStatus status,
+            LocalDate today) {
+        PenaltyRule rule = status.getPenaltyRule() == null ? resolvePenaltyRule() : status.getPenaltyRule();
+        return StudentAppointmentRestrictionResponse.builder()
+                .errorCode(AppointmentErrorCode.STUDENT_RESTRICTED)
+                .penaltyActive(true)
+                .remainingDays(calculateRemainingPenaltyDays(today, status.getRestrictionEndDate()))
+                .restrictionEndDate(status.getRestrictionEndDate())
+                .penaltyDurationDays(resolveBanDurationDays(rule))
+                .build();
+    }
+
+    private int resolveMaxNoShowCount(PenaltyRule rule) {
+        return rule.getMaxNoShowCount() == null || rule.getMaxNoShowCount() <= 0
+                ? DEFAULT_MAX_NO_SHOW_COUNT
+                : rule.getMaxNoShowCount();
+    }
+
+    private int resolveBanDurationDays(PenaltyRule rule) {
+        return rule.getBanDurationDays() == null || rule.getBanDurationDays() <= 0
+                ? DEFAULT_BAN_DURATION_DAYS
+                : rule.getBanDurationDays();
+    }
+
+    private Integer calculateRemainingPenaltyDays(LocalDate today, LocalDate endDate) {
+        if (endDate == null) {
+            return null;
+        }
+        return (int) Math.max(0, ChronoUnit.DAYS.between(today, endDate));
+    }
+
     private void runAfterCommit(Runnable action) {
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
             action.run();
@@ -243,16 +354,6 @@ public class NoShowPenaltyService {
             @Override
             public void afterCommit() {
                 action.run();
-            }
-        });
-    }
-
-    private void runAfterCommitInNewTransaction(Runnable action) {
-        runAfterCommit(() -> {
-            try {
-                new TransactionTemplate(transactionManager).executeWithoutResult(status -> action.run());
-            } catch (Exception e) {
-                LOGGER.error("Failed to process missed appointment side effects.", e);
             }
         });
     }
@@ -277,10 +378,7 @@ public class NoShowPenaltyService {
     }
 
     private void liftPenalty(StudentPenaltyStatus status) {
-        status.setIsRestricted(false);
-        status.setRestrictionStartDate(null);
-        status.setRestrictionEndDate(null);
-        status.setTotalNoShowCount(0); // Reset count upon penalty completion
+        clearExpiredPenalty(status);
         studentPenaltyStatusRepository.save(status);
 
         try {
@@ -297,5 +395,12 @@ public class NoShowPenaltyService {
         } catch (Exception e) {
             LOGGER.error("Failed to send Penalty Lifted notification for studentId={}", status.getStudentId(), e);
         }
+    }
+
+    private void clearExpiredPenalty(StudentPenaltyStatus status) {
+        status.setIsRestricted(false);
+        status.setRestrictionStartDate(null);
+        status.setRestrictionEndDate(null);
+        status.setTotalNoShowCount(0); // Reset count upon penalty completion
     }
 }

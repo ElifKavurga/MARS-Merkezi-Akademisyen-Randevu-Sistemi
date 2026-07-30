@@ -18,8 +18,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.SimpleTransactionStatus;
 
 import com.mars.dto.notification.NoShowNotificationRequest;
 import com.mars.dto.notification.PenaltyNotificationRequest;
@@ -29,6 +27,8 @@ import com.mars.enums.PenaltyNotificationEvent;
 import com.mars.repository.AppointmentRepository;
 import com.mars.repository.PenaltyRuleRepository;
 import com.mars.repository.StudentPenaltyStatusRepository;
+
+import jakarta.persistence.EntityManager;
 
 @ExtendWith(MockitoExtension.class)
 class NoShowPenaltyServiceTest {
@@ -40,7 +40,7 @@ class NoShowPenaltyServiceTest {
     @Mock
     private PenaltyRuleRepository penaltyRuleRepository;
     @Mock
-    private PlatformTransactionManager transactionManager;
+    private EntityManager entityManager;
     @Mock
     private NoShowNotificationPublisher noShowNotificationPublisher;
     @Mock
@@ -55,13 +55,17 @@ class NoShowPenaltyServiceTest {
                 appointmentRepository,
                 studentPenaltyStatusRepository,
                 penaltyRuleRepository,
-                transactionManager,
+                entityManager,
                 noShowNotificationPublisher,
                 penaltyNotificationPublisher
         );
-        lenient().when(transactionManager.getTransaction(any()))
-                .thenReturn(new SimpleTransactionStatus());
         now = LocalDateTime.of(2026, 7, 23, 14, 0);
+        lenient().when(entityManager.getReference(eq(User.class), anyInt()))
+                .thenAnswer(invocation -> {
+                    User student = new User();
+                    student.setUserId(invocation.getArgument(1));
+                    return student;
+                });
     }
 
     @Test
@@ -134,6 +138,75 @@ class NoShowPenaltyServiceTest {
         verify(studentPenaltyStatusRepository).save(status);
         verify(noShowNotificationPublisher).publish(any(NoShowNotificationRequest.class));
         verify(penaltyNotificationPublisher).publish(any(PenaltyNotificationRequest.class));
+    }
+
+    @Test
+    void resolveActiveRestriction_missingStatus_backfillsFromNoShowAppointments() {
+        User student = new User();
+        student.setUserId(10);
+        student.setFullName("Restricted Student");
+
+        PenaltyRule rule = new PenaltyRule();
+        rule.setPenaltyRuleId(1);
+        rule.setMaxNoShowCount(3);
+        rule.setBanDurationDays(7);
+        rule.setIsActive(true);
+
+        when(penaltyRuleRepository.findFirstByOrderByPenaltyRuleIdAsc())
+                .thenReturn(Optional.of(rule));
+        when(studentPenaltyStatusRepository.findById(10)).thenReturn(Optional.empty());
+        when(appointmentRepository.countByStudent_UserIdAndAppointmentStatus(10, AppointmentStatus.NO_SHOW.name()))
+                .thenReturn(5L);
+        when(studentPenaltyStatusRepository.save(any(StudentPenaltyStatus.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Optional<com.mars.dto.StudentAppointmentRestrictionResponse> restriction =
+                service.resolveActiveRestriction(student, now.toLocalDate());
+
+        assertThat(restriction).isPresent();
+        assertThat(restriction.get().getPenaltyActive()).isTrue();
+        assertThat(restriction.get().getRemainingDays()).isEqualTo(7);
+        assertThat(restriction.get().getRestrictionEndDate()).isEqualTo(now.toLocalDate().plusDays(7));
+        verify(studentPenaltyStatusRepository).save(argThat(status ->
+                Boolean.TRUE.equals(status.getIsRestricted())
+                        && status.getTotalNoShowCount() == 5
+                        && status.getRestrictionEndDate().equals(now.toLocalDate().plusDays(7))));
+    }
+
+    @Test
+    void resolveActiveRestriction_existingZeroStatus_backfillsFromNoShowAppointments() {
+        User student = new User();
+        student.setUserId(10);
+        student.setFullName("Restricted Student");
+
+        PenaltyRule rule = new PenaltyRule();
+        rule.setPenaltyRuleId(1);
+        rule.setMaxNoShowCount(3);
+        rule.setBanDurationDays(7);
+        rule.setIsActive(true);
+
+        StudentPenaltyStatus staleStatus = new StudentPenaltyStatus();
+        staleStatus.setStudentId(student.getUserId());
+        staleStatus.setStudent(student);
+        staleStatus.setIsRestricted(false);
+        staleStatus.setTotalNoShowCount(0);
+        staleStatus.setPenaltyRule(rule);
+
+        when(penaltyRuleRepository.findFirstByOrderByPenaltyRuleIdAsc())
+                .thenReturn(Optional.of(rule));
+        when(studentPenaltyStatusRepository.findById(10)).thenReturn(Optional.of(staleStatus));
+        when(appointmentRepository.countByStudent_UserIdAndAppointmentStatus(10, AppointmentStatus.NO_SHOW.name()))
+                .thenReturn(5L);
+        when(studentPenaltyStatusRepository.save(any(StudentPenaltyStatus.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Optional<com.mars.dto.StudentAppointmentRestrictionResponse> restriction =
+                service.resolveActiveRestriction(student, now.toLocalDate());
+
+        assertThat(restriction).isPresent();
+        assertThat(staleStatus.getTotalNoShowCount()).isEqualTo(5);
+        assertThat(staleStatus.getIsRestricted()).isTrue();
+        assertThat(staleStatus.getRestrictionEndDate()).isEqualTo(now.toLocalDate().plusDays(7));
     }
 
     @Test
