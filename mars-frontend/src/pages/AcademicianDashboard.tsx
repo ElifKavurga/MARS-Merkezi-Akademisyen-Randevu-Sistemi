@@ -28,7 +28,7 @@ const ACADEMICIAN_STATUS_LABELS: Record<string, string> = {
   APPROVED: 'Onaylanan öğrenciler',
   REJECTED: 'Reddedilen öğrenciler',
   COMPLETED: 'Tamamlanan öğrenciler',
-  NO_SHOW: 'Katılmayan öğrenciler',
+  NO_SHOW: 'Randevuya katılmayan öğrenciler',
   CANCELLED: 'İptal edilen öğrenciler',
   CANCELLED_BY_STUDENT: 'Öğrenci iptalleri',
   CANCELLED_BY_ACADEMICIAN: 'Akademisyen iptalleri',
@@ -278,7 +278,7 @@ export default function AcademicianDashboard() {
                 />
                 <DashboardKpiCard
                   icon="person_cancel"
-                  label="Katılmayan"
+                  label="Randevuya Katılmadı"
                   value={getStatusCount(stats, 'NO_SHOW')}
                   onClick={() => navigate(appointmentListPath({ status: 'NO_SHOW' }))}
                 />

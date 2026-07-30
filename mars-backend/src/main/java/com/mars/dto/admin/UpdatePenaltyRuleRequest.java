@@ -13,8 +13,8 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UpdatePenaltyRuleRequest {
 
-    @NotNull(message = "No-Show limiti zorunludur.")
-    @Positive(message = "No-Show limiti 0'dan büyük olmalıdır.")
+    @NotNull(message = "Randevuya katılmama limiti zorunludur.")
+    @Positive(message = "Randevuya katılmama limiti 0'dan büyük olmalıdır.")
     private Integer maxNoShowCount;
 
     @NotNull(message = "Ceza süresi zorunludur.")

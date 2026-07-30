@@ -108,7 +108,7 @@ export default function HodAcademiciansPage() {
       case 'completed':
         return 'Bu sayfada tamamlanan randevularınızla ilgili detaylı akademisyen listesi görüntülenmektedir.';
       case 'noshow':
-        return 'Bu sayfada No-Show kayıtlarına sahip akademisyenler görüntülenmektedir.';
+        return 'Bu sayfada randevuya katılmama kayıtlarına sahip akademisyenler görüntülenmektedir.';
       case 'waitlist':
         return 'Bu sayfada bekleme listesinde öğrencisi olan akademisyenler listelenmektedir.';
       default:

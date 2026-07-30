@@ -18,6 +18,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.SimpleTransactionStatus;
 
 import com.mars.dto.notification.NoShowNotificationRequest;
 import com.mars.dto.notification.PenaltyNotificationRequest;
@@ -38,6 +40,8 @@ class NoShowPenaltyServiceTest {
     @Mock
     private PenaltyRuleRepository penaltyRuleRepository;
     @Mock
+    private PlatformTransactionManager transactionManager;
+    @Mock
     private NoShowNotificationPublisher noShowNotificationPublisher;
     @Mock
     private PenaltyNotificationPublisher penaltyNotificationPublisher;
@@ -51,9 +55,12 @@ class NoShowPenaltyServiceTest {
                 appointmentRepository,
                 studentPenaltyStatusRepository,
                 penaltyRuleRepository,
+                transactionManager,
                 noShowNotificationPublisher,
                 penaltyNotificationPublisher
         );
+        lenient().when(transactionManager.getTransaction(any()))
+                .thenReturn(new SimpleTransactionStatus());
         now = LocalDateTime.of(2026, 7, 23, 14, 0);
     }
 

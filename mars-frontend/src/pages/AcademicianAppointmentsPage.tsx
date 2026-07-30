@@ -75,7 +75,7 @@ const QUERY_STATUS_TITLES: Partial<Record<AcademicianTab, string>> = {
   APPROVED: 'Onaylanan Öğrenciler',
   REJECTED: 'Reddedilen Öğrenciler',
   COMPLETED: 'Tamamlanan Öğrenciler',
-  NO_SHOW: 'Katılmayan Öğrenciler',
+  NO_SHOW: 'Randevuya Katılmayan Öğrenciler',
   CANCELLED: 'İptal Edilen Öğrenciler',
 };
 
@@ -98,7 +98,7 @@ export default function AcademicianAppointmentsPage({
   detailPath = academicianAppointmentDetailPath,
   searchInputId = 'acad-appt-search',
 }: AcademicianAppointmentsPageProps) {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryStatus = searchParams.get('status');
   const queryCategory = searchParams.get('category');
   const queryDate = searchParams.get('date');
@@ -158,6 +158,8 @@ export default function AcademicianAppointmentsPage({
     setActiveTab(tab);
     setSearch('');
     setSort('DATE_ASC');
+    const nextParams = new URLSearchParams({ status: tab });
+    setSearchParams(nextParams, { replace: true });
     if (byTab[tab] === undefined && !loadingByTab[tab] && !errorByTab[tab]) {
       void loadTab(tab);
     }

@@ -3,6 +3,8 @@ package com.mars.service;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.mars.dto.NotificationCreateRequest;
 import com.mars.dto.NotificationResponse;
@@ -21,17 +23,18 @@ public class NoShowNotificationPublisher {
     private final NoShowMailSubjectGenerator subjectGenerator;
     private final PublisherMailDetails mailDetails;
 
-    // TODO Sprint No-Show: AppointmentService içindeki gelecekteki No-Show durum
+    // TODO Sprint missed appointment: AppointmentService içindeki gelecekteki katılım göstermeme durum
     // geçişi ve ceza değerlendirmesi tamamlandıktan sonra bu metot çağrılmalıdır.
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public List<NotificationResponse> publish(NoShowNotificationRequest request) {
         return List.of(
                 publishFor(request, request.studentUserId(), subjectGenerator.studentSubject(),
-                        "Randevuya katılım göstermediğiniz için kayıt No-Show olarak işlendi. "
+                        "Randevuya katılım göstermediğiniz için kayıt Randevuya Katılmadı olarak işlendi. "
                                 + safeNextProcess(request.nextProcessInformation()),
-                        "Randevunuz No-Show olarak kaydedildi."),
+                        "Randevunuz Randevuya Katılmadı olarak kaydedildi."),
                 publishFor(request, request.staffUserId(), subjectGenerator.staffSubject(),
-                        "İlgili randevu No-Show olarak kaydedildi.",
-                        "No-Show işlemi tamamlandı."));
+                        "İlgili randevu Randevuya Katılmadı olarak kaydedildi.",
+                        "Randevuya Katılmadı işlemi tamamlandı."));
     }
 
     private NotificationResponse publishFor(
@@ -49,7 +52,7 @@ public class NoShowNotificationPublisher {
                 .eventKey("NO_SHOW:%s:%s".formatted(request.appointmentId(), recipientId))
                 .mailTemplateName(TEMPLATE)
                 .mailSubtitle(subtitle)
-                .mailStatusText("NO-SHOW")
+                .mailStatusText("Randevuya Katılmadı")
                 .mailStatusColor("#b91c1c")
                 .mailStatusBackground("#fef2f2")
                 .mailDetails(mailDetails.builder()

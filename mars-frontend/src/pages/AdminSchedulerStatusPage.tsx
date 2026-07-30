@@ -42,8 +42,8 @@ const SCHEDULER_NAME_MAP: Record<string, string> = {
   AppointmentStatusUpdateScheduler: 'Randevu Durumu Güncelleme Servisi',
   AppointmentReminder: 'Randevu Hatırlatma Servisi',
   AppointmentReminderScheduler: 'Randevu Hatırlatma Servisi',
-  NoShowDetection: 'No-Show Tespit Servisi',
-  NoShowPenaltyScheduler: 'No-Show Tespit Servisi',
+  NoShowDetection: 'Randevuya Katılmadı Tespit Servisi',
+  NoShowPenaltyScheduler: 'Randevuya Katılmadı Tespit Servisi',
   DelegationExpiry: 'Randevu Devri Süre Sonu Kontrolü',
   DelegationScheduler: 'Randevu Devri Süre Sonu Kontrolü',
   DelegationSync: 'Randevu Devri Senkronizasyonu',
@@ -64,7 +64,7 @@ function getSchedulerDisplayName(technicalName: string): string {
     return 'Randevu Hatırlatma Servisi';
   }
   if (/NoShow|No.?Show/i.test(normalizedName)) {
-    return 'No-Show Tespit Servisi';
+    return 'Randevuya Katılmadı Tespit Servisi';
   }
   if (/Delegation.*Sync|Sync.*Delegation/i.test(normalizedName)) {
     return 'Randevu Devri Senkronizasyonu';

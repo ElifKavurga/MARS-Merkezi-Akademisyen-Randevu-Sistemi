@@ -379,7 +379,7 @@ public class HodServiceImpl implements HodService {
 
         Integer departmentId = hodUser.getDepartment().getDepartmentId();
         
-        // --- No-Show Analysis ---
+        // --- Missed appointment analysis ---
         long totalAppointments = appointmentRepository.countByStaff_Department_DepartmentId(departmentId);
         long totalNoShow = appointmentRepository.countByStaff_Department_DepartmentIdAndAppointmentStatus(departmentId, "NO_SHOW");
         double noShowRate = totalAppointments > 0 ? ((double) totalNoShow / totalAppointments) * 100 : 0.0;

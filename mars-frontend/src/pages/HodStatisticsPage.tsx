@@ -252,7 +252,7 @@ export default function HodStatisticsPage() {
               <KpiCard icon="today" label="Bugünkü Randevu" value={kpi.todayAppointments} accent="bg-surface-container-high" onClick={() => navigate(`${ROUTES.HOD_ACADEMICIANS}?filter=today`)} />
               <KpiCard icon="pending" label="Bekleyen Randevu" value={kpi.pendingAppointments} accent="bg-amber-100 border border-amber-200 text-amber-700" onClick={() => navigate(`${ROUTES.HOD_ACADEMICIANS}?filter=pending`)} />
               <KpiCard icon="task_alt" label="Tamamlanan Randevu" value={kpi.completedAppointments} accent="bg-green-100 border border-green-200 text-green-700" onClick={() => navigate(`${ROUTES.HOD_ACADEMICIANS}?filter=completed`)} />
-              <KpiCard icon="person_cancel" label="No-Show Sayısı" value={kpi.noShowCount} accent="bg-red-100 border border-red-200 text-red-700" onClick={() => navigate(`${ROUTES.HOD_ACADEMICIANS}?filter=noshow`)} />
+              <KpiCard icon="person_cancel" label="Randevuya Katılmama Sayısı" value={kpi.noShowCount} accent="bg-red-100 border border-red-200 text-red-700" onClick={() => navigate(`${ROUTES.HOD_ACADEMICIANS}?filter=noshow`)} />
               <KpiCard icon="group_add" label="Bekleme Listesi" value={kpi.waitlistStudentCount} accent="bg-purple-100 border border-purple-200 text-purple-700" onClick={() => navigate(`${ROUTES.HOD_ACADEMICIANS}?filter=waitlist`)} />
             </div>
           </section>
@@ -265,14 +265,14 @@ export default function HodStatisticsPage() {
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <KpiCard icon="task_alt" label="Tamamlanan" value={academicianPerformance.totalCompleted} accent="bg-green-100 border border-green-200 text-green-700" onClick={() => navigate(`${ROUTES.HOD_ACADEMICIANS}?filter=completed`)} />
-            <KpiCard icon="person_cancel" label="No-Show" value={academicianPerformance.noShowCount} accent="bg-red-100 border border-red-200 text-red-700" onClick={() => navigate(`${ROUTES.HOD_ACADEMICIANS}?filter=noshow`)} />
+            <KpiCard icon="person_cancel" label="Randevuya Katılmadı" value={academicianPerformance.noShowCount} accent="bg-red-100 border border-red-200 text-red-700" onClick={() => navigate(`${ROUTES.HOD_ACADEMICIANS}?filter=noshow`)} />
             
             <div className="flex flex-col gap-2 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-4 shadow-sm">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 border border-orange-200 text-orange-700">
                 <span className="material-symbols-outlined text-[20px] text-primary">percent</span>
               </div>
               <div className="mt-1">
-                <p className="font-label-sm text-label-sm text-on-surface-variant">No-Show Oranı</p>
+                <p className="font-label-sm text-label-sm text-on-surface-variant">Randevuya Katılmama Oranı</p>
                 <p className="font-headline-sm text-headline-sm text-on-surface font-semibold">%{academicianPerformance.noShowRate}</p>
               </div>
             </div>
@@ -347,11 +347,11 @@ export default function HodStatisticsPage() {
           />
           
           <AnalysisCard
-            title="No-Show Analizi"
+            title="Randevuya Katılmama Analizi"
             icon="person_off"
             metrics={[
-              { label: 'Toplam No-Show', value: analysis.noShowAnalysis.totalNoShow },
-              { label: 'No-Show Oranı', value: `%${analysis.noShowAnalysis.noShowRate.toFixed(1)}` },
+              { label: 'Toplam Randevuya Katılmama', value: analysis.noShowAnalysis.totalNoShow },
+              { label: 'Randevuya Katılmama Oranı', value: `%${analysis.noShowAnalysis.noShowRate.toFixed(1)}` },
               { label: 'En Fazla (Gün)', value: analysis.noShowAnalysis.mostNoShowDay, colSpan: true },
               { label: 'En Fazla (Saat)', value: analysis.noShowAnalysis.mostNoShowTimeRange, colSpan: true },
             ]}

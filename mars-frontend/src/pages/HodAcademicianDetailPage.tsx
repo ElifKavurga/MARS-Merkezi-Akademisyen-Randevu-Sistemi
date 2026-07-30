@@ -20,7 +20,7 @@ const STATUS_LABELS: Record<string, string> = {
   APPROVED: 'Onaylanan',
   REJECTED: 'Reddedilen',
   COMPLETED: 'Tamamlanan',
-  NO_SHOW: 'No-Show',
+  NO_SHOW: 'Randevuya Katılmadı',
   CANCELLED: 'İptal',
 };
 
@@ -414,8 +414,8 @@ export default function HodAcademicianDetailPage() {
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <KpiCard icon="task_alt" label="Tamamlanan" value={performance.totalCompleted} accent="bg-green-100 text-green-700" />
             <KpiCard icon="trending_up" label="Günlük Ortalama" value={performance.averageDaily} accent="bg-blue-100 text-blue-700" />
-            <KpiCard icon="person_cancel" label="No-Show Sayısı" value={performance.noShowCount} accent="bg-red-100 text-red-700" />
-            <KpiCard icon="pie_chart" label="No-Show Oranı (%)" value={performance.noShowRate} accent="bg-orange-100 text-orange-700" />
+            <KpiCard icon="person_cancel" label="Randevuya Katılmama Sayısı" value={performance.noShowCount} accent="bg-red-100 text-red-700" />
+            <KpiCard icon="pie_chart" label="Randevuya Katılmama Oranı (%)" value={performance.noShowRate} accent="bg-orange-100 text-orange-700" />
           </div>
           <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
             <CompactMetric label="Ortalama Cevap Süresi" value={performance.averageResponseTime} />

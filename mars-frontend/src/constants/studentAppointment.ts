@@ -111,7 +111,7 @@ export const STUDENT_APPOINTMENT_MESSAGES = {
   PAST_LOAD_ERROR: 'Geçmiş randevular yüklenirken bir hata oluştu.',
   PAST_EMPTY_TITLE: 'Geçmiş randevu yok',
   PAST_EMPTY_DESCRIPTION:
-    'Tamamlanan, iptal edilen, reddedilen veya gelinmedi (No-Show) randevularınız burada listelenir.',
+    'Tamamlanan, iptal edilen, reddedilen veya randevuya katılmadı olarak işaretlenen randevularınız burada listelenir.',
   SEARCH_PLACEHOLDER: 'Personel, ünvan, ders veya kategori ara...',
   SEARCH_LABEL: 'Randevu ara',
   FILTER_STATUS: 'Durum',

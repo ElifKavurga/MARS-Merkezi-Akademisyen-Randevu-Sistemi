@@ -34,7 +34,7 @@ public class NoShowPenaltyScheduler {
             ctx.addUpdated(processedCount);
         } catch (Exception e) {
             ctx.incrementErrors();
-            LOGGER.error("[{}] Fatal error during No-Show detection. errorType={}",
+            LOGGER.error("[{}] Fatal error during missed appointment detection. errorType={}",
                     NO_SHOW_SCHEDULER_NAME, e.getClass().getSimpleName(), e);
         } finally {
             ctx.finish();

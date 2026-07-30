@@ -9,6 +9,6 @@ public class NoShowMailSubjectGenerator {
     }
 
     public String staffSubject() {
-        return "MARS No-Show Kaydı Oluşturuldu";
+        return "MARS Randevuya Katılmadı Kaydı Oluşturuldu";
     }
 }

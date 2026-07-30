@@ -1,6 +1,8 @@
 package com.mars.service;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.mars.dto.NotificationCreateRequest;
 import com.mars.dto.NotificationResponse;
@@ -22,6 +24,7 @@ public class PenaltyNotificationPublisher {
 
     // TODO Sprint Penalty: gelecekteki PenaltyService ceza uygulama ve ceza kaldırma
     // işlemleri kalıcı hale getirildikten sonra bu metot çağrılmalıdır.
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public NotificationResponse publish(PenaltyNotificationRequest request) {
         boolean applied = request.event() == PenaltyNotificationEvent.APPLIED;
         String subject = subjectGenerator.subject(request.event());

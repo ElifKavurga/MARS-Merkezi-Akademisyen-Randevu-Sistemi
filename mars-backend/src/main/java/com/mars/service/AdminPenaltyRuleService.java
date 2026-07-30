@@ -42,7 +42,7 @@ public class AdminPenaltyRuleService {
 
     private void validateRequest(UpdatePenaltyRuleRequest request) {
         if (request.getMaxNoShowCount() == null || request.getMaxNoShowCount() <= 0) {
-            throw new BadRequestException("No-Show limiti 0'dan büyük olmalıdır.");
+            throw new BadRequestException("Randevuya katılmama limiti 0'dan büyük olmalıdır.");
         }
         if (request.getBanDurationDays() == null || request.getBanDurationDays() <= 0) {
             throw new BadRequestException("Ceza süresi 0'dan büyük olmalıdır.");

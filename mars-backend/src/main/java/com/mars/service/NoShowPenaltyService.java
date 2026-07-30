@@ -12,7 +12,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.mars.AppointmentMessages;
 import com.mars.dto.notification.NoShowNotificationRequest;
@@ -37,6 +41,8 @@ public class NoShowPenaltyService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NoShowPenaltyService.class);
     private static final ZoneId APP_ZONE = ZoneId.of("Europe/Istanbul");
+    private static final int DEFAULT_MAX_NO_SHOW_COUNT = 3;
+    private static final int DEFAULT_BAN_DURATION_DAYS = 7;
     private static final Set<String> ACTIVE_STATUSES = Set.of(
             AppointmentStatus.APPROVED.name()
     );
@@ -44,6 +50,7 @@ public class NoShowPenaltyService {
     private final AppointmentRepository appointmentRepository;
     private final StudentPenaltyStatusRepository studentPenaltyStatusRepository;
     private final PenaltyRuleRepository penaltyRuleRepository;
+    private final PlatformTransactionManager transactionManager;
     
     private final NoShowNotificationPublisher noShowNotificationPublisher;
     private final PenaltyNotificationPublisher penaltyNotificationPublisher;
@@ -71,7 +78,7 @@ public class NoShowPenaltyService {
                     count++;
                 }
             } catch (Exception e) {
-                LOGGER.error("Failed to automatically mark appointment as No-Show. appointmentId={}, error={}",
+                LOGGER.error("Failed to automatically mark appointment as missed. appointmentId={}, error={}",
                         appointmentId, e.getMessage(), e);
             }
         }
@@ -119,6 +126,16 @@ public class NoShowPenaltyService {
         }
         appointment.setUpdatedAt(now);
         appointmentRepository.save(appointment);
+        runAfterCommitInNewTransaction(() -> processPenaltyAndNotifications(appointmentId, now));
+
+        return appointment;
+    }
+
+    private void processPenaltyAndNotifications(Integer appointmentId, LocalDateTime now) {
+        Appointment appointment = appointmentRepository.findByIdForUpdate(appointmentId).orElse(null);
+        if (appointment == null || !AppointmentStatus.NO_SHOW.name().equals(appointment.getAppointmentStatus())) {
+            return;
+        }
 
         User student = appointment.getStudent();
         StudentPenaltyStatus penaltyStatus = studentPenaltyStatusRepository.findById(student.getUserId())
@@ -128,68 +145,116 @@ public class NoShowPenaltyService {
                     newStatus.setStudent(student);
                     newStatus.setIsRestricted(false);
                     newStatus.setTotalNoShowCount(0);
-                    PenaltyRule activeRule = penaltyRuleRepository.findFirstByOrderByPenaltyRuleIdAsc()
-                            .orElseThrow(() -> new IllegalStateException("No active penalty rule found"));
-                    newStatus.setPenaltyRule(activeRule);
+                    newStatus.setPenaltyRule(resolvePenaltyRule());
                     return newStatus;
                 });
 
-        penaltyStatus.setTotalNoShowCount(penaltyStatus.getTotalNoShowCount() + 1);
+        int currentNoShowCount = penaltyStatus.getTotalNoShowCount() == null
+                ? 0
+                : penaltyStatus.getTotalNoShowCount();
+        penaltyStatus.setTotalNoShowCount(currentNoShowCount + 1);
 
         PenaltyRule rule = penaltyStatus.getPenaltyRule();
+        if (rule == null) {
+            rule = resolvePenaltyRule();
+            penaltyStatus.setPenaltyRule(rule);
+        }
+        int maxNoShowCount = rule.getMaxNoShowCount() == null || rule.getMaxNoShowCount() <= 0
+                ? DEFAULT_MAX_NO_SHOW_COUNT
+                : rule.getMaxNoShowCount();
+        int banDurationDays = rule.getBanDurationDays() == null || rule.getBanDurationDays() <= 0
+                ? DEFAULT_BAN_DURATION_DAYS
+                : rule.getBanDurationDays();
+
         boolean penaltyApplied = false;
         if (Boolean.TRUE.equals(rule.getIsActive()) && !Boolean.TRUE.equals(penaltyStatus.getIsRestricted())) {
-            if (penaltyStatus.getTotalNoShowCount() >= rule.getMaxNoShowCount()) {
+            if (penaltyStatus.getTotalNoShowCount() >= maxNoShowCount) {
                 penaltyStatus.setIsRestricted(true);
                 penaltyStatus.setRestrictionStartDate(now.toLocalDate());
-                penaltyStatus.setRestrictionEndDate(now.toLocalDate().plusDays(rule.getBanDurationDays()));
+                penaltyStatus.setRestrictionEndDate(now.toLocalDate().plusDays(banDurationDays));
                 penaltyApplied = true;
             }
         }
 
         studentPenaltyStatusRepository.save(penaltyStatus);
 
-        // Publish No-Show Notification
         String nextProc = penaltyApplied 
                 ? "Mevcut ceza kuralları kapsamında randevu almanız geçici olarak kısıtlanmıştır."
                 : "Mevcut ceza kuralları kapsamında takip edilmektedir.";
-        try {
-            noShowNotificationPublisher.publish(new NoShowNotificationRequest(
-                    student.getUserId(),
-                    appointment.getStaff().getUserId(),
-                    appointmentId,
-                    student.getFullName(),
-                    appointment.getStaff().getFullName(),
-                    appointment.getSlot().getSlotDate(),
-                    appointment.getSlot().getStartTime(),
-                    appointment.getSlot().getEndTime(),
-                    appointment.getCategory().getCategoryName(),
-                    appointment.getCourse() != null ? appointment.getCourse().getCourseCode() : null,
-                    nextProc
-            ));
-        } catch (Exception e) {
-            LOGGER.error("Failed to send No-Show notifications for appointmentId={}", appointmentId, e);
-        }
-
-        // Publish Penalty applied Notification
-        if (penaltyApplied) {
+        NoShowNotificationRequest noShowNotification = new NoShowNotificationRequest(
+                student.getUserId(),
+                appointment.getStaff().getUserId(),
+                appointmentId,
+                student.getFullName(),
+                appointment.getStaff().getFullName(),
+                appointment.getSlot().getSlotDate(),
+                appointment.getSlot().getStartTime(),
+                appointment.getSlot().getEndTime(),
+                appointment.getCategory().getCategoryName(),
+                appointment.getCourse() != null ? appointment.getCourse().getCourseCode() : null,
+                nextProc
+        );
+        runAfterCommit(() -> {
             try {
-                penaltyNotificationPublisher.publish(new PenaltyNotificationRequest(
-                        student.getUserId(),
-                        student.getUserId(), // Using student ID as the reference as well
-                        PenaltyNotificationEvent.APPLIED,
-                        student.getFullName(),
-                        "No-Show limiti aşıldı (" + rule.getMaxNoShowCount() + " kez katılım sağlanmadı)",
-                        penaltyStatus.getRestrictionStartDate(),
-                        penaltyStatus.getRestrictionEndDate(),
-                        rule.getBanDurationDays()
-                ));
+                noShowNotificationPublisher.publish(noShowNotification);
             } catch (Exception e) {
+                LOGGER.error("Failed to send missed appointment notifications for appointmentId={}", appointmentId, e);
+            }
+        });
+
+        if (penaltyApplied) {
+            PenaltyNotificationRequest penaltyNotification = new PenaltyNotificationRequest(
+                    student.getUserId(),
+                    student.getUserId(),
+                    PenaltyNotificationEvent.APPLIED,
+                    student.getFullName(),
+                    "Randevuya katılmama limiti aşıldı (" + maxNoShowCount + " kez katılım sağlanmadı)",
+                    penaltyStatus.getRestrictionStartDate(),
+                    penaltyStatus.getRestrictionEndDate(),
+                    banDurationDays
+            );
+            runAfterCommit(() -> {
+                try {
+                    penaltyNotificationPublisher.publish(penaltyNotification);
+                } catch (Exception e) {
                 LOGGER.error("Failed to send Penalty Applied notification for studentId={}", student.getUserId(), e);
             }
+        });
         }
+    }
 
-        return appointment;
+    private PenaltyRule resolvePenaltyRule() {
+        return penaltyRuleRepository.findFirstByOrderByPenaltyRuleIdAsc()
+                .orElseGet(() -> {
+                    PenaltyRule defaultRule = new PenaltyRule();
+                    defaultRule.setMaxNoShowCount(DEFAULT_MAX_NO_SHOW_COUNT);
+                    defaultRule.setBanDurationDays(DEFAULT_BAN_DURATION_DAYS);
+                    defaultRule.setIsActive(true);
+                    return penaltyRuleRepository.save(defaultRule);
+                });
+    }
+
+    private void runAfterCommit(Runnable action) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            action.run();
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                action.run();
+            }
+        });
+    }
+
+    private void runAfterCommitInNewTransaction(Runnable action) {
+        runAfterCommit(() -> {
+            try {
+                new TransactionTemplate(transactionManager).executeWithoutResult(status -> action.run());
+            } catch (Exception e) {
+                LOGGER.error("Failed to process missed appointment side effects.", e);
+            }
+        });
     }
 
     @Transactional

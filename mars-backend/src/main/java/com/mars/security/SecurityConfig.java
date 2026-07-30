@@ -60,9 +60,9 @@ public class SecurityConfig {
                         .requestMatchers("/assistant/appointments", "/assistant/appointments/**")
                                 .hasRole("ASSISTANT")
                         .requestMatchers("/academician/appointments", "/academician/appointments/**")
-                                .hasRole("ACADEMICIAN")
+                                .hasAnyRole("ACADEMICIAN", "HOD")
                         .requestMatchers(HttpMethod.GET, "/academician/dashboard")
-                                .hasRole("ACADEMICIAN")
+                                .hasAnyRole("ACADEMICIAN", "HOD")
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/assistant/courses",

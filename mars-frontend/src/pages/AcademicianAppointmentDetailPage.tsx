@@ -425,7 +425,7 @@ export default function AcademicianAppointmentDetailPage({
                   onClick={handleNoShowClick}
                 >
                   <span className="material-symbols-outlined text-[18px]" aria-hidden="true">person_off</span>
-                  {isMarkingNoShow ? 'İşaretleniyor...' : 'No-Show'}
+                  {isMarkingNoShow ? 'İşaretleniyor...' : 'Randevuya Katılmadı'}
                 </button>
               </>
             ) : null}
@@ -595,7 +595,7 @@ export default function AcademicianAppointmentDetailPage({
         open={showNoShowConfirm && Boolean(appointment)}
         title={STAFF_APPOINTMENT_MESSAGES.NO_SHOW_TITLE}
         description={STAFF_APPOINTMENT_MESSAGES.NO_SHOW_DESCRIPTION}
-        confirmLabel="No-Show"
+        confirmLabel="Randevuya Katılmadı"
         loading={isMarkingNoShow}
         error={noShowError}
         variant="danger"

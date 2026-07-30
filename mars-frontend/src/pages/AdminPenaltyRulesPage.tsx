@@ -91,7 +91,7 @@ export default function AdminPenaltyRulesPage() {
             Ceza Kuralları Yapılandırması
           </h1>
           <p className="font-body-lg text-body-lg text-on-surface-variant">
-            No-Show durumları için sistem ceza parametrelerini belirleyin.
+            Randevuya katılmama durumları için sistem ceza parametrelerini belirleyin.
           </p>
         </div>
 
@@ -113,7 +113,7 @@ export default function AdminPenaltyRulesPage() {
                       >
                         warning
                       </span>
-                      No-Show Limiti
+                      Randevuya Katılmama Limiti
                     </label>
                     <p className="mb-3 text-sm font-body-md text-body-md text-on-surface-variant">
                       Bir öğrencinin randevusuna gelmediği durumlar için izin verilen maksimum sayı.
@@ -263,8 +263,8 @@ export default function AdminPenaltyRulesPage() {
                   Cezalar Nasıl Uygulanır?
                 </h2>
                 <p className="text-sm leading-relaxed font-body-md text-body-md text-on-surface-variant">
-                  Yapılandırılan kurallar yalnızca kaydedildikten sonra oluşacak yeni No-Show
-                  durumları için uygulanır. Geçmiş randevular geriye dönük değerlendirilmez.
+                  Yapılandırılan kurallar yalnızca kaydedildikten sonra oluşacak yeni randevuya
+                  katılmama durumları için uygulanır. Geçmiş randevular geriye dönük değerlendirilmez.
                   Sistem pasif duruma alındığında mevcut cezalar kaldırılmaz; yalnızca yeni ceza
                   oluşturulması durdurulur.
                 </p>
