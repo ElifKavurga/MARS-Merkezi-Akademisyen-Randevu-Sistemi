@@ -43,15 +43,7 @@ function AcademicianCard({ academician }: { academician: StudentAcademician }) {
       data-academician-id={academician.userId}
     >
       <div className="flex items-start gap-3">
-        {academician.profilePhotoUrl ? (
-          <img
-            src={academician.profilePhotoUrl}
-            alt=""
-            className="h-10 w-10 shrink-0 rounded-full border border-outline-variant object-cover"
-          />
-        ) : (
-          <UserAvatar fullName={academician.fullName} size="md" />
-        )}
+        <UserAvatar fullName={academician.fullName} size="md" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-1.5">
             <h2 className="min-w-0 break-words font-headline-md text-body-md text-primary">

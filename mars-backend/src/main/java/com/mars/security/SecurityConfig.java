@@ -48,6 +48,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/reset-password").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/reset-password/confirm").permitAll()
                         .requestMatchers(HttpMethod.GET, "/roles", "/departments").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/ws/notifications", "/ws/notifications/**").permitAll()
@@ -88,7 +89,7 @@ public class SecurityConfig {
                         .requestMatchers("/calendar", "/calendar/**")
                                 .hasAnyRole("ASSISTANT", "ACADEMICIAN", "HOD")
                         .requestMatchers("/out-of-office", "/out-of-office/**")
-                                .hasAnyRole("ACADEMICIAN", "HOD")
+                                .hasAnyRole("ASSISTANT", "ACADEMICIAN", "HOD")
                         .requestMatchers(HttpMethod.GET, "/delegations/incoming")
                                 .hasAnyRole("ACADEMICIAN", "HOD", "ASSISTANT")
                         .requestMatchers(HttpMethod.GET, "/delegations/student/pending")

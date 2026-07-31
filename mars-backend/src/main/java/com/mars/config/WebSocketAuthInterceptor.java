@@ -63,7 +63,7 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
         }
         String username = jwtService.extractUsername(token);
         UserDetails details = userDetailsService.loadUserByUsername(username);
-        if (!details.isEnabled() || !jwtService.isTokenValid(token, details.getUsername())) {
+        if (!details.isEnabled() || !jwtService.isTokenValid(token, details.getUsername(), details.getPassword())) {
             throw new IllegalArgumentException("Geçersiz WebSocket kimlik bilgisi.");
         }
         accessor.setUser(new UsernamePasswordAuthenticationToken(
@@ -75,6 +75,9 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                 || !(authentication.getCredentials() instanceof String token)) {
             return false;
         }
-        return !jwtService.isTokenValid(token, authentication.getName());
+        if (!(authentication.getPrincipal() instanceof UserDetails details)) {
+            return true;
+        }
+        return !jwtService.isTokenValid(token, authentication.getName(), details.getPassword());
     }
 }

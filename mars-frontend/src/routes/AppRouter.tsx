@@ -153,6 +153,7 @@ export default function AppRouter() {
               element={<AcademicianIncomingDelegationDetailPage />}
             />
             <Route path={ROUTES.ASSISTANT_CALENDAR} element={<AssistantCalendarPage />} />
+            <Route path={ROUTES.ASSISTANT_OUT_OF_OFFICE} element={<AcademicianOutOfOfficePage />} />
             <Route path={ROUTES.ASSISTANT_PROFILE} element={<ProfilePage />} />
           </Route>
         </Route>

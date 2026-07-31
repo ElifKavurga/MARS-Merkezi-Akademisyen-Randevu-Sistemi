@@ -1,5 +1,5 @@
 export { apiClient } from './apiClient';
-export { login, resetPassword } from './authService';
+export { login, resetPassword, confirmResetPassword } from './authService';
 export {
   registerClearSessionHandler,
   unregisterClearSessionHandler,

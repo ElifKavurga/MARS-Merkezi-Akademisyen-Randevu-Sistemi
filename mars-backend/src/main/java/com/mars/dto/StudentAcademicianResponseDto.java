@@ -19,6 +19,4 @@ public class StudentAcademicianResponseDto {
     private String departmentName;
     private String institutionalEmail;
     private Boolean isAcceptingAppointments;
-    /** Profil fotoğrafı henüz modelde yok; istemci placeholder kullanır. */
-    private String profilePhotoUrl;
 }

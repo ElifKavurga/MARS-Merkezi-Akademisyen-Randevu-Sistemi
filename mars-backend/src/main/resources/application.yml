@@ -57,6 +57,9 @@ mars:
   jwt:
     secret: ${MARS_JWT_SECRET:MARS_DEV_JWT_SECRET_KEY_CHANGE_ME_32CHARS_MIN}
     expiration-ms: ${MARS_JWT_EXPIRATION_MS:86400000}
+    password-reset-expiration-ms: ${MARS_JWT_PASSWORD_RESET_EXPIRATION_MS:900000}
+  frontend:
+    base-url: ${MARS_FRONTEND_BASE_URL:http://localhost:5173}
   mail:
     enabled: ${MAIL_ENABLED:true}
     from: ${MAIL_FROM:${MAIL_USERNAME:}}

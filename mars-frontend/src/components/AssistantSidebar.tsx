@@ -39,6 +39,12 @@ const assistantNavItems = [
     icon: 'calendar_month',
     end: true,
   },
+  {
+    label: 'İzin Aralıklarım',
+    path: ROUTES.ASSISTANT_OUT_OF_OFFICE,
+    icon: 'event_busy',
+    end: true,
+  },
 ] as const;
 
 export default function AssistantSidebar({ mobileOpen, onClose }: ModuleSidebarProps) {

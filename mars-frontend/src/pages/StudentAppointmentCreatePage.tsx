@@ -166,17 +166,9 @@ function AcademicianSummary({ academician }: { academician: StudentAcademicianDe
       aria-label="Seçilen akademisyen"
     >
       <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center">
-        {academician.profilePhotoUrl ? (
-          <img
-            src={academician.profilePhotoUrl}
-            alt=""
-            className="h-16 w-16 shrink-0 rounded-full border-2 border-primary-container object-cover"
-          />
-        ) : (
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-primary-container bg-surface-container">
-            <UserAvatar fullName={academician.fullName} size="lg" />
-          </div>
-        )}
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-primary-container bg-surface-container">
+          <UserAvatar fullName={academician.fullName} size="lg" />
+        </div>
         <div className="min-w-0 flex-1 text-center sm:text-left">
           <h2 className="font-title-lg text-title-lg text-on-background">
             {academician.fullName}

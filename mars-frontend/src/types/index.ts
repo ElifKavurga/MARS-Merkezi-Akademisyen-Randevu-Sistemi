@@ -26,6 +26,7 @@ export type {
 export type {
   LoginRequest,
   LoginResponse,
+  ResetPasswordConfirmRequest,
   ResetPasswordRequest,
   ResetPasswordResponse,
   AuthUser,

@@ -176,17 +176,9 @@ export default function StudentAcademicianProfilePage() {
       <div className="mb-2 grid grid-cols-1 gap-2 lg:grid-cols-2">
         <section className="rounded-lg border border-outline-variant bg-surface-container-lowest p-2.5">
           <div className="flex flex-col gap-2.5 md:flex-row md:items-start">
-            {profile.profilePhotoUrl ? (
-              <img
-                src={profile.profilePhotoUrl}
-                alt=""
-                className="h-12 w-12 shrink-0 rounded-full border-2 border-primary-container object-cover"
-              />
-            ) : (
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-primary-container bg-surface-container font-headline-md text-base font-semibold text-primary">
-                <UserAvatar fullName={profile.fullName} size="md" />
-              </div>
-            )}
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-primary-container bg-surface-container font-headline-md text-base font-semibold text-primary">
+              <UserAvatar fullName={profile.fullName} size="md" />
+            </div>
 
             <div className="min-w-0 flex-1">
               <h2 className="font-title-lg text-title-lg text-on-background">

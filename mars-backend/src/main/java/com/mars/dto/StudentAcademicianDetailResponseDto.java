@@ -21,7 +21,6 @@ public class StudentAcademicianDetailResponseDto {
     private String departmentName;
     private String institutionalEmail;
     private Boolean isAcceptingAppointments;
-    private String profilePhotoUrl;
     /** Modelde henüz yok; ileride doldurulabilir. */
     private String officeName;
     /** Modelde henüz yok; ileride doldurulabilir. */

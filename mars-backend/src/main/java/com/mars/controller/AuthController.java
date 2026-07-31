@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.mars.dto.auth.LoginRequest;
 import com.mars.dto.auth.LoginResponse;
+import com.mars.dto.auth.ResetPasswordConfirmRequest;
 import com.mars.dto.auth.ResetPasswordRequest;
 import com.mars.dto.auth.ResetPasswordResponse;
 import com.mars.service.AuthenticationService;
@@ -32,5 +33,11 @@ public class AuthController {
     public ResponseEntity<ResetPasswordResponse> resetPassword(
             @Valid @RequestBody ResetPasswordRequest request) {
         return ResponseEntity.ok(authenticationService.resetPassword(request));
+    }
+
+    @PostMapping("/reset-password/confirm")
+    public ResponseEntity<ResetPasswordResponse> confirmResetPassword(
+            @Valid @RequestBody ResetPasswordConfirmRequest request) {
+        return ResponseEntity.ok(authenticationService.confirmResetPassword(request));
     }
 }

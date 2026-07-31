@@ -48,7 +48,6 @@ public class UserMapper {
                 .departmentName(user.getDepartment().getDepartmentName())
                 .institutionalEmail(user.getInstitutionalEmail())
                 .isAcceptingAppointments(Boolean.TRUE.equals(user.getIsAcceptingAppointments()))
-                .profilePhotoUrl(null)
                 .build();
     }
 
@@ -71,7 +70,6 @@ public class UserMapper {
                 .departmentName(user.getDepartment().getDepartmentName())
                 .institutionalEmail(user.getInstitutionalEmail())
                 .isAcceptingAppointments(Boolean.TRUE.equals(user.getIsAcceptingAppointments()))
-                .profilePhotoUrl(null)
                 .officeName(null)
                 .officeLocation(null)
                 .about(null)

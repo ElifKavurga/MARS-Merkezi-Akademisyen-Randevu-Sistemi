@@ -5,7 +5,6 @@ export type StudentAcademician = {
   departmentName: string;
   institutionalEmail: string;
   isAcceptingAppointments: boolean;
-  profilePhotoUrl: string | null;
 };
 
 export type StudentAcademicianCourse = {
@@ -22,7 +21,6 @@ export type StudentAcademicianDetail = {
   departmentName: string;
   institutionalEmail: string;
   isAcceptingAppointments: boolean;
-  profilePhotoUrl: string | null;
   officeName: string | null;
   officeLocation: string | null;
   about: string | null;

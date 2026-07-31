@@ -18,6 +18,12 @@ export type ResetPasswordRequest = {
   institutionalEmail: string;
 };
 
+export type ResetPasswordConfirmRequest = {
+  token: string;
+  newPassword: string;
+  confirmNewPassword: string;
+};
+
 export type ResetPasswordResponse = {
   message: string;
 };

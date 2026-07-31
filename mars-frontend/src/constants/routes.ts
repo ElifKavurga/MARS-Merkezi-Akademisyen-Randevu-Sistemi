@@ -35,6 +35,7 @@ export const ROUTES = {
   ASSISTANT_DELEGATION_HISTORY: '/assistant/delegations/history',
   ASSISTANT_DELEGATION_DETAIL: '/assistant/delegations/:delegationId',
   ASSISTANT_CALENDAR: '/assistant/calendar',
+  ASSISTANT_OUT_OF_OFFICE: '/assistant/out-of-office',
   ASSISTANT_PROFILE: '/assistant/profile',
   STUDENT: '/ogrenci',
   STUDENT_APPOINTMENTS: '/ogrenci/randevularim',
