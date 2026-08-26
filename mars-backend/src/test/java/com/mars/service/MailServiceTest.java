@@ -186,7 +186,7 @@ class MailServiceTest {
         String html = engine.process("mail/mars-mail", context);
 
         assertThat(html)
-                .contains("Modern Akademisyen Randevu Sistemi")
+                .contains("Merkezi Akademisyen Randevu Sistemi")
                 .contains("Randevu Onaylandı")
                 .contains("Randevunuz başarıyla onaylandı.")
                 .contains("Randevuyu Gör")
@@ -214,7 +214,7 @@ class MailServiceTest {
         for (String template : java.util.List.of(
                 "mail/waitlist-notification", "mail/no-show-notification", "mail/penalty-notification")) {
             assertThat(engine.process(template, context))
-                    .contains("Modern Akademisyen Randevu Sistemi")
+                    .contains("Merkezi Akademisyen Randevu Sistemi")
                     .contains("Süreç Bildirimi")
                     .contains("Bilgilendirme içeriği");
         }

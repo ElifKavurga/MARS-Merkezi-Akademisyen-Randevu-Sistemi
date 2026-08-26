@@ -1,6 +1,6 @@
 # MARS Frontend
 
-Modern Akademisyen Randevu Sistemi — React istemci uygulaması.
+Merkezi Akademisyen Randevu Sistemi — React istemci uygulaması.
 
 ## Teknoloji Yığını
 

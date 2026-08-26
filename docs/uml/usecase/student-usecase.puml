@@ -1,0 +1,82 @@
+@startuml
+
+left to right direction
+
+skinparam shadowing false
+skinparam nodesep 15
+skinparam ranksep 12
+skinparam defaultTextAlignment center
+skinparam actor {
+    FontSize 20
+    BorderThickness 1.5
+}
+skinparam usecase {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 10
+    Padding 2
+}
+
+actor "Öğrenci" as Student
+
+usecase "Sisteme Giriş Yap" as ST_UC01
+usecase "Şifre Sıfırla" as ST_UC02
+usecase "Çıkış Yap" as ST_UC23
+usecase "Ana Ekranı\nGörüntüle" as ST_UC03
+usecase "Akademisyen Ara" as ST_UC04
+usecase "Akademisyen Profili\nGörüntüle" as ST_UC05
+usecase "Randevu Kategorilerini\nGörüntüle" as ST_UC06
+usecase "Uygun Slotları\nGörüntüle" as ST_UC07
+usecase "Randevu Oluştur" as ST_UC08
+usecase "Randevularımı\nGörüntüle" as ST_UC09
+usecase "Randevu Detayı\nGörüntüle" as ST_UC10
+usecase "Randevu İptal Et" as ST_UC11
+usecase "Ceza Durumunu\nGörüntüle" as ST_UC12
+usecase "Yeniden Planlama\nTalebini Yanıtla" as ST_UC13
+usecase "Devir Taleplerini\nGörüntüle" as ST_UC14
+usecase "Devir Detayı\nGörüntüle" as ST_UC15
+usecase "Devir Talebini Yanıtla" as ST_UC16
+usecase "Bekleme Listesi\nTeklifini Yanıtla" as ST_UC17
+usecase "Profil Görüntüle" as ST_UC18
+usecase "Şifre Değiştir" as ST_UC19
+usecase "E-Posta Bildirim\nTercihlerini Güncelle" as ST_UC20
+usecase "Bildirimleri\nGörüntüle" as ST_UC21
+usecase "Bildirimleri Okundu\nİşaretle" as ST_UC22
+
+Student -- ST_UC03
+Student -- ST_UC01
+Student -- ST_UC02
+Student -- ST_UC23
+Student -- ST_UC04
+Student -- ST_UC05
+Student -- ST_UC06
+Student -- ST_UC07
+Student -- ST_UC08
+Student -- ST_UC09
+Student -- ST_UC10
+Student -- ST_UC11
+Student -- ST_UC12
+Student -- ST_UC13
+Student -- ST_UC14
+Student -- ST_UC15
+Student -- ST_UC16
+Student -- ST_UC17
+Student -- ST_UC18
+Student -- ST_UC19
+Student -- ST_UC20
+Student -- ST_UC21
+Student -- ST_UC22
+
+ST_UC05 ..> ST_UC04 : <<include>>
+ST_UC08 ..> ST_UC05 : <<include>>
+ST_UC08 ..> ST_UC06 : <<include>>
+ST_UC08 ..> ST_UC07 : <<include>>
+ST_UC10 ..> ST_UC09 : <<include>>
+ST_UC11 ..> ST_UC10 : <<include>>
+ST_UC13 ..> ST_UC10 : <<include>>
+ST_UC15 ..> ST_UC14 : <<include>>
+ST_UC16 ..> ST_UC15 : <<include>>
+ST_UC17 ..> ST_UC21 : <<extend>>
+ST_UC22 ..> ST_UC21 : <<include>>
+
+@enduml

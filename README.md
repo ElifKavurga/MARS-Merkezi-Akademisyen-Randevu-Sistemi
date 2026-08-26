@@ -1,6 +1,6 @@
 # MARS
 
-**Modern Akademisyen Randevu Sistemi**
+**Merkezi Akademisyen Randevu Sistemi**
 
 ![Java](https://img.shields.io/badge/Java-21-red?logo=openjdk)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-6DB33F?logo=springboot&logoColor=white)
@@ -64,7 +64,7 @@ Frontend tarafında sayfalar, ortak bileşenler, servisler, context yapıları v
 ## Proje Yapısı
 
 ```text
-MARS-Modern-Akademisyen-Randevu-Sistemi/
+MARS-Merkezi-Akademisyen-Randevu-Sistemi/
 ├── docs/
 │   ├── ER.md
 │   └── SRS.md

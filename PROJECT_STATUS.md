@@ -1,6 +1,6 @@
 # MARS Proje Durumu
 
-**Modern Akademisyen Randevu Sistemi (MARS)** — üniversite akademisyen randevu yönetim platformu.  
+**Merkezi Akademisyen Randevu Sistemi (MARS)** — üniversite akademisyen randevu yönetim platformu.  
 Kurumsal `@...edu.tr` kimlik doğrulama, rol tabanlı erişim ve (planlanan) randevu / ofis saati / bekleme listesi akışlarını kapsar.
 
 | Alan | Değer |

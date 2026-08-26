@@ -15,7 +15,7 @@
     <artifactId>mars-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>mars-backend</name>
-    <description>MARS - Modern Akademisyen Randevu Sistemi Backend</description>
+    <description>MARS - Merkezi Akademisyen Randevu Sistemi Backend</description>
 
     <properties>
         <java.version>21</java.version>

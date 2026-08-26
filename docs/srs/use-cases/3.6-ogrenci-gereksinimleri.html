@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>3.6 Öğrenci Gereksinimleri</title>
+    <style>
+        body {
+            font-family: Calibri, Arial, sans-serif;
+            font-size: 11pt;
+            color: #000;
+        }
+
+        h1 {
+            font-size: 16pt;
+            margin: 0 0 14px 0;
+        }
+
+        h2 {
+            font-size: 13pt;
+            margin: 18px 0 8px 0;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 0 0 12px 0;
+        }
+
+        th, td {
+            padding: 6px 8px;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        td:first-child {
+            width: 24%;
+            font-weight: bold;
+        }
+
+        ol, ul {
+            margin-top: 0;
+            margin-bottom: 0;
+            padding-left: 22px;
+        }
+
+        li {
+            margin-bottom: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>3.6 Öğrenci Gereksinimleri</h1>
+
+    <h2>Ana Ekranı Görüntüleme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Ana Ekranı Görüntüleme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Student</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>Öğrenci sisteme giriş yaptıktan sonra öğrenci ana ekranını açar.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Öğrenci geçerli oturuma sahip olmalı ve Student rolü ile yetkilendirilmiş olmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>Öğrenci giriş sonrası ana ekranına yönlendirilir.</li>
+                    <li>Frontend öğrencinin aktif randevularını backend servisinden ister.</li>
+                    <li>Frontend öğrencinin bekleyen devir onaylarını ve ceza durumunu ilgili servislerden alır.</li>
+                    <li>Sistem yaklaşan randevu sayısını ve en yakın randevu kayıtlarını ana ekranda gösterir.</li>
+                    <li>Bekleyen devir onayı varsa ana ekranda karar vermeye yönlendiren uyarı alanı görüntülenir.</li>
+                    <li>Ceza durumu kartında aktif ceza, kalan gün ve ceza bitiş tarihi bilgisi gösterilir.</li>
+                    <li>Öğrenci ana ekrandaki bağlantılardan randevularım veya ilgili öğrenci sayfalarına geçebilir.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Yaklaşan randevu yoksa sistem boş durum mesajı gösterir.</li>
+                    <li>Bekleyen devir onayı yoksa devir uyarısı görüntülenmez.</li>
+                    <li>Aktif ceza yoksa sistem randevuya katılmama sayısını ceza limitiyle birlikte gösterir.</li>
+                    <li>Randevu veya devir bildirimi geldiğinde ana ekrandaki ilgili veriler yenilenebilir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Öğrenci kendi randevu, devir onayı ve ceza özetini görüntülemiş olur.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Yetkisiz erişim durumunda öğrenci ana ekran verileri gösterilmez.</li>
+                    <li>Geçersiz veya süresi dolmuş token nedeniyle istekler reddedilir.</li>
+                    <li>Ceza durumu alınamazsa ilgili kart yüklenemeyebilir.</li>
+                    <li>Sunucu hatası oluşursa ana ekran verileri görüntülenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Akademisyenleri Görüntüleme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Akademisyenleri Görüntüleme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Student</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>Öğrenci randevu alabileceği akademisyenleri aramak veya listelemek ister.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Öğrenci geçerli oturuma sahip olmalı ve akademisyen arama ekranına erişebilmelidir.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>Öğrenci akademisyen arama sayfasını açar.</li>
+                    <li>Frontend öğrencinin bölüm bilgisini kullanarak başlangıç filtresini hazırlar.</li>
+                    <li>Frontend akademisyen unvan seçeneklerini ve bölüm listesini yükler.</li>
+                    <li>Öğrenci ad, bölüm, akademik unvan, randevu kabul durumu ve sıralama ölçütlerini belirler.</li>
+                    <li>Frontend seçilen parametrelerle akademisyen arama isteğini backend servisine gönderir.</li>
+                    <li>Sistem akademisyenleri ad, unvan, bölüm, e-posta ve randevu kabul durumu bilgileriyle listeler.</li>
+                    <li>Öğrenci listeden bir akademisyen seçerek profil sayfasına geçer.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Arama metni boş bırakılarak yalnızca filtrelere göre listeleme yapılabilir.</li>
+                    <li>Bölüm, unvan ve randevu kabul durumu filtreleri birlikte veya ayrı ayrı uygulanabilir.</li>
+                    <li>Liste ad artan veya ad azalan sıralamayla görüntülenebilir.</li>
+                    <li>Sonuç sayısı birden fazla sayfaya yayılırsa öğrenci sayfalar arasında geçiş yapabilir.</li>
+                    <li>Filtreye uygun akademisyen bulunmazsa sistem boş sonuç mesajı gösterir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Öğrenci randevu alabileceği akademisyenleri filtreli veya sıralı biçimde görüntülemiş olur.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Yetkisiz erişim durumunda akademisyen listesi gösterilmez.</li>
+                    <li>Unvan veya bölüm verileri yüklenemezse ilgili filtre seçenekleri eksik kalabilir.</li>
+                    <li>Geçersiz filtre parametresi gönderilirse arama isteği başarısız olabilir.</li>
+                    <li>Sunucu hatası oluşursa akademisyenler yüklenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Akademisyen Profilini Görüntüleme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Akademisyen Profilini Görüntüleme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Student</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>Öğrenci akademisyen listesinden bir akademisyen profilini açar.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Öğrenci geçerli oturuma sahip olmalı ve seçilen akademisyen sistemde aktif olarak bulunmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>Öğrenci akademisyen kartındaki profil görüntüleme işlemini seçer.</li>
+                    <li>Frontend akademisyen kimliği ile profil bilgisini backend servisinden ister.</li>
+                    <li>Backend akademisyenin aktif ve görüntülenebilir olduğunu doğrular.</li>
+                    <li>Sistem akademisyenin ad, unvan, bölüm, kurumsal e-posta ve randevu kabul durumu bilgilerini döndürür.</li>
+                    <li>Frontend akademisyene ait dersleri ve mevcut uygunluk saatlerini ayrıca yükler.</li>
+                    <li>Öğrenci akademisyenin derslerini, görüşme türüne göre uygun zamanlarını ve randevu kabul durumunu inceler.</li>
+                    <li>Akademisyen randevu kabul ediyorsa öğrenci randevu oluşturma akışına geçebilir.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Akademisyen randevu kabul etmiyorsa randevu oluşturma düğmesi pasif gösterilir.</li>
+                    <li>Akademisyenin dersi yoksa dersler bölümünde boş durum mesajı gösterilir.</li>
+                    <li>Uygun zaman bulunmazsa sistem uygunluk bulunamadı mesajı gösterir.</li>
+                    <li>Uygunluk verisi yüklenemezse öğrenci tekrar deneme işlemi yapabilir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Öğrenci seçilen akademisyenin profilini, derslerini ve uygun zaman özetini görüntülemiş olur.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Geçersiz akademisyen kimliği gönderilirse profil bulunamadı durumu gösterilir.</li>
+                    <li>Akademisyen bulunamazsa sistem profil bulunamadı mesajı verir.</li>
+                    <li>Yetkisiz erişim durumunda profil bilgisi gösterilmez.</li>
+                    <li>Sunucu hatası oluşursa profil veya uygunluk bilgileri yüklenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Randevu Oluşturma</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Randevu Oluşturma</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Student</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>Öğrenci seçtiği akademisyenden randevu talebi oluşturmak ister.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Öğrenci geçerli oturuma sahip olmalı, aktif ceza kısıtı bulunmamalı ve akademisyen randevu kabul ediyor olmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>Öğrenci akademisyen listesinden veya akademisyen profilinden randevu oluşturma akışını başlatır.</li>
+                    <li>Frontend seçilen akademisyen profilini yükler ve randevu adımlarını gösterir.</li>
+                    <li>Öğrenci randevu kategorisini seçer; kategori ders seçimi gerektiriyorsa ilgili dersi seçer.</li>
+                    <li>Frontend kategori ve ders bilgisine göre akademisyenin uygun slotlarını backend servisinden ister.</li>
+                    <li>Öğrenci uygun tarih ve saat aralığını seçer.</li>
+                    <li>Öğrenci slotun desteklediği seçeneklere göre görüşme türünü belirler.</li>
+                    <li>Frontend seçilen akademisyen, kategori, ders, slot ve görüşme türü bilgilerini onay ekranında özetler.</li>
+                    <li>Öğrenci randevu talebini onayladığında backend randevuyu oluşturur ve sistem öğrenciyi randevularım ekranına yönlendirir.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Kategori ders seçimi gerektirmiyorsa ders adımı atlanır.</li>
+                    <li>Öğrenci önceki adıma dönerek kategori, ders, slot veya görüşme türü seçimini değiştirebilir.</li>
+                    <li>Seçilen slot yalnızca yüz yüze veya yalnızca çevrim içi görüşmeyi destekliyorsa görüşme türü otomatik sınırlanır.</li>
+                    <li>Öğrenci onay ekranından geri dönerek randevu talebini göndermeden işlemi iptal edebilir.</li>
+                    <li>Randevu oluşturma sırasında öğrenci ceza kısıtı altındaysa sistem kısıt detaylarını uyarı penceresinde gösterir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Öğrencinin randevu talebi sistemde oluşturulur ve randevu öğrencinin randevu listesinde görüntülenebilir hale gelir.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Ceza nedeniyle randevu oluşturulamaz.</li>
+                    <li>Seçilen slot artık uygun değilse randevu kaydedilemez.</li>
+                    <li>Kategori, ders, slot veya görüşme türü bilgisi eksikse talep gönderilmez.</li>
+                    <li>Akademisyen randevu kabul etmiyorsa oluşturma akışı tamamlanamaz.</li>
+                    <li>Öğrencinin aynı zaman aralığında aktif randevusu varsa sistem çakışma hatası verebilir.</li>
+                    <li>Yetkisiz erişim veya sunucu hatası durumunda randevu oluşturulamaz.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Randevularımı Görüntüleme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Randevularımı Görüntüleme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Student</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>Öğrenci kendisine ait randevuları incelemek ister.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Öğrenci geçerli oturuma sahip olmalı ve kendi randevu kayıtlarına erişebilmelidir.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>Öğrenci randevularım sayfasını açar.</li>
+                    <li>Frontend varsayılan olarak aktif randevuları backend servisinden ister.</li>
+                    <li>Sistem aktif randevuları akademisyen, tarih, saat, kategori, görüşme türü ve durum bilgileriyle gösterir.</li>
+                    <li>Öğrenci aktif veya geçmiş randevular sekmesi arasında geçiş yapabilir.</li>
+                    <li>Öğrenci liste görünümü veya takvim görünümü arasında seçim yapabilir.</li>
+                    <li>Öğrenci arama, durum, görüşme türü, tarih aralığı ve sıralama filtrelerini uygular.</li>
+                    <li>Öğrenci listedeki karttan veya takvimdeki olaydan randevu detay ekranına geçer.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Geçmiş randevular sekmesi açıldığında tamamlanan, iptal edilen, reddedilen ve katılmadı durumundaki randevular yüklenir.</li>
+                    <li>Takvim görünümünde randevuya tıklanarak aynı detay ekranı açılabilir.</li>
+                    <li>Filtreler temizlenerek sekmenin varsayılan sıralamasına dönülebilir.</li>
+                    <li>Filtreye uygun randevu bulunmazsa sistem filtre boş durumu gösterir.</li>
+                    <li>Aktif randevu kartı üzerinden iptal işlemi başlatılabilir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Öğrenci aktif veya geçmiş randevularını seçilen görünüm ve filtrelerle görüntülemiş olur.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Yetkisiz erişim durumunda randevu listesi gösterilmez.</li>
+                    <li>Aktif veya geçmiş randevular yüklenemezse sistem hata durumu ve tekrar deneme seçeneği gösterir.</li>
+                    <li>Geçersiz tarih aralığı filtre sonucunu boş bırakabilir.</li>
+                    <li>Sunucu hatası oluşursa liste veya takvim görünümü yüklenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Randevu Detayını Görüntüleme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Randevu Detayını Görüntüleme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Student</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>Öğrenci randevu listesinden, takvimden veya bildirimden bir randevu kaydını açar.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Randevu kaydı öğrencinin kendi randevusu olmalı ve öğrenci geçerli oturuma sahip olmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>Öğrenci görüntülemek istediği randevu kaydını seçer.</li>
+                    <li>Frontend randevu kimliği ile detay bilgisini backend servisinden ister.</li>
+                    <li>Backend randevunun ilgili öğrenciye ait olduğunu doğrular.</li>
+                    <li>Sistem akademisyen, unvan, bölüm, tarih, saat, kategori, ders, görüşme türü ve durum bilgilerini döndürür.</li>
+                    <li>Frontend randevu detayını akademisyen, randevu ve konum bölümleriyle gösterir.</li>
+                    <li>Randevu iptal edilebilir durumdaysa iptal işlemi ekranda kullanılabilir olur.</li>
+                    <li>Randevuda bekleyen devir veya yeniden planlama onayı varsa karar alanları detay ekranında gösterilir.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Çevrim içi görüşmede sistem çevrim içi görüşme bilgisini konum alanında gösterir.</li>
+                    <li>Yüz yüze görüşmede ofis ve bina bilgisi varsa konum alanında görüntülenir.</li>
+                    <li>Devir tamamlandıysa eski ve yeni akademisyen bilgileri detay ekranında gösterilir.</li>
+                    <li>Bildirimden gelen öğrenci doğrudan ilgili randevu detayına yönlenebilir.</li>
+                    <li>Randevu bulunamazsa tekrar deneme yerine kayıt bulunamadı durumu gösterilebilir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Öğrenci seçilen randevunun güncel detaylarını ve varsa karar gerektiren süreçlerini görüntülemiş olur.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Geçersiz randevu kimliği gönderilirse detay ekranı açılmaz.</li>
+                    <li>Randevu bulunamazsa sistem kayıt bulunamadı mesajı gösterir.</li>
+                    <li>Randevu öğrenciye ait değilse yetkisiz erişim hatası oluşur.</li>
+                    <li>Sunucu hatası oluşursa randevu detayı yüklenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Randevu İptal Etme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Randevu İptal Etme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Student</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>Öğrenci aktif bir randevusunu iptal etmek ister.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Randevu öğrenciye ait olmalı, aktif durumda bulunmalı ve iptal edilebilir zaman aralığında olmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>Öğrenci randevularım sayfasındaki aktif randevu kartından veya randevu detay ekranından iptal işlemini başlatır.</li>
+                    <li>Frontend iptal onay penceresini gösterir.</li>
+                    <li>Öğrenci iptal işlemini onaylar.</li>
+                    <li>Frontend randevu kimliği ile iptal isteğini backend servisine gönderir.</li>
+                    <li>Backend randevunun öğrenciye ait olduğunu ve iptal edilebilir durumda bulunduğunu doğrular.</li>
+                    <li>Sistem randevuyu iptal edildi durumuna geçirir.</li>
+                    <li>Frontend başarı mesajı gösterir ve aktif randevu listesini günceller veya öğrenci randevularım ekranına döner.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Öğrenci onay penceresinden vazgeçerse randevu mevcut durumunda kalır.</li>
+                    <li>İptal edilen randevu aktif listeden kaldırılır ve geçmiş randevular yeniden yüklendiğinde görünür.</li>
+                    <li>Randevu zaten iptal edilmişse sistem güncel durumu hata mesajıyla bildirir.</li>
+                    <li>İptal işlemi kart üzerinden başlatıldıysa liste yerinde güncellenir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Randevu iptal edildi durumuna geçirilir ve öğrenci aktif randevu listesinden kaldırılır.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Randevu öğrenciye ait değilse yetkisiz erişim hatası oluşur.</li>
+                    <li>Randevu bulunamazsa iptal işlemi gerçekleştirilemez.</li>
+                    <li>Randevu aktif değilse veya iptal edilebilir zaman aralığı geçmişse sistem işlemi reddeder.</li>
+                    <li>Geçersiz randevu kimliği gönderilirse istek başarısız olur.</li>
+                    <li>Sunucu hatası oluşursa randevu iptal edilemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Bekleme Listesi Tekliflerini Yönetme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Bekleme Listesi Tekliflerini Yönetme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Student</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>Öğrenci bekleme listesindeki sırası için uygun slot teklifi aldığında teklifi yönetmek ister.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Öğrencinin kendisine ait bekleme listesi kaydı bulunmalı ve teklif bildirimi geçerli olmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>Sistem uygun slot oluştuğunda bekleme listesindeki uygun öğrenciye teklif bildirimi gönderir.</li>
+                    <li>Öğrenci bildirimi veya ilgili bekleme listesi alanını kullanarak teklif bilgisini görüntüler.</li>
+                    <li>Frontend öğrencinin bekleme listesi kayıtlarını backend servisinden alır.</li>
+                    <li>Sistem teklif durumunu, akademisyen, kategori, ders, teklif zamanı ve son yanıt zamanını gösterir.</li>
+                    <li>Öğrenci teklifi kabul veya reddetme kararını seçer.</li>
+                    <li>Backend karar öncesinde kaydın öğrenciye ait olduğunu, teklifin bildirildi durumda olduğunu ve süresinin dolmadığını doğrular.</li>
+                    <li>Kabulde sistem bekleme listesi kaydını randevuya dönüştürür; redde teklif reddedilir ve slot için bekleme listesi süreci devam eder.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Öğrenci teklife süresi içinde yanıt vermezse zamanlayıcı teklifi süresi doldu durumuna geçirir.</li>
+                    <li>Öğrenci teklifi reddederse sistem bir sonraki uygun bekleme listesi kaydını işleyebilir.</li>
+                    <li>Öğrencinin aktif cezası varsa teklif kabul edilse bile randevuya dönüştürme engellenir.</li>
+                    <li>Teklif kabul anında slot artık uygun değilse sistem randevu oluşturmaz.</li>
+                    <li>Bekleme listesi kaydı yoksa sistem boş durum mesajı gösterir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Bekleme listesi teklifi öğrencinin kararına göre randevuya dönüştürülür, reddedilir veya süresi dolmuş olarak sonuçlanır.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Bekleme listesi teklifi süresi dolmuşsa kabul veya red işlemi tamamlanamaz.</li>
+                    <li>Teklif öğrenciye ait değilse yetkisiz erişim hatası oluşur.</li>
+                    <li>Teklif bildirildi durumda değilse sistem işlemi reddeder.</li>
+                    <li>Ceza nedeniyle randevu oluşturulamaz.</li>
+                    <li>Slot artık uygun değilse teklif randevuya dönüştürülemez.</li>
+                    <li>Sunucu hatası oluşursa teklif kararı kaydedilemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Devir Onay Sürecini Yönetme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Devir Onay Sürecini Yönetme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Student</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>Öğrenci kendi randevusu için öğrenci onayı gerektiren devir talebi bildirimi alır.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Öğrencinin randevusuna bağlı bekleyen öğrenci onaylı devir talebi bulunmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>Sistem devir talebi öğrenci onayı bekleyen duruma geçtiğinde öğrenciye bildirim gönderir.</li>
+                    <li>Öğrenci ana ekrandan, randevularım sayfasından veya bildirim yönlendirmesinden randevu detayını açar.</li>
+                    <li>Frontend randevu detayında bekleyen devir kimliğini ve devir bilgilerini görüntüler.</li>
+                    <li>Sistem mevcut personel, yeni personel ve son yanıt zamanı bilgilerini öğrenciye gösterir.</li>
+                    <li>Öğrenci devir talebini kabul veya reddetme kararını seçer.</li>
+                    <li>Backend devir kaydının ilgili öğrencinin randevusuna ait olduğunu ve öğrenci onayı beklediğini doğrular.</li>
+                    <li>Kabulde randevu yeni personele aktarılır; redde devir talebi reddedilir ve slot kilidi serbest bırakılır.</li>
+                    <li>Frontend randevu detayını yenileyerek güncel akademisyen bilgisini veya reddedilen devir durumunu gösterir.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Öğrenci karar vermeden sayfadan ayrılırsa talep öğrenci onayı bekleyen durumda kalır.</li>
+                    <li>Kabul sonrası randevu detayında eski akademisyen ve yeni akademisyen bilgileri devir bilgisi olarak görüntülenir.</li>
+                    <li>Red sonrası sistem ilgili personele red bildirimi gönderebilir.</li>
+                    <li>Son yanıt zamanı geçmişse talep süresi dolmuş duruma alınır ve işlem yapılamaz.</li>
+                    <li>Randevu artık işlenebilir durumda değilse karar işlemi reddedilir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Devir talebi öğrencinin kararına göre kabul edilir, reddedilir veya geçersiz hale gelir; randevu detayında güncel akademisyen bilgisi gösterilir.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Devir talebi artık geçerli değilse kabul veya red işlemi tamamlanamaz.</li>
+                    <li>Devir kaydı öğrenciye ait değilse yetkisiz erişim hatası oluşur.</li>
+                    <li>Devir kaydı bulunamazsa sistem işlem yapamaz.</li>
+                    <li>Öğrenci onay süresi dolmuşsa sistem talebi süresi doldu olarak değerlendirir.</li>
+                    <li>Hedef slot uygunluğunu kaybetmişse kabul işlemi başarısız olabilir.</li>
+                    <li>Sunucu hatası oluşursa karar kaydedilemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Ceza Durumunu Görüntüleme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Ceza Durumunu Görüntüleme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Student</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>Öğrenci randevuya katılmama kaynaklı ceza durumunu incelemek ister veya ana ekranı açar.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Öğrenci geçerli oturuma sahip olmalı ve kendi ceza durumunu sorgulayabilmelidir.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>Öğrenci ana ekrandaki ceza durumu kartını görüntüler.</li>
+                    <li>Frontend öğrencinin ceza durumunu backend servisinden ister.</li>
+                    <li>Backend öğrencinin randevuya katılmama sayısını ve aktif ceza durumunu hesaplar.</li>
+                    <li>Sistem aktif ceza olup olmadığını, toplam randevuya katılmama sayısını ve ceza limitini döndürür.</li>
+                    <li>Aktif ceza varsa frontend kalan ceza süresini, ceza bitiş tarihini ve ceza süresini gösterir.</li>
+                    <li>Aktif ceza yoksa frontend öğrencinin mevcut randevuya katılmama sayısını limit bilgisiyle birlikte gösterir.</li>
+                    <li>Öğrenci aktif ceza süresince yeni randevu oluşturamayacağını görür.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Ceza süresi bugün sona eriyorsa sistem kalan süre mesajını buna göre gösterir.</li>
+                    <li>Randevu oluşturma sırasında aktif ceza tespit edilirse sistem kısıt detaylarını uyarı penceresinde görüntüler.</li>
+                    <li>Ceza yoksa öğrenci randevu oluşturma akışına devam edebilir.</li>
+                    <li>Ceza durumu yenilenemediğinde kart yükleniyor veya hata durumunda kalabilir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Öğrenci aktif ceza durumunu, kalan ceza süresini, ceza bitiş tarihini ve yeni randevu oluşturma kısıtını öğrenmiş olur.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Yetkisiz erişim durumunda ceza durumu gösterilmez.</li>
+                    <li>Geçersiz token nedeniyle ceza durumu isteği reddedilir.</li>
+                    <li>Ceza kaydı veya ceza kuralı hesaplanamazsa sistem ceza bilgisini yükleyemez.</li>
+                    <li>Sunucu hatası oluşursa ceza durumu görüntülenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>3.4 Akademisyen ve Bölüm Başkanı Ortak Gereksinimleri</title>
+    <style>
+        body {
+            font-family: Calibri, Arial, sans-serif;
+            font-size: 11pt;
+            color: #000;
+        }
+
+        h1 {
+            font-size: 16pt;
+            margin: 0 0 14px 0;
+        }
+
+        h2 {
+            font-size: 13pt;
+            margin: 18px 0 8px 0;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 0 0 12px 0;
+        }
+
+        th, td {
+            padding: 6px 8px;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        td:first-child {
+            width: 24%;
+            font-weight: bold;
+        }
+
+        ol, ul {
+            margin-top: 0;
+            margin-bottom: 0;
+            padding-left: 22px;
+        }
+
+        li {
+            margin-bottom: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>3.4 Akademisyen ve Bölüm Başkanı Ortak Gereksinimleri</h1>
+
+    <h2>Ofis Saatlerini Görüntüleme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Ofis Saatlerini Görüntüleme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Academician, HOD</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>İlgili aktör ofis saatleri sayfasını açar.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>İlgili aktör geçerli oturuma sahip olmalı ve kendi ofis saati kayıtlarını görüntüleme yetkisi bulunmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>İlgili aktör menü üzerinden ofis saatleri ekranına gider.</li>
+                    <li>Frontend aktöre ait ofis saati listesini ve özet bilgileri backend servisinden ister.</li>
+                    <li>Backend oturumu doğrular ve yalnızca ilgili aktöre ait slot kayıtlarını sorgular.</li>
+                    <li>Sistem toplam, kullanılabilir, kapalı ve içinde bulunulan haftaya ait slot sayılarını hazırlar.</li>
+                    <li>Frontend ofis saatlerini tarih, gün, başlangıç saati, bitiş saati, süre, görüşme türü ve durum bilgileriyle listeler.</li>
+                    <li>İlgili aktör arama, gün filtresi, durum filtresi veya sıralama seçenekleriyle listeyi düzenler.</li>
+                    <li>Sistem seçilen ölçütlere göre görüntülenen ofis saati listesini günceller.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Ofis saati kaydı yoksa sistem boş liste mesajı ve yeni kayıt oluşturma seçeneği gösterir.</li>
+                    <li>Seçili filtreye uygun kayıt yoksa filtreye özel boş durum mesajı görüntülenir.</li>
+                    <li>Aktör listeyi tarih, başlangıç saati veya bitiş saatine göre sıralayabilir.</li>
+                    <li>Yükleme hatasında sistem tekrar deneme seçeneği sunar.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>İlgili aktör kendisine ait ofis saatlerini ve slot özetlerini görüntülemiş olur.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Yetkisiz erişim durumunda ofis saati kayıtları gösterilmez.</li>
+                    <li>Geçersiz veya süresi dolmuş token nedeniyle istek reddedilir.</li>
+                    <li>Filtre veya sıralama parametreleri işlenemezse listeleme başarısız olabilir.</li>
+                    <li>Sunucu hatası oluşursa ofis saatleri yüklenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Tek Seferlik Ofis Saati Oluşturma</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Tek Seferlik Ofis Saati Oluşturma</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Academician, HOD</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>İlgili aktör tek bir tarih için yeni ofis saati tanımlamak ister.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>İlgili aktör geçerli oturuma sahip olmalı ve seçilen tarih geçmişte olmamalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>İlgili aktör ofis saatleri ekranında yeni ofis saati oluşturma işlemini başlatır.</li>
+                    <li>Frontend oluşturma penceresini açar ve tek seferlik ofis saati seçeneğini sunar.</li>
+                    <li>İlgili aktör tarih, başlangıç saati, bitiş saati ve görüşme türü bilgilerini girer.</li>
+                    <li>Frontend zorunlu alanları, geçmiş tarih seçimini, saat sırasını ve 10 dakikalık zaman adımını kontrol eder.</li>
+                    <li>Frontend geçerli verileri backend servisine gönderir.</li>
+                    <li>Backend aktörün mevcut slotlarıyla çakışma kontrolü yapar ve kaydı oluşturur.</li>
+                    <li>Sistem oluşturulan ofis saati slotunu listeye ekler ve başarı mesajı gösterir.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Aktör oluşturma penceresini kapatarak işlemi iptal edebilir.</li>
+                    <li>Görüşme türü yüz yüze, çevrim içi veya her ikisi olarak seçilebilir.</li>
+                    <li>Girilen zaman aralığı randevu süresine göre öğrenciler için uygun slotlara bölünebilir.</li>
+                    <li>Çakışma tespit edilirse kayıt oluşturulmaz ve mevcut bilgiler korunur.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Tek seferlik ofis saati kaydı oluşturulur ve uygun slot listesine dahil edilir.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Çakışan ofis saati varsa sistem kaydı oluşturmaz.</li>
+                    <li>Geçmiş tarih seçilirse işlem reddedilir.</li>
+                    <li>Başlangıç saati bitiş saatinden önce değilse geçersiz zaman aralığı hatası oluşur.</li>
+                    <li>Görüşme türü veya zorunlu alanlar eksikse kayıt gönderilmez.</li>
+                    <li>Yetkisiz erişim veya sunucu hatası durumunda işlem tamamlanamaz.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Tekrarlayan Ofis Saati Oluşturma</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Tekrarlayan Ofis Saati Oluşturma</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Academician, HOD</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>İlgili aktör belirli hafta günleri için tekrarlayan ofis saati tanımlamak ister.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>İlgili aktör geçerli oturuma sahip olmalı ve en az bir hafta günü seçmelidir.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>İlgili aktör ofis saatleri ekranında yeni ofis saati oluşturma işlemini başlatır.</li>
+                    <li>Frontend oluşturma penceresinde tekrarlayan ofis saati seçeneğini açar.</li>
+                    <li>İlgili aktör hafta günü veya günlerini, başlangıç saati, bitiş saati, tekrar bitiş seçeneği ve görüşme türünü girer.</li>
+                    <li>Frontend zorunlu alanları, zaman sırasını ve 10 dakikalık zaman adımını doğrular.</li>
+                    <li>Backend seçilen her gün için ilk uygun tarihi belirler ve tekrar bitiş tarihini çözümler.</li>
+                    <li>Backend her seçili gün için çakışma kontrolü yaparak haftalık tekrar kuralına bağlı slot kayıtlarını oluşturur.</li>
+                    <li>Frontend oluşturulan slot sayısına göre başarı mesajı gösterir ve listeyi yeniler.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Tekrar bitişi akademik dönem sonu olarak seçilebilir.</li>
+                    <li>Tekrar bitişi belirli bir tarih olarak seçildiğinde bitiş tarihi girilmelidir.</li>
+                    <li>Birden fazla hafta günü seçilirse sistem her gün için ayrı slot kaydı oluşturur.</li>
+                    <li>Çakışma bulunan gün için kayıt oluşturma işlemi başarısız olur ve hata mesajı gösterilir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Seçilen günlere göre haftalık tekrar kuralı bulunan ofis saati kayıtları oluşturulur.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>En az bir gün seçilmezse işlem başlatılamaz.</li>
+                    <li>Tekrar bitiş tarihi geçmişteyse veya başlangıçtan önceyse işlem reddedilir.</li>
+                    <li>Geçersiz saat aralığı ya da geçersiz dakika adımı kullanılırsa kayıt oluşturulmaz.</li>
+                    <li>Çakışan ofis saati bulunursa sistem çakışma hatası verir.</li>
+                    <li>Yetkisiz erişim veya sunucu hatası durumunda işlem tamamlanamaz.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Ofis Saatini Güncelleme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Ofis Saatini Güncelleme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Academician, HOD</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>İlgili aktör mevcut bir ofis saatinin tarih veya saat bilgisini değiştirmek ister.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Ofis saati ilgili aktöre ait olmalı, kullanıma kapalı olmamalı ve üzerinde aktif randevu bulunmamalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>İlgili aktör ofis saatleri listesinden güncellenecek slotu seçer.</li>
+                    <li>Frontend güncelleme penceresini seçili slotun mevcut bilgileriyle açar.</li>
+                    <li>İlgili aktör tarih, başlangıç saati veya bitiş saati alanlarını düzenler.</li>
+                    <li>Frontend zorunlu alanları, geçmiş tarih seçimini, saat sırasını ve 10 dakikalık zaman adımını kontrol eder.</li>
+                    <li>Frontend güncelleme isteğini slot kimliğiyle backend servisine gönderir.</li>
+                    <li>Backend slot sahipliğini, aktif randevu bulunup bulunmadığını ve çakışma durumunu doğrular.</li>
+                    <li>Sistem slotu günceller, başarı mesajı gösterir ve ofis saati listesini yeniler.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Aktör güncelleme penceresini kapatarak işlemi iptal edebilir.</li>
+                    <li>Tekrarlayan bir kayıtta sistem güncelleme kapsamı seçimi isteyebilir.</li>
+                    <li>Çakışma tespit edilirse mevcut ofis saati bilgileri değiştirilmeden korunur.</li>
+                    <li>Kullanıma kapalı slot için düzenleme seçeneği kısıtlanabilir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Ofis saati kaydı geçerli yeni tarih ve saat bilgileriyle güncellenir.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Slot bulunamazsa güncelleme işlemi başarısız olur.</li>
+                    <li>Slot ilgili aktöre ait değilse yetkisiz erişim hatası oluşur.</li>
+                    <li>Slot üzerinde aktif randevu varsa güncelleme işlemi reddedilir.</li>
+                    <li>Geçmiş tarih, geçersiz zaman aralığı veya çakışan ofis saati girilirse işlem tamamlanamaz.</li>
+                    <li>Sunucu hatası oluşursa güncelleme kaydedilemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Ofis Saatini Silme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Ofis Saatini Silme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Academician, HOD</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>İlgili aktör mevcut bir ofis saatini randevu alınabilir durumdan çıkarmak ister.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Ofis saati ilgili aktöre ait olmalı ve üzerinde aktif randevu bulunmamalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>İlgili aktör ofis saatleri listesinden işlem yapılacak slotu seçer.</li>
+                    <li>Frontend seçili ofis saati için kullanıma kapatma işlemini gösterir.</li>
+                    <li>İlgili aktör işlemi başlatır ve onay penceresindeki uyarıyı inceler.</li>
+                    <li>Aktör işlemi onayladığında frontend slot durum güncelleme isteğini backend servisine gönderir.</li>
+                    <li>Backend slot sahipliğini ve aktif randevu çakışmasını kontrol eder.</li>
+                    <li>Sistem slotu kullanıma kapalı duruma getirir.</li>
+                    <li>Frontend başarı mesajı gösterir ve ofis saati listesindeki durum bilgisini günceller.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Aktör onay penceresinden vazgeçerse slot mevcut durumunda kalır.</li>
+                    <li>Kullanıma kapalı slot daha sonra tekrar kullanılabilir hale getirilebilir.</li>
+                    <li>Slot üzerinde aktif randevu varsa sistem işlemi engeller.</li>
+                    <li>Durum zaten hedef durumdaysa sistem işlem yapılmasına gerek olmadığını bildirir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Ofis saati öğrenci randevu seçiminde kullanılmayacak şekilde kapalı duruma geçirilir.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Slot bulunamazsa işlem gerçekleştirilemez.</li>
+                    <li>Slot ilgili aktöre ait değilse yetkisiz erişim hatası oluşur.</li>
+                    <li>Aktif randevu bulunan slot kullanıma kapatılamaz.</li>
+                    <li>Geçersiz slot kimliği gönderilirse backend isteği reddeder.</li>
+                    <li>Sunucu hatası oluşursa slot durumu güncellenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>İzin Aralıklarını Yönetme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>İzin Aralıklarını Yönetme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Academician, HOD</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>İlgili aktör randevu alınamayacağı tarih aralığını tanımlamak veya düzenlemek ister.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>İlgili aktör geçerli oturuma sahip olmalı ve izin aralığı kendi hesabı için tanımlanmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>İlgili aktör izin aralıkları ekranını açar.</li>
+                    <li>Frontend aktöre ait izin aralıklarını backend servisinden ister ve liste halinde gösterir.</li>
+                    <li>İlgili aktör yeni izin oluşturma, mevcut izni güncelleme veya izni sonlandırma işlemlerinden birini seçer.</li>
+                    <li>Frontend başlangıç tarihi, bitiş tarihi ve sebep bilgisini içeren formu doğrular.</li>
+                    <li>Backend tarih aralığını, sebep kodunu, kayıt sahipliğini ve mevcut izinlerle çakışmayı kontrol eder.</li>
+                    <li>Sistem izin aralığını kaydeder veya günceller ve ilgili tarih aralığındaki slotları pasif duruma getirir.</li>
+                    <li>İzin sonlandırıldığında sistem artık izin kapsamında kalmayan slotları yeniden değerlendirir ve listeyi günceller.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Aktör oluşturma veya güncelleme penceresini kapatarak işlemi iptal edebilir.</li>
+                    <li>Mevcut izin aralığı güncellendiğinde eski ve yeni tarih aralıklarına göre slot durumları yeniden hesaplanır.</li>
+                    <li>Devam eden izin sonlandırıldığında bitiş tarihi sistem tarafından güncel tarihe çekilir.</li>
+                    <li>Geçmişte tamamlanmış izin aralıkları için işlem seçenekleri gösterilmeyebilir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>İzin aralığı kaydı güncel hale gelir ve bu aralıktaki uygun slotlar sistem tarafından pasifleştirilir.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Başlangıç veya bitiş tarihi eksikse işlem gerçekleştirilemez.</li>
+                    <li>Başlangıç tarihi bitiş tarihinden sonraysa geçersiz zaman aralığı hatası oluşur.</li>
+                    <li>Geçmiş tarih seçimi veya geçmiş izin aralığını güncelleme girişimi reddedilir.</li>
+                    <li>Çakışan izin aralığı ya da ilgili tarihlerde aktif randevu varsa işlem tamamlanamaz.</li>
+                    <li>Yetkisiz erişim, kayıt bulunamaması veya sunucu hatası durumunda işlem başarısız olur.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Randevu Devri Talebi Oluşturma</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Randevu Devri Talebi Oluşturma</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Academician, HOD</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>İlgili aktör kendisine ait aktif bir randevuyu başka uygun personele devretmek ister.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Randevu ilgili aktöre ait olmalı, bekleyen veya onaylı durumda bulunmalı ve randevu için aktif devir talebi olmamalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>İlgili aktör randevu detay ekranında randevu devri işlemini başlatır.</li>
+                    <li>Frontend randevu kimliği ile uygun hedef personel listesini backend servisinden ister.</li>
+                    <li>Backend randevu sahipliğini, randevu durumunu ve aktif devir talebi bulunmadığını doğrular.</li>
+                    <li>Sistem randevu süresiyle aynı tarih ve saat aralığında uygun slotu bulunan hedef personelleri listeler.</li>
+                    <li>İlgili aktör hedef personeli ve hedef slot bilgisini seçer, gerekirse açıklama girer.</li>
+                    <li>Frontend devir talebini backend servisine gönderir.</li>
+                    <li>Sistem talebi oluşturur, hedef slotu geçici olarak kilitler ve hedef personele bildirim gönderir.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Uygun hedef personel bulunmazsa sistem devir talebi oluşturma seçeneğini tamamlatmaz.</li>
+                    <li>Aktör hedef seçmeden pencereyi kapatarak işlemi iptal edebilir.</li>
+                    <li>Hedef personel ilgili dersin yetkili yardımcısı değilse kabul sonrasında öğrenci onayı gerekebilir.</li>
+                    <li>Seçilen hedef slot işlem sırasında uygunluğunu kaybederse talep oluşturulamaz.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Randevu devri talebi oluşturulur, hedef slot kilitlenir ve talep hedef personele iletilir.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Randevu bulunamazsa devir talebi oluşturulamaz.</li>
+                    <li>Randevu ilgili aktöre ait değilse yetkisiz erişim hatası oluşur.</li>
+                    <li>Randevu durumu devir için uygun değilse işlem reddedilir.</li>
+                    <li>Devir yapılacak kullanıcı uygun değilse veya hedef slot kullanılamazsa işlem tamamlanamaz.</li>
+                    <li>Aynı randevu için bekleyen devir talebi varsa sistem yeni talebi engeller.</li>
+                    <li>Sunucu hatası oluşursa talep kaydedilemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Gelen Devir Taleplerini Yönetme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Gelen Devir Taleplerini Yönetme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Academician, HOD</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>İlgili aktör kendisine gönderilen randevu devri taleplerini incelemek ve karar vermek ister.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>İlgili aktör geçerli oturuma sahip olmalı ve gelen devir talebinin hedef personeli olmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>İlgili aktör randevu devri ekranını açar ve gelen talepler sekmesini görüntüler.</li>
+                    <li>Frontend gelen ve gönderilen devir taleplerini backend servisinden ister.</li>
+                    <li>Backend oturumu doğrular ve aktörün hedef personel olduğu talepleri döndürür.</li>
+                    <li>Frontend talepleri gönderen, öğrenci, ders, tarih, saat ve durum bilgileriyle listeler.</li>
+                    <li>İlgili aktör arama, durum veya tarih filtresi uygulayarak talepleri inceler.</li>
+                    <li>Aktör bekleyen bir talep için kabul veya red işlemini seçer.</li>
+                    <li>Sistem kararı kaydeder; kabulde gerekli durumlarda öğrenci onayı sürecini başlatır, redde hedef slot kilidini serbest bırakır.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Aktör karar penceresinden vazgeçerek talebi bekleyen durumda bırakabilir.</li>
+                    <li>Talep kabul edildiğinde öğrenci onayı gerekmiyorsa randevu doğrudan hedef personele aktarılır.</li>
+                    <li>Öğrenci onayı gerekiyorsa talep öğrenci yanıtı bekleyen duruma alınır.</li>
+                    <li>Talep reddedildiğinde gönderen personele red bildirimi iletilir.</li>
+                    <li>Filtre sonucunda kayıt yoksa sistem boş liste mesajı gösterir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Gelen devir talebi kabul edilir, reddedilir veya öğrenci onayı bekleyen duruma geçirilir.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Talep ilgili aktöre ait değilse yetkisiz erişim hatası oluşur.</li>
+                    <li>Talep bulunamazsa karar işlemi gerçekleştirilemez.</li>
+                    <li>Talep bekleyen durumda değilse sistem kabul veya red işlemini reddeder.</li>
+                    <li>Randevu artık işlenebilir durumda değilse karar işlemi tamamlanamaz.</li>
+                    <li>Hedef slot çakışması oluşursa kabul işlemi başarısız olur.</li>
+                    <li>Sunucu hatası oluşursa talep durumu güncellenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Randevu Devri Detayını Görüntüleme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Randevu Devri Detayını Görüntüleme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Academician, HOD</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>İlgili aktör devir listesinde veya bildirimde yer alan bir devir kaydının ayrıntılarını açar.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>İlgili aktör devir kaydında gönderen veya hedef personel olarak yer almalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>İlgili aktör gelen veya gönderilen devir talepleri listesinden detay görüntüleme işlemini seçer.</li>
+                    <li>Frontend devir kimliği ile detay bilgisini backend servisinden ister.</li>
+                    <li>Backend oturumu doğrular ve aktörün devir kaydına taraf olup olmadığını kontrol eder.</li>
+                    <li>Sistem devir kaydının gönderen, hedef personel, öğrenci, ders, randevu zamanı, hedef slot ve durum bilgilerini döndürür.</li>
+                    <li>Frontend devir detayını ve durum geçmişini ekranda gösterir.</li>
+                    <li>İlgili aktör detay üzerinden bağlantılı randevu bilgisini inceleyebilir.</li>
+                    <li>Talep bekleyen durumdaysa sistem aktörün rolüne göre uygun karar seçeneklerini gösterebilir.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Bildirim üzerinden açılan devir kaydı doğrudan detay ekranına yönlendirilir.</li>
+                    <li>Gönderilen talepte aktör yalnızca talep durumunu ve geçmişini görüntüleyebilir.</li>
+                    <li>Gelen bekleyen talepte aktör kabul veya red işlemine detay ekranından devam edebilir.</li>
+                    <li>Öğrenci onayı bekleyen taleplerde son karar oluşana kadar mevcut durum gösterilir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Devir talebinin güncel bilgileri ve geçmiş durumları görüntülenmiş olur.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Devir kimliği geçersizse detay bilgisi getirilemez.</li>
+                    <li>Devir kaydı bulunamazsa sistem kayıt bulunamadı mesajı gösterir.</li>
+                    <li>İlgili aktör devir kaydının tarafı değilse erişim reddedilir.</li>
+                    <li>Bağlantılı randevu artık erişilebilir değilse ilgili kayıt açılamaz.</li>
+                    <li>Sunucu hatası oluşursa devir detayı yüklenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

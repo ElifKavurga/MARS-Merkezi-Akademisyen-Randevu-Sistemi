@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>3.3 Akademik Personel Ortak Gereksinimleri</title>
+    <style>
+        body {
+            font-family: Calibri, Arial, sans-serif;
+            font-size: 11pt;
+            color: #000;
+        }
+
+        h1 {
+            font-size: 16pt;
+            margin: 0 0 14px 0;
+        }
+
+        h2 {
+            font-size: 13pt;
+            margin: 18px 0 8px 0;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 0 0 12px 0;
+        }
+
+        th, td {
+            padding: 6px 8px;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        td:first-child {
+            width: 24%;
+            font-weight: bold;
+        }
+
+        ol, ul {
+            margin-top: 0;
+            margin-bottom: 0;
+            padding-left: 22px;
+        }
+
+        li {
+            margin-bottom: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>3.3 Akademik Personel Ortak Gereksinimleri</h1>
+
+    <h2>Ana Ekranını Görüntüleme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Ana Ekranını Görüntüleme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Academician, Assistant, HOD</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>İlgili aktör kimlik doğrulama sonrası ana ekran sayfasını açar.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>İlgili aktör geçerli oturuma ve akademik personel yetkisine sahip olmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>İlgili aktör sisteme giriş yaptıktan sonra kendi rolüne ait ana ekranı açar.</li>
+                    <li>Frontend, rol kapsamına uygun ana ekran verilerini backend servisinden ister.</li>
+                    <li>Backend oturum tokenını ve rol yetkisini doğrular.</li>
+                    <li>Sistem bekleyen randevu, yaklaşan randevu, günlük program ve ders özetlerini hazırlar.</li>
+                    <li>Frontend alınan özet bilgileri kartlar, listeler ve kısa erişim alanları halinde gösterir.</li>
+                    <li>İlgili aktör ana ekrandaki randevu, ders veya takvim bağlantılarından ilgili sayfalara geçebilir.</li>
+                    <li>Randevuya ilişkin yeni bildirim geldiğinde ana ekrandaki ilgili özet bilgiler güncellenir.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Veri yükleme sırasında sayfada yükleniyor durumu gösterilir.</li>
+                    <li>Gösterilecek kayıt bulunmazsa ilgili bölümde boş durum mesajı görüntülenir.</li>
+                    <li>Aktör hızlı erişim alanlarını kullanarak randevu, ders veya takvim ekranına yönlenebilir.</li>
+                    <li>Veri alınamazsa aktör tekrar deneme işlemini başlatabilir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Akademik personel rolüne uygun ana ekran bilgileri görüntülenmiş olur.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Yetkisiz erişim durumunda ana ekran verileri gösterilmez.</li>
+                    <li>Geçersiz veya süresi dolmuş token nedeniyle istek reddedilir.</li>
+                    <li>Backend servisinden hata dönerse ana ekran yüklenemez.</li>
+                    <li>Sunucu hatası oluşursa kullanıcıya hata mesajı gösterilir.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Dersleri Görüntüleme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Dersleri Görüntüleme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Academician, Assistant, HOD</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>İlgili aktör dersler sayfasını açar.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>İlgili aktör geçerli oturuma sahip olmalı ve kendisiyle ilişkili ders kayıtları sistemde bulunabilmelidir.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>İlgili aktör menü üzerinden dersler ekranına gider.</li>
+                    <li>Frontend, aktörün rolüne uygun ders listesini backend servisinden ister.</li>
+                    <li>Backend oturumu doğrular ve aktörle ilişkili ders kayıtlarını sorgular.</li>
+                    <li>Sistem ders kodu, ders adı, dönem, bölüm ve durum gibi alanları içeren listeyi döndürür.</li>
+                    <li>Frontend dersleri tablo görünümünde ekrana getirir.</li>
+                    <li>İlgili aktör arama veya filtreleme alanlarını kullanarak listeyi daraltabilir.</li>
+                    <li>Sistem seçilen arama ve filtre ölçütlerine göre görüntülenen listeyi günceller.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Ders kodu veya ders adına göre arama uygulanabilir.</li>
+                    <li>Akademik dönem, bölüm veya durum filtresi ekrandaki role uygun biçimde kullanılabilir.</li>
+                    <li>Kayıt bulunmazsa sistem boş liste mesajı gösterir.</li>
+                    <li>Veri yükleme başarısız olursa aktör listeyi yeniden yükleyebilir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>İlgili aktör kendisiyle ilişkili dersleri görüntülemiş olur.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Yetkisiz erişim durumunda ders listesi döndürülmez.</li>
+                    <li>Geçersiz token nedeniyle istek reddedilir.</li>
+                    <li>Filtre parametreleri geçersizse listeleme işlemi tamamlanamaz.</li>
+                    <li>Sunucu hatası oluşursa ders bilgileri yüklenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Ders Detayını Görüntüleme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Ders Detayını Görüntüleme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Academician, Assistant, HOD</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>İlgili aktör ders listesindeki bir dersin detay bilgilerini görüntülemek ister.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>İlgili aktör geçerli oturuma sahip olmalı ve seçilen ders aktörle ilişkili olmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>İlgili aktör dersler ekranında görüntülemek istediği dersi belirler.</li>
+                    <li>Frontend seçilen dersin kimliğine veya mevcut ders kaydına göre detay bilgisini hazırlar.</li>
+                    <li>Backend gerekli durumda ders kimliğini ve aktör yetkisini doğrular.</li>
+                    <li>Sistem ders kodu, ders adı, akademik dönem, bölüm ve durum bilgilerini sunar.</li>
+                    <li>Frontend dersle ilişkili ek bilgileri role uygun görünümde ekrana getirir.</li>
+                    <li>İlgili aktör ders detay bilgilerini inceleyerek önceki liste ekranına dönebilir.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Detay sayfası bulunan rolde kayıt ayrı bir detay ekranında açılır.</li>
+                    <li>Liste üzerinde yeterli detay bilgisi sunulan rolde aktör ders bilgilerini tablo satırından inceleyebilir.</li>
+                    <li>Ders pasif durumda olsa bile yetkili aktör mevcut kayıt bilgilerini görüntüleyebilir.</li>
+                    <li>Aktör işlem yapmadan ders listesine geri dönebilir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Seçilen dersin mevcut detay bilgileri görüntülenmiş olur.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Ders kimliği geçersizse detay bilgisi getirilemez.</li>
+                    <li>İlgili ders bulunamazsa sistem kayıt bulunamadı mesajı gösterir.</li>
+                    <li>Aktörün ders üzerinde görüntüleme yetkisi yoksa erişim reddedilir.</li>
+                    <li>Sunucu hatası oluşursa detay ekranı yüklenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Randevuları Görüntüleme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Randevuları Görüntüleme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Academician, Assistant, HOD</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>İlgili aktör randevular sayfasını açar.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>İlgili aktör geçerli oturuma sahip olmalı ve randevu görüntüleme yetkisi bulunmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>İlgili aktör menüden randevular ekranına gider.</li>
+                    <li>Frontend rol kapsamına uygun randevu listesini backend servisinden ister.</li>
+                    <li>Backend oturumu doğrular ve aktörle ilişkili randevuları sorgular.</li>
+                    <li>Sistem randevu tarihi, öğrenci bilgisi, kategori, durum ve ders bilgilerini döndürür.</li>
+                    <li>Frontend randevuları liste veya takvim odaklı görünümde gösterir.</li>
+                    <li>İlgili aktör durum, tarih veya metin araması gibi alanlarla listeyi filtreleyebilir.</li>
+                    <li>Sistem seçilen ölçütlere göre randevu görünümünü günceller.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Randevular aktif, geçmiş veya durum tabanlı görünümle incelenebilir.</li>
+                    <li>Liste görünümü değiştirilebilir ve takvim görünümünden randevu seçilebilir.</li>
+                    <li>Öğrenci adı, tarih veya durum bilgisine göre filtre uygulanabilir.</li>
+                    <li>Kayıt bulunmazsa sistem uygun boş durum mesajı gösterir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>İlgili aktör kendisiyle ilişkili randevuları görüntülemiş olur.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Yetkisiz erişim durumunda randevu listesi gösterilmez.</li>
+                    <li>Geçersiz token nedeniyle istek reddedilir.</li>
+                    <li>Geçersiz filtre veya tarih değeri kullanılırsa listeleme işlemi başarısız olabilir.</li>
+                    <li>Sunucu hatası oluşursa randevular yüklenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Randevu Detayını Görüntüleme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Randevu Detayını Görüntüleme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Academician, Assistant, HOD</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>İlgili aktör randevu listesinden veya bildirimden bir randevu kaydını açar.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>İlgili aktör geçerli oturuma sahip olmalı ve randevu kaydı aktörle ilişkili olmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>İlgili aktör görüntülemek istediği randevu kaydını seçer.</li>
+                    <li>Frontend randevu kimliği ile detay bilgisini backend servisinden ister.</li>
+                    <li>Backend oturumu, rol kapsamını ve randevu erişim yetkisini doğrular.</li>
+                    <li>Sistem randevunun öğrenci, tarih, saat, kategori, ders, açıklama ve durum bilgilerini döndürür.</li>
+                    <li>Frontend randevu detayını okunabilir biçimde ekrana getirir.</li>
+                    <li>Sistem randevunun mevcut durumuna göre uygun işlem düğmelerini gösterir.</li>
+                    <li>İlgili aktör detay ekranından listeye dönebilir veya uygun bir randevu işlemi başlatabilir.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Bildirim üzerinden açılan randevu doğrudan ilgili detay ekranına yönlendirilir.</li>
+                    <li>Randevu durumu işlem yapılmasına uygun değilse yalnızca görüntüleme yapılır.</li>
+                    <li>Liste ekranından geri dönüş yapıldığında önceki filtreli görünüm korunabilir.</li>
+                    <li>Veri yükleme sırasında bekleme durumu gösterilir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Seçilen randevunun detay bilgileri görüntülenmiş olur.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Randevu kimliği geçersizse detay bilgisi getirilemez.</li>
+                    <li>İlgili kayıt bulunamazsa sistem kayıt bulunamadı mesajı gösterir.</li>
+                    <li>Yetkisiz erişim durumunda randevu detayı gösterilmez.</li>
+                    <li>Sunucu hatası oluşursa detay ekranı yüklenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Randevuyu Onaylama</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Randevuyu Onaylama</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Academician, Assistant, HOD</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>İlgili aktör bekleyen durumdaki randevu talebini onaylamak ister.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Randevu ilgili aktörle ilişkili olmalı ve bekleyen durumda bulunmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>İlgili aktör randevu detay ekranını veya bekleyen randevular listesini açar.</li>
+                    <li>Sistem randevunun bekleyen durumda olduğunu doğrulayarak onaylama işlemini kullanılabilir gösterir.</li>
+                    <li>İlgili aktör randevuyu onaylama işlemini başlatır.</li>
+                    <li>Frontend onaylama isteğini randevu kimliği ve rol kapsamı ile backend servisine gönderir.</li>
+                    <li>Backend oturumu, erişim yetkisini ve randevu durumunu kontrol eder.</li>
+                    <li>Sistem randevunun durumunu onaylandı olarak günceller.</li>
+                    <li>Frontend başarı mesajı gösterir ve randevu listesini veya detay bilgisini yeniler.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Aktör onaylama işleminden önce ekranda kalmayı seçerek işlemi iptal edebilir.</li>
+                    <li>Randevu listeden onaylandıysa sistem ilgili satırın durumunu günceller.</li>
+                    <li>Randevu bildirimden açıldıysa onay sonrası detay ekranında güncel durum gösterilir.</li>
+                    <li>Randevu daha önce işleme alınmışsa sistem güncel durum bilgisini gösterir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Randevu onaylandı durumuna geçirilir ve ilgili ekran güncellenir.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Yetkisiz erişim durumunda onaylama işlemi gerçekleştirilmez.</li>
+                    <li>Randevu bulunamazsa işlem başarısız olur.</li>
+                    <li>Randevu durumu onaylama için uygun değilse sistem işlemi reddeder.</li>
+                    <li>Sunucu hatası oluşursa randevu durumu güncellenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Randevuyu Reddetme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Randevuyu Reddetme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Academician, Assistant, HOD</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>İlgili aktör bekleyen durumdaki randevu talebini reddetmek ister.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Randevu ilgili aktörle ilişkili olmalı ve bekleyen durumda bulunmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>İlgili aktör bekleyen randevunun detayını açar.</li>
+                    <li>Sistem randevunun reddetme işlemine uygun olup olmadığını kontrol eder.</li>
+                    <li>İlgili aktör randevuyu reddetme işlemini seçer.</li>
+                    <li>Frontend reddetme isteğini randevu kimliği ve rol kapsamı ile backend servisine gönderir.</li>
+                    <li>Backend oturumu, erişim yetkisini ve randevunun mevcut durumunu doğrular.</li>
+                    <li>Sistem randevunun durumunu reddedildi olarak günceller.</li>
+                    <li>Frontend başarı mesajı gösterir ve ilgili liste veya detay ekranını yeniler.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Aktör işlemden vazgeçerse randevu mevcut durumunda kalır.</li>
+                    <li>Randevu listeden seçildiyse işlem sonrası liste üzerinde güncel durum gösterilir.</li>
+                    <li>Randevu zaten farklı bir duruma geçmişse sistem işlemi tamamlamadan güncel durumu bildirir.</li>
+                    <li>Bildirim üzerinden açılan randevuda işlem sonrası ilgili bildirim akışı korunur.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Randevu reddedildi durumuna geçirilir ve ekrandaki bilgiler güncellenir.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Yetkisiz erişim durumunda reddetme işlemi gerçekleştirilmez.</li>
+                    <li>Randevu bulunamazsa işlem başarısız olur.</li>
+                    <li>Randevu durumu reddetme için uygun değilse sistem işlemi reddeder.</li>
+                    <li>Sunucu hatası oluşursa randevu durumu güncellenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Randevuyu Tamamlama</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Randevuyu Tamamlama</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Academician, Assistant, HOD</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>İlgili aktör gerçekleşen bir randevuyu tamamlandı olarak işaretlemek ister.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Randevu ilgili aktörle ilişkili olmalı ve tamamlamaya uygun durumda bulunmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>İlgili aktör randevu detay ekranını açar.</li>
+                    <li>Sistem randevunun mevcut durumuna göre tamamlama işlemini kullanılabilir gösterir.</li>
+                    <li>İlgili aktör randevuyu tamamlandı olarak işaretleme işlemini başlatır.</li>
+                    <li>Frontend tamamlama isteğini randevu kimliği ve rol kapsamı ile backend servisine gönderir.</li>
+                    <li>Backend oturumu, erişim yetkisini ve randevu durumunu doğrular.</li>
+                    <li>Sistem randevunun durumunu tamamlandı olarak günceller.</li>
+                    <li>Frontend başarı mesajı gösterir ve detay ekranındaki işlem seçeneklerini günceller.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Aktör işlemden vazgeçerse randevu mevcut durumunda kalır.</li>
+                    <li>Randevu listeden açılmışsa işlem sonrası listeye dönüldüğünde güncel durum görüntülenir.</li>
+                    <li>Randevu tamamlandı durumundaysa sistem tekrar işlem yapılmasına izin vermez.</li>
+                    <li>İşlem sonrası ilgili randevu geçmiş randevular arasında görüntülenebilir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Randevu tamamlandı durumuna geçirilir.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Yetkisiz erişim durumunda tamamlama işlemi gerçekleştirilmez.</li>
+                    <li>Randevu bulunamazsa işlem başarısız olur.</li>
+                    <li>Randevu durumu tamamlama için uygun değilse sistem işlemi reddeder.</li>
+                    <li>Sunucu hatası oluşursa randevu durumu güncellenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Randevuya Katılmadı Olarak İşaretleme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Randevuya Katılmadı Olarak İşaretleme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Academician, Assistant, HOD</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>İlgili aktör öğrencinin gerçekleşmesi beklenen randevuya katılmadığını belirtmek ister.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Randevu ilgili aktörle ilişkili olmalı ve katılım durumunun işaretlenebileceği durumda bulunmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>İlgili aktör randevu detay ekranını açar.</li>
+                    <li>Sistem randevunun mevcut durumuna göre katılmadı işaretleme seçeneğini gösterir.</li>
+                    <li>İlgili aktör randevuya katılmadı olarak işaretleme işlemini seçer.</li>
+                    <li>Frontend işlem isteğini randevu kimliği ve rol kapsamı ile backend servisine gönderir.</li>
+                    <li>Backend oturumu, erişim yetkisini ve randevu durumunu kontrol eder.</li>
+                    <li>Sistem randevunun durumunu katılmadı olarak günceller.</li>
+                    <li>Frontend başarı mesajı gösterir ve detay ekranındaki güncel durumu yansıtır.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Aktör işlemden vazgeçerse randevu mevcut durumunda kalır.</li>
+                    <li>Randevu zaten tamamlandı veya iptal edilmişse işlem seçeneği gösterilmeyebilir.</li>
+                    <li>Liste ekranına dönüldüğünde randevu güncel durumuyla görüntülenir.</li>
+                    <li>İşlem sonucunda sistemde randevu geçmişi güncel durumla saklanır.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Randevu katılmadı durumuna geçirilir.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Yetkisiz erişim durumunda işlem gerçekleştirilmez.</li>
+                    <li>Randevu bulunamazsa işlem başarısız olur.</li>
+                    <li>Randevu durumu katılmadı olarak işaretleme için uygun değilse sistem işlemi reddeder.</li>
+                    <li>Sunucu hatası oluşursa randevu durumu güncellenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Randevuyu Yeniden Planlama</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Randevuyu Yeniden Planlama</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Academician, Assistant, HOD</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>İlgili aktör mevcut bir randevu için yeni tarih ve saat önermek ister.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Randevu ilgili aktörle ilişkili olmalı ve yeniden planlamaya uygun durumda bulunmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>İlgili aktör randevu detay ekranında yeniden planlama işlemini başlatır.</li>
+                    <li>Frontend randevu için uygun yeni zaman aralıklarını backend servisinden ister.</li>
+                    <li>Backend oturumu, erişim yetkisini ve randevunun yeniden planlanabilir durumunu doğrular.</li>
+                    <li>Sistem uygun zaman aralıklarını frontend'e döndürür.</li>
+                    <li>İlgili aktör yeni tarih ve saat seçimini yapar.</li>
+                    <li>Frontend seçilen zaman bilgisini yeniden planlama isteği olarak backend servisine gönderir.</li>
+                    <li>Sistem randevuyu yeniden planlama sürecine alır ve güncel durumu ekranda gösterir.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Uygun zaman aralığı bulunmazsa sistem seçim yapılamayacağını bildirir.</li>
+                    <li>Aktör yeniden planlama penceresini kapatarak işlemi iptal edebilir.</li>
+                    <li>Öğrenci tarafından yanıt beklenen durumda randevu ekranda güncel durumuyla gösterilir.</li>
+                    <li>Seçilen zaman başka bir işlem nedeniyle dolarsa sistem yeni seçim yapılmasını ister.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Randevu için yeni zaman bilgisi sisteme iletilir ve randevu durumu güncellenir.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Yetkisiz erişim durumunda yeniden planlama işlemi gerçekleştirilmez.</li>
+                    <li>Randevu bulunamazsa uygun zaman aralıkları getirilemez.</li>
+                    <li>Randevu durumu yeniden planlama için uygun değilse sistem işlemi reddeder.</li>
+                    <li>Geçersiz veya çakışan zaman seçilirse işlem tamamlanamaz.</li>
+                    <li>Sunucu hatası oluşursa yeniden planlama kaydedilemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Takvimi Görüntüleme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Takvimi Görüntüleme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Academician, Assistant, HOD</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>İlgili aktör takvim sayfasını açar.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>İlgili aktör geçerli oturuma sahip olmalı ve takvim verilerine erişim yetkisi bulunmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>İlgili aktör menüden takvim ekranına gider.</li>
+                    <li>Frontend görüntülenecek tarih aralığı için takvim olaylarını backend servisinden ister.</li>
+                    <li>Backend oturumu ve rol yetkisini doğrular.</li>
+                    <li>Sistem aktörle ilişkili takvim olaylarını ve randevu bilgilerini hazırlar.</li>
+                    <li>Frontend olayları takvim bileşeni üzerinde tarih ve saat bilgileriyle gösterir.</li>
+                    <li>İlgili aktör önceki, sonraki veya bugünkü tarih aralığına geçebilir.</li>
+                    <li>Aktör takvimdeki bir randevu olayını seçerek ilgili kayıt bilgilerine ulaşabilir.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Takvim görünümü seçilen tarih aralığına göre değiştirilebilir.</li>
+                    <li>Seçilen aralıkta kayıt yoksa boş takvim görünümü gösterilir.</li>
+                    <li>Randevu olayı seçildiğinde ilgili randevu detay ekranı açılabilir.</li>
+                    <li>Takvim verileri yenilendiğinde ekrandaki olaylar güncel kayıtlarla değiştirilir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>İlgili aktör kendisiyle ilişkili takvim olaylarını görüntülemiş olur.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Yetkisiz erişim durumunda takvim verileri gösterilmez.</li>
+                    <li>Geçersiz tarih aralığı gönderilirse takvim isteği başarısız olabilir.</li>
+                    <li>İlgili kayıt bulunamazsa seçilen olay detayı açılamaz.</li>
+                    <li>Sunucu hatası oluşursa takvim olayları yüklenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Bildirimleri Yönetme</h2>
+    <table border="1" width="100%">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Bildirimleri Yönetme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Academician, Assistant, HOD</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>İlgili aktör bildirim panelini veya bildirimler sayfasını açar.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>İlgili aktör geçerli oturuma sahip olmalı ve kendi bildirim kayıtlarına erişebilmelidir.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>İlgili aktör bildirim simgesini, bildirim panelini veya bildirimler sayfasını açar.</li>
+                    <li>Frontend aktöre ait bildirimleri backend servisinden ister.</li>
+                    <li>Backend oturumu doğrular ve aktörün bildirim kayıtlarını döndürür.</li>
+                    <li>Sistem okunmamış bildirim sayısını ve bildirim listesini ekranda gösterir.</li>
+                    <li>İlgili aktör bildirimleri okuma durumuna veya bildirim içeriğine göre inceleyebilir.</li>
+                    <li>Aktör seçili bildirimi ya da tüm bildirimleri okundu olarak işaretleyebilir.</li>
+                    <li>Aktör ilgili kayda yönlendiren bir bildirime tıklayarak bağlantılı sayfayı açabilir.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Bildirim okunmuşsa sistem okundu durumunu korur ve tekrar işaretleme sonucu değiştirmez.</li>
+                    <li>Bildirimler okunma durumuna göre filtrelenebilir.</li>
+                    <li>Yeni bildirim geldiğinde bildirim sayısı ve ilgili ekranlar güncellenebilir.</li>
+                    <li>Bildirim bağlantısı randevu gibi ilgili bir kayda yönlendirebilir.</li>
+                    <li>Bildirim bulunmuyorsa sistem boş bildirim mesajı gösterir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>İlgili aktör bildirimlerini görüntüler, okundu durumlarını yönetir veya ilgili kayda yönlenir.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Yetkisiz erişim durumunda bildirimler gösterilmez.</li>
+                    <li>Geçersiz token nedeniyle bildirim isteği reddedilir.</li>
+                    <li>Bağlantılı kayıt bulunamazsa ilgili sayfa açılamaz.</li>
+                    <li>Sunucu hatası oluşursa bildirimler yüklenemez veya okundu durumu güncellenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

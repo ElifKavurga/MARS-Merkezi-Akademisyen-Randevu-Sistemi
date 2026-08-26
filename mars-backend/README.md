@@ -1,6 +1,6 @@
 # MARS Backend
 
-Modern Akademisyen Randevu Sistemi — Spring Boot API katmanı.
+Merkezi Akademisyen Randevu Sistemi — Spring Boot API katmanı.
 
 ## Teknoloji Yığını
 

@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>3.1 Ortak İşlevler (Tüm Roller)</title>
+    <style>
+        body {
+            font-family: Calibri, Arial, sans-serif;
+            font-size: 11pt;
+            color: #000;
+        }
+
+        h1 {
+            font-size: 16pt;
+            margin: 0 0 12pt 0;
+        }
+
+        h2 {
+            font-size: 13pt;
+            margin: 12pt 0 6pt 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0 0 11pt 0;
+        }
+
+        th,
+        td {
+            padding: 6pt;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        ol,
+        ul {
+            margin-top: 0;
+            margin-bottom: 0;
+            padding-left: 18pt;
+        }
+    </style>
+</head>
+<body>
+    <h1>3.1 Ortak İşlevler (Tüm Roller)</h1>
+
+    <h2>Sisteme Giriş Yapma</h2>
+    <table border="1">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Sisteme Giriş Yapma</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Student, Assistant, Academician, HOD, Admin</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>Aktör MARS giriş ekranında kurumsal e-posta ve şifre bilgilerini girerek oturum açma işlemini başlatır.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Aktör sistemde kayıtlı ve aktif bir kullanıcı hesabına sahip olmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>Aktör giriş sayfasını açar.</li>
+                    <li>Sistem kurumsal e-posta ve şifre alanlarını gösterir.</li>
+                    <li>Aktör kurumsal e-posta ve şifre bilgisini girer.</li>
+                    <li>Aktör giriş işlemini onaylar.</li>
+                    <li>Sistem girilen bilgileri backend kimlik doğrulama servisine gönderir.</li>
+                    <li>Backend kullanıcıyı, şifreyi, rolü ve hesap durumunu doğrular.</li>
+                    <li>Sistem başarılı girişte oturum bilgisini oluşturur ve aktörü rolüne uygun ana sayfaya yönlendirir.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Aktör aktif oturuma sahipse sistem giriş ekranı yerine rolüne uygun ana sayfaya yönlendirir.</li>
+                    <li>Aktör şifresini unutursa şifre sıfırlama akışına geçebilir.</li>
+                    <li>HOD rolündeki kullanıcı akademisyen yetkilerini de içeren rol ana sayfasına yönlendirilir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Aktör kimliği doğrulanmış şekilde MARS sisteminde rolüne uygun oturuma sahip olur.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Kurumsal e-posta veya şifre hatalıysa sistem giriş işlemini reddeder.</li>
+                    <li>Hesap pasifse sistem oturum açılmasına izin vermez.</li>
+                    <li>Eksik bilgi gönderilirse sistem doğrulama hatası döndürür.</li>
+                    <li>Sunucu hatası oluşursa sistem kullanıcıya giriş işleminin tamamlanamadığını bildirir.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Şifremi Unuttum</h2>
+    <table border="1">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Şifremi Unuttum</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Student, Assistant, Academician, HOD, Admin</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>Aktör giriş ekranından şifre sıfırlama sayfasına geçmek ister.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Aktör oturum açmamış durumda olmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>Aktör giriş ekranında şifre sıfırlama bağlantısını seçer.</li>
+                    <li>Sistem şifre sıfırlama ekranını açar.</li>
+                    <li>Sistem kurumsal e-posta alanını gösterir.</li>
+                    <li>Aktör kurumsal e-posta adresini girer.</li>
+                    <li>Aktör sıfırlama bağlantısı gönderme işlemini başlatır.</li>
+                    <li>Sistem talebi backend şifre sıfırlama servisine iletir.</li>
+                    <li>Sistem işlem sonucunu aktöre bildirir.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Aktör işlemden vazgeçerse giriş ekranına geri dönebilir.</li>
+                    <li>Aktör aktif oturuma sahipse sistem şifre sıfırlama ekranı yerine rol ana sayfasına yönlendirir.</li>
+                    <li>E-posta gönderimi sonrası aktör aynı ekrandan tekrar deneme akışını başlatabilir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Şifre sıfırlama talebi backend tarafından işlenmiş olur.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Kurumsal e-posta alanı boş bırakılırsa sistem doğrulama hatası verir.</li>
+                    <li>E-posta biçimi geçersizse talep reddedilir.</li>
+                    <li>Backend talebi işleyemezse sistem hata mesajı gösterir.</li>
+                    <li>Sunucu hatası oluşursa sıfırlama bağlantısı gönderilemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Şifre Sıfırlama</h2>
+    <table border="1">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Şifre Sıfırlama</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Student, Assistant, Academician, HOD, Admin</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>Aktör e-posta ile aldığı şifre sıfırlama bağlantısını açar.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Aktör geçerli bir şifre sıfırlama tokenına sahip olmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>Aktör token içeren şifre sıfırlama bağlantısını açar.</li>
+                    <li>Sistem yeni şifre ve yeni şifre tekrar alanlarını gösterir.</li>
+                    <li>Aktör yeni şifre bilgisini girer.</li>
+                    <li>Aktör yeni şifre tekrar bilgisini girer.</li>
+                    <li>Aktör şifre güncelleme işlemini onaylar.</li>
+                    <li>Sistem token ve şifre bilgilerini backend servisine gönderir.</li>
+                    <li>Backend tokenı doğrular ve şifreyi günceller.</li>
+                    <li>Sistem aktöre şifrenin güncellendiğini bildirir.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Aktör aktif oturuma sahipse sistem rol ana sayfasına yönlendirir.</li>
+                    <li>Aktör şifre sıfırlama işlemi tamamlandıktan sonra giriş ekranına dönebilir.</li>
+                    <li>Aktör token olmadan sayfaya gelirse sistem şifre sıfırlama bağlantısı isteme ekranını gösterir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Aktörün hesap şifresi yeni şifreyle güncellenir.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Token geçersiz veya süresi dolmuşsa sistem işlemi reddeder.</li>
+                    <li>Yeni şifre ve tekrar alanları eşleşmezse sistem doğrulama hatası verir.</li>
+                    <li>Yeni şifre parola kurallarını karşılamazsa işlem tamamlanmaz.</li>
+                    <li>Sunucu hatası oluşursa şifre güncellenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Çıkış Yapma</h2>
+    <table border="1">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Çıkış Yapma</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Student, Assistant, Academician, HOD, Admin</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>Aktör kullanıcı menüsünden çıkış yapma işlemini seçer.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Aktör sistemde aktif oturuma sahip olmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>Aktör uygulama menüsündeki kullanıcı alanını açar.</li>
+                    <li>Sistem profil ve çıkış seçeneklerini gösterir.</li>
+                    <li>Aktör çıkış yap seçeneğini seçer.</li>
+                    <li>Sistem mevcut oturum bilgisini istemci tarafından temizler.</li>
+                    <li>Sistem kullanıcı bilgisini ve token bilgisini kaldırır.</li>
+                    <li>Sistem aktöre oturumun kapatıldığını bildirir.</li>
+                    <li>Sistem aktörü giriş ekranına yönlendirir.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Aktör menüyü kapatırsa çıkış işlemi başlatılmaz.</li>
+                    <li>Oturum süresi dolmuşsa korumalı sayfa erişiminde sistem aktörü giriş ekranına yönlendirir.</li>
+                    <li>Aktör farklı bir role ait sayfaya erişmeye çalışırsa sistem rolüne uygun ana sayfaya yönlendirir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Aktörün yerel oturumu sonlandırılmış olur.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>İstemci tarafında oturum verisi bulunmuyorsa sistem yine giriş ekranına yönlendirir.</li>
+                    <li>Tarayıcı depolama alanı erişilemezse oturum temizleme işlemi beklenen şekilde tamamlanamayabilir.</li>
+                    <li>Yönlendirme hatası oluşursa aktör bulunduğu sayfada kalabilir.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Profil Bilgilerini Görüntüleme</h2>
+    <table border="1">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Profil Bilgilerini Görüntüleme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Student, Assistant, Academician, HOD, Admin</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>Aktör kullanıcı menüsünden profil görüntüleme seçeneğini açar.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Aktör sistemde aktif ve doğrulanmış oturuma sahip olmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>Aktör profil sayfasına gider.</li>
+                    <li>Sistem profil bilgilerini yükleme isteği oluşturur.</li>
+                    <li>Backend oturumdaki kullanıcı kimliğini doğrular.</li>
+                    <li>Backend aktörün profil bilgilerini döndürür.</li>
+                    <li>Sistem ad soyad, kurumsal e-posta, rol ve hesap durumunu gösterir.</li>
+                    <li>Sistem mevcutsa bölüm ve akademik unvan bilgilerini gösterir.</li>
+                    <li>Sistem aynı ekranda şifre değiştirme ve e-posta tercihleri alanlarını erişilebilir kılar.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Akademik unvan bilgisi yoksa sistem unvan alanını göstermez.</li>
+                    <li>Bölüm bilgisi boşsa sistem bölüm alanını göstermez.</li>
+                    <li>Profil yükleme sürerken sistem yükleniyor göstergesi sunar.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Aktör kendi profil bilgilerini görüntülemiş olur.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Yetkisiz erişim durumunda sistem profil bilgisini döndürmez.</li>
+                    <li>Oturum tokenı geçersizse aktör giriş ekranına yönlendirilir.</li>
+                    <li>Profil bilgileri yüklenemezse sistem hata mesajı gösterir.</li>
+                    <li>Sunucu hatası oluşursa profil ekranı tamamlanamaz.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Şifre Değiştirme</h2>
+    <table border="1">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Şifre Değiştirme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Student, Assistant, Academician, HOD, Admin</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>Aktör profil ekranındaki şifre değiştirme bölümünden işlem başlatır.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Aktör sistemde aktif oturuma sahip olmalı ve mevcut şifresini bilmelidir.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>Aktör profil sayfasını açar.</li>
+                    <li>Sistem şifre değiştirme formunu gösterir.</li>
+                    <li>Aktör mevcut şifresini girer.</li>
+                    <li>Aktör yeni şifresini ve yeni şifre tekrarını girer.</li>
+                    <li>Aktör şifre değiştirme işlemini onaylar.</li>
+                    <li>Sistem bilgileri backend kullanıcı profil servisine gönderir.</li>
+                    <li>Backend mevcut şifreyi doğrular ve yeni şifreyi kaydeder.</li>
+                    <li>Sistem aktöre işlemin tamamlandığını bildirir.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Aktör formu tamamlamadan işlemden vazgeçerse şifre değişmez.</li>
+                    <li>Aktör yeni şifre alanlarını düzeltip işlemi tekrar gönderebilir.</li>
+                    <li>Başarılı işlemden sonra aktör mevcut oturumuyla sistemi kullanmaya devam eder.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Aktörün hesap şifresi yeni değerle güncellenir.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Mevcut şifre hatalıysa backend işlemi reddeder.</li>
+                    <li>Yeni şifre ve tekrar alanı eşleşmezse sistem doğrulama hatası gösterir.</li>
+                    <li>Yeni şifre parola kurallarını karşılamazsa işlem tamamlanmaz.</li>
+                    <li>Yetkisiz erişim veya geçersiz token durumunda işlem reddedilir.</li>
+                    <li>Sunucu hatası oluşursa şifre değiştirilemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Bildirim Tercihlerini Yönetme</h2>
+    <table border="1">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Bildirim Tercihlerini Yönetme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Student, Assistant, Academician, HOD, Admin</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>Aktör profil ekranında e-posta bildirim tercihlerini değiştirmek ister.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Aktör sistemde aktif oturuma sahip olmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>Aktör profil sayfasını açar.</li>
+                    <li>Sistem mevcut e-posta bildirim tercihlerini backend servisinden ister.</li>
+                    <li>Backend aktöre ait tercihleri döndürür.</li>
+                    <li>Sistem tercihleri açma kapama seçenekleriyle gösterir.</li>
+                    <li>Aktör ilgili bildirim kategorisi için tercihini değiştirir.</li>
+                    <li>Sistem güncel tercihleri backend servisine gönderir.</li>
+                    <li>Backend tercihleri kaydeder.</li>
+                    <li>Sistem güncel tercih durumunu aktöre gösterir.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Aktör hiçbir tercih değiştirmezse sistem kayıt isteği göndermez.</li>
+                    <li>Tercih bilgileri yüklenene kadar sistem yükleniyor durumu gösterir.</li>
+                    <li>Aktör bir tercihi kapatırsa ilgili e-posta bildirimi için pasif tercih kaydedilir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Aktörün e-posta bildirim tercihleri güncel haliyle kaydedilir.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Yetkisiz erişim durumunda tercih bilgileri getirilemez veya güncellenemez.</li>
+                    <li>Geçersiz istek gövdesi gönderilirse backend doğrulama hatası döndürür.</li>
+                    <li>Sunucu hatası oluşursa tercih değişikliği kaydedilemez.</li>
+                    <li>Ağ hatası oluşursa sistem mevcut tercihleri korur.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Bildirimleri Görüntüleme</h2>
+    <table border="1">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Bildirimleri Görüntüleme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Student, Assistant, Academician, HOD, Admin</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>Aktör bildirim merkezi sayfasını veya bildirim menüsünü açar.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Aktör sistemde aktif oturuma sahip olmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>Aktör bildirim ekranını açar.</li>
+                    <li>Sistem aktöre ait bildirim listesini backend servisinden ister.</li>
+                    <li>Backend yalnızca oturumdaki aktöre ait bildirimleri döndürür.</li>
+                    <li>Sistem bildirimleri en yeni kayıtlar üstte olacak şekilde listeler.</li>
+                    <li>Sistem bildirim başlığı, mesajı, tarihi ve okundu durumunu gösterir.</li>
+                    <li>Sistem okunmamış bildirim sayısını günceller.</li>
+                    <li>Gerçek zamanlı bildirim gelirse sistem listeyi günceller.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Aktöre ait bildirim yoksa sistem boş durum mesajı gösterir.</li>
+                    <li>Bildirim sayısı fazla ise sistem sayfalama davranışıyla listeyi gösterir.</li>
+                    <li>Backend sayfalı listeyi döndüremezse sistem uygun olduğunda bildirim geçmişi üzerinden liste oluşturur.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Aktör kendisine ait bildirimleri görüntülemiş olur.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Yetkisiz erişim durumunda bildirimler döndürülmez.</li>
+                    <li>Token geçersizse aktör giriş ekranına yönlendirilir.</li>
+                    <li>Bildirimler yüklenemezse sistem hata durumu gösterir.</li>
+                    <li>Sunucu hatası oluşursa bildirim listesi güncellenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Bildirimi Okundu Olarak İşaretleme</h2>
+    <table border="1">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Bildirimi Okundu Olarak İşaretleme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Student, Assistant, Academician, HOD, Admin</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>Aktör okunmamış bir bildirimi açar veya okundu olarak işaretleme işlemini tetikler.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Aktör sistemde oturum açmış olmalı ve kendisine ait en az bir bildirim bulunmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>Aktör bildirim listesini açar.</li>
+                    <li>Sistem okunmamış bildirimleri görsel olarak ayırt eder.</li>
+                    <li>Aktör bir bildirimi seçer.</li>
+                    <li>Sistem bildirimi istemci tarafında okundu durumuna alır.</li>
+                    <li>Sistem bildirimin kimliğini backend bildirim servisine gönderir.</li>
+                    <li>Backend bildirimin aktöre ait olduğunu doğrular.</li>
+                    <li>Backend bildirimi okundu olarak kaydeder.</li>
+                    <li>Sistem okunmamış bildirim sayısını günceller.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Bildirim zaten okunmuşsa sistem ek güncelleme yapmadan mevcut durumu korur.</li>
+                    <li>Bildirim tıklanabilir bir hedefe sahipse sistem ilgili sayfaya yönlendirme akışını başlatabilir.</li>
+                    <li>Backend güncellemesi başarısız olursa sistem istemci tarafındaki okundu değişikliğini geri alabilir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Seçilen bildirim okundu olarak işaretlenir ve okunmamış bildirim sayısı güncellenir.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Bildirim aktöre ait değilse backend yetkisiz işlem hatası döndürür.</li>
+                    <li>Bildirim bulunamazsa sistem işlem sonucunu hata olarak değerlendirir.</li>
+                    <li>Geçersiz token durumunda işlem reddedilir.</li>
+                    <li>Sunucu hatası oluşursa okundu durumu kaydedilemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Tüm Bildirimleri Okundu Olarak İşaretleme</h2>
+    <table border="1">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Tüm Bildirimleri Okundu Olarak İşaretleme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Student, Assistant, Academician, HOD, Admin</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>Aktör bildirim merkezinde tümünü okundu işaretleme komutunu seçer.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Aktör sistemde oturum açmış olmalı ve okunmamış bildirimi bulunmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>Aktör bildirim merkezini açar.</li>
+                    <li>Sistem okunmamış bildirim sayısını gösterir.</li>
+                    <li>Aktör tümünü okundu işaretleme komutunu seçer.</li>
+                    <li>Sistem listedeki okunmamış bildirimleri istemci tarafında okundu olarak işaretler.</li>
+                    <li>Sistem backend bildirim servisine toplu okundu isteği gönderir.</li>
+                    <li>Backend aktöre ait okunmamış bildirimleri okundu olarak günceller.</li>
+                    <li>Sistem okunmamış bildirim sayısını sıfırlar veya güncel değere çeker.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Okunmamış bildirim yoksa sistem komutu pasif hale getirir.</li>
+                    <li>Bildirim listesi boşsa sistem boş durum mesajını göstermeye devam eder.</li>
+                    <li>Backend işlemi başarısız olursa sistem önceki okundu durumlarını geri yükleyebilir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Aktöre ait okunmamış bildirimler okundu olarak kaydedilir.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Yetkisiz erişim durumunda toplu güncelleme yapılmaz.</li>
+                    <li>Geçersiz token durumunda sistem işlemi reddeder.</li>
+                    <li>Sunucu hatası oluşursa bildirimlerin okundu durumu kaydedilemez.</li>
+                    <li>Ağ hatası oluşursa istemci güncellemesi geri alınabilir.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Bildirime Tıklayarak İlgili Sayfaya Gitme</h2>
+    <table border="1">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Bildirime Tıklayarak İlgili Sayfaya Gitme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Student, Assistant, Academician, HOD, Admin</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>Aktör bildirim listesinden veya bildirim menüsünden bir bildirimi seçer.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Aktör sistemde oturum açmış olmalı ve bildirimin yönlendirilebilir hedef bilgisi bulunmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>Aktör bildirim listesini veya bildirim menüsünü açar.</li>
+                    <li>Sistem aktöre ait bildirimleri gösterir.</li>
+                    <li>Aktör bir bildirime tıklar.</li>
+                    <li>Sistem bildirimi okundu olarak işaretleme işlemini başlatır.</li>
+                    <li>Sistem bildirimin türünü ve ilişkili kayıt bilgilerini değerlendirir.</li>
+                    <li>Sistem aktörün rolüne uygun hedef sayfayı belirler.</li>
+                    <li>Sistem aktörü ilgili randevu, devir veya bildirim kapsamındaki sayfaya yönlendirir.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Bildirim hedef sayfa içermiyorsa sistem yalnızca okundu işaretleme işlemini yapar.</li>
+                    <li>Aktörün rolüne göre aynı bildirim farklı modül sayfasına yönlendirilebilir.</li>
+                    <li>Bildirim zaten okunmuşsa sistem yönlendirme işlemini yine gerçekleştirebilir.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Aktör bildirimin ilişkili olduğu sistem sayfasına yönlendirilir.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Hedef kayıt bulunamazsa sistem ilgili detay sayfasında hata durumu gösterebilir.</li>
+                    <li>Aktörün hedef sayfaya erişim yetkisi yoksa sistem erişimi reddeder veya rol ana sayfasına yönlendirir.</li>
+                    <li>Geçersiz token durumunda yönlendirme yerine giriş ekranı gösterilir.</li>
+                    <li>Sunucu hatası oluşursa hedef sayfa verileri yüklenemez.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Bildirimleri Filtreleme</h2>
+    <table border="1">
+        <tr>
+            <th>Veri Alanı</th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>Use Case Adı</td>
+            <td>Bildirimleri Filtreleme</td>
+        </tr>
+        <tr>
+            <td>İlgili Aktör</td>
+            <td>Student, Assistant, Academician, HOD, Admin</td>
+        </tr>
+        <tr>
+            <td>Tetikleyici</td>
+            <td>Aktör bildirim merkezinde kategori veya okundu durumu filtresi seçer.</td>
+        </tr>
+        <tr>
+            <td>Ön Koşul</td>
+            <td>Aktör bildirim merkezi ekranında bildirim listesini görüntülüyor olmalıdır.</td>
+        </tr>
+        <tr>
+            <td>Temel Akış</td>
+            <td>
+                <ol>
+                    <li>Aktör bildirim merkezi ekranını açar.</li>
+                    <li>Sistem bildirim listesini ve filtre seçeneklerini gösterir.</li>
+                    <li>Aktör bildirim kategorisi filtresini seçer.</li>
+                    <li>Aktör gerekirse okundu durumu filtresini seçer.</li>
+                    <li>Sistem bildirimleri seçilen kategoriye göre istemci tarafında filtreler.</li>
+                    <li>Sistem bildirimleri seçilen okundu durumuna göre daraltır.</li>
+                    <li>Sistem filtreye uygun bildirimleri listeler ve sayfa bilgisini günceller.</li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>Alternatif Akışlar</td>
+            <td>
+                <ul>
+                    <li>Aktör tümü filtresini seçerse sistem tüm bildirimleri gösterir.</li>
+                    <li>Filtre sonucunda kayıt bulunmazsa sistem uygun bildirim bulunmadığını gösterir.</li>
+                    <li>Aktör filtreyi değiştirdiğinde sistem sayfayı ilk sayfaya geri alır.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Son Koşul</td>
+            <td>Bildirim listesi aktörün seçtiği filtrelere göre görüntülenir.</td>
+        </tr>
+        <tr>
+            <td>İstisnalar</td>
+            <td>
+                <ul>
+                    <li>Bildirimler yüklenememişse filtreleme işlemi uygulanamaz.</li>
+                    <li>Geçersiz filtre değeri oluşursa sistem varsayılan listeleme davranışına dönebilir.</li>
+                    <li>Sunucu hatası nedeniyle liste alınamazsa sistem hata mesajı gösterir.</li>
+                    <li>Oturum geçersizse aktör giriş ekranına yönlendirilir.</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
