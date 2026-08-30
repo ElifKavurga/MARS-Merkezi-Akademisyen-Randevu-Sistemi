@@ -53,9 +53,9 @@ management:
 
 mars:
   cors:
-    allowed-origins: ${MARS_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+    allowed-origins: ${MARS_CORS_ALLOWED_ORIGINS:}
   jwt:
-    secret: ${MARS_JWT_SECRET:MARS_DEV_JWT_SECRET_KEY_CHANGE_ME_32CHARS_MIN}
+    secret: ${MARS_JWT_SECRET}
     expiration-ms: ${MARS_JWT_EXPIRATION_MS:86400000}
     password-reset-expiration-ms: ${MARS_JWT_PASSWORD_RESET_EXPIRATION_MS:900000}
   frontend:
@@ -81,3 +81,15 @@ logging:
   level:
     root: INFO
     com.mars: INFO
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local,dev,test
+
+mars:
+  cors:
+    allowed-origins: ${MARS_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  jwt:
+    secret: ${MARS_JWT_SECRET:MARS_LOCAL_DEV_JWT_SECRET_CHANGE_ME_32CHARS_MIN}

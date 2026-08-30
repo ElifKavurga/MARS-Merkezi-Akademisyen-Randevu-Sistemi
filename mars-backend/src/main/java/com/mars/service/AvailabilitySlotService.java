@@ -454,12 +454,16 @@ public class AvailabilitySlotService {
     private List<AvailabilitySlotResponseDto> createRecurringSlots(
             AvailabilitySlotCreateRequest request, User currentUser) {
         List<DayOfWeek> selectedDays = normalizeSelectedDays(request.getDaysOfWeek());
+        boolean termEndMode = isTermEndMode(request);
         LocalDate recurrenceEndDate = resolveRecurrenceEndDate(request, LocalDate.now());
         String meetingType = resolveMeetingType(request.getMeetingType());
 
         List<AvailabilitySlotResponseDto> created = new ArrayList<>();
         for (DayOfWeek day : selectedDays) {
             LocalDate slotDate = LocalDate.now().with(TemporalAdjusters.nextOrSame(day));
+            if (termEndMode && recurrenceEndDate.isBefore(slotDate)) {
+                recurrenceEndDate = AcademicTermCalendar.resolveCurrentTermEndDate(slotDate);
+            }
             if (recurrenceEndDate.isBefore(slotDate)) {
                 throw new BadRequestException(AvailabilitySlotMessages.RECURRENCE_END_BEFORE_START);
             }
@@ -472,6 +476,11 @@ public class AvailabilitySlotService {
                     meetingType));
         }
         return created;
+    }
+
+    private boolean isTermEndMode(AvailabilitySlotCreateRequest request) {
+        return request.getRecurrenceEndMode() != null
+                && RecurrenceEndMode.TERM_END.name().equalsIgnoreCase(request.getRecurrenceEndMode().trim());
     }
 
     private AvailabilitySlotResponseDto persistSlot(

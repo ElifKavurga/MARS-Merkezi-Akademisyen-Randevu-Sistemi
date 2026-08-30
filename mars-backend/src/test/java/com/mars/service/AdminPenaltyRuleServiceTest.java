@@ -93,7 +93,7 @@ class AdminPenaltyRuleServiceTest {
 
         assertThatThrownBy(() -> adminPenaltyRuleService.updatePenaltyRule(request))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("No-Show");
+                .hasMessageContaining("katılmama limiti");
 
         verify(penaltyRuleRepository, never()).save(any());
     }

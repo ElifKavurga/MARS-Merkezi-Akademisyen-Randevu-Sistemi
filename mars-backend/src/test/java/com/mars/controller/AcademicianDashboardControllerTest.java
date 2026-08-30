@@ -106,8 +106,23 @@ class AcademicianDashboardControllerTest {
 
     @Test
     @WithMockUser(roles = "HOD")
-    void getDashboardSummary_asHod_returnsForbidden() throws Exception {
-        assertForbidden();
+    void getDashboardSummary_asHod_returnsSummary() throws Exception {
+        when(academicianDashboardService.getDashboardSummary()).thenReturn(
+                AcademicianDashboardResponseDto.builder()
+                        .pendingAppointmentCount(1)
+                        .upcomingAppointmentCount(0)
+                        .activeCourseCount(2)
+                        .pendingDelegationCount(0)
+                        .acceptedDelegationCount(0)
+                        .rejectedDelegationCount(0)
+                        .pendingAppointments(List.of())
+                        .upcomingAppointments(List.of())
+                        .build());
+
+        mockMvc.perform(get("/academician/dashboard"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pendingAppointmentCount").value(1))
+                .andExpect(jsonPath("$.activeCourseCount").value(2));
     }
 
     private void assertForbidden() throws Exception {

@@ -267,9 +267,9 @@ class AvailabilitySlotServiceTest {
 
     @Test
     void createSlots_recurringMultipleDays_createsSeparateSlotsWithRules() {
-        LocalDate wed = LocalDate.now().with(TemporalAdjusters.nextOrSame(DayOfWeek.WEDNESDAY));
-        LocalDate thu = LocalDate.now().with(TemporalAdjusters.nextOrSame(DayOfWeek.THURSDAY));
-        LocalDate termEnd = AcademicTermCalendar.resolveCurrentTermEndDate(LocalDate.now());
+        LocalDate referenceDate = LocalDate.now();
+        LocalDate wed = referenceDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.WEDNESDAY));
+        LocalDate thu = referenceDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.THURSDAY));
         AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(
                 OfficeHourType.RECURRING.name(),
                 null,
@@ -310,7 +310,6 @@ class AvailabilitySlotServiceTest {
         assertThat(result).extracting(AvailabilitySlotResponseDto::getSlotId).containsExactly(1, 2);
         verify(availabilitySlotRepository, org.mockito.Mockito.times(2)).save(any());
         verify(recurrenceRuleService, org.mockito.Mockito.times(2)).createRule(any(), any());
-        assertThat(termEnd).isNotNull();
     }
 
     @Test
@@ -357,8 +356,9 @@ class AvailabilitySlotServiceTest {
 
     @Test
     void createSlots_weeklyUntilTermEnd_usesTermEndDate() {
-        LocalDate slotDate = LocalDate.now().with(TemporalAdjusters.nextOrSame(DayOfWeek.FRIDAY));
-        LocalDate termEnd = AcademicTermCalendar.resolveCurrentTermEndDate(LocalDate.now());
+        LocalDate referenceDate = LocalDate.now();
+        LocalDate slotDate = referenceDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.FRIDAY));
+        LocalDate termEnd = AcademicTermCalendar.resolveCurrentTermEndDate(slotDate);
         AvailabilitySlotCreateRequest request = new AvailabilitySlotCreateRequest(
                 OfficeHourType.RECURRING.name(),
                 null,
@@ -1117,12 +1117,14 @@ class AvailabilitySlotServiceTest {
         // Regresyon: today+14 sert kesimi, OOO (17–30 Tem) sonrası Perşembe (6 Ağu+) slotları eliyordu.
         LocalDate today = LocalDate.now(java.time.ZoneId.of("Europe/Istanbul"));
         LocalDate rangeEnd = AcademicTermCalendar.resolveBookableHorizonEnd(today);
-        LocalDate firstThursday = LocalDate.of(2026, 7, 23);
-        LocalDate afterOooThursday = LocalDate.of(2026, 8, 6);
-        while (!afterOooThursday.isAfter(today.plusDays(14))) {
+        LocalDate firstThursday = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.THURSDAY));
+        LocalDate oooStart = firstThursday;
+        LocalDate oooEnd = firstThursday.plusDays(13);
+        LocalDate afterOooThursday = firstThursday.plusWeeks(1);
+        while (!afterOooThursday.isAfter(oooEnd) || !afterOooThursday.isAfter(today.plusDays(14))) {
             afterOooThursday = afterOooThursday.plusWeeks(1);
         }
-        if (afterOooThursday.isAfter(rangeEnd) || afterOooThursday.isBefore(today)) {
+        if (afterOooThursday.isAfter(rangeEnd)) {
             return;
         }
 
@@ -1130,7 +1132,7 @@ class AvailabilitySlotServiceTest {
         rule.setRecurrenceRuleId(35);
         rule.setRepeatType(RepeatType.WEEKLY.name());
         rule.setStartDate(firstThursday);
-        rule.setEndDate(LocalDate.of(2026, 8, 31));
+        rule.setEndDate(rangeEnd);
 
         AvailabilitySlot recurring = new AvailabilitySlot();
         recurring.setSlotId(38);
@@ -1152,8 +1154,7 @@ class AvailabilitySlotServiceTest {
         when(outOfOfficePeriodRepository.existsOverlappingPeriod(eq(10), any(LocalDate.class), any(LocalDate.class)))
                 .thenAnswer(invocation -> {
                     LocalDate date = invocation.getArgument(1);
-                    return !date.isBefore(LocalDate.of(2026, 7, 17))
-                            && !date.isAfter(LocalDate.of(2026, 7, 30));
+                    return !date.isBefore(oooStart) && !date.isAfter(oooEnd);
                 });
         when(availabilitySlotMapper.toAvailableResponse(
                         eq(recurring), any(LocalDate.class), any(LocalTime.class), any(LocalTime.class)))

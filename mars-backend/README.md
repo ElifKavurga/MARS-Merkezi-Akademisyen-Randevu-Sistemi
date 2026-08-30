@@ -86,6 +86,7 @@ docker compose up -d
 | `SPRING_DATASOURCE_URL` | JDBC URL |
 | `SPRING_DATASOURCE_USERNAME` | DB kullanıcı |
 | `SPRING_DATASOURCE_PASSWORD` | DB şifre |
+| `MARS_JWT_SECRET` | JWT imzalama secret'ı; production ortamında zorunludur |
 | `MARS_CORS_ALLOWED_ORIGINS` | CORS origin listesi (virgülle ayrılmış) |
 | `SERVER_PORT` | Sunucu portu (varsayılan `8080`) |
 | `MAIL_ENABLED` | Tüm SMTP gönderimini açar/kapatır (varsayılan `true`) |
@@ -94,4 +95,6 @@ docker compose up -d
 
 - JPA `ddl-auto: validate` (dev/prod) — şema yalnızca Flyway ile yönetilir.
 - Migration dosyaları: `src/main/resources/db/migration`
+- Demo seed verisi production migration yolunda değildir; local/demo kullanım için `src/main/resources/db/demo/demo_seed_data.sql` manuel uygulanabilir.
 - Local profilde Flyway kapalıdır; H2 şeması JPA ile oluşturulur.
+- Stateless JWT API mimarisi nedeniyle CSRF kapalıdır. WebSocket handshake endpoint'i açıktır; STOMP mesaj kimlik doğrulaması bearer token ile interceptor içinde yapılır.

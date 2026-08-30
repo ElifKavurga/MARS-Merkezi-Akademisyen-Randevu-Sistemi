@@ -65,9 +65,6 @@ Frontend tarafında sayfalar, ortak bileşenler, servisler, context yapıları v
 
 ```text
 MARS-Merkezi-Akademisyen-Randevu-Sistemi/
-├── docs/
-│   ├── ER.md
-│   └── SRS.md
 ├── mars-backend/
 │   ├── pom.xml
 │   └── src/
@@ -109,6 +106,8 @@ Linux/macOS için:
 cp .env.example .env
 ```
 
+Production ortamında `.env.example` içindeki `CHANGE_ME_DEV_ONLY` değerleri kullanılmamalıdır. Özellikle `MARS_JWT_SECRET`, veritabanı kullanıcı bilgileri, SMTP bilgileri ve `MARS_CORS_ALLOWED_ORIGINS` deployment ortamına özel güvenli değerlerle tanımlanmalıdır. `prod` profili JWT secret ve CORS origin için güvenli fallback kullanmaz; eksik veya wildcard origin ile uygulama başlamaz.
+
 ## Docker ile Çalıştırma
 
 Proje kök dizininde aşağıdaki komut kullanılabilir:
@@ -124,6 +123,8 @@ Varsayılan servisler:
 - PostgreSQL: `localhost:5432`
 
 Servisler `docker-compose.yml` üzerinden PostgreSQL, Spring Boot backend ve Vite frontend olarak birlikte ayağa kaldırılır. Veritabanı şeması Flyway migration dosyaları ile hazırlanır.
+
+`docker-compose.yml` local geliştirme içindir. Public repodaki placeholder credential değerleri production için uygun değildir.
 
 ## Manuel Kurulum
 
@@ -142,6 +143,10 @@ cd mars-backend
 ```
 
 Backend çalışmadan önce PostgreSQL bağlantı bilgilerinin ortam değişkenleri veya Spring konfigürasyonu üzerinden sağlandığından emin olunmalıdır.
+
+### Demo Data
+
+Production Flyway migration zinciri yalnızca şema ve güvenli referans verileri çalıştırır. Büyük demo veri seti otomatik çalışmaz; ihtiyaç olursa `mars-backend/src/main/resources/db/demo/demo_seed_data.sql` içeriği yalnızca local/demo veritabanında manuel uygulanmalıdır.
 
 ### Frontend
 
@@ -273,21 +278,6 @@ Bölüm Başkanı rolü, akademisyen randevu ekranlarına ek olarak bölüm yön
 | ![Profil](screenshots/profil.png) |
 | Rol bağımsız kullanıcı bilgilerinin yönetildiği ortak profil ekranı. |
 
-## Gelecek Çalışmalar
-
-- Uçtan uca test kapsamının genişletilmesi
-- Dashboard grafiklerinde daha gelişmiş tarih aralığı karşılaştırmaları
-- Bildirim merkezi için gelişmiş arşivleme ve arama seçenekleri
-- Erişilebilirlik denetimlerinin otomatik kalite sürecine eklenmesi
-- Sistem gözlemlenebilirliği için daha detaylı operasyon metrikleri
-
-## Dokümantasyon
-
-Detaylı gereksinimler ve veri modeli dokümantasyonu aşağıdaki dosyalarda yer alır:
-
-- `docs/SRS.md`
-- `docs/ER.md`
-
 ## Lisans
 
-Bu proje akademik teslim kapsamında hazırlanmıştır. Lisans koşulları proje sahibi ve teslim gereksinimlerine göre belirlenmelidir. Açık kaynak dağıtım planlanıyorsa repository kök dizinine ayrıca bir `LICENSE` dosyası eklenmelidir.
+Bu proje [MIT Lisansı](LICENSE) altında lisanslanmıştır. Detaylar için kök dizindeki [LICENSE](LICENSE) dosyasına bakabilirsiniz.

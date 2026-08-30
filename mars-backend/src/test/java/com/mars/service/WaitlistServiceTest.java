@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,6 +44,8 @@ import com.mars.repository.WaitlistEntryRepository;
 @ExtendWith(MockitoExtension.class)
 class WaitlistServiceTest {
 
+    private static final ZoneId APP_ZONE = ZoneId.of("Europe/Istanbul");
+
     @Mock private WaitlistEntryRepository waitlistEntryRepository;
     @Mock private AppointmentRepository appointmentRepository;
     @Mock private AvailabilitySlotRepository availabilitySlotRepository;
@@ -69,7 +72,7 @@ class WaitlistServiceTest {
         );
         scheduler = new WaitlistOfferScheduler(waitlistEntryRepository, service, null);
 
-        now = LocalDateTime.of(2026, 7, 23, 14, 0);
+        now = LocalDateTime.now(APP_ZONE).withSecond(0).withNano(0);
     }
 
     @Test
@@ -108,6 +111,10 @@ class WaitlistServiceTest {
         when(waitlistEntryRepository.findExpiredOffers(eq(WaitlistStatus.NOTIFIED.name()), any()))
                 .thenReturn(List.of(entry1));
         when(waitlistEntryRepository.findById(1)).thenReturn(Optional.of(entry1));
+        when(appointmentRepository.existsBySlot_SlotIdAndAppointmentStatusIn(eq(1), any()))
+                .thenReturn(false);
+        when(waitlistEntryRepository.existsActiveOfferForSlot(eq(1), any()))
+                .thenReturn(false);
         
         // Mocking next candidate lookup
         when(waitlistEntryRepository.findActiveWaitlistEntriesForStaff(eq(10), any()))
@@ -115,13 +122,16 @@ class WaitlistServiceTest {
 
         scheduler.checkExpiredOffers();
 
-        verify(waitlistEntryRepository, times(1)).save(entry1);
+        ArgumentCaptor<WaitlistEntry> savedEntries = ArgumentCaptor.forClass(WaitlistEntry.class);
+        verify(waitlistEntryRepository, times(2)).save(savedEntries.capture());
         assertThat(entry1.getWaitlistStatus()).isEqualTo(WaitlistStatus.EXPIRED.name());
 
         // Verify the next student was offered the slot
-        verify(waitlistEntryRepository, times(1)).save(entry2);
         assertThat(entry2.getWaitlistStatus()).isEqualTo(WaitlistStatus.NOTIFIED.name());
         assertThat(entry2.getSlot()).isEqualTo(slot);
+        assertThat(savedEntries.getAllValues())
+                .extracting(WaitlistEntry::getWaitlistEntryId)
+                .containsExactlyInAnyOrder(1, 2);
     }
 
     private AvailabilitySlot createSlot(Integer staffId, LocalDateTime dateTime) {

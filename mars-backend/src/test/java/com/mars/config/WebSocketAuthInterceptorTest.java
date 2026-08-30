@@ -41,7 +41,7 @@ class WebSocketAuthInterceptorTest {
         when(jwtService.isTokenValid(token)).thenReturn(true);
         when(jwtService.extractUsername(token)).thenReturn(username);
         when(userDetailsService.loadUserByUsername(username)).thenReturn(details);
-        when(jwtService.isTokenValid(token, username)).thenReturn(true);
+        when(jwtService.isTokenValid(token, username, details.getPassword())).thenReturn(true);
 
         Message<byte[]> message = stompMessage(
                 StompCommand.CONNECT, null, "Bearer " + token);
@@ -75,7 +75,7 @@ class WebSocketAuthInterceptorTest {
                 details, token, details.getAuthorities()));
         accessor.setLeaveMutable(true);
         Message<byte[]> message = MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
-        when(jwtService.isTokenValid(token, details.getUsername())).thenReturn(false);
+        when(jwtService.isTokenValid(token, details.getUsername(), details.getPassword())).thenReturn(false);
 
         assertThat(interceptor.preSend(message, mock(MessageChannel.class))).isNull();
     }

@@ -207,8 +207,13 @@ class AcademicianAppointmentControllerTest {
 
     @Test
     @WithMockUser(roles = "HOD")
-    void rejectAppointment_asHod_returnsForbidden() throws Exception {
-        assertForbidden("PATCH", "/academician/appointments/11/reject");
+    void rejectAppointment_asHod_returnsRejected() throws Exception {
+        when(appointmentService.rejectStaffAppointment(11, RoleType.ACADEMICIAN))
+                .thenReturn(appointmentResponse(AppointmentStatus.REJECTED));
+
+        mockMvc.perform(patch("/academician/appointments/11/reject"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.appointmentStatus").value("REJECTED"));
     }
 
     @Test

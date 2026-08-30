@@ -2,7 +2,7 @@ spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/mars_db}
     username: ${SPRING_DATASOURCE_USERNAME:mars_user}
-    password: ${SPRING_DATASOURCE_PASSWORD:mars_password}
+    password: ${SPRING_DATASOURCE_PASSWORD:CHANGE_ME_DEV_ONLY}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
