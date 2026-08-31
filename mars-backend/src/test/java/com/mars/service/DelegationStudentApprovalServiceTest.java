@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,6 +52,8 @@ import com.mars.security.CustomUserDetails;
 
 @ExtendWith(MockitoExtension.class)
 class DelegationStudentApprovalServiceTest {
+
+    private static final ZoneId APP_ZONE = ZoneId.of("Europe/Istanbul");
 
     @Mock private DelegationLogRepository delegationLogRepository;
     @Mock private DelegationStatusHistoryRepository delegationStatusHistoryRepository;
@@ -230,7 +233,7 @@ class DelegationStudentApprovalServiceTest {
 
         assertThat(result.getDelegationStatus())
                 .isEqualTo(DelegationStatus.PENDING_STUDENT_APPROVAL.name());
-        assertThat(log.getStudentApprovalExpiresAt()).isAfter(LocalDateTime.now().plusMinutes(119));
+        assertThat(log.getStudentApprovalExpiresAt()).isAfter(LocalDateTime.now(APP_ZONE).plusMinutes(119));
         assertThat(appointment.getStaff()).isEqualTo(academician);
         verify(appointmentRepository, never()).save(any());
         verify(notificationService).createPreparedEmailNotification(
@@ -252,7 +255,7 @@ class DelegationStudentApprovalServiceTest {
 
         assertThat(result.getDelegationStatus())
                 .isEqualTo(DelegationStatus.PENDING_STUDENT_APPROVAL.name());
-        assertThat(log.getStudentApprovalExpiresAt()).isAfter(LocalDateTime.now().plusMinutes(119));
+        assertThat(log.getStudentApprovalExpiresAt()).isAfter(LocalDateTime.now(APP_ZONE).plusMinutes(119));
         assertThat(appointment.getStaff()).isEqualTo(academician);
         verify(appointmentRepository, never()).save(any());
         verify(notificationService).createPreparedEmailNotification(
@@ -340,11 +343,11 @@ class DelegationStudentApprovalServiceTest {
     @Test
     void timeoutReleasesSlotAndNotifiesAcademician() {
         DelegationLog log = studentApprovalLog(4, unrelatedAssistant);
-        log.setStudentApprovalExpiresAt(LocalDateTime.now().minusMinutes(1));
+        log.setStudentApprovalExpiresAt(LocalDateTime.now(APP_ZONE).minusMinutes(1));
         when(delegationLogRepository.findExpiredStudentApprovals(
                 eq(DelegationStatus.PENDING_STUDENT_APPROVAL.name()), any())).thenReturn(List.of(log));
 
-        delegationService.expireStudentApprovals(LocalDateTime.now());
+        delegationService.expireStudentApprovals(LocalDateTime.now(APP_ZONE));
 
 
         assertThat(log.getDelegationStatus()).isEqualTo(DelegationStatus.EXPIRED.name());
@@ -387,7 +390,7 @@ class DelegationStudentApprovalServiceTest {
         log.setDelegatedByUser(academician);
         log.setDelegatedToUser(target);
         log.setDelegationStatus(DelegationStatus.PENDING_STUDENT_APPROVAL.name());
-        log.setStudentApprovalExpiresAt(LocalDateTime.now().plusMinutes(30));
+        log.setStudentApprovalExpiresAt(LocalDateTime.now(APP_ZONE).plusMinutes(30));
         log.setSlotLockStatus(SlotLockStatus.LOCKED.name());
         return log;
     }

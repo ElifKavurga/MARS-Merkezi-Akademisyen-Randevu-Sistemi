@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -50,6 +51,8 @@ import com.mars.security.CustomUserDetails;
 
 @ExtendWith(MockitoExtension.class)
 class DelegationServiceTest {
+
+    private static final ZoneId APP_ZONE = ZoneId.of("Europe/Istanbul");
 
     @Mock
     private DelegationLogRepository delegationLogRepository;
@@ -351,8 +354,8 @@ class DelegationServiceTest {
         log.setAppointment(appointment);
         log.setDelegatedByUser(by);
         log.setDelegatedToUser(to);
-        log.setDelegatedAt(LocalDateTime.now());
-        log.setUpdatedAt(LocalDateTime.now());
+        log.setDelegatedAt(LocalDateTime.now(APP_ZONE));
+        log.setUpdatedAt(LocalDateTime.now(APP_ZONE));
         log.setDelegationStatus(DelegationStatus.PENDING.name());
         return log;
     }
