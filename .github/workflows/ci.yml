@@ -23,7 +23,7 @@ jobs:
           java-version: "21"
           cache: maven
       - name: Test
-        run: ./mvnw test
+        run: ./mvnw test -Dspring.profiles.active=test
 
   frontend:
     name: Frontend
